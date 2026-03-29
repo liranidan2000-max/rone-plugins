@@ -22,10 +22,13 @@ jobs:
 
     steps:
       # -----------------------------------------------------------------------
-      # 1. Checkout source (recursive so rone-flanger-'s bundled JUCE is included)
-      #    GH_PAT must be a Personal Access Token (classic) with 'repo' scope,
-      #    added as a secret in this repo's Settings → Secrets → Actions.
+      # 1. Inject PAT into git at transport level so ALL submodule HTTPS clones
+      #    are authenticated, regardless of per-repo credential caching.
+      #    GH_PAT must be a classic Personal Access Token with 'repo' scope.
       # -----------------------------------------------------------------------
+      - name: Inject PAT into git for private submodule clones
+        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
