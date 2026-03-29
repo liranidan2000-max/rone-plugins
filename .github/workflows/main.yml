@@ -1,0 +1,130 @@
+name: Build & Package RONE Plugins Installer
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'          # also run when a version tag is pushed (e.g. v1.2.0)
+
+permissions:
+  contents: write   # needed to create GitHub Releases
+
+jobs:
+  build-installer:
+    name: Build Windows Installer
+    runs-on: windows-latest
+
+    env:
+      # Version = 1.0.<run_number> on branch pushes.
+      # When a vX.Y.Z tag is pushed, strip the leading "v" for a clean version.
+      INSTALLER_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('1.0.{0}', github.run_number) }}
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout source (recursive so rone-flanger-'s bundled JUCE is included)
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # -----------------------------------------------------------------------
+      # 2. Set up a Visual Studio developer environment (MSVC + CMake + Ninja)
+      # -----------------------------------------------------------------------
+      - name: Set up MSVC developer environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # -----------------------------------------------------------------------
+      # 3. Build each plugin (Release, 64-bit, output to build-ci/)
+      #    Each plugin fetches / uses its own JUCE via CMakeLists.txt.
+      # -----------------------------------------------------------------------
+      - name: Build ReverseReverbVST
+        working-directory: ReverseReverbVST
+        run: |
+          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-ci --config Release --parallel
+
+      - name: Build RoneStemsFixer
+        working-directory: RoneStemsFixer
+        run: |
+          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-ci --config Release --parallel
+
+      - name: Build RoneStutter
+        working-directory: RoneStutter
+        run: |
+          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-ci --config Release --parallel
+
+      - name: Build rone-flanger (ManualFlanger)
+        working-directory: rone-flanger-
+        run: |
+          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-ci --config Release --parallel
+
+      # -----------------------------------------------------------------------
+      # 4. Install Inno Setup 6 (iscc is added to PATH automatically)
+      # -----------------------------------------------------------------------
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      # -----------------------------------------------------------------------
+      # 5. Compile the combined installer
+      #    /DMyAppVersion passes the dynamic version into the .iss #define.
+      #    Output lands in build-output\ at the repo root.
+      # -----------------------------------------------------------------------
+      - name: Create installer output directory
+        run: New-Item -ItemType Directory -Force -Path build-output
+
+      - name: Compile Inno Setup installer
+        run: |
+          $version = "${{ env.INSTALLER_VERSION }}"
+          # Strip leading 'v' in case the tag was pushed as "v1.2.3"
+          $version = $version.TrimStart('v')
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DMyAppVersion=$version" `
+            "installer\RONE_Plugins.iss"
+        shell: pwsh
+
+      # -----------------------------------------------------------------------
+      # 6. Upload installer as a workflow artifact (available on every run)
+      # -----------------------------------------------------------------------
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RONE_Plugins_Installer_v${{ env.INSTALLER_VERSION }}
+          path: build-output/RONE_Plugins_Installer_v*.exe
+          if-no-files-found: error
+
+      # -----------------------------------------------------------------------
+      # 7. Create a GitHub Release when a version tag is pushed (vX.Y.Z)
+      # -----------------------------------------------------------------------
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RONE Plugins ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: build-output/RONE_Plugins_Installer_v*.exe
+          body: |
+            ## RONE Plugins ${{ github.ref_name }}
+
+            ### Included Plugins
+            - **ReverseReverb** — VST3 + Standalone
+            - **RONE Stems Fixer** — Standalone
+            - **Rone Stutter** — VST3 + Standalone
+            - **Rone Flanger** — VST3 + Standalone
+
+            ### Installation Paths
+            | Type | Path |
+            |------|------|
+            | VST3 plugins | `C:\Program Files\Common Files\VST3\RONE\` |
+            | Standalone apps | `C:\Program Files\RONE Plugins\` |
+            | Desktop shortcuts | Created for all 4 standalone apps |
+
+            Download the `.exe` installer below and run it as Administrator.

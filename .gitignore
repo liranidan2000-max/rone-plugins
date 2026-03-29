@@ -1,0 +1,111 @@
+# ============================================================
+# RONE Plugins - Root .gitignore
+# ============================================================
+
+# Build output directories (CMake, Xcode, VS)
+build/
+build-ci/
+build-output/
+Build/
+out/
+cmake-build-*/
+_build/
+*.xcworkspace
+*.xcuserdata
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+_deps/
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.aps
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcarchive
+
+# JUCE generated files
+JuceLibraryCode/
+
+# Compiled plugin outputs (keep source, ignore binaries)
+*.vst3
+*.vst
+*.component
+*.au
+*.aaxplugin
+*.app
+*.exe
+*.dll
+*.dylib
+*.so
+*.pdb
+
+# Installer build output
+*.iss.bak
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+.fseventsd
+.TemporaryItems
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# Node / npm (if any tooling)
+node_modules/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# NuGet (WebView2 etc.)
+packages/
+*.nupkg
