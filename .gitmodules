@@ -6,7 +6,7 @@
 	url = https://github.com/liranidan2000-max/RoneStemsFixer.git
 [submodule "RoneStutter"]
 	path = RoneStutter
-	url = https://github.com/liranigan2000-max/RoneStutter.git
+	url = https://github.com/liranidan2000-max/RoneStutter.git
 [submodule "rone-flanger-"]
 	path = rone-flanger-
-	url = https://github.com/liranigan2000-max/rone-flanger-.git
+	url = https://github.com/liranidan2000-max/rone-flanger-.git
