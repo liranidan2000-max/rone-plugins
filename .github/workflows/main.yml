@@ -23,11 +23,14 @@ jobs:
     steps:
       # -----------------------------------------------------------------------
       # 1. Checkout source (recursive so rone-flanger-'s bundled JUCE is included)
+      #    GH_PAT must be a Personal Access Token (classic) with 'repo' scope,
+      #    added as a secret in this repo's Settings → Secrets → Actions.
       # -----------------------------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.GH_PAT }}
 
       # -----------------------------------------------------------------------
       # 2. Set up a Visual Studio developer environment (MSVC + CMake + Ninja)
