@@ -75,6 +75,20 @@ jobs:
             "-DFETCHCONTENT_SOURCE_DIR_WEBVIEW2=${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177"
           cmake --build build-ci --config Release --parallel
 
+      - name: Restore missing JUCE extras/Build for rone-flanger-
+        working-directory: rone-flanger-
+        shell: pwsh
+        run: |
+          # The committed JUCE 8.0.12 copy is missing extras/Build/CMake/ (never committed).
+          # Sparse-clone just that directory from GitHub — no full JUCE re-download needed.
+          git clone --depth 1 --branch 8.0.12 --filter=blob:none --sparse `
+            https://github.com/juce-framework/JUCE.git _juce_build_tmp
+          Push-Location _juce_build_tmp
+          git sparse-checkout set extras/Build
+          Pop-Location
+          Copy-Item -Recurse -Force "_juce_build_tmp/extras/Build" "JUCE/extras/Build"
+          Remove-Item -Recurse -Force _juce_build_tmp
+
       - name: Build rone-flanger (ManualFlanger)
         working-directory: rone-flanger-
         run: |
