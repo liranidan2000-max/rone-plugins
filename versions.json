@@ -1,17 +1,17 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-03-30T15:16:40Z",
+  "last_updated": "2026-03-30T15:38:49Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.0.0.24",
+    "version": "1.0.0.28",
     "sha256": ""
   },
   "plugins": [
     {
       "id": "ReverseReverb",
       "name": "ReverseReverb",
-      "version": "1.0.0.24",
+      "version": "1.0.0.28",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -31,7 +31,7 @@
     {
       "id": "RoneStemsFixer",
       "name": "RONE Stems Fixer",
-      "version": "1.0.0.24",
+      "version": "1.0.0.28",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -49,7 +49,7 @@
     {
       "id": "RoneStutter",
       "name": "Rone Stutter",
-      "version": "1.0.0.24",
+      "version": "1.0.0.28",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -69,7 +69,7 @@
     {
       "id": "RoneFlanger",
       "name": "Rone Flanger",
-      "version": "1.0.0.24",
+      "version": "1.0.0.28",
       "type": "plugin",
       "formats": [
         "VST3",
