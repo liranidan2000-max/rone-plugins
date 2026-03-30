@@ -124,7 +124,7 @@ juce::File VersionChecker::getStandaloneInstallDir()
     return progFiles.getChildFile (RONE_INSTALL_DIR);
 #else
     return juce::File::getSpecialLocation (
-        juce::File::userApplicationsDirectory).getChildFile ("RONE Plugins");
+        juce::File::userApplicationDataDirectory).getChildFile ("RONE Plugins");
 #endif
 }
 
