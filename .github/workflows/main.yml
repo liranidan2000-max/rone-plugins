@@ -306,6 +306,12 @@ jobs:
             [ -d "$A/VST3" ]       && mkdir -p staging/Library/Audio/Plug-Ins/VST3       && cp -R "$A"/VST3/*.vst3      staging/Library/Audio/Plug-Ins/VST3/       2>/dev/null || true
             [ -d "$A/AU" ]         && mkdir -p staging/Library/Audio/Plug-Ins/Components  && cp -R "$A"/AU/*.component   staging/Library/Audio/Plug-Ins/Components/ 2>/dev/null || true
             [ -d "$A/Standalone" ] && mkdir -p staging/Applications                       && cp -R "$A"/Standalone/*.app  staging/Applications/                      2>/dev/null || true
+            # Fallback for juce_add_gui_app: .app is directly in Release, not under Standalone/
+            if [ ! -d "$A/Standalone" ]; then
+              for app in "$A"/*.app; do
+                [ -d "$app" ] && mkdir -p staging/Applications && cp -R "$app" staging/Applications/ && break
+              done
+            fi
 
             # Generate component plist and disable BundleIsRelocatable
             # so macOS installer places .app in /Applications/ instead of relocating
