@@ -1,86 +1,186 @@
 name: Build & Package RONE Plugins Installer
 
+# ============================================================================
+# Triggers
+# ============================================================================
 on:
   push:
-    branches:
-      - main
-    tags:
-      - 'v*'          # also run when a version tag is pushed (e.g. v1.2.0)
+    branches: [main]
+    tags:     ['v*']
 
 permissions:
   contents: write   # needed to create GitHub Releases
 
+# ============================================================================
+# JOB 1 — detect-changes
+# Fast ubuntu runner: figure out which plugins actually changed so the build
+# matrix can skip unnecessary full rebuilds (caching does the rest).
+# ============================================================================
 jobs:
-  build-installer:
-    name: Build Windows Installer
-    runs-on: windows-latest
+  detect-changes:
+    name: Detect changed plugins
+    runs-on: ubuntu-latest
+    outputs:
+      reverse_reverb: ${{ steps.force.outputs.reverse_reverb || steps.filter.outputs.reverse_reverb }}
+      stems_fixer:    ${{ steps.force.outputs.stems_fixer    || steps.filter.outputs.stems_fixer    }}
+      stutter:        ${{ steps.force.outputs.stutter        || steps.filter.outputs.stutter        }}
+      flanger:        ${{ steps.force.outputs.flanger        || steps.filter.outputs.flanger        }}
 
-    env:
-      # Version = 1.0.<run_number> on branch pushes.
-      # When a vX.Y.Z tag is pushed, strip the leading "v" for a clean version.
-      INSTALLER_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('1.0.{0}', github.run_number) }}
+    steps:
+      - name: Checkout root (no submodules needed)
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 2
+
+      # On a version-tag push we always do a full clean release build
+      - name: Force all plugins changed (tag push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: force
+        run: |
+          echo "reverse_reverb=true" >> $GITHUB_OUTPUT
+          echo "stems_fixer=true"    >> $GITHUB_OUTPUT
+          echo "stutter=true"        >> $GITHUB_OUTPUT
+          echo "flanger=true"        >> $GITHUB_OUTPUT
+
+      # On branch pushes compare against the previous commit
+      - name: Detect changed plugin submodule pointers
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            reverse_reverb:
+              - 'ReverseReverbVST'
+              - '.github/workflows/**'
+              - 'installer/**'
+            stems_fixer:
+              - 'RoneStemsFixer'
+              - '.github/workflows/**'
+              - 'installer/**'
+            stutter:
+              - 'RoneStutter'
+              - '.github/workflows/**'
+              - 'installer/**'
+            flanger:
+              - 'rone-flanger-'
+              - '.github/workflows/**'
+              - 'installer/**'
+
+# ============================================================================
+# JOB 2 — build  (matrix: 4 × windows-latest running in parallel)
+# Each slot builds one plugin, caches its build-ci/ directory, and uploads
+# the compiled artifacts so the package job can assemble them.
+# ============================================================================
+  build:
+    name: Build ${{ matrix.plugin_id }}
+    needs: detect-changes
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false    # let other plugins finish even if one fails
+      matrix:
+        include:
+          # ------------------------------------------------------------------
+          - plugin_id:      reverse_reverb
+            folder:         ReverseReverbVST
+            cmake_project:  ReverseReverb
+            needs_webview2: "true"
+            webview2_flag:  JUCE_WEBVIEW2_PACKAGE_LOCATION
+            is_flanger:     "false"
+            juce_version:   "8.0.4"
+          # ------------------------------------------------------------------
+          - plugin_id:      stems_fixer
+            folder:         RoneStemsFixer
+            cmake_project:  RoneStemsFixer
+            needs_webview2: "false"
+            is_flanger:     "false"
+            juce_version:   "8.0.12"
+          # ------------------------------------------------------------------
+          - plugin_id:      stutter
+            folder:         RoneStutter
+            cmake_project:  RoneStutter
+            needs_webview2: "true"
+            webview2_flag:  FETCHCONTENT_SOURCE_DIR_WEBVIEW2
+            is_flanger:     "false"
+            juce_version:   "8.0.4"
+          # ------------------------------------------------------------------
+          - plugin_id:      flanger
+            folder:         rone-flanger-
+            cmake_project:  ManualFlanger
+            needs_webview2: "false"
+            is_flanger:     "true"
+            juce_version:   "local-8.0.12"
 
     steps:
       # -----------------------------------------------------------------------
-      # 1. Inject PAT into git at transport level so ALL submodule HTTPS clones
-      #    are authenticated, regardless of per-repo credential caching.
-      #    GH_PAT must be a classic Personal Access Token with 'repo' scope.
+      # 1. Auth + checkout — only materialise THIS plugin's submodule
       # -----------------------------------------------------------------------
       - name: Inject PAT into git for private submodule clones
         run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
 
-      - name: Checkout repository
+      - name: Checkout root repo (no submodules yet)
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: false
           token: ${{ secrets.GH_PAT }}
 
+      - name: Checkout ${{ matrix.folder }} submodule only
+        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}"
+
       # -----------------------------------------------------------------------
-      # 2. Set up a Visual Studio developer environment (MSVC + CMake + Ninja)
+      # 2. MSVC build environment
       # -----------------------------------------------------------------------
-      - name: Set up MSVC developer environment
+      - name: Set up MSVC (x64)
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
 
       # -----------------------------------------------------------------------
-      # 3. Download WebView2 SDK once (shared by ReverseReverbVST + RoneStutter)
-      #    NuGet extracts to: webview2\Microsoft.Web.WebView2.1.0.1901.177\
-      #    JUCE's FindWebView2.cmake globs for *Microsoft.Web.WebView2* inside
-      #    JUCE_WEBVIEW2_PACKAGE_LOCATION, so pointing it at webview2\ works.
+      # 3. Cache — full build-ci/ directory (JUCE objects + plugin output)
+      #    Key includes a hash of the entire plugin folder so a source change
+      #    busts the cache and triggers a full rebuild.
+      #    restore-keys gives a partial hit that lets CMake do incremental work.
       # -----------------------------------------------------------------------
+      - name: Restore build cache for ${{ matrix.plugin_id }}
+        uses: actions/cache@v4
+        id: cache-build
+        with:
+          path: ${{ matrix.folder }}/build-ci
+          key:  build-${{ matrix.plugin_id }}-${{ runner.os }}-${{ hashFiles(format('{0}/**', matrix.folder)) }}
+          restore-keys: |
+            build-${{ matrix.plugin_id }}-${{ runner.os }}-
+
+      # -----------------------------------------------------------------------
+      # 4. WebView2 NuGet cache (reverse_reverb + stutter only)
+      # -----------------------------------------------------------------------
+      - name: Restore WebView2 NuGet cache
+        if: matrix.needs_webview2 == 'true'
+        uses: actions/cache@v4
+        id: cache-webview2
+        with:
+          path: ${{ github.workspace }}\webview2
+          key:  webview2-nuget-1.0.1901.177
+
       - name: Download WebView2 SDK
+        if: matrix.needs_webview2 == 'true' && steps.cache-webview2.outputs.cache-hit != 'true'
         run: nuget install Microsoft.Web.WebView2 -Version 1.0.1901.177 -OutputDirectory "${{ github.workspace }}\webview2"
 
       # -----------------------------------------------------------------------
-      # 4. Build each plugin (Release, 64-bit, output to build-ci/)
+      # 5. rone-flanger: cache the sparse-cloned extras/Build directory
       # -----------------------------------------------------------------------
-      - name: Build ReverseReverbVST
-        working-directory: ReverseReverbVST
-        run: |
-          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release `
-            "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=${{ github.workspace }}\webview2"
-          cmake --build build-ci --config Release --parallel
+      - name: Restore rone-flanger JUCE extras/Build cache
+        if: matrix.is_flanger == 'true'
+        uses: actions/cache@v4
+        id: cache-extras
+        with:
+          path: rone-flanger-/JUCE/extras/Build
+          key:  flanger-juce-extras-8.0.12-${{ runner.os }}
 
-      - name: Build RoneStemsFixer
-        working-directory: RoneStemsFixer
-        run: |
-          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-ci --config Release --parallel
-
-      - name: Build RoneStutter
-        working-directory: RoneStutter
-        run: |
-          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release `
-            "-DFETCHCONTENT_SOURCE_DIR_WEBVIEW2=${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177"
-          cmake --build build-ci --config Release --parallel
-
-      - name: Restore missing JUCE extras/Build for rone-flanger-
+      - name: Fetch missing JUCE extras/Build (rone-flanger-)
+        if: matrix.is_flanger == 'true' && steps.cache-extras.outputs.cache-hit != 'true'
         working-directory: rone-flanger-
         shell: pwsh
         run: |
-          # The committed JUCE 8.0.12 copy is missing extras/Build/CMake/ (never committed).
-          # Sparse-clone just that directory from GitHub — no full JUCE re-download needed.
           git clone --depth 1 --branch 8.0.12 --filter=blob:none --sparse `
             https://github.com/juce-framework/JUCE.git _juce_build_tmp
           Push-Location _juce_build_tmp
@@ -89,38 +189,147 @@ jobs:
           Copy-Item -Recurse -Force "_juce_build_tmp/extras/Build" "JUCE/extras/Build"
           Remove-Item -Recurse -Force _juce_build_tmp
 
-      - name: Build rone-flanger (ManualFlanger)
-        working-directory: rone-flanger-
+      # -----------------------------------------------------------------------
+      # 6. Decide whether this plugin needs building
+      #    Build if: plugin changed, OR workflow/installer changed, OR no cache
+      # -----------------------------------------------------------------------
+      - name: Determine if build is needed
+        id: should-build
+        shell: pwsh
         run: |
-          cmake -B build-ci -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
-          cmake --build build-ci --config Release --parallel
+          $changed = switch ("${{ matrix.plugin_id }}") {
+            "reverse_reverb" { "${{ needs.detect-changes.outputs.reverse_reverb }}" }
+            "stems_fixer"    { "${{ needs.detect-changes.outputs.stems_fixer }}" }
+            "stutter"        { "${{ needs.detect-changes.outputs.stutter }}" }
+            "flanger"        { "${{ needs.detect-changes.outputs.flanger }}" }
+            default          { "true" }
+          }
+          $cacheHit  = "${{ steps.cache-build.outputs.cache-hit }}"
+          $needBuild = ($changed -eq "true") -or ($cacheHit -ne "true")
+          echo "PLUGIN_CHANGED=$needBuild" >> $env:GITHUB_ENV
+          Write-Host "Plugin changed: $changed  |  Cache hit: $cacheHit  |  Will build: $needBuild"
 
       # -----------------------------------------------------------------------
-      # 5. Install Inno Setup 6 (iscc is added to PATH automatically)
+      # 7. CMake configure + build (skipped if cached + unchanged)
+      # -----------------------------------------------------------------------
+      - name: CMake configure — ${{ matrix.plugin_id }}
+        if: env.PLUGIN_CHANGED == 'True'
+        working-directory: ${{ matrix.folder }}
+        shell: pwsh
+        run: |
+          $flags = @(
+            "-B", "build-ci",
+            "-G", "Visual Studio 17 2022",
+            "-A", "x64",
+            "-DCMAKE_BUILD_TYPE=Release"
+          )
+          # WebView2 flag (plugin-specific)
+          if ("${{ matrix.needs_webview2 }}" -eq "true") {
+            if ("${{ matrix.webview2_flag }}" -eq "JUCE_WEBVIEW2_PACKAGE_LOCATION") {
+              $flags += "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=${{ github.workspace }}\webview2"
+            } else {
+              $flags += "-DFETCHCONTENT_SOURCE_DIR_WEBVIEW2=${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177"
+            }
+          }
+          cmake @flags
+
+      - name: CMake build — ${{ matrix.plugin_id }}
+        if: env.PLUGIN_CHANGED == 'True'
+        working-directory: ${{ matrix.folder }}
+        run: cmake --build build-ci --config Release --parallel
+
+      # -----------------------------------------------------------------------
+      # 8. Upload compiled artifacts for the package job
+      #    Uploads the entire Release/ subtree (VST3/ + Standalone/ subdirs).
+      # -----------------------------------------------------------------------
+      - name: Upload plugin artifacts — ${{ matrix.plugin_id }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-${{ matrix.plugin_id }}
+          path: ${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release/
+          retention-days: 1
+          if-no-files-found: error
+
+# ============================================================================
+# JOB 3 — package
+# Downloads all 4 plugin artifacts, places them at the paths the ISS file
+# expects, then runs iscc to produce the combined installer.
+# ============================================================================
+  package:
+    name: Package installer
+    needs: [detect-changes, build]
+    runs-on: windows-latest
+
+    env:
+      # 1.0.<run_number> on branch pushes; strip "v" prefix on tag pushes
+      INSTALLER_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('1.0.{0}', github.run_number) }}
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout root only — we just need installer/ and .github/
+      # -----------------------------------------------------------------------
+      - name: Inject PAT into git
+        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Checkout root repo
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          token: ${{ secrets.GH_PAT }}
+          sparse-checkout: |
+            installer
+            .github
+
+      # -----------------------------------------------------------------------
+      # 2. Download all 4 plugin artifacts to the exact paths the ISS expects:
+      #    installer\RONE_Plugins.iss uses "..\<folder>\build-ci\..._artefacts\Release\..."
+      # -----------------------------------------------------------------------
+      - name: Download ReverseReverbVST artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-reverse_reverb
+          path: ReverseReverbVST/build-ci/ReverseReverb_artefacts/Release/
+
+      - name: Download RoneStemsFixer artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-stems_fixer
+          path: RoneStemsFixer/build-ci/RoneStemsFixer_artefacts/Release/
+
+      - name: Download RoneStutter artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-stutter
+          path: RoneStutter/build-ci/RoneStutter_artefacts/Release/
+
+      - name: Download rone-flanger- artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-flanger
+          path: rone-flanger-/build-ci/ManualFlanger_artefacts/Release/
+
+      # -----------------------------------------------------------------------
+      # 3. Install Inno Setup 6
       # -----------------------------------------------------------------------
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
 
       # -----------------------------------------------------------------------
-      # 6. Compile the combined installer
-      #    /DMyAppVersion passes the dynamic version into the .iss #define.
-      #    Output lands in build-output\ at the repo root.
+      # 4. Compile the combined installer
       # -----------------------------------------------------------------------
       - name: Create installer output directory
         run: New-Item -ItemType Directory -Force -Path build-output
 
       - name: Compile Inno Setup installer
+        shell: pwsh
         run: |
-          $version = "${{ env.INSTALLER_VERSION }}"
-          # Strip leading 'v' in case the tag was pushed as "v1.2.3"
-          $version = $version.TrimStart('v')
+          $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
             "/DMyAppVersion=$version" `
             "installer\RONE_Plugins.iss"
-        shell: pwsh
 
       # -----------------------------------------------------------------------
-      # 7. Upload installer as a workflow artifact (available on every run)
+      # 5. Upload installer artifact (every run)
       # -----------------------------------------------------------------------
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
@@ -130,7 +339,7 @@ jobs:
           if-no-files-found: error
 
       # -----------------------------------------------------------------------
-      # 8. Create a GitHub Release when a version tag is pushed (vX.Y.Z)
+      # 6. Create GitHub Release (tag pushes only)
       # -----------------------------------------------------------------------
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
