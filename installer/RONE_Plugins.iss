@@ -1,11 +1,13 @@
 ; ============================================================================
-; RONE Plugins - Combined Windows Installer
+; RONE Plugins Center — Lightweight Hub Installer
 ; Inno Setup Script
 ;
-; Installs:
-;   VST3 plugins  → C:\Program Files\Common Files\VST3\RONE\
-;   Standalone apps → C:\Program Files\RONE Plugins\
-;   Desktop shortcuts for all 4 standalone apps
+; Installs ONLY the RONE Plugins Center hub application.
+; Individual plugins are installed/updated through the Center itself.
+;
+;   RONE Plugins Center → C:\Program Files\RONE Plugins\
+;   Desktop + Start Menu shortcuts
+;   Registry root for RONE plugin version tracking
 ;
 ; Build from repo root:
 ;   iscc installer\RONE_Plugins.iss
@@ -15,7 +17,7 @@
   #define MyAppVersion "1.0"
 #endif
 
-#define MyAppName     "RONE Plugins"
+#define MyAppName     "RONE Plugins Center"
 #define MyAppPublisher "Liran Rone Kalifa"
 #define MyAppURL      "https://github.com/liranronekalifa"
 
@@ -28,9 +30,9 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={commonpf}\RONE Plugins
-DefaultGroupName={#MyAppName}
+DefaultGroupName=RONE Plugins
 DisableProgramGroupPage=yes
-OutputBaseFilename=RONE_Plugins_Installer_v{#MyAppVersion}
+OutputBaseFilename=RONE_Plugins_Center_Installer_v{#MyAppVersion}
 OutputDir=..\build-output
 Compression=lzma2
 SolidCompression=yes
@@ -44,102 +46,31 @@ UninstallDisplayName={#MyAppName}
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 ; ============================================================================
-; Installation components — let the user pick what to install
-; ============================================================================
-[Types]
-Name: "full";    Description: "Full installation (VST3 + Standalone apps)"
-Name: "vst3";    Description: "VST3 plugins only"
-Name: "standalone"; Description: "Standalone applications only"
-Name: "custom";  Description: "Custom installation"; Flags: iscustom
-
-[Components]
-Name: "vst3";       Description: "VST3 Plugins";          Types: full vst3 custom
-Name: "standalone"; Description: "Standalone Applications"; Types: full standalone custom
-
-; ============================================================================
-; Optional tasks (checkboxes on the final wizard page)
-; ============================================================================
-[Tasks]
-Name: "desktopicons"; Description: "Create desktop shortcuts for all standalone apps"; GroupDescription: "Additional shortcuts:"; Components: standalone
-
-; ============================================================================
-; Files
+; Files — only the Center application
 ; ============================================================================
 [Files]
-
-; --------------------------------------------------------------------------
-; ReverseReverb — VST3
-; Source path is relative to this .iss file location (installer\ folder)
-; --------------------------------------------------------------------------
-Source: "..\ReverseReverbVST\build-ci\ReverseReverb_artefacts\Release\VST3\ReverseReverb.vst3\*"; \
-  DestDir: "{commoncf}\VST3\RONE\ReverseReverb.vst3"; \
-  Components: vst3; \
-  Flags: ignoreversion recursesubdirs createallsubdirs
-
-; ReverseReverb — Standalone
-Source: "..\ReverseReverbVST\build-ci\ReverseReverb_artefacts\Release\Standalone\ReverseReverb.exe"; \
+Source: "..\RonePluginsCenter\build-ci\RonePluginsCenter_artefacts\Release\RONE Plugins Center.exe"; \
   DestDir: "{app}"; \
-  Components: standalone; \
-  Flags: ignoreversion
-
-; --------------------------------------------------------------------------
-; RONE Stems Fixer — Standalone only (GUI app, no VST3)
-; --------------------------------------------------------------------------
-Source: "..\RoneStemsFixer\build-ci\RoneStemsFixer_artefacts\Release\RONE Stems Fixer.exe"; \
-  DestDir: "{app}"; \
-  Components: standalone; \
-  Flags: ignoreversion
-
-; --------------------------------------------------------------------------
-; Rone Stutter — VST3
-; --------------------------------------------------------------------------
-Source: "..\RoneStutter\build-ci\RoneStutter_artefacts\Release\VST3\Rone Stutter.vst3\*"; \
-  DestDir: "{commoncf}\VST3\RONE\Rone Stutter.vst3"; \
-  Components: vst3; \
-  Flags: ignoreversion recursesubdirs createallsubdirs
-
-; Rone Stutter — Standalone
-Source: "..\RoneStutter\build-ci\RoneStutter_artefacts\Release\Standalone\Rone Stutter.exe"; \
-  DestDir: "{app}"; \
-  Components: standalone; \
-  Flags: ignoreversion
-
-; --------------------------------------------------------------------------
-; Rone Flanger — VST3
-; --------------------------------------------------------------------------
-Source: "..\rone-flanger-\build-ci\ManualFlanger_artefacts\Release\VST3\Rone Flanger.vst3\*"; \
-  DestDir: "{commoncf}\VST3\RONE\Rone Flanger.vst3"; \
-  Components: vst3; \
-  Flags: ignoreversion recursesubdirs createallsubdirs
-
-; Rone Flanger — Standalone
-Source: "..\rone-flanger-\build-ci\ManualFlanger_artefacts\Release\Standalone\Rone Flanger.exe"; \
-  DestDir: "{app}"; \
-  Components: standalone; \
   Flags: ignoreversion
 
 ; ============================================================================
 ; Start Menu + Desktop shortcuts
 ; ============================================================================
 [Icons]
-; --- Start Menu group ---
-Name: "{group}\ReverseReverb";    Filename: "{app}\ReverseReverb.exe";         Components: standalone
-Name: "{group}\RONE Stems Fixer"; Filename: "{app}\RONE Stems Fixer.exe";      Components: standalone
-Name: "{group}\Rone Stutter";     Filename: "{app}\Rone Stutter.exe";          Components: standalone
-Name: "{group}\Rone Flanger";     Filename: "{app}\Rone Flanger.exe";          Components: standalone
+Name: "{group}\RONE Plugins Center"; Filename: "{app}\RONE Plugins Center.exe"
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-
-; --- Desktop shortcuts (only if user ticked the checkbox) ---
-Name: "{commondesktop}\ReverseReverb";    Filename: "{app}\ReverseReverb.exe";    Components: standalone; Tasks: desktopicons
-Name: "{commondesktop}\RONE Stems Fixer"; Filename: "{app}\RONE Stems Fixer.exe"; Components: standalone; Tasks: desktopicons
-Name: "{commondesktop}\Rone Stutter";     Filename: "{app}\Rone Stutter.exe";     Components: standalone; Tasks: desktopicons
-Name: "{commondesktop}\Rone Flanger";     Filename: "{app}\Rone Flanger.exe";     Components: standalone; Tasks: desktopicons
+Name: "{commondesktop}\RONE Plugins Center"; Filename: "{app}\RONE Plugins Center.exe"
 
 ; ============================================================================
-; Post-install: offer to launch one of the apps
+; Registry — create the RONE root key for plugin version tracking
+; ============================================================================
+[Registry]
+Root: HKCU; Subkey: "Software\RONE\Plugins"; Flags: uninsdeletekeyifempty
+
+; ============================================================================
+; Post-install: launch the Center
 ; ============================================================================
 [Run]
-Filename: "{app}\Rone Stutter.exe"; \
-  Description: "Launch Rone Stutter"; \
-  Flags: nowait postinstall skipifsilent unchecked; \
-  Components: standalone
+Filename: "{app}\RONE Plugins Center.exe"; \
+  Description: "Launch RONE Plugins Center"; \
+  Flags: nowait postinstall skipifsilent

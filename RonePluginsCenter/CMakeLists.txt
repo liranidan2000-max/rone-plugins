@@ -1,0 +1,66 @@
+cmake_minimum_required(VERSION 3.22)
+project(RonePluginsCenter VERSION 1.0.0 LANGUAGES C CXX)
+
+if(APPLE)
+    enable_language(OBJC)
+    enable_language(OBJCXX)
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# --- JUCE via FetchContent ---
+include(FetchContent)
+FetchContent_Declare(
+    JUCE
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG        8.0.12
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(JUCE)
+
+# --- GUI Application (not a plugin) ---
+juce_add_gui_app(RonePluginsCenter
+    PRODUCT_NAME  "RONE Plugins Center"
+    COMPANY_NAME  "RONE Plugins"
+    VERSION       "1.0.0"
+)
+
+target_sources(RonePluginsCenter PRIVATE
+    Source/Main.cpp
+    Source/MainComponent.cpp
+    Source/PluginCard.cpp
+    Source/NetworkManager.cpp
+    Source/VersionChecker.cpp
+)
+
+target_compile_definitions(RonePluginsCenter PRIVATE
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:RonePluginsCenter,JUCE_PRODUCT_NAME>"
+    JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:RonePluginsCenter,JUCE_VERSION>"
+    JUCE_DISPLAY_SPLASH_SCREEN=0
+    # URL for the remote version manifest — fetched on startup
+    VERSIONS_JSON_URL="https://raw.githubusercontent.com/liranidan2000-max/rone-plugins/main/versions.json"
+    # Windows Registry root for installed plugin versions
+    RONE_REGISTRY_PATH="Software\\\\RONE\\\\Plugins"
+    # Default standalone install folder
+    RONE_INSTALL_DIR="RONE Plugins"
+    # Default VST3 subfolder under Common Files\\VST3
+    RONE_VST3_SUBDIR="RONE"
+)
+
+target_link_libraries(RonePluginsCenter PRIVATE
+    juce::juce_core
+    juce::juce_gui_basics
+    juce::juce_gui_extra
+    juce::juce_graphics
+    juce::juce_events
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_warning_flags
+)
+
+# Windows: link registry + shell APIs
+if(WIN32)
+    target_link_libraries(RonePluginsCenter PRIVATE advapi32 shell32 urlmon)
+endif()

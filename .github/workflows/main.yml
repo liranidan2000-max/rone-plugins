@@ -25,6 +25,7 @@ jobs:
       stems_fixer:    ${{ steps.force.outputs.stems_fixer    || steps.filter.outputs.stems_fixer    }}
       stutter:        ${{ steps.force.outputs.stutter        || steps.filter.outputs.stutter        }}
       flanger:        ${{ steps.force.outputs.flanger        || steps.filter.outputs.flanger        }}
+      plugins_center: ${{ steps.force.outputs.plugins_center || steps.filter.outputs.plugins_center }}
 
     steps:
       - name: Checkout root (no submodules needed)
@@ -42,6 +43,7 @@ jobs:
           echo "stems_fixer=true"    >> $GITHUB_OUTPUT
           echo "stutter=true"        >> $GITHUB_OUTPUT
           echo "flanger=true"        >> $GITHUB_OUTPUT
+          echo "plugins_center=true" >> $GITHUB_OUTPUT
 
       # On branch pushes compare against the previous commit
       - name: Detect changed plugin submodule pointers
@@ -64,6 +66,10 @@ jobs:
               - 'installer/**'
             flanger:
               - 'rone-flanger-'
+              - '.github/workflows/**'
+              - 'installer/**'
+            plugins_center:
+              - 'RonePluginsCenter'
               - '.github/workflows/**'
               - 'installer/**'
 
@@ -110,6 +116,13 @@ jobs:
             needs_webview2: "false"
             is_flanger:     "true"
             juce_version:   "local-8.0.12"
+          # ------------------------------------------------------------------
+          - plugin_id:      plugins_center
+            folder:         RonePluginsCenter
+            cmake_project:  RonePluginsCenter
+            needs_webview2: "false"
+            is_flanger:     "false"
+            juce_version:   "8.0.12"
 
     steps:
       # -----------------------------------------------------------------------
@@ -202,6 +215,7 @@ jobs:
             "stems_fixer"    { "${{ needs.detect-changes.outputs.stems_fixer }}" }
             "stutter"        { "${{ needs.detect-changes.outputs.stutter }}" }
             "flanger"        { "${{ needs.detect-changes.outputs.flanger }}" }
+            "plugins_center" { "${{ needs.detect-changes.outputs.plugins_center }}" }
             default          { "true" }
           }
           $cacheHit  = "${{ steps.cache-build.outputs.cache-hit }}"
@@ -252,11 +266,12 @@ jobs:
 
 # ============================================================================
 # JOB 3 — package
-# Downloads all 4 plugin artifacts, places them at the paths the ISS file
-# expects, then runs iscc to produce the combined installer.
+# Downloads all 5 build artifacts, compiles 5 separate Inno Setup installers:
+#   1 × RONE Plugins Center (main hub — the only installer users download)
+#   4 × Individual plugin silent installers (downloaded by the Center on demand)
 # ============================================================================
   package:
-    name: Package installer
+    name: Package installers
     needs: [detect-changes, build]
     runs-on: windows-latest
 
@@ -266,7 +281,7 @@ jobs:
 
     steps:
       # -----------------------------------------------------------------------
-      # 1. Checkout root only — we just need installer/ and .github/
+      # 1. Checkout root — we need installer/*.iss files
       # -----------------------------------------------------------------------
       - name: Inject PAT into git
         run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
@@ -281,8 +296,7 @@ jobs:
             .github
 
       # -----------------------------------------------------------------------
-      # 2. Download all 4 plugin artifacts to the exact paths the ISS expects:
-      #    installer\RONE_Plugins.iss uses "..\<folder>\build-ci\..._artefacts\Release\..."
+      # 2. Download all 5 build artifacts to ISS-expected paths
       # -----------------------------------------------------------------------
       - name: Download ReverseReverbVST artifacts
         uses: actions/download-artifact@v4
@@ -308,6 +322,12 @@ jobs:
           name: plugin-flanger
           path: rone-flanger-/build-ci/ManualFlanger_artefacts/Release/
 
+      - name: Download RonePluginsCenter artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-plugins_center
+          path: RonePluginsCenter/build-ci/RonePluginsCenter_artefacts/Release/
+
       # -----------------------------------------------------------------------
       # 3. Install Inno Setup 6
       # -----------------------------------------------------------------------
@@ -315,12 +335,12 @@ jobs:
         run: choco install innosetup --yes --no-progress
 
       # -----------------------------------------------------------------------
-      # 4. Compile the combined installer
+      # 4. Compile all 5 Inno Setup installers
       # -----------------------------------------------------------------------
       - name: Create installer output directory
         run: New-Item -ItemType Directory -Force -Path build-output
 
-      - name: Compile Inno Setup installer
+      - name: Compile Center installer (RONE_Plugins.iss)
         shell: pwsh
         run: |
           $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
@@ -328,19 +348,100 @@ jobs:
             "/DMyAppVersion=$version" `
             "installer\RONE_Plugins.iss"
 
+      - name: Compile ReverseReverb silent installer
+        shell: pwsh
+        run: |
+          $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DMyAppVersion=$version" `
+            "installer\ReverseReverb.iss"
+
+      - name: Compile RoneStemsFixer silent installer
+        shell: pwsh
+        run: |
+          $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DMyAppVersion=$version" `
+            "installer\RoneStemsFixer.iss"
+
+      - name: Compile RoneStutter silent installer
+        shell: pwsh
+        run: |
+          $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DMyAppVersion=$version" `
+            "installer\RoneStutter.iss"
+
+      - name: Compile RoneFlanger silent installer
+        shell: pwsh
+        run: |
+          $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DMyAppVersion=$version" `
+            "installer\RoneFlanger.iss"
+
       # -----------------------------------------------------------------------
-      # 5. Upload installer artifact (every run)
+      # 5. Upload all 5 installers as separate artifacts
       # -----------------------------------------------------------------------
-      - name: Upload installer artifact
+      - name: Upload Center installer
         uses: actions/upload-artifact@v4
         with:
-          name: RONE_Plugins_Installer_v${{ env.INSTALLER_VERSION }}
-          path: build-output/RONE_Plugins_Installer_v*.exe
+          name: RONE_Plugins_Center_Installer
+          path: build-output/RONE_Plugins_Center_Installer_v*.exe
+          if-no-files-found: error
+
+      - name: Upload ReverseReverb installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReverseReverb_Installer
+          path: build-output/ReverseReverb_Installer_v*.exe
+          if-no-files-found: error
+
+      - name: Upload RoneStemsFixer installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoneStemsFixer_Installer
+          path: build-output/RoneStemsFixer_Installer_v*.exe
+          if-no-files-found: error
+
+      - name: Upload RoneStutter installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoneStutter_Installer
+          path: build-output/RoneStutter_Installer_v*.exe
+          if-no-files-found: error
+
+      - name: Upload RoneFlanger installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoneFlanger_Installer
+          path: build-output/RoneFlanger_Installer_v*.exe
           if-no-files-found: error
 
       # -----------------------------------------------------------------------
-      # 6. Create GitHub Release (tag pushes only)
+      # 6. Create GitHub Release with all 5 installers (tag pushes only)
+      #    The Center installer is the primary download. Plugin installers are
+      #    downloaded on-demand by the Center app from these release assets.
       # -----------------------------------------------------------------------
+      - name: Rename installers for release (strip version suffix for stable URLs)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          # GitHub Releases need stable filenames so versions.json download_url
+          # (e.g. .../latest/download/ReverseReverb_Installer.exe) always resolves.
+          # Keep versioned copies AND create unversioned copies for the release.
+          $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
+          $files = @(
+            @{ src = "RONE_Plugins_Center_Installer_v$version.exe"; dst = "RONE_Plugins_Center_Installer.exe" },
+            @{ src = "ReverseReverb_Installer_v$version.exe";      dst = "ReverseReverb_Installer.exe" },
+            @{ src = "RoneStemsFixer_Installer_v$version.exe";     dst = "RoneStemsFixer_Installer.exe" },
+            @{ src = "RoneStutter_Installer_v$version.exe";        dst = "RoneStutter_Installer.exe" },
+            @{ src = "RoneFlanger_Installer_v$version.exe";        dst = "RoneFlanger_Installer.exe" }
+          )
+          foreach ($f in $files) {
+            Copy-Item "build-output\$($f.src)" "build-output\$($f.dst)"
+          }
+
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
@@ -349,11 +450,20 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: build-output/RONE_Plugins_Installer_v*.exe
+          files: |
+            build-output/RONE_Plugins_Center_Installer.exe
+            build-output/ReverseReverb_Installer.exe
+            build-output/RoneStemsFixer_Installer.exe
+            build-output/RoneStutter_Installer.exe
+            build-output/RoneFlanger_Installer.exe
           body: |
             ## RONE Plugins ${{ github.ref_name }}
 
-            ### Included Plugins
+            ### Hub-First Model
+            Download **RONE Plugins Center** below — it's the only installer you need.
+            Launch it to browse, install, and update all plugins from one place.
+
+            ### Available Plugins
             - **ReverseReverb** — VST3 + Standalone
             - **RONE Stems Fixer** — Standalone
             - **Rone Stutter** — VST3 + Standalone
@@ -364,6 +474,6 @@ jobs:
             |------|------|
             | VST3 plugins | `C:\Program Files\Common Files\VST3\RONE\` |
             | Standalone apps | `C:\Program Files\RONE Plugins\` |
-            | Desktop shortcuts | Created for all 4 standalone apps |
 
-            Download the `.exe` installer below and run it as Administrator.
+            > Individual plugin installers are also attached for advanced users.
+            > They can be run silently: `ReverseReverb_Installer.exe /VERYSILENT`
