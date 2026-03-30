@@ -128,13 +128,11 @@ void PluginCard::updateButtonState()
             break;
 
         case PluginStatus::UpToDate:
-            actionButton.setButtonText ("\xe2\x9c\x93 Installed");
+            actionButton.setButtonText ("Installed");
             actionButton.setColour (juce::TextButton::buttonColourId,
                                      Colours_RONE::installedGreen.withAlpha (0.18f));
             actionButton.setEnabled (false);
-
-            if (pluginInfo.standaloneExe.isNotEmpty())
-                openButton.setVisible (true);
+            openButton.setVisible (true);
             break;
 
         case PluginStatus::Downloading:
@@ -169,6 +167,7 @@ void PluginCard::updateButtonState()
     {
         actionButton.setAlpha (1.0f);
         openButton.setAlpha (1.0f);
+        openButton.setEnabled (true);
         actionButton.setTooltip ({});
         openButton.setTooltip ({});
     }
@@ -317,7 +316,7 @@ void PluginCard::resized()
     descLabel.setBounds (area.removeFromTop (15));
 
     // Badges space (drawn in paint)
-    area.removeFromTop (20);
+    area.removeFromTop (28);
 
     // Version
     versionLabel.setBounds (area.removeFromTop (14));

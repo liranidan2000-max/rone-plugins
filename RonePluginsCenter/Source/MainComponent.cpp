@@ -363,18 +363,67 @@ void MainComponent::handleOpen (const juce::String& pluginId)
 
     for (auto& p : pluginData)
     {
-        if (p.id == pluginId && p.standaloneExe.isNotEmpty())
+        if (p.id == pluginId)
         {
-            auto exe = VersionChecker::getStandaloneInstallDir()
-                           .getChildFile (p.standaloneExe);
-            if (exe.existsAsFile())
-                exe.startAsProcess();
-            else
-                juce::NativeMessageBox::showMessageBoxAsync (
-                    juce::MessageBoxIconType::WarningIcon,
-                    "Not Found",
-                    "Could not find " + p.standaloneExe + " on disk.\n"
-                    "Try reinstalling the plugin.");
+        #if JUCE_MAC
+            // Try standalone .app first
+            if (p.standaloneExe.isNotEmpty())
+            {
+                auto appName = p.standaloneExe.replace (".exe", "") + ".app";
+                auto app = juce::File ("/Applications").getChildFile (appName);
+                if (! app.exists())
+                    app = VersionChecker::getStandaloneInstallDir().getChildFile (appName);
+
+                if (app.exists())
+                {
+                    app.startAsProcess();
+                    break;
+                }
+            }
+
+            // Fallback: reveal the VST3 in Finder
+            if (p.vst3Bundle.isNotEmpty())
+            {
+                auto vst3 = VersionChecker::getVst3InstallDir().getChildFile (p.vst3Bundle);
+                if (! vst3.exists())
+                {
+                    // Check user-level VST3 directory
+                    vst3 = juce::File::getSpecialLocation (juce::File::userHomeDirectory)
+                               .getChildFile ("Library/Audio/Plug-Ins/VST3")
+                               .getChildFile (p.vst3Bundle);
+                }
+
+                if (vst3.exists())
+                {
+                    vst3.revealToUser();
+                    break;
+                }
+            }
+
+            // Nothing found
+            juce::NativeMessageBox::showMessageBoxAsync (
+                juce::MessageBoxIconType::WarningIcon,
+                "Not Found",
+                "Could not find " + p.name + " on disk.\n"
+                "Try reinstalling the plugin.");
+        #else
+            if (p.standaloneExe.isNotEmpty())
+            {
+                auto exe = VersionChecker::getStandaloneInstallDir()
+                               .getChildFile (p.standaloneExe);
+                if (exe.existsAsFile())
+                {
+                    exe.startAsProcess();
+                    break;
+                }
+            }
+
+            juce::NativeMessageBox::showMessageBoxAsync (
+                juce::MessageBoxIconType::WarningIcon,
+                "Not Found",
+                "Could not find " + p.standaloneExe + " on disk.\n"
+                "Try reinstalling the plugin.");
+        #endif
             break;
         }
     }
