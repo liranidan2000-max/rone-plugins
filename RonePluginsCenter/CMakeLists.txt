@@ -60,6 +60,11 @@ target_link_libraries(RonePluginsCenter PRIVATE
     juce::juce_recommended_warning_flags
 )
 
+# Generate JuceHeader.h — aggregates all linked JUCE modules into a single
+# include. Without this call the header is never written to the build tree,
+# causing C1083 "Cannot open include file: 'JuceHeader.h'" on every TU.
+juce_generate_juce_header(RonePluginsCenter)
+
 # Windows: link registry + shell APIs
 if(WIN32)
     target_link_libraries(RonePluginsCenter PRIVATE advapi32 shell32 urlmon)
