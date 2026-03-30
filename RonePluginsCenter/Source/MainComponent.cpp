@@ -1,299 +1,479 @@
 #include "MainComponent.h"
+#include "BinaryData.h"
 
 // ============================================================================
-// Construction / Destruction
+// Resource provider — serves embedded HTML/CSS/JS + logos
+// ============================================================================
+
+juce::String MainComponent::getMimeForExtension (const juce::String& ext)
+{
+    if (ext == "html") return "text/html";
+    if (ext == "css")  return "text/css";
+    if (ext == "js")   return "application/javascript";
+    if (ext == "png")  return "image/png";
+    if (ext == "jpg" || ext == "jpeg") return "image/jpeg";
+    if (ext == "svg")  return "image/svg+xml";
+    if (ext == "json") return "application/json";
+    if (ext == "ico")  return "image/x-icon";
+    return "application/octet-stream";
+}
+
+std::optional<juce::WebBrowserComponent::Resource>
+MainComponent::getResource (const juce::String& url)
+{
+    auto path = url == "/" ? juce::String ("index.html")
+                           : url.fromFirstOccurrenceOf ("/", false, false);
+
+    // Map URL paths to BinaryData entries
+    struct Entry { const char* data; int size; };
+    const std::map<juce::String, Entry> resources = {
+        { "index.html",              { BinaryData::index_html,              BinaryData::index_htmlSize } },
+        { "bundle.js",               { BinaryData::bundle_js,              BinaryData::bundle_jsSize } },
+        { "styles.css",              { BinaryData::styles_css,             BinaryData::styles_cssSize } },
+        { "logos/ReverseReverb.png",  { BinaryData::ReverseReverb_icon_png, BinaryData::ReverseReverb_icon_pngSize } },
+        { "logos/RoneStutter.png",    { BinaryData::RoneStutter_icon_png,   BinaryData::RoneStutter_icon_pngSize } },
+        { "logos/RoneStemsFixer.png",  { BinaryData::RoneStemsFixer_icon_png, BinaryData::RoneStemsFixer_icon_pngSize } },
+        { "logos/RoneFlanger.png",    { BinaryData::RoneFlanger_icon_png,   BinaryData::RoneFlanger_icon_pngSize } },
+    };
+
+    auto it = resources.find (path);
+    if (it == resources.end())
+        return std::nullopt;
+
+    auto& entry = it->second;
+    std::vector<std::byte> bytes ((size_t) entry.size);
+    std::memcpy (bytes.data(), entry.data, (size_t) entry.size);
+
+    auto ext = path.fromLastOccurrenceOf (".", false, false).toLowerCase();
+
+    return juce::WebBrowserComponent::Resource {
+        std::move (bytes),
+        getMimeForExtension (ext)
+    };
+}
+
+// ============================================================================
+// Construction
 // ============================================================================
 
 MainComponent::MainComponent()
+    : webView (juce::WebBrowserComponent::Options{}
+        .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
+        .withWinWebView2Options (
+            juce::WebBrowserComponent::Options::WinWebView2{}
+                .withUserDataFolder (
+                    juce::File::getSpecialLocation (juce::File::tempDirectory)
+                        .getChildFile ("RonePluginsCenter")))
+        .withNativeIntegrationEnabled()
+
+        // ---- JS → C++ native functions ----
+        .withNativeFunction ("getPlugins", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetPlugins (args, std::move (complete));
+        })
+        .withNativeFunction ("installPlugin", [this] (NativeArgs args, NativeCompletion complete) {
+            handleInstallPlugin (args, std::move (complete));
+        })
+        .withNativeFunction ("openPlugin", [this] (NativeArgs args, NativeCompletion complete) {
+            handleOpenPlugin (args, std::move (complete));
+        })
+        .withNativeFunction ("refreshPlugins", [this] (NativeArgs args, NativeCompletion complete) {
+            handleRefreshPlugins (args, std::move (complete));
+        })
+        .withNativeFunction ("activateLicense", [this] (NativeArgs args, NativeCompletion complete) {
+            handleActivateLicense (args, std::move (complete));
+        })
+        .withNativeFunction ("deactivateLicense", [this] (NativeArgs args, NativeCompletion complete) {
+            handleDeactivateLicense (args, std::move (complete));
+        })
+        .withNativeFunction ("getLicenseStatus", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetLicenseStatus (args, std::move (complete));
+        })
+        .withNativeFunction ("getAppVersion", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetAppVersion (args, std::move (complete));
+        })
+
+        // ---- Resource provider ----
+        .withResourceProvider (
+            [this] (const auto& url) { return getResource (url); },
+            juce::URL { "http://localhost:3000/" }.getOrigin()))
 {
-    setLookAndFeel (&roneLnf);
-
-    // --- Title ---
-    titleLabel.setText ("RONE PLUGINS CENTER", juce::dontSendNotification);
-    titleLabel.setFont (juce::FontOptions (18.0f, juce::Font::bold));
-    titleLabel.setColour (juce::Label::textColourId, Colours_RONE::hotPurple);
-    titleLabel.setJustificationType (juce::Justification::centredLeft);
-    addAndMakeVisible (titleLabel);
-
-    // --- Status ---
-    statusLabel.setFont (juce::FontOptions (11.5f));
-    statusLabel.setColour (juce::Label::textColourId, Colours_RONE::textSecondary);
-    statusLabel.setJustificationType (juce::Justification::centredRight);
-    addAndMakeVisible (statusLabel);
-
-    // --- Refresh ---
-    refreshButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
-    refreshButton.onClick = [this] { refreshPlugins(); };
-    addAndMakeVisible (refreshButton);
-
-    // --- Viewport + card container ---
-    viewport.setViewedComponent (&cardContainer, false);
-    viewport.setScrollBarsShown (true, false);
-    addAndMakeVisible (viewport);
+    addAndMakeVisible (webView);
+    setSize (920, 640);
 
     networkManager.addListener (this);
 
-    // --- License UI ---
-    licenseKeyInput.setMultiLine (false);
-    licenseKeyInput.setTextToShowWhenEmpty ("Enter your RONE Full Bundle license key...",
-                                            Colours_RONE::textDim);
-    licenseKeyInput.setColour (juce::TextEditor::backgroundColourId,  Colours_RONE::licenseBg);
-    licenseKeyInput.setColour (juce::TextEditor::textColourId,        Colours_RONE::textPrimary);
-    licenseKeyInput.setColour (juce::TextEditor::outlineColourId,     Colours_RONE::cardBorder);
-    licenseKeyInput.setColour (juce::TextEditor::focusedOutlineColourId, Colours_RONE::hotPurple);
-    addAndMakeVisible (licenseKeyInput);
+    // License handler
+    licenseHandler.onLicenseStateChanged = [this] (bool isLicensed)
+    {
+        auto* obj = new juce::DynamicObject();
+        obj->setProperty ("licensed",     isLicensed);
+        obj->setProperty ("customerName", licenseHandler.getCustomerName());
+        obj->setProperty ("message",      licenseHandler.getStatusMessage());
+        webView.emitEventIfBrowserIsVisible ("licenseChanged", juce::var (obj));
 
-    activateButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::hotPurple);
-    activateButton.onClick = [this] { handleActivate(); };
-    addAndMakeVisible (activateButton);
-
-    deactivateButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
-    deactivateButton.onClick = [this] { handleDeactivate(); };
-    deactivateButton.setVisible (false);
-    addAndMakeVisible (deactivateButton);
-
-    licenseStatusLabel.setFont (juce::FontOptions (11.0f));
-    licenseStatusLabel.setColour (juce::Label::textColourId, Colours_RONE::textSecondary);
-    addAndMakeVisible (licenseStatusLabel);
-
-    proBadge.setText ("PRO", juce::dontSendNotification);
-    proBadge.setFont (juce::FontOptions (12.0f, juce::Font::bold));
-    proBadge.setColour (juce::Label::textColourId, Colours_RONE::neonPink);
-    proBadge.setJustificationType (juce::Justification::centred);
-    proBadge.setVisible (false);
-    addAndMakeVisible (proBadge);
-
-    // --- Init license ---
-    licenseHandler.onLicenseStateChanged = [this] (bool) { updateLicenseUI(); };
+        // Also push updated plugin data (license affects card state)
+        emitPluginsUpdated();
+    };
     licenseHandler.initialize();
-    updateLicenseUI();
 
-    // --- Initial fetch ---
-    statusLabel.setText ("Checking for updates...", juce::dontSendNotification);
-    refreshPlugins();
+    // Navigate to resource provider root (uses JUCE's internal scheme, not actual HTTP)
+    webView.goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
-    // --- Horizontal layout: wider, shorter ---
-    setSize (840, 520);
-
-    // --- Fade-in animation: start transparent, animate over 400ms ---
-    setAlpha (0.0f);
-    fadeAlpha = 0.0f;
-    fadeComplete = false;
-    startTimerHz (60); // 60 FPS for smooth animation
+    // Fetch manifest after a short delay to let the WebView initialize
+    juce::Timer::callAfterDelay (500, [this] { networkManager.fetchManifest(); });
 }
 
 MainComponent::~MainComponent()
 {
-    stopTimer();
     networkManager.removeListener (this);
-    setLookAndFeel (nullptr);
 }
-
-// ============================================================================
-// Timer — handles fade-in animation + auto-refresh
-// ============================================================================
-
-void MainComponent::timerCallback()
-{
-    if (! fadeComplete)
-    {
-        fadeAlpha += 0.05f; // ~300ms total at 60fps
-        if (fadeAlpha >= 1.0f)
-        {
-            fadeAlpha = 1.0f;
-            fadeComplete = true;
-            stopTimer();
-
-            // Restart as 30-minute refresh timer
-            startTimer (30 * 60 * 1000);
-        }
-        setAlpha (fadeAlpha);
-    }
-    else
-    {
-        // Auto-refresh
-        refreshPlugins();
-    }
-}
-
-// ============================================================================
-// Paint — header + license bar + background
-// ============================================================================
-
-void MainComponent::paint (juce::Graphics& g)
-{
-    // Background
-    g.fillAll (Colours_RONE::background);
-
-    // Header — 48px
-    auto headerArea = getLocalBounds().removeFromTop (48);
-    {
-        juce::ColourGradient grad (Colours_RONE::headerBg,
-                                    (float) headerArea.getX(), (float) headerArea.getY(),
-                                    Colours_RONE::headerBg.brighter (0.06f),
-                                    (float) headerArea.getX(), (float) headerArea.getBottom(),
-                                    false);
-        g.setGradientFill (grad);
-        g.fillRect (headerArea);
-    }
-
-    // Thin glow line
-    auto glowY = headerArea.getBottom();
-    g.setColour (Colours_RONE::hotPurple.withAlpha (0.35f));
-    g.fillRect (headerArea.getX(), glowY, headerArea.getWidth(), 1);
-
-    // License bar — 46px
-    auto licenseBar = getLocalBounds();
-    licenseBar.removeFromTop (49);
-    auto lBar = licenseBar.removeFromTop (46);
-    g.setColour (Colours_RONE::licenseBg);
-    g.fillRect (lBar);
-
-    // Separator
-    g.setColour (Colours_RONE::cardBorder.withAlpha (0.4f));
-    g.fillRect (lBar.getX(), lBar.getBottom(), lBar.getWidth(), 1);
-}
-
-// ============================================================================
-// Layout — 2-column grid
-// ============================================================================
 
 void MainComponent::resized()
 {
-    auto area = getLocalBounds();
-
-    // Header: 48px
-    auto header = area.removeFromTop (48).reduced (20, 8);
-    refreshButton.setBounds (header.removeFromRight (70));
-    header.removeFromRight (10);
-    statusLabel.setBounds (header.removeFromRight (180));
-    titleLabel.setBounds (header);
-
-    // License bar: 46px
-    area.removeFromTop (1); // glow line
-    auto licenseArea = area.removeFromTop (46).reduced (20, 7);
-
-    if (licenseHandler.isLicensed())
-    {
-        auto row = licenseArea.removeFromTop (28);
-        proBadge.setBounds (row.removeFromLeft (38));
-        row.removeFromLeft (6);
-        deactivateButton.setBounds (row.removeFromRight (88));
-        row.removeFromRight (8);
-        licenseStatusLabel.setBounds (row);
-
-        licenseKeyInput.setVisible (false);
-        activateButton.setVisible (false);
-    }
-    else
-    {
-        auto row1 = licenseArea.removeFromTop (26);
-        activateButton.setBounds (row1.removeFromRight (88));
-        row1.removeFromRight (8);
-        licenseKeyInput.setBounds (row1);
-
-        licenseArea.removeFromTop (2);
-        licenseStatusLabel.setBounds (licenseArea);
-
-        proBadge.setVisible (false);
-        deactivateButton.setVisible (false);
-    }
-
-    // Card grid area
-    area.removeFromTop (6);
-    viewport.setBounds (area.reduced (8, 0));
-
-    // Layout cards in 2-column grid
-    const int numCards = cards.size();
-    if (numCards == 0) return;
-
-    const int cardGap = 10;
-    const int cols    = 2;
-    const int containerW = viewport.getWidth() - viewport.getScrollBarThickness() - 4;
-    const int cardW   = (containerW - cardGap * (cols + 1)) / cols;
-    const int cardH   = 155;
-
-    int rows = (numCards + cols - 1) / cols;
-    int totalH = rows * (cardH + cardGap) + cardGap;
-
-    cardContainer.setBounds (0, 0, containerW, totalH);
-
-    for (int i = 0; i < numCards; ++i)
-    {
-        int col = i % cols;
-        int row = i / cols;
-        int x = cardGap + col * (cardW + cardGap);
-        int y = cardGap + row * (cardH + cardGap);
-
-        cards[i]->setBounds (x, y, cardW, cardH);
-    }
+    webView.setBounds (getLocalBounds());
 }
 
 // ============================================================================
-// Refresh
+// Serialisation helpers
 // ============================================================================
 
-void MainComponent::refreshPlugins()
+juce::String MainComponent::statusToString (PluginStatus s)
 {
-    statusLabel.setText ("Checking for updates...", juce::dontSendNotification);
-    networkManager.fetchManifest();
+    switch (s)
+    {
+        case PluginStatus::NotInstalled:    return "not_installed";
+        case PluginStatus::UpToDate:        return "up_to_date";
+        case PluginStatus::UpdateAvailable: return "update_available";
+        case PluginStatus::Downloading:     return "downloading";
+        case PluginStatus::Installing:      return "installing";
+        case PluginStatus::Error:           return "error";
+    }
+    return "unknown";
+}
+
+juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
+{
+    auto* obj = new juce::DynamicObject();
+
+    obj->setProperty ("id",               info.id);
+    obj->setProperty ("name",             info.name);
+    obj->setProperty ("description",      info.description);
+    obj->setProperty ("remoteVersion",    info.remoteVersion);
+    obj->setProperty ("installedVersion", info.installedVersion);
+    obj->setProperty ("whatsNew",         info.whatsNew);
+    obj->setProperty ("status",           statusToString (info.status));
+    obj->setProperty ("downloadProgress", info.downloadProgress);
+    obj->setProperty ("type",             info.type);
+
+    // Formats array
+    juce::Array<juce::var> fmts;
+    for (auto& f : info.formats)
+        fmts.add (f);
+    obj->setProperty ("formats", fmts);
+
+    // Logo URL (served by resource provider)
+    obj->setProperty ("logoUrl", "/logos/" + info.id + ".png");
+
+    // Standalone availability
+    bool hasStandalone = info.standaloneExe.isNotEmpty();
+    bool standaloneInstalled = hasStandalone
+                             && VersionChecker::isStandaloneInstalled (info.standaloneExe);
+    obj->setProperty ("hasStandalone",       hasStandalone);
+    obj->setProperty ("standaloneInstalled", standaloneInstalled);
+
+    return juce::var (obj);
+}
+
+juce::var MainComponent::allPluginsToVar()
+{
+    juce::Array<juce::var> arr;
+    for (auto& p : pluginData)
+        arr.add (pluginInfoToVar (p));
+
+    auto* result = new juce::DynamicObject();
+    result->setProperty ("plugins", arr);
+    return juce::var (result);
 }
 
 // ============================================================================
-// NetworkManager callbacks
+// Emit helpers
+// ============================================================================
+
+void MainComponent::emitPluginsUpdated()
+{
+    webView.emitEventIfBrowserIsVisible ("pluginsUpdated", allPluginsToVar());
+}
+
+void MainComponent::emitStatusMessage (const juce::String& text, const juce::String& type)
+{
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("text", text);
+    obj->setProperty ("type", type);
+    webView.emitEventIfBrowserIsVisible ("statusMessage", juce::var (obj));
+}
+
+// ============================================================================
+// Native function handlers
+// ============================================================================
+
+void MainComponent::handleGetPlugins (NativeArgs, NativeCompletion complete)
+{
+    auto result = allPluginsToVar();
+    complete (juce::JSON::toString (result));
+}
+
+void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion complete)
+{
+    if (args.isEmpty())
+    {
+        complete ("{\"started\":false,\"error\":\"Missing plugin ID\"}");
+        return;
+    }
+
+    if (! licenseHandler.isLicensed())
+    {
+        complete ("{\"started\":false,\"error\":\"License required\"}");
+        return;
+    }
+
+    auto pluginId = args[0].toString();
+
+    for (auto& p : pluginData)
+    {
+        if (p.id == pluginId)
+        {
+            if (p.status == PluginStatus::NotInstalled
+             || p.status == PluginStatus::UpdateAvailable
+             || p.status == PluginStatus::Error
+             || p.status == PluginStatus::UpToDate)
+            {
+                p.status = PluginStatus::Downloading;
+                p.downloadProgress = 0.0;
+
+            #if JUCE_MAC
+                networkManager.downloadInstaller (pluginId, p.downloadUrlMac);
+            #else
+                networkManager.downloadInstaller (pluginId, p.downloadUrl);
+            #endif
+
+                emitPluginsUpdated();
+                complete ("{\"started\":true}");
+                return;
+            }
+            break;
+        }
+    }
+
+    complete ("{\"started\":false,\"error\":\"Plugin not in installable state\"}");
+}
+
+void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete)
+{
+    if (args.isEmpty())
+    {
+        complete ("{\"success\":false,\"error\":\"Missing plugin ID\"}");
+        return;
+    }
+
+    if (! licenseHandler.isLicensed())
+    {
+        complete ("{\"success\":false,\"error\":\"License required\"}");
+        return;
+    }
+
+    auto pluginId = args[0].toString();
+
+    for (auto& p : pluginData)
+    {
+        if (p.id == pluginId)
+        {
+        #if JUCE_MAC
+            if (p.standaloneExe.isNotEmpty())
+            {
+                auto appName = p.standaloneExe.replace (".exe", "") + ".app";
+                juce::File app;
+
+                for (auto& dir : { juce::File ("/Applications"),
+                                    juce::File ("/Applications/RONE Plugins"),
+                                    VersionChecker::getStandaloneInstallDir() })
+                {
+                    auto candidate = dir.getChildFile (appName);
+                    if (candidate.exists()) { app = candidate; break; }
+                }
+
+                if (app.exists())
+                {
+                    app.startAsProcess();
+                    complete ("{\"success\":true}");
+                    return;
+                }
+            }
+
+            // Standalone not found — tell the user to install
+            complete ("{\"success\":false,\"error\":\"Standalone not installed. Click INSTALL to download it.\"}");
+            return;
+        #else
+            if (p.standaloneExe.isNotEmpty())
+            {
+                auto exe = VersionChecker::getStandaloneInstallDir()
+                               .getChildFile (p.standaloneExe);
+                if (exe.existsAsFile())
+                {
+                    exe.startAsProcess();
+                    complete ("{\"success\":true}");
+                    return;
+                }
+            }
+
+            complete ("{\"success\":false,\"error\":\"Standalone not found on disk\"}");
+        #endif
+            return;
+        }
+    }
+
+    complete ("{\"success\":false,\"error\":\"Plugin not found\"}");
+}
+
+void MainComponent::handleRefreshPlugins (NativeArgs, NativeCompletion complete)
+{
+    networkManager.fetchManifest();
+    complete ("{\"success\":true}");
+}
+
+void MainComponent::handleActivateLicense (NativeArgs args, NativeCompletion complete)
+{
+    if (args.isEmpty())
+    {
+        auto* err = new juce::DynamicObject();
+        err->setProperty ("success", false);
+        err->setProperty ("message", "No license key provided");
+        complete (juce::JSON::toString (juce::var (err)));
+        return;
+    }
+
+    auto key = args[0].toString().trim();
+    if (key.isEmpty())
+    {
+        auto* err = new juce::DynamicObject();
+        err->setProperty ("success", false);
+        err->setProperty ("message", "Empty license key");
+        complete (juce::JSON::toString (juce::var (err)));
+        return;
+    }
+
+    // Respond immediately — result comes via licenseActivationResult event
+    auto* startObj = new juce::DynamicObject();
+    startObj->setProperty ("started", true);
+    complete (juce::JSON::toString (juce::var (startObj)));
+
+    licenseHandler.activateLicense (key, [this] (bool success, juce::String msg)
+    {
+        juce::MessageManager::callAsync ([this, success, msg]()
+        {
+            auto* obj = new juce::DynamicObject();
+            obj->setProperty ("success", success);
+            obj->setProperty ("message", msg);
+            if (success)
+                obj->setProperty ("customerName", licenseHandler.getCustomerName());
+
+            webView.emitEventIfBrowserIsVisible ("licenseActivationResult", juce::var (obj));
+
+            if (success)
+                emitStatusMessage ("License activated — all plugins unlocked!", "success");
+        });
+    });
+}
+
+void MainComponent::handleDeactivateLicense (NativeArgs, NativeCompletion complete)
+{
+    auto* startObj = new juce::DynamicObject();
+    startObj->setProperty ("started", true);
+    complete (juce::JSON::toString (juce::var (startObj)));
+
+    licenseHandler.deactivateLicense ([this] (bool success, juce::String msg)
+    {
+        juce::MessageManager::callAsync ([this, success, msg]()
+        {
+            auto* obj = new juce::DynamicObject();
+            obj->setProperty ("success", success);
+            obj->setProperty ("message", msg);
+            webView.emitEventIfBrowserIsVisible ("licenseDeactivationResult", juce::var (obj));
+        });
+    });
+}
+
+void MainComponent::handleGetLicenseStatus (NativeArgs, NativeCompletion complete)
+{
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("licensed",     licenseHandler.isLicensed());
+    obj->setProperty ("customerName", licenseHandler.getCustomerName());
+    obj->setProperty ("licenseKey",   licenseHandler.getLicenseKey());
+    obj->setProperty ("message",      licenseHandler.getStatusMessage());
+    complete (juce::JSON::toString (juce::var (obj)));
+}
+
+void MainComponent::handleGetAppVersion (NativeArgs, NativeCompletion complete)
+{
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("version",  juce::String (JUCE_APPLICATION_VERSION_STRING));
+#if JUCE_MAC
+    obj->setProperty ("platform", "mac");
+#elif JUCE_WINDOWS
+    obj->setProperty ("platform", "windows");
+#else
+    obj->setProperty ("platform", "linux");
+#endif
+    complete (juce::JSON::toString (juce::var (obj)));
+}
+
+// ============================================================================
+// NetworkManager callbacks → push to JS
 // ============================================================================
 
 void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 {
     pluginData = plugins;
-    cards.clear();
 
     if (plugins.isEmpty())
     {
-        statusLabel.setText ("Could not load plugins \u2014 check your connection",
-                              juce::dontSendNotification);
-        resized();
+        emitStatusMessage ("Could not load plugins — check your connection", "error");
         return;
     }
 
-    for (auto& info : pluginData)
-    {
-        auto* card = cards.add (new PluginCard());
-        card->setPluginInfo (info);
+    emitPluginsUpdated();
 
-        card->onActionClicked = [this] (const juce::String& id) { handleAction (id); };
-        card->onOpenClicked   = [this] (const juce::String& id) { handleOpen (id); };
-        card->onInfoClicked   = [this] (const juce::String& id) { handleInfo (id); };
-
-        cardContainer.addAndMakeVisible (card);
-    }
-
-    // Apply license state
-    refreshCardLicenseState();
-
-    int updatesAvailable = 0;
+    int updates = 0;
     for (auto& p : pluginData)
         if (p.status == PluginStatus::UpdateAvailable || p.status == PluginStatus::NotInstalled)
-            ++updatesAvailable;
+            ++updates;
 
-    if (updatesAvailable > 0)
-        statusLabel.setText (juce::String (updatesAvailable) + " update(s) available",
-                              juce::dontSendNotification);
+    if (updates > 0)
+        emitStatusMessage (juce::String (updates) + " update(s) available", "info");
     else
-        statusLabel.setText ("All plugins up to date", juce::dontSendNotification);
-
-    resized();
+        emitStatusMessage ("All plugins up to date", "success");
 }
 
 void MainComponent::onManifestError (const juce::String& errorMessage)
 {
-    statusLabel.setText ("Offline \u2014 " + errorMessage, juce::dontSendNotification);
+    emitStatusMessage ("Offline — " + errorMessage, "error");
 }
 
 void MainComponent::onDownloadProgress (const juce::String& pluginId, double progress)
 {
-    if (auto* card = findCard (pluginId))
-        card->setDownloadProgress (progress);
+    // Update local state
+    for (auto& p : pluginData)
+    {
+        if (p.id == pluginId)
+        {
+            p.downloadProgress = progress;
+            break;
+        }
+    }
+
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("pluginId", pluginId);
+    obj->setProperty ("progress", progress);
+    webView.emitEventIfBrowserIsVisible ("downloadProgress", juce::var (obj));
 }
 
 void MainComponent::onDownloadComplete (const juce::String& pluginId,
@@ -312,162 +492,17 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
             if (p.id == pluginId)
             {
                 p.status = PluginStatus::Error;
-                if (auto* card = findCard (pluginId))
-                    card->setPluginInfo (p);
                 break;
             }
         }
 
-        juce::NativeMessageBox::showMessageBoxAsync (
-            juce::MessageBoxIconType::WarningIcon,
-            "Download Failed", errorMessage);
+        emitPluginsUpdated();
+        emitStatusMessage ("Download failed — " + errorMessage, "error");
     }
 }
 
 // ============================================================================
-// Action handlers
-// ============================================================================
-
-void MainComponent::handleAction (const juce::String& pluginId)
-{
-    if (! licenseHandler.isLicensed()) return;
-
-    for (auto& p : pluginData)
-    {
-        if (p.id == pluginId)
-        {
-            if (p.status == PluginStatus::NotInstalled
-             || p.status == PluginStatus::UpdateAvailable
-             || p.status == PluginStatus::Error)
-            {
-                p.status = PluginStatus::Downloading;
-                p.downloadProgress = 0.0;
-
-                if (auto* card = findCard (pluginId))
-                    card->setDownloadProgress (0.0);
-
-            #if JUCE_MAC
-                networkManager.downloadInstaller (pluginId, p.downloadUrlMac);
-            #else
-                networkManager.downloadInstaller (pluginId, p.downloadUrl);
-            #endif
-            }
-            break;
-        }
-    }
-}
-
-void MainComponent::handleOpen (const juce::String& pluginId)
-{
-    if (! licenseHandler.isLicensed()) return;
-
-    for (auto& p : pluginData)
-    {
-        if (p.id == pluginId)
-        {
-        #if JUCE_MAC
-            if (p.standaloneExe.isNotEmpty())
-            {
-                auto appName = p.standaloneExe.replace (".exe", "") + ".app";
-
-                // Search multiple known locations
-                juce::File app;
-                for (auto& dir : { juce::File ("/Applications"),
-                                    juce::File ("/Applications/RONE Plugins"),
-                                    VersionChecker::getStandaloneInstallDir() })
-                {
-                    auto candidate = dir.getChildFile (appName);
-                    if (candidate.exists()) { app = candidate; break; }
-                }
-
-                if (app.exists())
-                {
-                    app.startAsProcess();
-                    break;
-                }
-            }
-
-            // No standalone found — offer to install it
-            {
-                auto pid = p.id;
-                auto name = p.name;
-                juce::NativeMessageBox::showYesNoBox (
-                    juce::MessageBoxIconType::QuestionIcon,
-                    "Standalone Not Installed",
-                    name + " is installed as a plugin (VST3/AU) only.\n\n"
-                    "Download and install the standalone version?",
-                    nullptr,
-                    juce::ModalCallbackFunction::create ([this, pid] (int result)
-                    {
-                        if (result == 1) // Yes
-                        {
-                            for (auto& pl : pluginData)
-                            {
-                                if (pl.id == pid)
-                                {
-                                    pl.status = PluginStatus::Downloading;
-                                    pl.downloadProgress = 0.0;
-                                    if (auto* card = findCard (pid))
-                                        card->setDownloadProgress (0.0);
-                                #if JUCE_MAC
-                                    networkManager.downloadInstaller (pid, pl.downloadUrlMac);
-                                #else
-                                    networkManager.downloadInstaller (pid, pl.downloadUrl);
-                                #endif
-                                    break;
-                                }
-                            }
-                        }
-                    }));
-            }
-        #else
-            if (p.standaloneExe.isNotEmpty())
-            {
-                auto exe = VersionChecker::getStandaloneInstallDir()
-                               .getChildFile (p.standaloneExe);
-                if (exe.existsAsFile())
-                {
-                    exe.startAsProcess();
-                    break;
-                }
-            }
-
-            juce::NativeMessageBox::showMessageBoxAsync (
-                juce::MessageBoxIconType::WarningIcon,
-                "Not Found",
-                "Could not find " + p.standaloneExe + " on disk.\n"
-                "Try reinstalling the plugin.");
-        #endif
-            break;
-        }
-    }
-}
-
-void MainComponent::handleInfo (const juce::String& pluginId)
-{
-    for (auto& p : pluginData)
-    {
-        if (p.id == pluginId)
-        {
-            juce::String msg;
-            msg << p.name << " v" << p.remoteVersion << "\n\n"
-                << "What's New:\n" << p.whatsNew << "\n\n"
-                << "Formats: " << p.formats.joinIntoString (", ") << "\n"
-                << "Type: " << p.type;
-
-            if (p.installedVersion.isNotEmpty())
-                msg << "\nInstalled: v" + p.installedVersion;
-
-            juce::NativeMessageBox::showMessageBoxAsync (
-                juce::MessageBoxIconType::InfoIcon,
-                p.name + " \u2014 Info", msg);
-            break;
-        }
-    }
-}
-
-// ============================================================================
-// Silent installer execution
+// Silent installer — runs in background thread
 // ============================================================================
 
 void MainComponent::launchSilentInstaller (const juce::File& installerFile,
@@ -478,17 +513,14 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
         if (p.id == pluginId)
         {
             p.status = PluginStatus::Installing;
-            if (auto* card = findCard (pluginId))
-                card->setPluginInfo (p);
             break;
         }
     }
+    emitPluginsUpdated();
+    emitStatusMessage ("Installing...", "info");
 
-    statusLabel.setText ("Installing...", juce::dontSendNotification);
-
-    auto filePath = installerFile.getFullPathName();
-    auto pid      = pluginId;
-
+    auto filePath     = installerFile.getFullPathName();
+    auto pid          = pluginId;
     juce::String regKey, remoteVer, vst3Bundle, auBundle, standaloneExe;
 
     for (auto& p : pluginData)
@@ -507,33 +539,80 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
     juce::Thread::launch ([this, filePath, pid, regKey, remoteVer,
                            vst3Bundle, auBundle, standaloneExe]
     {
-        juce::ChildProcess process;
         bool started = false;
 
     #if JUCE_MAC
+        // Record what was already on disk BEFORE installation
+        bool hadVst3Before       = VersionChecker::isVst3Installed (vst3Bundle);
+        bool hadAUBefore         = VersionChecker::isAUInstalled (auBundle);
+        bool hadStandaloneBefore = VersionChecker::isStandaloneInstalled (standaloneExe);
+
         juce::String cmd = juce::String ("osascript -e 'do shell script \"installer -pkg ")
                          + "\\\"" + filePath + "\\\""
                          + " -target /\" with administrator privileges'";
-        started = process.start (cmd);
+
+        DBG ("[Installer] Running: " + cmd);
+
+        // Use system() instead of ChildProcess — ChildProcess can't show
+        // the macOS admin password dialog from a background thread
+        int exitCode = std::system (cmd.toRawUTF8());
+        bool processFinished = true;
+        started = true;
     #else
+        juce::ChildProcess process;
         juce::String cmd = "\"" + filePath + "\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-";
         started = process.start (cmd);
-    #endif
 
-        bool processFinished = false;
-        if (started)
-            processFinished = process.waitForProcessToFinish (120000);
+        if (! started)
+        {
+            DBG ("[Installer] Failed to start process");
+            juce::MessageManager::callAsync ([this, pid] {
+                for (auto& p : pluginData)
+                    if (p.id == pid) { p.status = PluginStatus::Error; break; }
+                emitPluginsUpdated();
+                emitStatusMessage ("Failed to launch installer.", "error");
+            });
+            return;
+        }
+
+        bool processFinished = process.waitForProcessToFinish (120000);
+        auto exitCode = process.getExitCode();
+    #endif
+        DBG ("[Installer] Process finished=" + juce::String (processFinished ? "YES" : "NO")
+             + " exitCode=" + juce::String (exitCode));
 
         bool verified = false;
 
     #if JUCE_MAC
-        if (processFinished)
+        if (processFinished && exitCode == 0)
         {
-            verified = VersionChecker::isVst3Installed (vst3Bundle)
-                    || VersionChecker::isAUInstalled (auBundle)
-                    || VersionChecker::isStandaloneInstalled (standaloneExe);
+            // Check that something NEW was installed (not just pre-existing files)
+            bool hasVst3Now       = VersionChecker::isVst3Installed (vst3Bundle);
+            bool hasAUNow         = VersionChecker::isAUInstalled (auBundle);
+            bool hasStandaloneNow = VersionChecker::isStandaloneInstalled (standaloneExe);
+
+            bool somethingNew = (hasVst3Now && ! hadVst3Before)
+                             || (hasAUNow && ! hadAUBefore)
+                             || (hasStandaloneNow && ! hadStandaloneBefore);
+
+            // If nothing new but all targets exist, still consider it verified
+            // (re-installing over existing files)
+            bool allTargetsPresent = (vst3Bundle.isEmpty()    || hasVst3Now)
+                                  && (auBundle.isEmpty()      || hasAUNow)
+                                  && (standaloneExe.isEmpty() || hasStandaloneNow);
+
+            verified = somethingNew || allTargetsPresent;
+
+            DBG ("[Installer] Verification: somethingNew=" + juce::String (somethingNew ? "YES" : "NO")
+                 + " allTargetsPresent=" + juce::String (allTargetsPresent ? "YES" : "NO")
+                 + " verified=" + juce::String (verified ? "YES" : "NO"));
+
             if (verified)
                 VersionChecker::setInstalledVersion (regKey, remoteVer);
+        }
+        else
+        {
+            DBG ("[Installer] Installation failed or was cancelled (exitCode=" + juce::String (exitCode) + ")");
         }
     #else
         if (processFinished)
@@ -543,7 +622,7 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
         }
     #endif
 
-        juce::MessageManager::callAsync ([this, pid, verified, remoteVer]
+        juce::MessageManager::callAsync ([this, pid, verified, remoteVer, exitCode, processFinished]
         {
             for (auto& p : pluginData)
             {
@@ -555,10 +634,10 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                         if (p.installedVersion.isEmpty())
                             p.installedVersion = remoteVer;
                         p.status = PluginStatus::UpToDate;
-                        statusLabel.setText ("Installed successfully!",
-                                              juce::dontSendNotification);
 
-                        // Auto-open standalone after install if available
+                        emitStatusMessage (p.name + " installed successfully!", "success");
+
+                        // Auto-open standalone after install
                     #if JUCE_MAC
                         if (p.standaloneExe.isNotEmpty())
                         {
@@ -571,119 +650,29 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                                 auto candidate = dir.getChildFile (appName);
                                 if (candidate.exists()) { app = candidate; break; }
                             }
-
                             if (app.exists())
                                 app.startAsProcess();
-                            else
-                                juce::NativeMessageBox::showMessageBoxAsync (
-                                    juce::MessageBoxIconType::WarningIcon,
-                                    "Standalone Not Found",
-                                    "The plugin was installed but the standalone app was not found.\n"
-                                    "The VST3/AU plugin is ready to use in your DAW.");
                         }
                     #endif
                     }
                     else
                     {
                         p.status = PluginStatus::Error;
-                    #if JUCE_MAC
-                        statusLabel.setText ("Install failed \u2014 check your password and try again.",
-                                              juce::dontSendNotification);
-                    #else
-                        statusLabel.setText ("Install failed \u2014 try running as Administrator.",
-                                              juce::dontSendNotification);
-                    #endif
+
+                        if (! processFinished)
+                            emitStatusMessage ("Install timed out.", "error");
+                        else if (exitCode != 0)
+                            emitStatusMessage ("Install cancelled or failed (code " + juce::String (exitCode) + "). Enter your password when prompted.", "error");
+                        else
+                            emitStatusMessage ("Install verification failed — components not found.", "error");
                     }
 
-                    if (auto* card = findCard (pid))
-                        card->setPluginInfo (p);
                     break;
                 }
             }
+
+            // Push full updated state
+            emitPluginsUpdated();
         });
     });
-}
-
-// ============================================================================
-// License handlers
-// ============================================================================
-
-void MainComponent::handleActivate()
-{
-    auto key = licenseKeyInput.getText().trim();
-    if (key.isEmpty()) return;
-
-    activateButton.setEnabled (false);
-    licenseStatusLabel.setText ("Activating...", juce::dontSendNotification);
-
-    licenseHandler.activateLicense (key, [this] (bool success, juce::String msg)
-    {
-        activateButton.setEnabled (true);
-        licenseStatusLabel.setText (msg, juce::dontSendNotification);
-        if (success)
-        {
-            updateLicenseUI();
-            statusLabel.setText ("License activated \u2014 all plugins unlocked!",
-                                  juce::dontSendNotification);
-        }
-    });
-}
-
-void MainComponent::handleDeactivate()
-{
-    licenseHandler.deactivateLicense ([this] (bool success, juce::String msg)
-    {
-        licenseStatusLabel.setText (msg, juce::dontSendNotification);
-        if (success) updateLicenseUI();
-    });
-}
-
-void MainComponent::updateLicenseUI()
-{
-    bool pro = licenseHandler.isLicensed();
-
-    proBadge.setVisible (pro);
-    licenseKeyInput.setVisible (! pro);
-    activateButton.setVisible (! pro);
-    deactivateButton.setVisible (pro);
-
-    // Show "Licensed to [customer name]" when licensed
-    if (pro)
-    {
-        auto name = licenseHandler.getCustomerName();
-        if (name.isNotEmpty())
-            licenseStatusLabel.setText ("Licensed to " + name + " \u2014 RONE Full Bundle",
-                                        juce::dontSendNotification);
-        else
-            licenseStatusLabel.setText ("Licensed \u2014 RONE Full Bundle",
-                                        juce::dontSendNotification);
-    }
-    else
-    {
-        licenseStatusLabel.setText (licenseHandler.getStatusMessage(),
-                                    juce::dontSendNotification);
-    }
-
-    refreshCardLicenseState();
-    resized();
-}
-
-void MainComponent::refreshCardLicenseState()
-{
-    bool pro = licenseHandler.isLicensed();
-    for (auto* card : cards)
-        card->setLicensed (pro);
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-PluginCard* MainComponent::findCard (const juce::String& pluginId)
-{
-    for (int i = 0; i < pluginData.size(); ++i)
-        if (pluginData[i].id == pluginId)
-            return cards[i];
-
-    return nullptr;
 }

@@ -310,14 +310,14 @@ jobs:
             echo "=== End scan ==="
 
             # VST3 bundles (recursive search)
-            for f in $(find "$A" -name "*.vst3" -type d 2>/dev/null); do
+            find "$A" -name "*.vst3" -type d 2>/dev/null | while IFS= read -r f; do
               mkdir -p staging/Library/Audio/Plug-Ins/VST3
               cp -R "$f" staging/Library/Audio/Plug-Ins/VST3/
               echo "Staged VST3: $(basename "$f")"
             done
 
             # AU bundles (recursive search)
-            for f in $(find "$A" -name "*.component" -type d 2>/dev/null); do
+            find "$A" -name "*.component" -type d 2>/dev/null | while IFS= read -r f; do
               mkdir -p staging/Library/Audio/Plug-Ins/Components
               cp -R "$f" staging/Library/Audio/Plug-Ins/Components/
               echo "Staged AU: $(basename "$f")"
@@ -325,12 +325,10 @@ jobs:
 
             # Standalone .app — search Standalone/ first, then Release/ root
             # Works for both juce_add_plugin (Standalone/) and juce_add_gui_app (root)
-            APP_STAGED=false
-            for f in $(find "$A" -name "*.app" -type d -maxdepth 2 2>/dev/null); do
+            find "$A" -name "*.app" -type d -maxdepth 2 2>/dev/null | while IFS= read -r f; do
               mkdir -p staging/Applications
               cp -R "$f" staging/Applications/
               echo "Staged App: $(basename "$f") -> /Applications/"
-              APP_STAGED=true
             done
 
             # --- Fail-safe: refuse to create empty pkg ---
@@ -342,7 +340,7 @@ jobs:
             fi
             echo "Total files staged: $FILE_COUNT"
 
-            if [ "$APP_STAGED" = "false" ]; then
+            if ! find staging/Applications -name "*.app" -type d -maxdepth 1 2>/dev/null | grep -q .; then
               echo "::warning::No standalone .app found for ${{ matrix.plugin_id }}"
             fi
 

@@ -35,13 +35,13 @@ private:
     public:
         explicit MainWindow (const juce::String& name)
             : DocumentWindow (name,
-                              Colours_RONE::background,
+                              juce::Colour (0xff0B0416),
                               DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
             setContentOwned (new MainComponent(), true);
             setResizable (true, true);
-            setResizeLimits (420, 500, 800, 1200);
+            setResizeLimits (700, 500, 1400, 1000);
             centreWithSize (getWidth(), getHeight());
             setVisible (true);
         }

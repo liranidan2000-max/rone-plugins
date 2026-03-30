@@ -19,24 +19,40 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
+# --- WebView2 SDK for Windows ---
+if(WIN32)
+    FetchContent_Declare(
+        WebView2
+        URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2903.40
+        URL_HASH SHA256=0
+        DOWNLOAD_NO_EXTRACT FALSE
+    )
+    FetchContent_MakeAvailable(WebView2)
+
+    # Point JUCE to the WebView2 package
+    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${webview2_SOURCE_DIR}" CACHE STRING "" FORCE)
+endif()
+
 # --- GUI Application (not a plugin) ---
 juce_add_gui_app(RonePluginsCenter
     PRODUCT_NAME  "RONE Plugins Center"
     COMPANY_NAME  "RONE Plugins"
     VERSION       "1.0.0"
+    ICON_BIG      "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
+    ICON_SMALL    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
 )
 
 target_sources(RonePluginsCenter PRIVATE
     Source/Main.cpp
     Source/MainComponent.cpp
-    Source/PluginCard.cpp
     Source/NetworkManager.cpp
     Source/VersionChecker.cpp
     Source/LicenseHandler.cpp
 )
 
 target_compile_definitions(RonePluginsCenter PRIVATE
-    JUCE_WEB_BROWSER=0
+    JUCE_WEB_BROWSER=1
+    JUCE_USE_WIN_WEBVIEW2=1
     JUCE_USE_CURL=0
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:RonePluginsCenter,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:RonePluginsCenter,JUCE_VERSION>"
@@ -53,8 +69,11 @@ target_compile_definitions(RonePluginsCenter PRIVATE
     RONE_LICENSE_REGISTRY_PATH="Software\\\\RONE\\\\License"
 )
 
-# --- Embed plugin logos as binary data ---
-juce_add_binary_data(PluginLogos SOURCES
+# --- Embed React UI + plugin logos as binary data ---
+juce_add_binary_data(PluginsCenterUI SOURCES
+    Resources/ui/dist/index.html
+    Resources/ui/dist/bundle.js
+    Resources/ui/dist/styles.css
     Resources/ReverseReverb_icon.png
     Resources/RoneStutter_icon.png
     Resources/RoneStemsFixer_icon.png
@@ -62,7 +81,7 @@ juce_add_binary_data(PluginLogos SOURCES
 )
 
 target_link_libraries(RonePluginsCenter PRIVATE
-    PluginLogos
+    PluginsCenterUI
     juce::juce_core
     juce::juce_gui_basics
     juce::juce_gui_extra

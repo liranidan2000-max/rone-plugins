@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #0B0416;
+  color: #f0f0f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* Prevent text selection in UI (feels more native) */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow text selection in input fields */
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Custom scrollbar for the plugin grid */
+.plugin-grid-scroll::-webkit-scrollbar { width: 6px; }
+.plugin-grid-scroll::-webkit-scrollbar-track { background: transparent; }
+.plugin-grid-scroll::-webkit-scrollbar-thumb {
+  background: rgba(181, 55, 242, 0.25);
+  border-radius: 3px;
+}
+.plugin-grid-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(181, 55, 242, 0.45);
+}
+
+/* Glassmorphism card effect */
+.glass-card {
+  background: linear-gradient(135deg, rgba(21, 10, 38, 0.9), rgba(21, 10, 38, 0.7));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Progress bar shimmer */
+.progress-shimmer {
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    90deg,
+    #b537f2 0%,
+    #E040FB 50%,
+    #b537f2 100%
+  );
+}

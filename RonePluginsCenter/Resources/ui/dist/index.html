@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RONE Plugins Center</title>
+    <style>
+      /* Prevent flash of white before React hydrates */
+      html, body { margin: 0; padding: 0; background: #0B0416; overflow: hidden; }
+      * { box-sizing: border-box; }
+      /* Hide scrollbar but allow scroll */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(181, 55, 242, 0.3); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(181, 55, 242, 0.5); }
+    </style>
+    <script type="module" crossorigin src="/bundle.js"></script>
+    <link rel="stylesheet" crossorigin href="/styles.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

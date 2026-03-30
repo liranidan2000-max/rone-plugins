@@ -1,23 +1,19 @@
 #pragma once
 #include <JuceHeader.h>
-#include "Styles.h"
-#include "PluginCard.h"
 #include "NetworkManager.h"
 #include "VersionChecker.h"
 #include "LicenseHandler.h"
 
 // ============================================================================
-// MainComponent — root UI with 2-column grid + header + license bar
+// MainComponent — WebView host for the React UI
 // ============================================================================
 class MainComponent : public juce::Component,
-                      public NetworkManager::Listener,
-                      public juce::Timer
+                      public NetworkManager::Listener
 {
 public:
     MainComponent();
     ~MainComponent() override;
 
-    void paint (juce::Graphics& g) override;
     void resized() override;
 
     // NetworkManager::Listener
@@ -29,50 +25,43 @@ public:
                              bool success,
                              const juce::String& errorMessage) override;
 
-    // Timer — auto-refresh + fade-in animation
-    void timerCallback() override;
-
 private:
-    void refreshPlugins();
-    void handleAction (const juce::String& pluginId);
-    void handleOpen   (const juce::String& pluginId);
-    void handleInfo   (const juce::String& pluginId);
-    void launchSilentInstaller (const juce::File& installerExe,
+    // ---- Resource provider ----
+    std::optional<juce::WebBrowserComponent::Resource>
+        getResource (const juce::String& url);
+    static juce::String getMimeForExtension (const juce::String& ext);
+
+    // ---- Serialisation helpers ----
+    juce::var pluginInfoToVar (const PluginInfo& info);
+    juce::var allPluginsToVar();
+    juce::String statusToString (PluginStatus s);
+
+    // ---- Native function handlers (JS → C++) ----
+    using NativeArgs       = const juce::Array<juce::var>&;
+    using NativeCompletion = juce::WebBrowserComponent::NativeFunctionCompletion;
+
+    void handleGetPlugins      (NativeArgs args, NativeCompletion complete);
+    void handleInstallPlugin   (NativeArgs args, NativeCompletion complete);
+    void handleOpenPlugin      (NativeArgs args, NativeCompletion complete);
+    void handleRefreshPlugins  (NativeArgs args, NativeCompletion complete);
+    void handleActivateLicense (NativeArgs args, NativeCompletion complete);
+    void handleDeactivateLicense (NativeArgs args, NativeCompletion complete);
+    void handleGetLicenseStatus(NativeArgs args, NativeCompletion complete);
+    void handleGetAppVersion   (NativeArgs args, NativeCompletion complete);
+
+    // ---- Backend logic (carried over) ----
+    void launchSilentInstaller (const juce::File& installer,
                                  const juce::String& pluginId);
 
-    void handleActivate();
-    void handleDeactivate();
-    void updateLicenseUI();
-    void refreshCardLicenseState();
+    // ---- Emit helper ----
+    void emitPluginsUpdated();
+    void emitStatusMessage (const juce::String& text, const juce::String& type);
 
-    PluginCard* findCard (const juce::String& pluginId);
-
-    // Data
-    juce::Array<PluginInfo>          pluginData;
-    juce::OwnedArray<PluginCard>     cards;
-    NetworkManager                   networkManager;
-    LicenseHandler                   licenseHandler;
-
-    // UI
-    RoneLookAndFeel  roneLnf;
-    juce::Label      titleLabel;
-    juce::Label      statusLabel;
-    juce::TextButton refreshButton { "Refresh" };
-    juce::Component  cardContainer;
-    juce::Viewport   viewport;
-
-    // License UI
-    juce::TextEditor licenseKeyInput;
-    juce::TextButton activateButton   { "ACTIVATE" };
-    juce::TextButton deactivateButton { "DEACTIVATE" };
-    juce::Label      licenseStatusLabel;
-    juce::Label      proBadge;
-
-    // Fade-in animation
-    float fadeAlpha = 0.0f;
-    bool  fadeComplete = false;
-    int   fadeTimerId = 1;
-    int   refreshTimerId = 2;
+    // ---- Members ----
+    juce::WebBrowserComponent webView;
+    NetworkManager            networkManager;
+    LicenseHandler            licenseHandler;
+    juce::Array<PluginInfo>   pluginData;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
