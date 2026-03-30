@@ -366,7 +366,6 @@ void MainComponent::handleOpen (const juce::String& pluginId)
         if (p.id == pluginId)
         {
         #if JUCE_MAC
-            // Try standalone .app first
             if (p.standaloneExe.isNotEmpty())
             {
                 auto appName = p.standaloneExe.replace (".exe", "") + ".app";
@@ -381,31 +380,39 @@ void MainComponent::handleOpen (const juce::String& pluginId)
                 }
             }
 
-            // Fallback: reveal the VST3 in Finder
-            if (p.vst3Bundle.isNotEmpty())
+            // No standalone found — offer to install it
             {
-                auto vst3 = VersionChecker::getVst3InstallDir().getChildFile (p.vst3Bundle);
-                if (! vst3.exists())
-                {
-                    // Check user-level VST3 directory
-                    vst3 = juce::File::getSpecialLocation (juce::File::userHomeDirectory)
-                               .getChildFile ("Library/Audio/Plug-Ins/VST3")
-                               .getChildFile (p.vst3Bundle);
-                }
-
-                if (vst3.exists())
-                {
-                    vst3.revealToUser();
-                    break;
-                }
+                auto pid = p.id;
+                auto name = p.name;
+                juce::NativeMessageBox::showYesNoBox (
+                    juce::MessageBoxIconType::QuestionIcon,
+                    "Standalone Not Installed",
+                    name + " is installed as a plugin (VST3/AU) only.\n\n"
+                    "Download and install the standalone version?",
+                    nullptr,
+                    juce::ModalCallbackFunction::create ([this, pid] (int result)
+                    {
+                        if (result == 1) // Yes
+                        {
+                            for (auto& pl : pluginData)
+                            {
+                                if (pl.id == pid)
+                                {
+                                    pl.status = PluginStatus::Downloading;
+                                    pl.downloadProgress = 0.0;
+                                    if (auto* card = findCard (pid))
+                                        card->setDownloadProgress (0.0);
+                                #if JUCE_MAC
+                                    networkManager.downloadInstaller (pid, pl.downloadUrlMac);
+                                #else
+                                    networkManager.downloadInstaller (pid, pl.downloadUrl);
+                                #endif
+                                    break;
+                                }
+                            }
+                        }
+                    }));
             }
-
-            // Nothing found
-            juce::NativeMessageBox::showMessageBoxAsync (
-                juce::MessageBoxIconType::WarningIcon,
-                "Not Found",
-                "Could not find " + p.name + " on disk.\n"
-                "Try reinstalling the plugin.");
         #else
             if (p.standaloneExe.isNotEmpty())
             {

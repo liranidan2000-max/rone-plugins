@@ -133,6 +133,17 @@ void PluginCard::updateButtonState()
                                      Colours_RONE::installedGreen.withAlpha (0.18f));
             actionButton.setEnabled (false);
             openButton.setVisible (true);
+
+            if (pluginInfo.standaloneExe.isNotEmpty()
+                && VersionChecker::isStandaloneInstalled (pluginInfo.standaloneExe))
+            {
+                openButton.setButtonText ("OPEN");
+            }
+            else
+            {
+                openButton.setButtonText ("OPEN");
+                openButton.setTooltip ("Standalone not installed — plugin only");
+            }
             break;
 
         case PluginStatus::Downloading:
