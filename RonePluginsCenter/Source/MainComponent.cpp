@@ -550,6 +550,25 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                         p.status = PluginStatus::UpToDate;
                         statusLabel.setText ("Installed successfully!",
                                               juce::dontSendNotification);
+
+                        // Auto-open standalone after install if available
+                    #if JUCE_MAC
+                        if (p.standaloneExe.isNotEmpty())
+                        {
+                            auto appName = p.standaloneExe.replace (".exe", "") + ".app";
+                            auto app = juce::File ("/Applications").getChildFile (appName);
+                            if (! app.exists())
+                                app = VersionChecker::getStandaloneInstallDir().getChildFile (appName);
+                            if (app.exists())
+                                app.startAsProcess();
+                            else
+                                juce::NativeMessageBox::showMessageBoxAsync (
+                                    juce::MessageBoxIconType::WarningIcon,
+                                    "Standalone Not Found",
+                                    "The plugin was installed but the standalone app was not found.\n"
+                                    "The VST3/AU plugin is ready to use in your DAW.");
+                        }
+                    #endif
                     }
                     else
                     {

@@ -307,7 +307,21 @@ jobs:
             [ -d "$A/AU" ]         && mkdir -p staging/Library/Audio/Plug-Ins/Components  && cp -R "$A"/AU/*.component   staging/Library/Audio/Plug-Ins/Components/ 2>/dev/null || true
             [ -d "$A/Standalone" ] && mkdir -p staging/Applications                       && cp -R "$A"/Standalone/*.app  staging/Applications/                      2>/dev/null || true
 
+            # Generate component plist and disable BundleIsRelocatable
+            # so macOS installer places .app in /Applications/ instead of relocating
+            pkgbuild --analyze --root staging /tmp/comp.plist
+            python3 -c "
+import plistlib
+with open('/tmp/comp.plist', 'rb') as f:
+    p = plistlib.load(f)
+for item in p:
+    item['BundleIsRelocatable'] = False
+with open('/tmp/comp.plist', 'wb') as f:
+    plistlib.dump(p, f)
+            "
+
             pkgbuild --root staging \
+              --component-plist /tmp/comp.plist \
               --identifier "com.roneplugins.${{ matrix.plugin_id }}" \
               --version "$VER" \
               --install-location / \
