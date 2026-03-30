@@ -2,8 +2,8 @@
   "manifest_version": 2,
   "last_updated": "2026-03-30T12:00:00Z",
   "center_installer": {
-    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RONE_Plugins_Center_Installer.exe",
-    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RONE_Plugins_Center.dmg",
+    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
+    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
     "version": "1.0.0",
     "sha256": ""
   },
@@ -19,8 +19,8 @@
       "standalone_exe": "ReverseReverb.exe",
       "vst3_bundle": "ReverseReverb.vst3",
       "au_bundle": "ReverseReverb.component",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/ReverseReverb_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/ReverseReverb_Installer.pkg",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
       "sha256": "",
       "registry_key": "ReverseReverb"
     },
@@ -35,8 +35,8 @@
       "standalone_exe": "RONE Stems Fixer.exe",
       "vst3_bundle": "",
       "au_bundle": "",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStemsFixer_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStemsFixer_Installer.pkg",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneStemsFixer"
     },
@@ -51,8 +51,8 @@
       "standalone_exe": "Rone Stutter.exe",
       "vst3_bundle": "Rone Stutter.vst3",
       "au_bundle": "Rone Stutter.component",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStutter_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStutter_Installer.pkg",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneStutter"
     },
@@ -67,8 +67,8 @@
       "standalone_exe": "Rone Flanger.exe",
       "vst3_bundle": "Rone Flanger.vst3",
       "au_bundle": "",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneFlanger_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneFlanger_Installer.pkg",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneFlanger"
     }

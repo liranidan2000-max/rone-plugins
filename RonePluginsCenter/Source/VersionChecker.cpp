@@ -152,10 +152,15 @@ bool VersionChecker::isNewerVersion (const juce::String& installed,
     auto a = parseVersion (installed);
     auto b = parseVersion (remote);
 
-    for (int i = 0; i < juce::jmin (a.size(), b.size()); ++i)
+    int maxLen = juce::jmax (a.size(), b.size());
+
+    for (int i = 0; i < maxLen; ++i)
     {
-        if (b[i] > a[i]) return true;
-        if (b[i] < a[i]) return false;
+        int ai = i < a.size() ? a[i] : 0;
+        int bi = i < b.size() ? b[i] : 0;
+
+        if (bi > ai) return true;
+        if (bi < ai) return false;
     }
     return false;
 }
