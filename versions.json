@@ -1,10 +1,10 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-03-30T12:00:00Z",
+  "last_updated": "2026-03-30T13:53:59Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.0.0",
+    "version": "1.0.0.21",
     "sha256": ""
   },
   "plugins": [
@@ -13,7 +13,11 @@
       "name": "ReverseReverb",
       "version": "1.0.0",
       "type": "plugin",
-      "formats": ["VST3", "AU", "Standalone"],
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
       "description": "Real-time reverse reverb effect with WebView2 UI",
       "whats_new": "Initial release",
       "standalone_exe": "ReverseReverb.exe",
@@ -29,7 +33,9 @@
       "name": "RONE Stems Fixer",
       "version": "1.0.0",
       "type": "standalone",
-      "formats": ["Standalone"],
+      "formats": [
+        "Standalone"
+      ],
       "description": "Audio stem analysis and repair tool",
       "whats_new": "Initial release",
       "standalone_exe": "RONE Stems Fixer.exe",
@@ -45,7 +51,11 @@
       "name": "Rone Stutter",
       "version": "1.0.0",
       "type": "plugin",
-      "formats": ["VST3", "AU", "Standalone"],
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
       "description": "Glitch and stutter effect with WebView2 UI",
       "whats_new": "Initial release",
       "standalone_exe": "Rone Stutter.exe",
@@ -61,7 +71,10 @@
       "name": "Rone Flanger",
       "version": "1.0.0",
       "type": "plugin",
-      "formats": ["VST3", "Standalone"],
+      "formats": [
+        "VST3",
+        "Standalone"
+      ],
       "description": "Manual flanger with custom visualizer",
       "whats_new": "Initial release",
       "standalone_exe": "Rone Flanger.exe",
