@@ -3,6 +3,7 @@
   "last_updated": "2026-03-30T12:00:00Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RONE_Plugins_Center_Installer.exe",
+    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RONE_Plugins_Center.dmg",
     "version": "1.0.0",
     "sha256": ""
   },
@@ -12,12 +13,14 @@
       "name": "ReverseReverb",
       "version": "1.0.0",
       "type": "plugin",
-      "formats": ["VST3", "Standalone"],
+      "formats": ["VST3", "AU", "Standalone"],
       "description": "Real-time reverse reverb effect with WebView2 UI",
       "whats_new": "Initial release",
       "standalone_exe": "ReverseReverb.exe",
       "vst3_bundle": "ReverseReverb.vst3",
+      "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/ReverseReverb_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/ReverseReverb_Installer.pkg",
       "sha256": "",
       "registry_key": "ReverseReverb"
     },
@@ -31,7 +34,9 @@
       "whats_new": "Initial release",
       "standalone_exe": "RONE Stems Fixer.exe",
       "vst3_bundle": "",
+      "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStemsFixer_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStemsFixer_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneStemsFixer"
     },
@@ -40,12 +45,14 @@
       "name": "Rone Stutter",
       "version": "1.0.0",
       "type": "plugin",
-      "formats": ["VST3", "Standalone"],
+      "formats": ["VST3", "AU", "Standalone"],
       "description": "Glitch and stutter effect with WebView2 UI",
       "whats_new": "Initial release",
       "standalone_exe": "Rone Stutter.exe",
       "vst3_bundle": "Rone Stutter.vst3",
+      "au_bundle": "Rone Stutter.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStutter_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStutter_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneStutter"
     },
@@ -59,7 +66,9 @@
       "whats_new": "Initial release",
       "standalone_exe": "Rone Flanger.exe",
       "vst3_bundle": "Rone Flanger.vst3",
+      "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneFlanger_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneFlanger_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneFlanger"
     }

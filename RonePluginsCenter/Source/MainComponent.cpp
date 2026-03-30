@@ -287,7 +287,11 @@ void MainComponent::handleAction (const juce::String& pluginId)
                 if (auto* card = findCard (pluginId))
                     card->setDownloadProgress (0.0);
 
+            #if JUCE_MAC
+                networkManager.downloadInstaller (pluginId, p.downloadUrlMac);
+            #else
                 networkManager.downloadInstaller (pluginId, p.downloadUrl);
+            #endif
             }
             break;
         }
@@ -342,7 +346,7 @@ void MainComponent::handleInfo (const juce::String& pluginId)
 // Silent installer execution
 // ============================================================================
 
-void MainComponent::launchSilentInstaller (const juce::File& installerExe,
+void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                                             const juce::String& pluginId)
 {
     // Update card state
@@ -359,44 +363,75 @@ void MainComponent::launchSilentInstaller (const juce::File& installerExe,
 
     statusLabel.setText ("Installing...", juce::dontSendNotification);
 
-    // Launch installer in background thread
-    auto exePath = installerExe.getFullPathName();
-    auto pid     = pluginId;
+    // Gather info before launching the background thread
+    auto filePath = installerFile.getFullPathName();
+    auto pid      = pluginId;
 
-    // Find the registry key and remote version before launching the thread
     juce::String regKey;
     juce::String remoteVer;
+    juce::String vst3Bundle;
+    juce::String auBundle;
+    juce::String standaloneExe;
+
     for (auto& p : pluginData)
     {
         if (p.id == pluginId)
         {
-            regKey    = p.registryKey;
-            remoteVer = p.remoteVersion;
+            regKey        = p.registryKey;
+            remoteVer     = p.remoteVersion;
+            vst3Bundle    = p.vst3Bundle;
+            auBundle      = p.auBundle;
+            standaloneExe = p.standaloneExe;
             break;
         }
     }
 
-    juce::Thread::launch ([this, exePath, pid, regKey, remoteVer]
+    juce::Thread::launch ([this, filePath, pid, regKey, remoteVer,
+                           vst3Bundle, auBundle, standaloneExe]
     {
         juce::ChildProcess process;
-        // Inno Setup silent flags — individual plugin installer.
-        // Wrap path in quotes to handle spaces and special characters.
-        juce::String cmd = "\"" + exePath + "\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-";
-        bool started = process.start (cmd);
+        bool started = false;
+
+    #if JUCE_MAC
+        // macOS: use 'installer' command via osascript for admin privileges.
+        // The .pkg installs VST3/AU to /Library/Audio/Plug-Ins/ system-wide.
+        juce::String cmd = juce::String ("osascript -e 'do shell script \"installer -pkg ")
+                         + "\\\"" + filePath + "\\\""
+                         + " -target /\" with administrator privileges'";
+        started = process.start (cmd);
+    #else
+        // Windows: Inno Setup silent flags
+        juce::String cmd = "\"" + filePath + "\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-";
+        started = process.start (cmd);
+    #endif
 
         bool processFinished = false;
         if (started)
             processFinished = process.waitForProcessToFinish (120000); // 2 min timeout
 
-        // Verify success by checking if the installer wrote the registry key.
-        // This is more reliable than just checking the process exit —
-        // the individual plugin installer writes InstalledVersion on success.
+        // Verify installation success
         bool verified = false;
+
+    #if JUCE_MAC
         if (processFinished)
         {
+            // On Mac, verify by checking if the plugin files appeared on disk
+            verified = VersionChecker::isVst3Installed (vst3Bundle)
+                    || VersionChecker::isAUInstalled (auBundle)
+                    || VersionChecker::isStandaloneInstalled (standaloneExe);
+
+            // If verified, write the version to our shared XML tracker
+            if (verified)
+                VersionChecker::setInstalledVersion (regKey, remoteVer);
+        }
+    #else
+        if (processFinished)
+        {
+            // On Windows, the Inno Setup installer writes the registry key
             auto installedVer = VersionChecker::getInstalledVersion (regKey);
             verified = installedVer.isNotEmpty();
         }
+    #endif
 
         juce::MessageManager::callAsync ([this, pid, verified, remoteVer]
         {
@@ -406,9 +441,13 @@ void MainComponent::launchSilentInstaller (const juce::File& installerExe,
                 {
                     if (verified)
                     {
-                        // The individual installer already wrote the registry key.
-                        // Read the actual installed version back from it.
                         p.installedVersion = VersionChecker::getInstalledVersion (p.registryKey);
+
+                        // On Mac the XML was just written with remoteVer;
+                        // if getInstalledVersion returned empty, use remoteVer directly
+                        if (p.installedVersion.isEmpty())
+                            p.installedVersion = remoteVer;
+
                         p.status = PluginStatus::UpToDate;
                         statusLabel.setText ("Installed successfully!",
                                               juce::dontSendNotification);
@@ -416,8 +455,13 @@ void MainComponent::launchSilentInstaller (const juce::File& installerExe,
                     else
                     {
                         p.status = PluginStatus::Error;
+                    #if JUCE_MAC
+                        statusLabel.setText ("Install failed — check your password and try again.",
+                                              juce::dontSendNotification);
+                    #else
                         statusLabel.setText ("Install failed — try running as Administrator.",
                                               juce::dontSendNotification);
+                    #endif
                     }
 
                     if (auto* card = findCard (pid))

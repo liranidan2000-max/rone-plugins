@@ -74,12 +74,12 @@ jobs:
               - 'installer/**'
 
 # ============================================================================
-# JOB 2 — build  (matrix: 4 × windows-latest running in parallel)
+# JOB 2 — build-windows  (matrix: 5 × windows-latest running in parallel)
 # Each slot builds one plugin, caches its build-ci/ directory, and uploads
 # the compiled artifacts so the package job can assemble them.
 # ============================================================================
-  build:
-    name: Build ${{ matrix.plugin_id }}
+  build-windows:
+    name: Build ${{ matrix.plugin_id }} (Windows)
     needs: detect-changes
     runs-on: windows-latest
     strategy:
@@ -149,10 +149,7 @@ jobs:
           arch: x64
 
       # -----------------------------------------------------------------------
-      # 3. Cache — full build-ci/ directory (JUCE objects + plugin output)
-      #    Key includes a hash of the entire plugin folder so a source change
-      #    busts the cache and triggers a full rebuild.
-      #    restore-keys gives a partial hit that lets CMake do incremental work.
+      # 3. Cache — full build-ci/ directory
       # -----------------------------------------------------------------------
       - name: Restore build cache for ${{ matrix.plugin_id }}
         uses: actions/cache@v4
@@ -204,7 +201,6 @@ jobs:
 
       # -----------------------------------------------------------------------
       # 6. Decide whether this plugin needs building
-      #    Build if: plugin changed, OR workflow/installer changed, OR no cache
       # -----------------------------------------------------------------------
       - name: Determine if build is needed
         id: should-build
@@ -224,7 +220,7 @@ jobs:
           Write-Host "Plugin changed: $changed  |  Cache hit: $cacheHit  |  Will build: $needBuild"
 
       # -----------------------------------------------------------------------
-      # 7. CMake configure + build (skipped if cached + unchanged)
+      # 7. CMake configure + build
       # -----------------------------------------------------------------------
       - name: CMake configure — ${{ matrix.plugin_id }}
         if: env.PLUGIN_CHANGED == 'True'
@@ -253,35 +249,166 @@ jobs:
         run: cmake --build build-ci --config Release --parallel
 
       # -----------------------------------------------------------------------
-      # 8. Upload compiled artifacts for the package job
-      #    Uploads the entire Release/ subtree (VST3/ + Standalone/ subdirs).
+      # 8. Upload compiled artifacts
       # -----------------------------------------------------------------------
       - name: Upload plugin artifacts — ${{ matrix.plugin_id }}
         uses: actions/upload-artifact@v4
         with:
-          name: plugin-${{ matrix.plugin_id }}
+          name: plugin-${{ matrix.plugin_id }}-windows
           path: ${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release/
           retention-days: 1
           if-no-files-found: error
 
 # ============================================================================
-# JOB 3 — package
-# Downloads all 5 build artifacts, compiles 5 separate Inno Setup installers:
-#   1 × RONE Plugins Center (main hub — the only installer users download)
-#   4 × Individual plugin silent installers (downloaded by the Center on demand)
+# JOB 3 — build-macos  (matrix: 5 × macos-latest running in parallel)
+# Builds all plugins for macOS (VST3, AU, Standalone).
+# ============================================================================
+  build-macos:
+    name: Build ${{ matrix.plugin_id }} (macOS)
+    needs: detect-changes
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ------------------------------------------------------------------
+          - plugin_id:      reverse_reverb
+            folder:         ReverseReverbVST
+            cmake_project:  ReverseReverb
+            is_flanger:     "false"
+          # ------------------------------------------------------------------
+          - plugin_id:      stems_fixer
+            folder:         RoneStemsFixer
+            cmake_project:  RoneStemsFixer
+            is_flanger:     "false"
+          # ------------------------------------------------------------------
+          - plugin_id:      stutter
+            folder:         RoneStutter
+            cmake_project:  RoneStutter
+            is_flanger:     "false"
+          # ------------------------------------------------------------------
+          - plugin_id:      flanger
+            folder:         rone-flanger-
+            cmake_project:  ManualFlanger
+            is_flanger:     "true"
+          # ------------------------------------------------------------------
+          - plugin_id:      plugins_center
+            folder:         RonePluginsCenter
+            cmake_project:  RonePluginsCenter
+            is_flanger:     "false"
+
+    steps:
+      - name: Inject PAT into git for private submodule clones
+        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Checkout root repo
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout ${{ matrix.folder }} submodule only
+        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}"
+
+      # -----------------------------------------------------------------------
+      # Cache
+      # -----------------------------------------------------------------------
+      - name: Restore build cache for ${{ matrix.plugin_id }}
+        uses: actions/cache@v4
+        id: cache-build
+        with:
+          path: ${{ matrix.folder }}/build-ci
+          key:  build-${{ matrix.plugin_id }}-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            build-${{ matrix.plugin_id }}-${{ runner.os }}-
+
+      # -----------------------------------------------------------------------
+      # rone-flanger: fetch JUCE extras/Build
+      # -----------------------------------------------------------------------
+      - name: Restore rone-flanger JUCE extras/Build cache
+        if: matrix.is_flanger == 'true'
+        uses: actions/cache@v4
+        id: cache-extras
+        with:
+          path: rone-flanger-/JUCE/extras/Build
+          key:  flanger-juce-extras-8.0.12-${{ runner.os }}
+
+      - name: Fetch missing JUCE extras/Build (rone-flanger-)
+        if: matrix.is_flanger == 'true' && steps.cache-extras.outputs.cache-hit != 'true'
+        working-directory: rone-flanger-
+        run: |
+          git clone --depth 1 --branch 8.0.12 --filter=blob:none --sparse \
+            https://github.com/juce-framework/JUCE.git _juce_build_tmp
+          cd _juce_build_tmp
+          git sparse-checkout set extras/Build
+          cd ..
+          cp -R _juce_build_tmp/extras/Build JUCE/extras/Build
+          rm -rf _juce_build_tmp
+
+      # -----------------------------------------------------------------------
+      # Determine if build is needed
+      # -----------------------------------------------------------------------
+      - name: Determine if build is needed
+        id: should-build
+        run: |
+          case "${{ matrix.plugin_id }}" in
+            reverse_reverb) changed="${{ needs.detect-changes.outputs.reverse_reverb }}" ;;
+            stems_fixer)    changed="${{ needs.detect-changes.outputs.stems_fixer }}" ;;
+            stutter)        changed="${{ needs.detect-changes.outputs.stutter }}" ;;
+            flanger)        changed="${{ needs.detect-changes.outputs.flanger }}" ;;
+            plugins_center) changed="${{ needs.detect-changes.outputs.plugins_center }}" ;;
+            *)              changed="true" ;;
+          esac
+          cache_hit="${{ steps.cache-build.outputs.cache-hit }}"
+          if [ "$changed" = "true" ] || [ "$cache_hit" != "true" ]; then
+            echo "PLUGIN_CHANGED=true" >> $GITHUB_ENV
+          else
+            echo "PLUGIN_CHANGED=false" >> $GITHUB_ENV
+          fi
+          echo "Plugin changed: $changed | Cache hit: $cache_hit"
+
+      # -----------------------------------------------------------------------
+      # CMake configure + build (macOS — Xcode or Unix Makefiles)
+      # -----------------------------------------------------------------------
+      - name: CMake configure — ${{ matrix.plugin_id }}
+        if: env.PLUGIN_CHANGED == 'true'
+        working-directory: ${{ matrix.folder }}
+        run: |
+          cmake -B build-ci \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+
+      - name: CMake build — ${{ matrix.plugin_id }}
+        if: env.PLUGIN_CHANGED == 'true'
+        working-directory: ${{ matrix.folder }}
+        run: cmake --build build-ci --config Release --parallel
+
+      # -----------------------------------------------------------------------
+      # Upload compiled artifacts
+      # -----------------------------------------------------------------------
+      - name: Upload plugin artifacts — ${{ matrix.plugin_id }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-${{ matrix.plugin_id }}-macos
+          path: ${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release/
+          retention-days: 1
+          if-no-files-found: error
+
+# ============================================================================
+# JOB 4 — package
+# Downloads all build artifacts, compiles Windows installers + macOS .pkg/.dmg
 # ============================================================================
   package:
     name: Package installers
-    needs: [detect-changes, build]
-    runs-on: windows-latest
+    needs: [detect-changes, build-windows, build-macos]
+    runs-on: macos-latest
 
     env:
-      # 1.0.<run_number> on branch pushes; strip "v" prefix on tag pushes
       INSTALLER_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('1.0.{0}', github.run_number) }}
 
     steps:
       # -----------------------------------------------------------------------
-      # 1. Checkout root — we need installer/*.iss files
+      # 1. Checkout — we need installer/*.iss files (for reference, built on separate runner)
       # -----------------------------------------------------------------------
       - name: Inject PAT into git
         run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
@@ -296,46 +423,232 @@ jobs:
             .github
 
       # -----------------------------------------------------------------------
-      # 2. Download all 5 build artifacts to ISS-expected paths
+      # 2. Download all macOS build artifacts
+      # -----------------------------------------------------------------------
+      - name: Download ReverseReverb macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-reverse_reverb-macos
+          path: macos-artifacts/ReverseReverb/
+
+      - name: Download RoneStemsFixer macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-stems_fixer-macos
+          path: macos-artifacts/RoneStemsFixer/
+
+      - name: Download RoneStutter macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-stutter-macos
+          path: macos-artifacts/RoneStutter/
+
+      - name: Download RoneFlanger macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-flanger-macos
+          path: macos-artifacts/RoneFlanger/
+
+      - name: Download RonePluginsCenter macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-plugins_center-macos
+          path: macos-artifacts/RonePluginsCenter/
+
+      # -----------------------------------------------------------------------
+      # 3. Create macOS .pkg installers using pkgbuild
+      # -----------------------------------------------------------------------
+      - name: Create output directory
+        run: mkdir -p build-output
+
+      - name: Build macOS .pkg — ReverseReverb
+        run: |
+          VERSION=$(echo "${{ env.INSTALLER_VERSION }}" | sed 's/^v//')
+          mkdir -p staging/Library/Audio/Plug-Ins/VST3
+          mkdir -p staging/Library/Audio/Plug-Ins/Components
+          cp -R macos-artifacts/ReverseReverb/VST3/*.vst3 staging/Library/Audio/Plug-Ins/VST3/ 2>/dev/null || true
+          cp -R macos-artifacts/ReverseReverb/AU/*.component staging/Library/Audio/Plug-Ins/Components/ 2>/dev/null || true
+          pkgbuild --root staging \
+                   --identifier com.roneplugins.reversereverb \
+                   --version "$VERSION" \
+                   --install-location / \
+                   build-output/ReverseReverb_Installer.pkg
+          rm -rf staging
+
+      - name: Build macOS .pkg — RoneStemsFixer
+        run: |
+          VERSION=$(echo "${{ env.INSTALLER_VERSION }}" | sed 's/^v//')
+          mkdir -p staging/Applications
+          cp -R macos-artifacts/RoneStemsFixer/Standalone/*.app staging/Applications/ 2>/dev/null || true
+          pkgbuild --root staging \
+                   --identifier com.roneplugins.ronestemsfixer \
+                   --version "$VERSION" \
+                   --install-location / \
+                   build-output/RoneStemsFixer_Installer.pkg
+          rm -rf staging
+
+      - name: Build macOS .pkg — RoneStutter
+        run: |
+          VERSION=$(echo "${{ env.INSTALLER_VERSION }}" | sed 's/^v//')
+          mkdir -p staging/Library/Audio/Plug-Ins/VST3
+          mkdir -p staging/Library/Audio/Plug-Ins/Components
+          cp -R macos-artifacts/RoneStutter/VST3/*.vst3 staging/Library/Audio/Plug-Ins/VST3/ 2>/dev/null || true
+          cp -R macos-artifacts/RoneStutter/AU/*.component staging/Library/Audio/Plug-Ins/Components/ 2>/dev/null || true
+          pkgbuild --root staging \
+                   --identifier com.roneplugins.ronestutter \
+                   --version "$VERSION" \
+                   --install-location / \
+                   build-output/RoneStutter_Installer.pkg
+          rm -rf staging
+
+      - name: Build macOS .pkg — RoneFlanger
+        run: |
+          VERSION=$(echo "${{ env.INSTALLER_VERSION }}" | sed 's/^v//')
+          mkdir -p staging/Library/Audio/Plug-Ins/VST3
+          cp -R macos-artifacts/RoneFlanger/VST3/*.vst3 staging/Library/Audio/Plug-Ins/VST3/ 2>/dev/null || true
+          pkgbuild --root staging \
+                   --identifier com.roneplugins.roneflanger \
+                   --version "$VERSION" \
+                   --install-location / \
+                   build-output/RoneFlanger_Installer.pkg
+          rm -rf staging
+
+      # -----------------------------------------------------------------------
+      # 4. Create macOS .dmg for the Center app
+      # -----------------------------------------------------------------------
+      - name: Build macOS .dmg — RONE Plugins Center
+        run: |
+          mkdir -p dmg_staging
+          # Find the .app bundle in the artifacts
+          APP_PATH=$(find macos-artifacts/RonePluginsCenter -name "*.app" -type d | head -1)
+          if [ -n "$APP_PATH" ]; then
+            cp -R "$APP_PATH" dmg_staging/
+            hdiutil create -volname "RONE Plugins Center" -srcfolder dmg_staging \
+              -ov -format UDZO build-output/RONE_Plugins_Center.dmg
+          fi
+          rm -rf dmg_staging
+
+      # -----------------------------------------------------------------------
+      # 5. Upload macOS installers as artifacts
+      # -----------------------------------------------------------------------
+      - name: Upload macOS .pkg installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-installers
+          path: |
+            build-output/*.pkg
+            build-output/*.dmg
+          if-no-files-found: warn
+
+      # -----------------------------------------------------------------------
+      # 6. Create GitHub Release with all installers (tag pushes only)
+      # -----------------------------------------------------------------------
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RONE Plugins ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: |
+            build-output/ReverseReverb_Installer.pkg
+            build-output/RoneStemsFixer_Installer.pkg
+            build-output/RoneStutter_Installer.pkg
+            build-output/RoneFlanger_Installer.pkg
+            build-output/RONE_Plugins_Center.dmg
+          body: |
+            ## RONE Plugins ${{ github.ref_name }}
+
+            ### Hub-First Model
+            Download **RONE Plugins Center** below — it's the only installer you need.
+            Launch it to browse, install, and update all plugins from one place.
+
+            ### Available Plugins
+            - **ReverseReverb** — VST3 + AU + Standalone
+            - **RONE Stems Fixer** — Standalone
+            - **Rone Stutter** — VST3 + AU + Standalone
+            - **Rone Flanger** — VST3 + Standalone
+
+            ### Downloads
+            | Platform | Center App | Plugins |
+            |----------|-----------|---------|
+            | **Windows** | `RONE_Plugins_Center_Installer.exe` | Downloaded by Center |
+            | **macOS** | `RONE_Plugins_Center.dmg` | Downloaded by Center |
+
+            ### Installation Paths
+            | Platform | VST3 | AU | Standalone |
+            |----------|------|----|------------|
+            | Windows | `C:\Program Files\Common Files\VST3\RONE\` | — | `C:\Program Files\RONE Plugins\` |
+            | macOS | `/Library/Audio/Plug-Ins/VST3/` | `/Library/Audio/Plug-Ins/Components/` | `/Applications/` |
+
+            > Individual plugin installers (.exe / .pkg) are also attached for advanced users.
+
+  # ============================================================================
+  # JOB 5 — package-windows (separate runner for Inno Setup)
+  # ============================================================================
+  package-windows:
+    name: Package Windows installers
+    needs: [detect-changes, build-windows]
+    runs-on: windows-latest
+
+    env:
+      INSTALLER_VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('1.0.{0}', github.run_number) }}
+
+    steps:
+      - name: Inject PAT into git
+        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Checkout root repo
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          token: ${{ secrets.GH_PAT }}
+          sparse-checkout: |
+            installer
+            .github
+
+      # -----------------------------------------------------------------------
+      # Download Windows build artifacts
       # -----------------------------------------------------------------------
       - name: Download ReverseReverbVST artifacts
         uses: actions/download-artifact@v4
         with:
-          name: plugin-reverse_reverb
+          name: plugin-reverse_reverb-windows
           path: ReverseReverbVST/build-ci/ReverseReverb_artefacts/Release/
 
       - name: Download RoneStemsFixer artifacts
         uses: actions/download-artifact@v4
         with:
-          name: plugin-stems_fixer
+          name: plugin-stems_fixer-windows
           path: RoneStemsFixer/build-ci/RoneStemsFixer_artefacts/Release/
 
       - name: Download RoneStutter artifacts
         uses: actions/download-artifact@v4
         with:
-          name: plugin-stutter
+          name: plugin-stutter-windows
           path: RoneStutter/build-ci/RoneStutter_artefacts/Release/
 
       - name: Download rone-flanger- artifacts
         uses: actions/download-artifact@v4
         with:
-          name: plugin-flanger
+          name: plugin-flanger-windows
           path: rone-flanger-/build-ci/ManualFlanger_artefacts/Release/
 
       - name: Download RonePluginsCenter artifacts
         uses: actions/download-artifact@v4
         with:
-          name: plugin-plugins_center
+          name: plugin-plugins_center-windows
           path: RonePluginsCenter/build-ci/RonePluginsCenter_artefacts/Release/
 
       # -----------------------------------------------------------------------
-      # 3. Install Inno Setup 6
+      # Install Inno Setup 6
       # -----------------------------------------------------------------------
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
 
       # -----------------------------------------------------------------------
-      # 4. Compile all 5 Inno Setup installers
+      # Compile all 5 Inno Setup installers
       # -----------------------------------------------------------------------
       - name: Create installer output directory
         run: New-Item -ItemType Directory -Force -Path build-output
@@ -381,55 +694,22 @@ jobs:
             "installer\RoneFlanger.iss"
 
       # -----------------------------------------------------------------------
-      # 5. Upload all 5 installers as separate artifacts
+      # Upload Windows installers
       # -----------------------------------------------------------------------
-      - name: Upload Center installer
+      - name: Upload Windows installers
         uses: actions/upload-artifact@v4
         with:
-          name: RONE_Plugins_Center_Installer
-          path: build-output/RONE_Plugins_Center_Installer_v*.exe
-          if-no-files-found: error
-
-      - name: Upload ReverseReverb installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: ReverseReverb_Installer
-          path: build-output/ReverseReverb_Installer_v*.exe
-          if-no-files-found: error
-
-      - name: Upload RoneStemsFixer installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: RoneStemsFixer_Installer
-          path: build-output/RoneStemsFixer_Installer_v*.exe
-          if-no-files-found: error
-
-      - name: Upload RoneStutter installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: RoneStutter_Installer
-          path: build-output/RoneStutter_Installer_v*.exe
-          if-no-files-found: error
-
-      - name: Upload RoneFlanger installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: RoneFlanger_Installer
-          path: build-output/RoneFlanger_Installer_v*.exe
+          name: windows-installers
+          path: build-output/*.exe
           if-no-files-found: error
 
       # -----------------------------------------------------------------------
-      # 6. Create GitHub Release with all 5 installers (tag pushes only)
-      #    The Center installer is the primary download. Plugin installers are
-      #    downloaded on-demand by the Center app from these release assets.
+      # Rename for stable URLs + add to GitHub Release (tag pushes only)
       # -----------------------------------------------------------------------
       - name: Rename installers for release (strip version suffix for stable URLs)
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
-          # GitHub Releases need stable filenames so versions.json download_url
-          # (e.g. .../latest/download/ReverseReverb_Installer.exe) always resolves.
-          # Keep versioned copies AND create unversioned copies for the release.
           $version = "${{ env.INSTALLER_VERSION }}".TrimStart('v')
           $files = @(
             @{ src = "RONE_Plugins_Center_Installer_v$version.exe"; dst = "RONE_Plugins_Center_Installer.exe" },
@@ -442,38 +722,14 @@ jobs:
             Copy-Item "build-output\$($f.src)" "build-output\$($f.dst)"
           }
 
-      - name: Create GitHub Release
+      - name: Add Windows installers to GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          name: RONE Plugins ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          draft: false
-          prerelease: false
           files: |
             build-output/RONE_Plugins_Center_Installer.exe
             build-output/ReverseReverb_Installer.exe
             build-output/RoneStemsFixer_Installer.exe
             build-output/RoneStutter_Installer.exe
             build-output/RoneFlanger_Installer.exe
-          body: |
-            ## RONE Plugins ${{ github.ref_name }}
-
-            ### Hub-First Model
-            Download **RONE Plugins Center** below — it's the only installer you need.
-            Launch it to browse, install, and update all plugins from one place.
-
-            ### Available Plugins
-            - **ReverseReverb** — VST3 + Standalone
-            - **RONE Stems Fixer** — Standalone
-            - **Rone Stutter** — VST3 + Standalone
-            - **Rone Flanger** — VST3 + Standalone
-
-            ### Installation Paths
-            | Type | Path |
-            |------|------|
-            | VST3 plugins | `C:\Program Files\Common Files\VST3\RONE\` |
-            | Standalone apps | `C:\Program Files\RONE Plugins\` |
-
-            > Individual plugin installers are also attached for advanced users.
-            > They can be run silently: `ReverseReverb_Installer.exe /VERYSILENT`

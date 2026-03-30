@@ -104,7 +104,11 @@ void NetworkManager::run()
                                .getChildFile ("RONE_Downloads");
             tempDir.createDirectory();
 
+        #if JUCE_MAC
+            auto tempFile = tempDir.getChildFile (activePluginId + "_Installer.pkg");
+        #else
             auto tempFile = tempDir.getChildFile (activePluginId + "_Installer.exe");
+        #endif
             if (tempFile.existsAsFile())
                 tempFile.deleteFile();
 
@@ -230,11 +234,13 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.remoteVersion = entry.getProperty ("version",      {}).toString();
         info.description   = entry.getProperty ("description",  {}).toString();
         info.whatsNew      = entry.getProperty ("whats_new",    {}).toString();
-        info.downloadUrl   = entry.getProperty ("download_url", {}).toString();
-        info.sha256        = entry.getProperty ("sha256",       {}).toString();
-        info.standaloneExe = entry.getProperty ("standalone_exe", {}).toString();
-        info.vst3Bundle    = entry.getProperty ("vst3_bundle",  {}).toString();
-        info.registryKey   = entry.getProperty ("registry_key", {}).toString();
+        info.downloadUrl    = entry.getProperty ("download_url",     {}).toString();
+        info.downloadUrlMac = entry.getProperty ("download_url_mac", {}).toString();
+        info.sha256         = entry.getProperty ("sha256",           {}).toString();
+        info.standaloneExe  = entry.getProperty ("standalone_exe",   {}).toString();
+        info.vst3Bundle     = entry.getProperty ("vst3_bundle",      {}).toString();
+        info.auBundle       = entry.getProperty ("au_bundle",        {}).toString();
+        info.registryKey    = entry.getProperty ("registry_key",     {}).toString();
         info.type          = entry.getProperty ("type",         {}).toString();
 
         auto* fmts = entry.getProperty ("formats", {}).getArray();
@@ -252,7 +258,8 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         if (info.status == PluginStatus::NotInstalled)
         {
             bool found = VersionChecker::isStandaloneInstalled (info.standaloneExe)
-                      || VersionChecker::isVst3Installed (info.vst3Bundle);
+                      || VersionChecker::isVst3Installed (info.vst3Bundle)
+                      || VersionChecker::isAUInstalled (info.auBundle);
             if (found)
             {
                 info.installedVersion = "?";
@@ -280,12 +287,14 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
       "name": "ReverseReverb",
       "version": "1.0.0",
       "type": "plugin",
-      "formats": ["VST3", "Standalone"],
+      "formats": ["VST3", "AU", "Standalone"],
       "description": "Real-time reverse reverb effect with WebView2 UI",
       "whats_new": "Initial release",
       "standalone_exe": "ReverseReverb.exe",
       "vst3_bundle": "ReverseReverb.vst3",
+      "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/ReverseReverb_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/ReverseReverb_Installer.pkg",
       "sha256": "",
       "registry_key": "ReverseReverb"
     },
@@ -299,7 +308,9 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
       "whats_new": "Initial release",
       "standalone_exe": "RONE Stems Fixer.exe",
       "vst3_bundle": "",
+      "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStemsFixer_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStemsFixer_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneStemsFixer"
     },
@@ -308,12 +319,14 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
       "name": "Rone Stutter",
       "version": "1.0.0",
       "type": "plugin",
-      "formats": ["VST3", "Standalone"],
+      "formats": ["VST3", "AU", "Standalone"],
       "description": "Glitch and stutter effect with WebView2 UI",
       "whats_new": "Initial release",
       "standalone_exe": "Rone Stutter.exe",
       "vst3_bundle": "Rone Stutter.vst3",
+      "au_bundle": "Rone Stutter.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStutter_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStutter_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneStutter"
     },
@@ -327,7 +340,9 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
       "whats_new": "Initial release",
       "standalone_exe": "Rone Flanger.exe",
       "vst3_bundle": "Rone Flanger.vst3",
+      "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneFlanger_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneFlanger_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneFlanger"
     }

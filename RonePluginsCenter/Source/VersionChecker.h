@@ -26,9 +26,11 @@ struct PluginInfo
     juce::String installedVersion;    // empty if not installed
     juce::String whatsNew;
     juce::String downloadUrl;
+    juce::String downloadUrlMac;      // .pkg URL for macOS
     juce::String sha256;
     juce::String standaloneExe;
     juce::String vst3Bundle;
+    juce::String auBundle;            // e.g. "ReverseReverb.component"
     juce::String registryKey;
     juce::String type;                // "plugin" or "standalone"
     juce::StringArray formats;
@@ -59,15 +61,15 @@ public:
     static PluginStatus determineStatus (const juce::String& installed,
                                           const juce::String& remote);
 
-    // Check whether the standalone exe or VST3 bundle exists on disk.
+    // Check whether the standalone exe or VST3/AU bundle exists on disk.
     static bool isStandaloneInstalled (const juce::String& exeName);
     static bool isVst3Installed       (const juce::String& bundleName);
+    static bool isAUInstalled         (const juce::String& bundleName);
 
-    // Get the install directory for standalones.
+    // Get the install directories.
     static juce::File getStandaloneInstallDir();
-
-    // Get the VST3 install directory.
     static juce::File getVst3InstallDir();
+    static juce::File getAUInstallDir();
 
 private:
     // Split "1.2.3" into {1, 2, 3}.

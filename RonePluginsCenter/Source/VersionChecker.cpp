@@ -5,7 +5,22 @@
 #endif
 
 // ============================================================================
-// Registry helpers (Windows only — stubs on other platforms)
+// Version persistence helpers
+// ============================================================================
+
+#if JUCE_MAC || JUCE_LINUX
+// On macOS/Linux we store installed versions in a shared XML file
+// at ~/Library/Application Support/RonePlugins/versions.xml
+static juce::File getVersionsXmlFile()
+{
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+               .getChildFile ("RonePlugins")
+               .getChildFile ("versions.xml");
+}
+#endif
+
+// ============================================================================
+// Registry / XML helpers — read & write installed version per plugin
 // ============================================================================
 
 juce::String VersionChecker::getInstalledVersion (const juce::String& registryKey)
@@ -31,11 +46,27 @@ juce::String VersionChecker::getInstalledVersion (const juce::String& registryKe
         }
         RegCloseKey (hKey);
     }
-#else
-    juce::ignoreUnused (registryKey);
-#endif
 
     return {};
+
+#else
+    // macOS / Linux: read from shared XML file
+    auto file = getVersionsXmlFile();
+    if (! file.existsAsFile())
+        return {};
+
+    auto xml = juce::parseXML (file);
+    if (xml == nullptr)
+        return {};
+
+    for (auto* child : xml->getChildIterator())
+    {
+        if (child->getStringAttribute ("id") == registryKey)
+            return child->getStringAttribute ("version");
+    }
+
+    return {};
+#endif
 }
 
 void VersionChecker::setInstalledVersion (const juce::String& registryKey,
@@ -60,7 +91,36 @@ void VersionChecker::setInstalledVersion (const juce::String& registryKey,
         RegCloseKey (hKey);
     }
 #else
-    juce::ignoreUnused (registryKey, version);
+    // macOS / Linux: write to shared XML file
+    auto file = getVersionsXmlFile();
+    file.getParentDirectory().createDirectory();
+
+    std::unique_ptr<juce::XmlElement> xml;
+    if (file.existsAsFile())
+        xml = juce::parseXML (file);
+    if (xml == nullptr)
+        xml = std::make_unique<juce::XmlElement> ("RoneVersions");
+
+    // Find or create the plugin entry
+    bool found = false;
+    for (auto* child : xml->getChildIterator())
+    {
+        if (child->getStringAttribute ("id") == registryKey)
+        {
+            child->setAttribute ("version", version);
+            found = true;
+            break;
+        }
+    }
+
+    if (! found)
+    {
+        auto* entry = xml->createNewChildElement ("Plugin");
+        entry->setAttribute ("id", registryKey);
+        entry->setAttribute ("version", version);
+    }
+
+    xml->writeTo (file, {});
 #endif
 }
 
@@ -140,16 +200,42 @@ juce::File VersionChecker::getVst3InstallDir()
         .getChildFile (RONE_VST3_SUBDIR);
     return common;
 #elif JUCE_MAC
-    return juce::File ("/Library/Audio/Plug-Ins/VST3/RONE");
+    return juce::File ("/Library/Audio/Plug-Ins/VST3");
 #else
     return juce::File ("~/.vst3/RONE");
+#endif
+}
+
+juce::File VersionChecker::getAUInstallDir()
+{
+#if JUCE_MAC
+    return juce::File ("/Library/Audio/Plug-Ins/Components");
+#else
+    return juce::File(); // AU is macOS-only
 #endif
 }
 
 bool VersionChecker::isStandaloneInstalled (const juce::String& exeName)
 {
     if (exeName.isEmpty()) return false;
+
+#if JUCE_MAC
+    // On Mac, standalone apps are .app bundles — check both the install dir
+    // and /Applications
+    auto installDir = getStandaloneInstallDir();
+    auto appName = exeName.replace (".exe", "") + ".app";
+
+    if (installDir.getChildFile (appName).exists())
+        return true;
+
+    // Also check /Applications
+    if (juce::File ("/Applications").getChildFile (appName).exists())
+        return true;
+
+    return false;
+#else
     return getStandaloneInstallDir().getChildFile (exeName).existsAsFile();
+#endif
 }
 
 bool VersionChecker::isVst3Installed (const juce::String& bundleName)
@@ -157,4 +243,23 @@ bool VersionChecker::isVst3Installed (const juce::String& bundleName)
     if (bundleName.isEmpty()) return false;
     auto vst3 = getVst3InstallDir().getChildFile (bundleName);
     return vst3.exists(); // could be file or directory (bundle)
+}
+
+bool VersionChecker::isAUInstalled (const juce::String& bundleName)
+{
+    if (bundleName.isEmpty()) return false;
+
+#if JUCE_MAC
+    // Check system-wide and user AU directories
+    if (getAUInstallDir().getChildFile (bundleName).exists())
+        return true;
+
+    auto userAU = juce::File::getSpecialLocation (juce::File::userHomeDirectory)
+                      .getChildFile ("Library/Audio/Plug-Ins/Components")
+                      .getChildFile (bundleName);
+    return userAU.exists();
+#else
+    juce::ignoreUnused (bundleName);
+    return false;
+#endif
 }
