@@ -53,6 +53,10 @@ private:
     // Parse the raw JSON body into PluginInfo structs.
     juce::Array<PluginInfo> parseManifest (const juce::String& jsonBody);
 
+    // Hardcoded fallback manifest — used when remote fetch returns 0 plugins
+    // (e.g. private repo 404, no internet, JSON parse failure).
+    juce::Array<PluginInfo> getFallbackManifest();
+
     // ---- State -------------------------------------------------------------
     enum Task { None, FetchManifest, DownloadFile };
 

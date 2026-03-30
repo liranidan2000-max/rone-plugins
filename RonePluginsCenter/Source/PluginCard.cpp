@@ -19,7 +19,7 @@ PluginCard::PluginCard()
 
     // Formats label (VST3, Standalone, etc.)
     formatsLabel.setFont (juce::FontOptions (11.0f));
-    formatsLabel.setColour (juce::Label::textColourId, Colours_RONE::neonPurple);
+    formatsLabel.setColour (juce::Label::textColourId, Colours_RONE::lightPurple);
     addAndMakeVisible (formatsLabel);
 
     // Action button
@@ -28,12 +28,12 @@ PluginCard::PluginCard()
 
     // Open button (for standalones)
     openButton.addListener (this);
-    openButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::cardBorder);
+    openButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
     addAndMakeVisible (openButton);
 
     // Info button
     infoButton.addListener (this);
-    infoButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::cardBorder);
+    infoButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
     addAndMakeVisible (infoButton);
 
     // Progress bar (hidden by default)
@@ -87,19 +87,19 @@ void PluginCard::updateButtonState()
         case PluginStatus::NotInstalled:
             actionButton.setButtonText ("INSTALL");
             actionButton.setColour (juce::TextButton::buttonColourId,
-                                     Colours_RONE::neonBlue);
+                                     Colours_RONE::hotPurple);
             break;
 
         case PluginStatus::UpdateAvailable:
             actionButton.setButtonText ("UPDATE");
             actionButton.setColour (juce::TextButton::buttonColourId,
-                                     Colours_RONE::neonOrange);
+                                     Colours_RONE::neonPink);
             break;
 
         case PluginStatus::UpToDate:
             actionButton.setButtonText ("INSTALLED");
             actionButton.setColour (juce::TextButton::buttonColourId,
-                                     Colours_RONE::neonGreen.withAlpha (0.25f));
+                                     Colours_RONE::lightPurple.withAlpha (0.25f));
             actionButton.setEnabled (false);
 
             // Show "Open" for standalones
@@ -121,42 +121,53 @@ void PluginCard::updateButtonState()
         case PluginStatus::Error:
             actionButton.setButtonText ("RETRY");
             actionButton.setColour (juce::TextButton::buttonColourId,
-                                     Colours_RONE::neonPink);
+                                     Colours_RONE::errorRed);
             break;
     }
 }
 
 // ============================================================================
-// Paint — draws the card background + glow border
+// Paint — draws the card background with gradient + glow border
 // ============================================================================
 
 void PluginCard::paint (juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat().reduced (1.0f);
 
-    // Card fill
-    g.setColour (Colours_RONE::cardBackground);
-    g.fillRoundedRectangle (bounds, 10.0f);
+    // Card fill — subtle vertical gradient (brighter top → darker bottom)
+    {
+        juce::ColourGradient cardGrad (Colours_RONE::cardBackground.brighter (0.05f),
+                                        bounds.getX(), bounds.getY(),
+                                        Colours_RONE::cardBackground.darker (0.1f),
+                                        bounds.getX(), bounds.getBottom(), false);
+        g.setGradientFill (cardGrad);
+        g.fillRoundedRectangle (bounds, 10.0f);
+    }
 
     // Border — colour varies by status
     juce::Colour borderCol = Colours_RONE::cardBorder;
 
     switch (pluginInfo.status)
     {
-        case PluginStatus::UpToDate:       borderCol = Colours_RONE::neonGreen.withAlpha (0.3f);  break;
-        case PluginStatus::UpdateAvailable: borderCol = Colours_RONE::neonOrange.withAlpha (0.4f); break;
-        case PluginStatus::Downloading:    borderCol = Colours_RONE::neonBlue.withAlpha (0.5f);   break;
-        case PluginStatus::Error:          borderCol = Colours_RONE::neonPink.withAlpha (0.5f);   break;
+        case PluginStatus::UpToDate:        borderCol = Colours_RONE::lightPurple.withAlpha (0.3f); break;
+        case PluginStatus::UpdateAvailable: borderCol = Colours_RONE::neonPink.withAlpha (0.4f);    break;
+        case PluginStatus::Downloading:     borderCol = Colours_RONE::hotPurple.withAlpha (0.5f);   break;
+        case PluginStatus::Error:           borderCol = Colours_RONE::errorRed.withAlpha (0.5f);    break;
         default: break;
     }
 
-    g.setColour (borderCol);
-    g.drawRoundedRectangle (bounds, 10.0f, 1.5f);
+    // Outer glow ring (expanded, low alpha)
+    g.setColour (borderCol.withAlpha (0.12f));
+    g.drawRoundedRectangle (bounds.expanded (1.5f), 11.5f, 2.0f);
 
-    // Top accent line (neon glow strip)
-    auto accent = bounds.removeFromTop (3.0f).reduced (20.0f, 0);
+    // Inner border (solid)
+    g.setColour (borderCol);
+    g.drawRoundedRectangle (bounds, 10.0f, 2.0f);
+
+    // Top accent strip (neon glow — wider + thicker)
+    auto accent = bounds.removeFromTop (4.0f).reduced (12.0f, 0);
     g.setColour (borderCol.withAlpha (0.7f));
-    g.fillRoundedRectangle (accent, 1.5f);
+    g.fillRoundedRectangle (accent, 2.0f);
 }
 
 // ============================================================================

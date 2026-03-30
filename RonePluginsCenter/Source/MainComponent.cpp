@@ -11,7 +11,7 @@ MainComponent::MainComponent()
     // --- Title label (top bar) ---
     titleLabel.setText ("RONE PLUGINS CENTER", juce::dontSendNotification);
     titleLabel.setFont (juce::FontOptions (22.0f, juce::Font::bold));
-    titleLabel.setColour (juce::Label::textColourId, Colours_RONE::neonGreen);
+    titleLabel.setColour (juce::Label::textColourId, Colours_RONE::hotPurple);
     titleLabel.setJustificationType (juce::Justification::centredLeft);
     addAndMakeVisible (titleLabel);
 
@@ -22,7 +22,7 @@ MainComponent::MainComponent()
     addAndMakeVisible (statusLabel);
 
     // --- Refresh button ---
-    refreshButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::cardBorder);
+    refreshButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
     refreshButton.onClick = [this] { refreshPlugins(); };
     addAndMakeVisible (refreshButton);
 
@@ -59,15 +59,25 @@ void MainComponent::paint (juce::Graphics& g)
 {
     g.fillAll (Colours_RONE::background);
 
-    // Header bar background
+    // Header bar — gradient fill
     auto headerArea = getLocalBounds().removeFromTop (56);
-    g.setColour (Colours_RONE::headerBg);
-    g.fillRect (headerArea);
+    {
+        juce::ColourGradient headerGrad (Colours_RONE::headerBg,
+                                          (float) headerArea.getX(), (float) headerArea.getY(),
+                                          Colours_RONE::headerBg.brighter (0.08f),
+                                          (float) headerArea.getX(), (float) headerArea.getBottom(),
+                                          false);
+        g.setGradientFill (headerGrad);
+        g.fillRect (headerArea);
+    }
 
-    // Bottom glow line under header
-    g.setColour (Colours_RONE::neonPurple.withAlpha (0.3f));
-    g.fillRect (headerArea.getX(), headerArea.getBottom() - 1,
-                headerArea.getWidth(), 1);
+    // Decorative glow line under header (2px + 2px bloom)
+    auto glowY = headerArea.getBottom() - 1;
+    g.setColour (Colours_RONE::hotPurple.withAlpha (0.5f));
+    g.fillRect (headerArea.getX(), glowY, headerArea.getWidth(), 2);
+
+    g.setColour (Colours_RONE::hotPurple.withAlpha (0.15f));
+    g.fillRect (headerArea.getX(), glowY - 2, headerArea.getWidth(), 2);
 }
 
 // ============================================================================
@@ -128,6 +138,15 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 {
     pluginData = plugins;
     cards.clear();
+
+    // Safety net — if even the fallback returned nothing
+    if (plugins.isEmpty())
+    {
+        statusLabel.setText ("Could not load plugins \u2014 check your connection",
+                              juce::dontSendNotification);
+        resized();
+        return;
+    }
 
     for (auto& info : pluginData)
     {

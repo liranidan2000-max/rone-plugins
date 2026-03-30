@@ -85,6 +85,11 @@ void NetworkManager::run()
 
             auto plugins = parseManifest (body);
 
+            // If remote JSON was unparseable (e.g. 404 HTML from private repo),
+            // fall back to a hardcoded catalog so the UI always shows plugins.
+            if (plugins.isEmpty())
+                plugins = getFallbackManifest();
+
             juce::MessageManager::callAsync ([this, plugins]
             {
                 listeners.call (&Listener::onManifestReady, plugins);
@@ -247,4 +252,75 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
     }
 
     return result;
+}
+
+// ============================================================================
+// Hardcoded fallback — always shows the plugin catalog even if the remote
+// versions.json is unreachable (private repo, no internet, etc.)
+// ============================================================================
+
+juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
+{
+    juce::String json = R"({
+  "plugins": [
+    {
+      "id": "ReverseReverb",
+      "name": "ReverseReverb",
+      "version": "1.0.0",
+      "type": "plugin",
+      "formats": ["VST3", "Standalone"],
+      "description": "Real-time reverse reverb effect with WebView2 UI",
+      "whats_new": "Initial release",
+      "standalone_exe": "ReverseReverb.exe",
+      "vst3_bundle": "ReverseReverb.vst3",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/ReverseReverb_Installer.exe",
+      "sha256": "",
+      "registry_key": "ReverseReverb"
+    },
+    {
+      "id": "RoneStemsFixer",
+      "name": "RONE Stems Fixer",
+      "version": "1.0.0",
+      "type": "standalone",
+      "formats": ["Standalone"],
+      "description": "Audio stem analysis and repair tool",
+      "whats_new": "Initial release",
+      "standalone_exe": "RONE Stems Fixer.exe",
+      "vst3_bundle": "",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStemsFixer_Installer.exe",
+      "sha256": "",
+      "registry_key": "RoneStemsFixer"
+    },
+    {
+      "id": "RoneStutter",
+      "name": "Rone Stutter",
+      "version": "1.0.0",
+      "type": "plugin",
+      "formats": ["VST3", "Standalone"],
+      "description": "Glitch and stutter effect with WebView2 UI",
+      "whats_new": "Initial release",
+      "standalone_exe": "Rone Stutter.exe",
+      "vst3_bundle": "Rone Stutter.vst3",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneStutter_Installer.exe",
+      "sha256": "",
+      "registry_key": "RoneStutter"
+    },
+    {
+      "id": "RoneFlanger",
+      "name": "Rone Flanger",
+      "version": "1.0.0",
+      "type": "plugin",
+      "formats": ["VST3", "Standalone"],
+      "description": "Manual flanger with custom visualizer",
+      "whats_new": "Initial release",
+      "standalone_exe": "Rone Flanger.exe",
+      "vst3_bundle": "Rone Flanger.vst3",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/latest/download/RoneFlanger_Installer.exe",
+      "sha256": "",
+      "registry_key": "RoneFlanger"
+    }
+  ]
+})";
+
+    return parseManifest (json);
 }
