@@ -24,7 +24,6 @@ if(WIN32)
     FetchContent_Declare(
         WebView2
         URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2903.40
-        URL_HASH SHA256=0
         DOWNLOAD_NO_EXTRACT FALSE
     )
     FetchContent_MakeAvailable(WebView2)
