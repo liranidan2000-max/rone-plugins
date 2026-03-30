@@ -7,7 +7,7 @@
 #include "LicenseHandler.h"
 
 // ============================================================================
-// MainComponent — the root UI: header bar + scrollable plugin card grid
+// MainComponent — root UI with 2-column grid + header + license bar
 // ============================================================================
 class MainComponent : public juce::Component,
                       public NetworkManager::Listener,
@@ -29,7 +29,7 @@ public:
                              bool success,
                              const juce::String& errorMessage) override;
 
-    // Timer — auto-refresh every 30 min
+    // Timer — auto-refresh + fade-in animation
     void timerCallback() override;
 
 private:
@@ -43,6 +43,7 @@ private:
     void handleActivate();
     void handleDeactivate();
     void updateLicenseUI();
+    void refreshCardLicenseState();
 
     PluginCard* findCard (const juce::String& pluginId);
 
@@ -52,13 +53,13 @@ private:
     NetworkManager                   networkManager;
     LicenseHandler                   licenseHandler;
 
-    // UI pieces
+    // UI
     RoneLookAndFeel  roneLnf;
     juce::Label      titleLabel;
     juce::Label      statusLabel;
     juce::TextButton refreshButton { "Refresh" };
-    juce::Viewport   viewport;
     juce::Component  cardContainer;
+    juce::Viewport   viewport;
 
     // License UI
     juce::TextEditor licenseKeyInput;
@@ -66,6 +67,12 @@ private:
     juce::TextButton deactivateButton { "DEACTIVATE" };
     juce::Label      licenseStatusLabel;
     juce::Label      proBadge;
+
+    // Fade-in animation
+    float fadeAlpha = 0.0f;
+    bool  fadeComplete = false;
+    int   fadeTimerId = 1;
+    int   refreshTimerId = 2;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

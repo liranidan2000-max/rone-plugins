@@ -1,44 +1,68 @@
 #include "PluginCard.h"
+#include "BinaryData.h"
 
 PluginCard::PluginCard()
 {
-    // Name label — large, bold
-    nameLabel.setFont (juce::FontOptions (20.0f, juce::Font::bold));
+    nameLabel.setFont (juce::FontOptions (16.0f, juce::Font::bold));
     nameLabel.setColour (juce::Label::textColourId, Colours_RONE::textPrimary);
     addAndMakeVisible (nameLabel);
 
-    // Description label — smaller, dimmer
-    descLabel.setFont (juce::FontOptions (13.0f));
+    descLabel.setFont (juce::FontOptions (11.5f));
     descLabel.setColour (juce::Label::textColourId, Colours_RONE::textSecondary);
     addAndMakeVisible (descLabel);
 
-    // Version label
-    versionLabel.setFont (juce::FontOptions (12.0f));
+    versionLabel.setFont (juce::FontOptions (10.5f));
     versionLabel.setColour (juce::Label::textColourId, Colours_RONE::textDim);
     addAndMakeVisible (versionLabel);
 
-    // Formats label (VST3, Standalone, etc.)
-    formatsLabel.setFont (juce::FontOptions (11.0f));
-    formatsLabel.setColour (juce::Label::textColourId, Colours_RONE::lightPurple);
-    addAndMakeVisible (formatsLabel);
-
-    // Action button
     actionButton.addListener (this);
     addAndMakeVisible (actionButton);
 
-    // Open button (for standalones)
     openButton.addListener (this);
     openButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
     addAndMakeVisible (openButton);
 
-    // Info button
     infoButton.addListener (this);
-    infoButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
+    infoButton.setColour (juce::TextButton::buttonColourId,
+                           Colours_RONE::cardBorder.brighter (0.2f));
     addAndMakeVisible (infoButton);
 
-    // Progress bar (hidden by default)
     progressBar.setVisible (false);
     addAndMakeVisible (progressBar);
+}
+
+// ============================================================================
+// Load the correct logo from embedded binary data
+// ============================================================================
+
+void PluginCard::loadPluginLogo()
+{
+    const char* data = nullptr;
+    int size = 0;
+
+    if (pluginInfo.id == "ReverseReverb")
+    {
+        data = BinaryData::ReverseReverb_icon_png;
+        size = BinaryData::ReverseReverb_icon_pngSize;
+    }
+    else if (pluginInfo.id == "RoneStutter")
+    {
+        data = BinaryData::RoneStutter_icon_png;
+        size = BinaryData::RoneStutter_icon_pngSize;
+    }
+    else if (pluginInfo.id == "RoneStemsFixer")
+    {
+        data = BinaryData::RoneStemsFixer_icon_png;
+        size = BinaryData::RoneStemsFixer_icon_pngSize;
+    }
+    else if (pluginInfo.id == "RoneFlanger")
+    {
+        data = BinaryData::RoneFlanger_icon_png;
+        size = BinaryData::RoneFlanger_icon_pngSize;
+    }
+
+    if (data != nullptr && size > 0)
+        pluginLogo = juce::ImageFileFormat::loadFrom (data, (size_t) size);
 }
 
 void PluginCard::setPluginInfo (const PluginInfo& info)
@@ -47,10 +71,7 @@ void PluginCard::setPluginInfo (const PluginInfo& info)
 
     nameLabel.setText (info.name, juce::dontSendNotification);
     descLabel.setText (info.description, juce::dontSendNotification);
-    formatsLabel.setText (info.formats.joinIntoString (" | "),
-                          juce::dontSendNotification);
 
-    // Version string
     juce::String verText;
     if (info.installedVersion.isNotEmpty() && info.installedVersion != "?")
         verText = "v" + info.installedVersion;
@@ -58,9 +79,12 @@ void PluginCard::setPluginInfo (const PluginInfo& info)
         verText = "v" + info.remoteVersion;
 
     if (info.status == PluginStatus::UpdateAvailable)
-        verText += "  ->  v" + info.remoteVersion;
+        verText += "  \xe2\x86\x92  v" + info.remoteVersion;  // →
 
     versionLabel.setText (verText, juce::dontSendNotification);
+
+    if (! pluginLogo.isValid())
+        loadPluginLogo();
 
     updateButtonState();
     repaint();
@@ -73,6 +97,13 @@ void PluginCard::setDownloadProgress (double progress)
     progressBar.setVisible (true);
     actionButton.setEnabled (false);
     actionButton.setButtonText ("DOWNLOADING...");
+    repaint();
+}
+
+void PluginCard::setLicensed (bool isLicensed)
+{
+    licensed = isLicensed;
+    updateButtonState();
     repaint();
 }
 
@@ -97,12 +128,11 @@ void PluginCard::updateButtonState()
             break;
 
         case PluginStatus::UpToDate:
-            actionButton.setButtonText ("INSTALLED");
+            actionButton.setButtonText ("\xe2\x9c\x93 Installed");
             actionButton.setColour (juce::TextButton::buttonColourId,
-                                     Colours_RONE::lightPurple.withAlpha (0.25f));
+                                     Colours_RONE::installedGreen.withAlpha (0.18f));
             actionButton.setEnabled (false);
 
-            // Show "Open" for standalones
             if (pluginInfo.standaloneExe.isNotEmpty())
                 openButton.setVisible (true);
             break;
@@ -124,50 +154,146 @@ void PluginCard::updateButtonState()
                                      Colours_RONE::errorRed);
             break;
     }
+
+    // ---- License paywall ----
+    if (! licensed)
+    {
+        actionButton.setEnabled (false);
+        actionButton.setAlpha (0.35f);
+        openButton.setEnabled (false);
+        openButton.setAlpha (0.35f);
+        actionButton.setTooltip ("Activate your license to install RONE plugins.");
+        openButton.setTooltip ("Activate your license to open RONE plugins.");
+    }
+    else
+    {
+        actionButton.setAlpha (1.0f);
+        openButton.setAlpha (1.0f);
+        actionButton.setTooltip ({});
+        openButton.setTooltip ({});
+    }
 }
 
 // ============================================================================
-// Paint — draws the card background with gradient + glow border
+// Draw format badges
+// ============================================================================
+
+void PluginCard::drawFormatBadges (juce::Graphics& g, juce::Rectangle<int> area)
+{
+    int x = area.getX();
+    int y = area.getY();
+    int h = area.getHeight();
+
+    g.setFont (juce::FontOptions (9.5f, juce::Font::bold));
+
+    for (auto& fmt : pluginInfo.formats)
+    {
+        auto text = fmt.toUpperCase();
+        int textW = (int) g.getCurrentFont().getStringWidthFloat (text) + 14;
+
+        auto pill = juce::Rectangle<float> ((float) x, (float) y,
+                                             (float) textW, (float) h);
+
+        juce::Colour pillCol = Colours_RONE::badgeStandalone;
+        if (text == "VST3")    pillCol = Colours_RONE::badgeVST3;
+        else if (text == "AU") pillCol = Colours_RONE::badgeAU;
+
+        g.setColour (pillCol.withAlpha (0.25f));
+        g.fillRoundedRectangle (pill, 4.0f);
+
+        g.setColour (pillCol.brighter (0.5f).withAlpha (0.6f));
+        g.drawRoundedRectangle (pill, 4.0f, 0.8f);
+
+        g.setColour (juce::Colours::white.withAlpha (0.85f));
+        g.drawText (text, pill.toNearestInt(), juce::Justification::centred);
+
+        x += textW + 5;
+    }
+}
+
+// ============================================================================
+// Paint — clean card with logo, gradient, Apple-style depth
 // ============================================================================
 
 void PluginCard::paint (juce::Graphics& g)
 {
     auto bounds = getLocalBounds().toFloat().reduced (1.0f);
 
-    // Card fill — subtle vertical gradient (brighter top → darker bottom)
+    // Drop shadow (Apple-style elevation)
+    g.setColour (juce::Colours::black.withAlpha (0.25f));
+    g.fillRoundedRectangle (bounds.translated (0, 2).expanded (1), 14.0f);
+
+    // Card fill — subtle gradient
     {
-        juce::ColourGradient cardGrad (Colours_RONE::cardBackground.brighter (0.05f),
-                                        bounds.getX(), bounds.getY(),
-                                        Colours_RONE::cardBackground.darker (0.1f),
-                                        bounds.getX(), bounds.getBottom(), false);
-        g.setGradientFill (cardGrad);
-        g.fillRoundedRectangle (bounds, 10.0f);
+        juce::ColourGradient grad (Colours_RONE::cardBackground.brighter (0.06f),
+                                    bounds.getX(), bounds.getY(),
+                                    Colours_RONE::cardBackground.darker (0.05f),
+                                    bounds.getX(), bounds.getBottom(), false);
+        g.setGradientFill (grad);
+        g.fillRoundedRectangle (bounds, 12.0f);
     }
 
-    // Border — colour varies by status
+    // Border
     juce::Colour borderCol = Colours_RONE::cardBorder;
-
     switch (pluginInfo.status)
     {
-        case PluginStatus::UpToDate:        borderCol = Colours_RONE::lightPurple.withAlpha (0.3f); break;
-        case PluginStatus::UpdateAvailable: borderCol = Colours_RONE::neonPink.withAlpha (0.4f);    break;
-        case PluginStatus::Downloading:     borderCol = Colours_RONE::hotPurple.withAlpha (0.5f);   break;
-        case PluginStatus::Error:           borderCol = Colours_RONE::errorRed.withAlpha (0.5f);    break;
+        case PluginStatus::UpToDate:        borderCol = Colours_RONE::installedGreen.withAlpha (0.2f);  break;
+        case PluginStatus::UpdateAvailable: borderCol = Colours_RONE::neonPink.withAlpha (0.3f);       break;
+        case PluginStatus::Downloading:     borderCol = Colours_RONE::hotPurple.withAlpha (0.4f);      break;
+        case PluginStatus::Error:           borderCol = Colours_RONE::errorRed.withAlpha (0.4f);       break;
         default: break;
     }
 
-    // Outer glow ring (expanded, low alpha)
-    g.setColour (borderCol.withAlpha (0.12f));
-    g.drawRoundedRectangle (bounds.expanded (1.5f), 11.5f, 2.0f);
-
-    // Inner border (solid)
     g.setColour (borderCol);
-    g.drawRoundedRectangle (bounds, 10.0f, 2.0f);
+    g.drawRoundedRectangle (bounds, 12.0f, 1.0f);
 
-    // Top accent strip (neon glow — wider + thicker)
-    auto accent = bounds.removeFromTop (4.0f).reduced (12.0f, 0);
-    g.setColour (borderCol.withAlpha (0.7f));
-    g.fillRoundedRectangle (accent, 2.0f);
+    // --- Plugin logo (left side) ---
+    auto contentArea = getLocalBounds().reduced (16, 12);
+    auto logoArea = contentArea.removeFromLeft (52);
+
+    if (pluginLogo.isValid())
+    {
+        auto logoBounds = logoArea.withSizeKeepingCentre (48, 48).toFloat();
+
+        // Soft glow behind logo
+        g.setColour (Colours_RONE::hotPurple.withAlpha (0.08f));
+        g.fillRoundedRectangle (logoBounds.expanded (4), 12.0f);
+
+        g.drawImage (pluginLogo, logoBounds,
+                     juce::RectanglePlacement::centred | juce::RectanglePlacement::onlyReduceInSize);
+    }
+    else
+    {
+        // Fallback: letter circle
+        auto circle = logoArea.withSizeKeepingCentre (48, 48).toFloat();
+        g.setColour (Colours_RONE::hotPurple.withAlpha (0.3f));
+        g.fillEllipse (circle);
+        g.setColour (juce::Colours::white);
+        g.setFont (juce::FontOptions (18.0f, juce::Font::bold));
+        g.drawText (pluginInfo.name.substring (0, 2).toUpperCase(),
+                    circle.toNearestInt(), juce::Justification::centred);
+    }
+
+    // --- Format badges ---
+    contentArea.removeFromLeft (12); // gap after logo
+    auto badgeY = contentArea.getY() + 46;
+    drawFormatBadges (g, juce::Rectangle<int> (contentArea.getX(), badgeY,
+                                                contentArea.getWidth(), 17));
+
+    // --- Lock badge when unlicensed ---
+    if (! licensed)
+    {
+        auto lockBadge = getLocalBounds().reduced (16, 0)
+                             .removeFromBottom (28).removeFromRight (70)
+                             .translated (0, -8);
+
+        g.setColour (Colours_RONE::errorRed.withAlpha (0.12f));
+        g.fillRoundedRectangle (lockBadge.toFloat(), 6.0f);
+
+        g.setColour (Colours_RONE::errorRed.withAlpha (0.65f));
+        g.setFont (juce::FontOptions (9.5f, juce::Font::bold));
+        g.drawText ("\xf0\x9f\x94\x92 LOCKED", lockBadge, juce::Justification::centred);
+    }
 }
 
 // ============================================================================
@@ -178,38 +304,41 @@ void PluginCard::resized()
 {
     auto area = getLocalBounds().reduced (16, 12);
 
-    auto topRow = area.removeFromTop (26);
-    nameLabel.setBounds (topRow.removeFromLeft (topRow.getWidth() - 30));
-    infoButton.setBounds (topRow.reduced (2));
+    // Logo space
+    area.removeFromLeft (64); // 52 logo + 12 gap
+
+    // Info button top-right
+    auto topRow = area.removeFromTop (20);
+    infoButton.setBounds (topRow.removeFromRight (22).reduced (0, 0));
+    topRow.removeFromRight (4);
+    nameLabel.setBounds (topRow);
 
     area.removeFromTop (2);
-    descLabel.setBounds (area.removeFromTop (18));
+    descLabel.setBounds (area.removeFromTop (15));
 
-    area.removeFromTop (4);
-    formatsLabel.setBounds (area.removeFromTop (16));
+    // Badges space (drawn in paint)
+    area.removeFromTop (20);
 
-    area.removeFromTop (2);
-    versionLabel.setBounds (area.removeFromTop (16));
+    // Version
+    versionLabel.setBounds (area.removeFromTop (14));
 
-    area.removeFromTop (8);
+    area.removeFromTop (3);
 
-    // Progress bar (full width if visible)
+    // Progress bar
     if (progressBar.isVisible())
     {
-        progressBar.setBounds (area.removeFromTop (10));
-        area.removeFromTop (8);
+        progressBar.setBounds (area.removeFromTop (6));
+        area.removeFromTop (3);
     }
 
-    // Buttons at the bottom
-    auto buttonRow = area.removeFromBottom (32);
-    int buttonW = 120;
-
-    actionButton.setBounds (buttonRow.removeFromLeft (buttonW));
+    // Buttons
+    auto buttonRow = area.removeFromBottom (26);
+    actionButton.setBounds (buttonRow.removeFromLeft (100));
 
     if (openButton.isVisible())
     {
-        buttonRow.removeFromLeft (8);
-        openButton.setBounds (buttonRow.removeFromLeft (70));
+        buttonRow.removeFromLeft (6);
+        openButton.setBounds (buttonRow.removeFromLeft (56));
     }
 }
 
@@ -220,11 +349,17 @@ void PluginCard::resized()
 void PluginCard::buttonClicked (juce::Button* button)
 {
     if (button == &actionButton && onActionClicked)
-        onActionClicked (pluginInfo.id);
-
+    {
+        if (licensed)
+            onActionClicked (pluginInfo.id);
+    }
     else if (button == &openButton && onOpenClicked)
-        onOpenClicked (pluginInfo.id);
-
+    {
+        if (licensed)
+            onOpenClicked (pluginInfo.id);
+    }
     else if (button == &infoButton && onInfoClicked)
+    {
         onInfoClicked (pluginInfo.id);
+    }
 }

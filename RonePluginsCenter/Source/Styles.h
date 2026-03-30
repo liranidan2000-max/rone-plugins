@@ -2,39 +2,46 @@
 #include <JuceHeader.h>
 
 // ============================================================================
-// RONE Plugins Center — Purple/Neon Magenta palette
-// Matched to rone-flanger NeonLookAndFeel + ReverseReverb CSS theme
+// RONE Plugins Center — Refined Purple palette
+// Apple-inspired clean aesthetic with RONE signature purple accents
 // ============================================================================
 namespace Colours_RONE
 {
-    // Backgrounds (deep purple family — from rone-flanger #0D0520 / #1A0A2E)
-    static const juce::Colour background     { 0xff0D0520 };  // deep dark purple
-    static const juce::Colour cardBackground { 0xff1A0A2E };  // dark purple panel
-    static const juce::Colour cardBorder     { 0xff2A1040 };  // subtle purple edge
-    static const juce::Colour headerBg       { 0xff0A0318 };  // deepest purple header
+    // Backgrounds — deep, layered
+    static const juce::Colour background     { 0xff0B0416 };  // deepest base
+    static const juce::Colour cardBackground { 0xff150A26 };  // elevated card surface
+    static const juce::Colour cardBorder     { 0xff251540 };  // subtle card edge
+    static const juce::Colour headerBg       { 0xff0E0620 };  // header surface
+    static const juce::Colour licenseBg      { 0xff110720 };  // license bar
 
-    // Accent colours (purple/magenta dominant)
-    static const juce::Colour hotPurple      { 0xffb537f2 };  // primary action — ReverseReverb hot-pink
-    static const juce::Colour neonPink       { 0xffE040FB };  // neon magenta — rone-flanger thumb
-    static const juce::Colour neonPurple     { 0xff9d4edd };  // decorative purple
-    static const juce::Colour deepPurple     { 0xff7B1FA2 };  // fill / hover
-    static const juce::Colour lightPurple    { 0xffCE93D8 };  // installed state / light accent
-    static const juce::Colour buttonBase     { 0xff4A148C };  // button off state
-    static const juce::Colour borderPurple   { 0xff9C27B0 };  // medium purple border
-    static const juce::Colour errorRed       { 0xffe94560 };  // error / cancel
+    // Primary accents
+    static const juce::Colour hotPurple      { 0xffb537f2 };  // primary CTA
+    static const juce::Colour neonPink       { 0xffE040FB };  // secondary accent
+    static const juce::Colour neonPurple     { 0xff9d4edd };  // decorative
+    static const juce::Colour deepPurple     { 0xff7B1FA2 };  // hover/fill
+    static const juce::Colour lightPurple    { 0xffCE93D8 };  // subtle accent
+    static const juce::Colour buttonBase     { 0xff3A1070 };  // button idle
+    static const juce::Colour borderPurple   { 0xff9C27B0 };  // medium border
+    static const juce::Colour errorRed       { 0xffe94560 };  // error state
 
-    // Text
-    static const juce::Colour textPrimary    { 0xffe0e0e0 };
-    static const juce::Colour textSecondary  { 0xff8888aa };
-    static const juce::Colour textDim        { 0xff555570 };
+    // Badge colours
+    static const juce::Colour badgeVST3      { 0xff6A1B9A };
+    static const juce::Colour badgeAU        { 0xff8E24AA };
+    static const juce::Colour badgeStandalone { 0xff4A148C };
+    static const juce::Colour installedGreen { 0xff00C853 };
 
-    // Progress bar
+    // Text — high contrast hierarchy
+    static const juce::Colour textPrimary    { 0xfff0f0f0 };  // bright white
+    static const juce::Colour textSecondary  { 0xff9999bb };  // muted
+    static const juce::Colour textDim        { 0xff606080 };  // very subtle
+
+    // Progress / track
     static const juce::Colour progressTrack  { 0xff1a0a30 };
-    static const juce::Colour progressFill   { 0xffE040FB };  // neon pink
+    static const juce::Colour progressFill   { 0xffE040FB };
 }
 
 // ============================================================================
-// Custom LookAndFeel — matched to RONE plugin family
+// Custom LookAndFeel — refined, Apple-inspired
 // ============================================================================
 class RoneLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -47,6 +54,11 @@ public:
         setColour (juce::Label::textColourId,                  Colours_RONE::textPrimary);
         setColour (juce::ProgressBar::foregroundColourId,      Colours_RONE::progressFill);
         setColour (juce::ProgressBar::backgroundColourId,      Colours_RONE::progressTrack);
+
+        // Tooltip styling
+        setColour (juce::TooltipWindow::backgroundColourId,    Colours_RONE::cardBackground);
+        setColour (juce::TooltipWindow::textColourId,          Colours_RONE::textPrimary);
+        setColour (juce::TooltipWindow::outlineColourId,       Colours_RONE::cardBorder);
     }
 
     void drawButtonBackground (juce::Graphics& g, juce::Button& button,
@@ -56,37 +68,40 @@ public:
         auto bounds = button.getLocalBounds().toFloat().reduced (0.5f);
         auto colour = bgColour;
 
-        if (isDown)             colour = colour.darker (0.3f);
-        else if (isHighlighted) colour = colour.brighter (0.15f);
+        if (isDown)             colour = colour.darker (0.25f);
+        else if (isHighlighted) colour = colour.brighter (0.12f);
 
+        // Soft shadow (Apple-style depth)
+        g.setColour (juce::Colours::black.withAlpha (0.2f));
+        g.fillRoundedRectangle (bounds.translated (0, 1), 8.0f);
+
+        // Fill
         g.setColour (colour);
-        g.fillRoundedRectangle (bounds, 6.0f);
+        g.fillRoundedRectangle (bounds, 8.0f);
 
-        // Glow border
-        g.setColour (colour.brighter (0.4f).withAlpha (0.45f));
-        g.drawRoundedRectangle (bounds, 6.0f, 1.5f);
+        // Subtle top highlight
+        g.setColour (juce::Colours::white.withAlpha (0.06f));
+        g.fillRoundedRectangle (bounds.removeFromTop (bounds.getHeight() * 0.5f), 8.0f);
     }
 
-    void drawProgressBar (juce::Graphics& g, juce::ProgressBar& bar,
+    void drawProgressBar (juce::Graphics& g, juce::ProgressBar& /*bar*/,
                           int width, int height, double progress,
                           const juce::String& /*text*/) override
     {
         auto bounds = juce::Rectangle<float> (0.0f, 0.0f, (float) width, (float) height);
 
-        // Track
         g.setColour (Colours_RONE::progressTrack);
         g.fillRoundedRectangle (bounds, 4.0f);
 
-        // Fill
         if (progress > 0.0)
         {
             auto fillWidth = bounds.getWidth() * (float) progress;
-            g.setColour (Colours_RONE::progressFill);
-            g.fillRoundedRectangle (bounds.withWidth (fillWidth), 4.0f);
 
-            // Neon glow bloom
-            g.setColour (Colours_RONE::progressFill.withAlpha (0.25f));
-            g.fillRoundedRectangle (bounds.withWidth (fillWidth).expanded (0, 3), 6.0f);
+            // Gradient fill
+            juce::ColourGradient grad (Colours_RONE::hotPurple, 0, 0,
+                                        Colours_RONE::neonPink, fillWidth, 0, false);
+            g.setGradientFill (grad);
+            g.fillRoundedRectangle (bounds.withWidth (fillWidth), 4.0f);
         }
     }
 };

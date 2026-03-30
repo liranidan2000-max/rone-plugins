@@ -53,7 +53,16 @@ target_compile_definitions(RonePluginsCenter PRIVATE
     RONE_LICENSE_REGISTRY_PATH="Software\\\\RONE\\\\License"
 )
 
+# --- Embed plugin logos as binary data ---
+juce_add_binary_data(PluginLogos SOURCES
+    Resources/ReverseReverb_icon.png
+    Resources/RoneStutter_icon.png
+    Resources/RoneStemsFixer_icon.png
+    Resources/RoneFlanger_icon.png
+)
+
 target_link_libraries(RonePluginsCenter PRIVATE
+    PluginLogos
     juce::juce_core
     juce::juce_gui_basics
     juce::juce_gui_extra

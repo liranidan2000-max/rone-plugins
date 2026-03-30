@@ -8,36 +8,36 @@ MainComponent::MainComponent()
 {
     setLookAndFeel (&roneLnf);
 
-    // --- Title label (top bar) ---
+    // --- Title ---
     titleLabel.setText ("RONE PLUGINS CENTER", juce::dontSendNotification);
-    titleLabel.setFont (juce::FontOptions (22.0f, juce::Font::bold));
+    titleLabel.setFont (juce::FontOptions (18.0f, juce::Font::bold));
     titleLabel.setColour (juce::Label::textColourId, Colours_RONE::hotPurple);
     titleLabel.setJustificationType (juce::Justification::centredLeft);
     addAndMakeVisible (titleLabel);
 
-    // --- Status label ---
-    statusLabel.setFont (juce::FontOptions (13.0f));
+    // --- Status ---
+    statusLabel.setFont (juce::FontOptions (11.5f));
     statusLabel.setColour (juce::Label::textColourId, Colours_RONE::textSecondary);
     statusLabel.setJustificationType (juce::Justification::centredRight);
     addAndMakeVisible (statusLabel);
 
-    // --- Refresh button ---
+    // --- Refresh ---
     refreshButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
     refreshButton.onClick = [this] { refreshPlugins(); };
     addAndMakeVisible (refreshButton);
 
-    // --- Scrollable viewport ---
+    // --- Viewport + card container ---
     viewport.setViewedComponent (&cardContainer, false);
     viewport.setScrollBarsShown (true, false);
     addAndMakeVisible (viewport);
 
-    // --- Register as network listener ---
     networkManager.addListener (this);
 
-    // --- License section ---
+    // --- License UI ---
     licenseKeyInput.setMultiLine (false);
-    licenseKeyInput.setTextToShowWhenEmpty ("Enter license key...", Colours_RONE::textDim);
-    licenseKeyInput.setColour (juce::TextEditor::backgroundColourId,  Colours_RONE::cardBackground);
+    licenseKeyInput.setTextToShowWhenEmpty ("Enter your RONE Full Bundle license key...",
+                                            Colours_RONE::textDim);
+    licenseKeyInput.setColour (juce::TextEditor::backgroundColourId,  Colours_RONE::licenseBg);
     licenseKeyInput.setColour (juce::TextEditor::textColourId,        Colours_RONE::textPrimary);
     licenseKeyInput.setColour (juce::TextEditor::outlineColourId,     Colours_RONE::cardBorder);
     licenseKeyInput.setColour (juce::TextEditor::focusedOutlineColourId, Colours_RONE::hotPurple);
@@ -52,18 +52,18 @@ MainComponent::MainComponent()
     deactivateButton.setVisible (false);
     addAndMakeVisible (deactivateButton);
 
-    licenseStatusLabel.setFont (juce::FontOptions (12.0f));
+    licenseStatusLabel.setFont (juce::FontOptions (11.0f));
     licenseStatusLabel.setColour (juce::Label::textColourId, Colours_RONE::textSecondary);
     addAndMakeVisible (licenseStatusLabel);
 
     proBadge.setText ("PRO", juce::dontSendNotification);
-    proBadge.setFont (juce::FontOptions (14.0f, juce::Font::bold));
+    proBadge.setFont (juce::FontOptions (12.0f, juce::Font::bold));
     proBadge.setColour (juce::Label::textColourId, Colours_RONE::neonPink);
     proBadge.setJustificationType (juce::Justification::centred);
     proBadge.setVisible (false);
     addAndMakeVisible (proBadge);
 
-    // --- Initialize license ---
+    // --- Init license ---
     licenseHandler.onLicenseStateChanged = [this] (bool) { updateLicenseUI(); };
     licenseHandler.initialize();
     updateLicenseUI();
@@ -72,10 +72,14 @@ MainComponent::MainComponent()
     statusLabel.setText ("Checking for updates...", juce::dontSendNotification);
     refreshPlugins();
 
-    // --- Auto-refresh every 30 minutes ---
-    startTimer (30 * 60 * 1000);
+    // --- Horizontal layout: wider, shorter ---
+    setSize (840, 520);
 
-    setSize (520, 730);
+    // --- Fade-in animation: start transparent, animate over 400ms ---
+    setAlpha (0.0f);
+    fadeAlpha = 0.0f;
+    fadeComplete = false;
+    startTimerHz (60); // 60 FPS for smooth animation
 }
 
 MainComponent::~MainComponent()
@@ -86,101 +90,153 @@ MainComponent::~MainComponent()
 }
 
 // ============================================================================
-// Paint — background gradient
+// Timer — handles fade-in animation + auto-refresh
+// ============================================================================
+
+void MainComponent::timerCallback()
+{
+    if (! fadeComplete)
+    {
+        fadeAlpha += 0.05f; // ~300ms total at 60fps
+        if (fadeAlpha >= 1.0f)
+        {
+            fadeAlpha = 1.0f;
+            fadeComplete = true;
+            stopTimer();
+
+            // Restart as 30-minute refresh timer
+            startTimer (30 * 60 * 1000);
+        }
+        setAlpha (fadeAlpha);
+    }
+    else
+    {
+        // Auto-refresh
+        refreshPlugins();
+    }
+}
+
+// ============================================================================
+// Paint — header + license bar + background
 // ============================================================================
 
 void MainComponent::paint (juce::Graphics& g)
 {
+    // Background
     g.fillAll (Colours_RONE::background);
 
-    // Header bar — gradient fill
-    auto headerArea = getLocalBounds().removeFromTop (56);
+    // Header — 48px
+    auto headerArea = getLocalBounds().removeFromTop (48);
     {
-        juce::ColourGradient headerGrad (Colours_RONE::headerBg,
-                                          (float) headerArea.getX(), (float) headerArea.getY(),
-                                          Colours_RONE::headerBg.brighter (0.08f),
-                                          (float) headerArea.getX(), (float) headerArea.getBottom(),
-                                          false);
-        g.setGradientFill (headerGrad);
+        juce::ColourGradient grad (Colours_RONE::headerBg,
+                                    (float) headerArea.getX(), (float) headerArea.getY(),
+                                    Colours_RONE::headerBg.brighter (0.06f),
+                                    (float) headerArea.getX(), (float) headerArea.getBottom(),
+                                    false);
+        g.setGradientFill (grad);
         g.fillRect (headerArea);
     }
 
-    // Decorative glow line under header (2px + 2px bloom)
-    auto glowY = headerArea.getBottom() - 1;
-    g.setColour (Colours_RONE::hotPurple.withAlpha (0.5f));
-    g.fillRect (headerArea.getX(), glowY, headerArea.getWidth(), 2);
+    // Thin glow line
+    auto glowY = headerArea.getBottom();
+    g.setColour (Colours_RONE::hotPurple.withAlpha (0.35f));
+    g.fillRect (headerArea.getX(), glowY, headerArea.getWidth(), 1);
 
-    g.setColour (Colours_RONE::hotPurple.withAlpha (0.15f));
-    g.fillRect (headerArea.getX(), glowY - 2, headerArea.getWidth(), 2);
+    // License bar — 46px
+    auto licenseBar = getLocalBounds();
+    licenseBar.removeFromTop (49);
+    auto lBar = licenseBar.removeFromTop (46);
+    g.setColour (Colours_RONE::licenseBg);
+    g.fillRect (lBar);
+
+    // Separator
+    g.setColour (Colours_RONE::cardBorder.withAlpha (0.4f));
+    g.fillRect (lBar.getX(), lBar.getBottom(), lBar.getWidth(), 1);
 }
 
 // ============================================================================
-// Layout
+// Layout — 2-column grid
 // ============================================================================
 
 void MainComponent::resized()
 {
     auto area = getLocalBounds();
 
-    // Header: 56 px tall
-    auto header = area.removeFromTop (56).reduced (16, 10);
-    refreshButton.setBounds (header.removeFromRight (80));
-    header.removeFromRight (8);
-    statusLabel.setBounds (header.removeFromRight (200));
+    // Header: 48px
+    auto header = area.removeFromTop (48).reduced (20, 8);
+    refreshButton.setBounds (header.removeFromRight (70));
+    header.removeFromRight (10);
+    statusLabel.setBounds (header.removeFromRight (180));
     titleLabel.setBounds (header);
 
-    // License section: 44 px tall
-    auto licenseArea = area.removeFromTop (44).reduced (16, 4);
+    // License bar: 46px
+    area.removeFromTop (1); // glow line
+    auto licenseArea = area.removeFromTop (46).reduced (20, 7);
 
     if (licenseHandler.isLicensed())
     {
-        proBadge.setBounds (licenseArea.removeFromLeft (40));
-        licenseArea.removeFromLeft (8);
-        licenseStatusLabel.setBounds (licenseArea.removeFromLeft (240));
-        deactivateButton.setBounds (licenseArea.removeFromRight (100));
+        auto row = licenseArea.removeFromTop (28);
+        proBadge.setBounds (row.removeFromLeft (38));
+        row.removeFromLeft (6);
+        deactivateButton.setBounds (row.removeFromRight (88));
+        row.removeFromRight (8);
+        licenseStatusLabel.setBounds (row);
+
+        licenseKeyInput.setVisible (false);
+        activateButton.setVisible (false);
     }
     else
     {
-        licenseKeyInput.setBounds (licenseArea.removeFromLeft (260));
-        licenseArea.removeFromLeft (8);
-        activateButton.setBounds (licenseArea.removeFromLeft (90));
-        licenseArea.removeFromLeft (8);
+        auto row1 = licenseArea.removeFromTop (26);
+        activateButton.setBounds (row1.removeFromRight (88));
+        row1.removeFromRight (8);
+        licenseKeyInput.setBounds (row1);
+
+        licenseArea.removeFromTop (2);
         licenseStatusLabel.setBounds (licenseArea);
+
+        proBadge.setVisible (false);
+        deactivateButton.setVisible (false);
     }
 
-    // Viewport takes the rest
-    area.removeFromTop (8);
+    // Card grid area
+    area.removeFromTop (6);
     viewport.setBounds (area.reduced (8, 0));
 
-    // Layout cards inside the container
-    const int cardH      = 180;
-    const int cardGap    = 12;
-    const int totalH     = cards.size() * (cardH + cardGap) + cardGap;
+    // Layout cards in 2-column grid
+    const int numCards = cards.size();
+    if (numCards == 0) return;
+
+    const int cardGap = 10;
+    const int cols    = 2;
     const int containerW = viewport.getWidth() - viewport.getScrollBarThickness() - 4;
+    const int cardW   = (containerW - cardGap * (cols + 1)) / cols;
+    const int cardH   = 155;
+
+    int rows = (numCards + cols - 1) / cols;
+    int totalH = rows * (cardH + cardGap) + cardGap;
 
     cardContainer.setBounds (0, 0, containerW, totalH);
 
-    int y = cardGap;
-    for (auto* card : cards)
+    for (int i = 0; i < numCards; ++i)
     {
-        card->setBounds (cardGap, y, containerW - 2 * cardGap, cardH);
-        y += cardH + cardGap;
+        int col = i % cols;
+        int row = i / cols;
+        int x = cardGap + col * (cardW + cardGap);
+        int y = cardGap + row * (cardH + cardGap);
+
+        cards[i]->setBounds (x, y, cardW, cardH);
     }
 }
 
 // ============================================================================
-// Refresh — trigger manifest fetch
+// Refresh
 // ============================================================================
 
 void MainComponent::refreshPlugins()
 {
     statusLabel.setText ("Checking for updates...", juce::dontSendNotification);
     networkManager.fetchManifest();
-}
-
-void MainComponent::timerCallback()
-{
-    refreshPlugins();
 }
 
 // ============================================================================
@@ -192,7 +248,6 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
     pluginData = plugins;
     cards.clear();
 
-    // Safety net — if even the fallback returned nothing
     if (plugins.isEmpty())
     {
         statusLabel.setText ("Could not load plugins \u2014 check your connection",
@@ -213,6 +268,9 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
         cardContainer.addAndMakeVisible (card);
     }
 
+    // Apply license state
+    refreshCardLicenseState();
+
     int updatesAvailable = 0;
     for (auto& p : pluginData)
         if (p.status == PluginStatus::UpdateAvailable || p.status == PluginStatus::NotInstalled)
@@ -229,7 +287,7 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 
 void MainComponent::onManifestError (const juce::String& errorMessage)
 {
-    statusLabel.setText ("Offline — " + errorMessage, juce::dontSendNotification);
+    statusLabel.setText ("Offline \u2014 " + errorMessage, juce::dontSendNotification);
 }
 
 void MainComponent::onDownloadProgress (const juce::String& pluginId, double progress)
@@ -249,7 +307,6 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
     }
     else
     {
-        // Set error state on the card
         for (auto& p : pluginData)
         {
             if (p.id == pluginId)
@@ -273,6 +330,8 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
 
 void MainComponent::handleAction (const juce::String& pluginId)
 {
+    if (! licenseHandler.isLicensed()) return;
+
     for (auto& p : pluginData)
     {
         if (p.id == pluginId)
@@ -300,6 +359,8 @@ void MainComponent::handleAction (const juce::String& pluginId)
 
 void MainComponent::handleOpen (const juce::String& pluginId)
 {
+    if (! licenseHandler.isLicensed()) return;
+
     for (auto& p : pluginData)
     {
         if (p.id == pluginId && p.standaloneExe.isNotEmpty())
@@ -336,7 +397,7 @@ void MainComponent::handleInfo (const juce::String& pluginId)
 
             juce::NativeMessageBox::showMessageBoxAsync (
                 juce::MessageBoxIconType::InfoIcon,
-                p.name + " — Changelog", msg);
+                p.name + " \u2014 Info", msg);
             break;
         }
     }
@@ -349,7 +410,6 @@ void MainComponent::handleInfo (const juce::String& pluginId)
 void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                                             const juce::String& pluginId)
 {
-    // Update card state
     for (auto& p : pluginData)
     {
         if (p.id == pluginId)
@@ -363,15 +423,10 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
 
     statusLabel.setText ("Installing...", juce::dontSendNotification);
 
-    // Gather info before launching the background thread
     auto filePath = installerFile.getFullPathName();
     auto pid      = pluginId;
 
-    juce::String regKey;
-    juce::String remoteVer;
-    juce::String vst3Bundle;
-    juce::String auBundle;
-    juce::String standaloneExe;
+    juce::String regKey, remoteVer, vst3Bundle, auBundle, standaloneExe;
 
     for (auto& p : pluginData)
     {
@@ -393,41 +448,33 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
         bool started = false;
 
     #if JUCE_MAC
-        // macOS: use 'installer' command via osascript for admin privileges.
-        // The .pkg installs VST3/AU to /Library/Audio/Plug-Ins/ system-wide.
         juce::String cmd = juce::String ("osascript -e 'do shell script \"installer -pkg ")
                          + "\\\"" + filePath + "\\\""
                          + " -target /\" with administrator privileges'";
         started = process.start (cmd);
     #else
-        // Windows: Inno Setup silent flags
         juce::String cmd = "\"" + filePath + "\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-";
         started = process.start (cmd);
     #endif
 
         bool processFinished = false;
         if (started)
-            processFinished = process.waitForProcessToFinish (120000); // 2 min timeout
+            processFinished = process.waitForProcessToFinish (120000);
 
-        // Verify installation success
         bool verified = false;
 
     #if JUCE_MAC
         if (processFinished)
         {
-            // On Mac, verify by checking if the plugin files appeared on disk
             verified = VersionChecker::isVst3Installed (vst3Bundle)
                     || VersionChecker::isAUInstalled (auBundle)
                     || VersionChecker::isStandaloneInstalled (standaloneExe);
-
-            // If verified, write the version to our shared XML tracker
             if (verified)
                 VersionChecker::setInstalledVersion (regKey, remoteVer);
         }
     #else
         if (processFinished)
         {
-            // On Windows, the Inno Setup installer writes the registry key
             auto installedVer = VersionChecker::getInstalledVersion (regKey);
             verified = installedVer.isNotEmpty();
         }
@@ -442,12 +489,8 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                     if (verified)
                     {
                         p.installedVersion = VersionChecker::getInstalledVersion (p.registryKey);
-
-                        // On Mac the XML was just written with remoteVer;
-                        // if getInstalledVersion returned empty, use remoteVer directly
                         if (p.installedVersion.isEmpty())
                             p.installedVersion = remoteVer;
-
                         p.status = PluginStatus::UpToDate;
                         statusLabel.setText ("Installed successfully!",
                                               juce::dontSendNotification);
@@ -456,10 +499,10 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                     {
                         p.status = PluginStatus::Error;
                     #if JUCE_MAC
-                        statusLabel.setText ("Install failed — check your password and try again.",
+                        statusLabel.setText ("Install failed \u2014 check your password and try again.",
                                               juce::dontSendNotification);
                     #else
-                        statusLabel.setText ("Install failed — try running as Administrator.",
+                        statusLabel.setText ("Install failed \u2014 try running as Administrator.",
                                               juce::dontSendNotification);
                     #endif
                     }
@@ -489,7 +532,12 @@ void MainComponent::handleActivate()
     {
         activateButton.setEnabled (true);
         licenseStatusLabel.setText (msg, juce::dontSendNotification);
-        if (success) updateLicenseUI();
+        if (success)
+        {
+            updateLicenseUI();
+            statusLabel.setText ("License activated \u2014 all plugins unlocked!",
+                                  juce::dontSendNotification);
+        }
     });
 }
 
@@ -511,9 +559,32 @@ void MainComponent::updateLicenseUI()
     activateButton.setVisible (! pro);
     deactivateButton.setVisible (pro);
 
-    licenseStatusLabel.setText (licenseHandler.getStatusMessage(),
-                                juce::dontSendNotification);
+    // Show "Licensed to [customer name]" when licensed
+    if (pro)
+    {
+        auto name = licenseHandler.getCustomerName();
+        if (name.isNotEmpty())
+            licenseStatusLabel.setText ("Licensed to " + name + " \u2014 RONE Full Bundle",
+                                        juce::dontSendNotification);
+        else
+            licenseStatusLabel.setText ("Licensed \u2014 RONE Full Bundle",
+                                        juce::dontSendNotification);
+    }
+    else
+    {
+        licenseStatusLabel.setText (licenseHandler.getStatusMessage(),
+                                    juce::dontSendNotification);
+    }
+
+    refreshCardLicenseState();
     resized();
+}
+
+void MainComponent::refreshCardLicenseState()
+{
+    bool pro = licenseHandler.isLicensed();
+    for (auto* card : cards)
+        card->setLicensed (pro);
 }
 
 // ============================================================================
