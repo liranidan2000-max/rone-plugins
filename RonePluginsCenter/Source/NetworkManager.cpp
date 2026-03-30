@@ -175,16 +175,28 @@ void NetworkManager::run()
                 return;
             }
 
-            bool success = tempFile.existsAsFile() && tempFile.getSize() > 0;
+            // Verify the downloaded file is a real installer, not an HTML error page.
+            // GitHub returns small HTML 404 pages for missing/private release assets.
+            static constexpr juce::int64 MIN_INSTALLER_SIZE = 1024 * 1024; // 1 MB
+
+            bool fileExists = tempFile.existsAsFile();
+            auto fileSize   = fileExists ? tempFile.getSize() : 0;
+            bool success    = fileExists && fileSize >= MIN_INSTALLER_SIZE;
+
             auto pid  = activePluginId;
             auto file = tempFile;
 
-            juce::MessageManager::callAsync ([this, pid, file, success]
+            juce::String errorMsg;
+            if (! fileExists)
+                errorMsg = "Download failed — file was not saved.";
+            else if (fileSize < MIN_INSTALLER_SIZE)
+                errorMsg = "Download failed — corrupt file (" + juce::String (fileSize / 1024)
+                         + " KB). The download link may be invalid.";
+
+            juce::MessageManager::callAsync ([this, pid, file, success, errorMsg]
             {
                 listeners.call (&Listener::onDownloadComplete,
-                                pid, file, success,
-                                success ? juce::String()
-                                        : juce::String ("Download failed — file is empty."));
+                                pid, file, success, errorMsg);
             });
             break;
         }

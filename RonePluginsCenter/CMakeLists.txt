@@ -32,6 +32,7 @@ target_sources(RonePluginsCenter PRIVATE
     Source/PluginCard.cpp
     Source/NetworkManager.cpp
     Source/VersionChecker.cpp
+    Source/LicenseHandler.cpp
 )
 
 target_compile_definitions(RonePluginsCenter PRIVATE
@@ -48,6 +49,8 @@ target_compile_definitions(RonePluginsCenter PRIVATE
     RONE_INSTALL_DIR="RONE Plugins"
     # Default VST3 subfolder under Common Files\\VST3
     RONE_VST3_SUBDIR="RONE"
+    # Windows Registry path for bundle license status
+    RONE_LICENSE_REGISTRY_PATH="Software\\\\RONE\\\\License"
 )
 
 target_link_libraries(RonePluginsCenter PRIVATE

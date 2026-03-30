@@ -34,6 +34,40 @@ MainComponent::MainComponent()
     // --- Register as network listener ---
     networkManager.addListener (this);
 
+    // --- License section ---
+    licenseKeyInput.setMultiLine (false);
+    licenseKeyInput.setTextToShowWhenEmpty ("Enter license key...", Colours_RONE::textDim);
+    licenseKeyInput.setColour (juce::TextEditor::backgroundColourId,  Colours_RONE::cardBackground);
+    licenseKeyInput.setColour (juce::TextEditor::textColourId,        Colours_RONE::textPrimary);
+    licenseKeyInput.setColour (juce::TextEditor::outlineColourId,     Colours_RONE::cardBorder);
+    licenseKeyInput.setColour (juce::TextEditor::focusedOutlineColourId, Colours_RONE::hotPurple);
+    addAndMakeVisible (licenseKeyInput);
+
+    activateButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::hotPurple);
+    activateButton.onClick = [this] { handleActivate(); };
+    addAndMakeVisible (activateButton);
+
+    deactivateButton.setColour (juce::TextButton::buttonColourId, Colours_RONE::buttonBase);
+    deactivateButton.onClick = [this] { handleDeactivate(); };
+    deactivateButton.setVisible (false);
+    addAndMakeVisible (deactivateButton);
+
+    licenseStatusLabel.setFont (juce::FontOptions (12.0f));
+    licenseStatusLabel.setColour (juce::Label::textColourId, Colours_RONE::textSecondary);
+    addAndMakeVisible (licenseStatusLabel);
+
+    proBadge.setText ("PRO", juce::dontSendNotification);
+    proBadge.setFont (juce::FontOptions (14.0f, juce::Font::bold));
+    proBadge.setColour (juce::Label::textColourId, Colours_RONE::neonPink);
+    proBadge.setJustificationType (juce::Justification::centred);
+    proBadge.setVisible (false);
+    addAndMakeVisible (proBadge);
+
+    // --- Initialize license ---
+    licenseHandler.onLicenseStateChanged = [this] (bool) { updateLicenseUI(); };
+    licenseHandler.initialize();
+    updateLicenseUI();
+
     // --- Initial fetch ---
     statusLabel.setText ("Checking for updates...", juce::dontSendNotification);
     refreshPlugins();
@@ -41,7 +75,7 @@ MainComponent::MainComponent()
     // --- Auto-refresh every 30 minutes ---
     startTimer (30 * 60 * 1000);
 
-    setSize (520, 680);
+    setSize (520, 730);
 }
 
 MainComponent::~MainComponent()
@@ -94,6 +128,25 @@ void MainComponent::resized()
     header.removeFromRight (8);
     statusLabel.setBounds (header.removeFromRight (200));
     titleLabel.setBounds (header);
+
+    // License section: 44 px tall
+    auto licenseArea = area.removeFromTop (44).reduced (16, 4);
+
+    if (licenseHandler.isLicensed())
+    {
+        proBadge.setBounds (licenseArea.removeFromLeft (40));
+        licenseArea.removeFromLeft (8);
+        licenseStatusLabel.setBounds (licenseArea.removeFromLeft (240));
+        deactivateButton.setBounds (licenseArea.removeFromRight (100));
+    }
+    else
+    {
+        licenseKeyInput.setBounds (licenseArea.removeFromLeft (260));
+        licenseArea.removeFromLeft (8);
+        activateButton.setBounds (licenseArea.removeFromLeft (90));
+        licenseArea.removeFromLeft (8);
+        licenseStatusLabel.setBounds (licenseArea);
+    }
 
     // Viewport takes the rest
     area.removeFromTop (8);
@@ -326,9 +379,10 @@ void MainComponent::launchSilentInstaller (const juce::File& installerExe,
     juce::Thread::launch ([this, exePath, pid, regKey, remoteVer]
     {
         juce::ChildProcess process;
-        // Inno Setup silent flags — individual plugin installer
-        bool started = process.start (
-            "\"" + exePath + "\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-");
+        // Inno Setup silent flags — individual plugin installer.
+        // Wrap path in quotes to handle spaces and special characters.
+        juce::String cmd = "\"" + exePath + "\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-";
+        bool started = process.start (cmd);
 
         bool processFinished = false;
         if (started)
@@ -373,6 +427,49 @@ void MainComponent::launchSilentInstaller (const juce::File& installerExe,
             }
         });
     });
+}
+
+// ============================================================================
+// License handlers
+// ============================================================================
+
+void MainComponent::handleActivate()
+{
+    auto key = licenseKeyInput.getText().trim();
+    if (key.isEmpty()) return;
+
+    activateButton.setEnabled (false);
+    licenseStatusLabel.setText ("Activating...", juce::dontSendNotification);
+
+    licenseHandler.activateLicense (key, [this] (bool success, juce::String msg)
+    {
+        activateButton.setEnabled (true);
+        licenseStatusLabel.setText (msg, juce::dontSendNotification);
+        if (success) updateLicenseUI();
+    });
+}
+
+void MainComponent::handleDeactivate()
+{
+    licenseHandler.deactivateLicense ([this] (bool success, juce::String msg)
+    {
+        licenseStatusLabel.setText (msg, juce::dontSendNotification);
+        if (success) updateLicenseUI();
+    });
+}
+
+void MainComponent::updateLicenseUI()
+{
+    bool pro = licenseHandler.isLicensed();
+
+    proBadge.setVisible (pro);
+    licenseKeyInput.setVisible (! pro);
+    activateButton.setVisible (! pro);
+    deactivateButton.setVisible (pro);
+
+    licenseStatusLabel.setText (licenseHandler.getStatusMessage(),
+                                juce::dontSendNotification);
+    resized();
 }
 
 // ============================================================================

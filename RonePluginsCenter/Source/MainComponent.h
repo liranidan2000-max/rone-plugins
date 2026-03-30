@@ -4,6 +4,7 @@
 #include "PluginCard.h"
 #include "NetworkManager.h"
 #include "VersionChecker.h"
+#include "LicenseHandler.h"
 
 // ============================================================================
 // MainComponent — the root UI: header bar + scrollable plugin card grid
@@ -39,12 +40,17 @@ private:
     void launchSilentInstaller (const juce::File& installerExe,
                                  const juce::String& pluginId);
 
+    void handleActivate();
+    void handleDeactivate();
+    void updateLicenseUI();
+
     PluginCard* findCard (const juce::String& pluginId);
 
     // Data
     juce::Array<PluginInfo>          pluginData;
     juce::OwnedArray<PluginCard>     cards;
     NetworkManager                   networkManager;
+    LicenseHandler                   licenseHandler;
 
     // UI pieces
     RoneLookAndFeel  roneLnf;
@@ -53,6 +59,13 @@ private:
     juce::TextButton refreshButton { "Refresh" };
     juce::Viewport   viewport;
     juce::Component  cardContainer;
+
+    // License UI
+    juce::TextEditor licenseKeyInput;
+    juce::TextButton activateButton   { "ACTIVATE" };
+    juce::TextButton deactivateButton { "DEACTIVATE" };
+    juce::Label      licenseStatusLabel;
+    juce::Label      proBadge;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
