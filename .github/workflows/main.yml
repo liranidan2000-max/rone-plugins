@@ -310,15 +310,7 @@ jobs:
             # Generate component plist and disable BundleIsRelocatable
             # so macOS installer places .app in /Applications/ instead of relocating
             pkgbuild --analyze --root staging /tmp/comp.plist
-            python3 -c "
-import plistlib
-with open('/tmp/comp.plist', 'rb') as f:
-    p = plistlib.load(f)
-for item in p:
-    item['BundleIsRelocatable'] = False
-with open('/tmp/comp.plist', 'wb') as f:
-    plistlib.dump(p, f)
-            "
+            python3 -c "import plistlib; f=open('/tmp/comp.plist','rb'); p=plistlib.load(f); f.close(); [item.__setitem__('BundleIsRelocatable',False) for item in p]; f=open('/tmp/comp.plist','wb'); plistlib.dump(p,f); f.close()"
 
             pkgbuild --root staging \
               --component-plist /tmp/comp.plist \
