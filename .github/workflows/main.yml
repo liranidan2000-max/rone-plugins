@@ -303,20 +303,54 @@ jobs:
           else
             # .pkg for plugins
             mkdir -p staging
-            [ -d "$A/VST3" ]       && mkdir -p staging/Library/Audio/Plug-Ins/VST3       && cp -R "$A"/VST3/*.vst3      staging/Library/Audio/Plug-Ins/VST3/       2>/dev/null || true
-            [ -d "$A/AU" ]         && mkdir -p staging/Library/Audio/Plug-Ins/Components  && cp -R "$A"/AU/*.component   staging/Library/Audio/Plug-Ins/Components/ 2>/dev/null || true
-            [ -d "$A/Standalone" ] && mkdir -p staging/Applications                       && cp -R "$A"/Standalone/*.app  staging/Applications/                      2>/dev/null || true
-            # Fallback for juce_add_gui_app: .app is directly in Release, not under Standalone/
-            if [ ! -d "$A/Standalone" ]; then
-              for app in "$A"/*.app; do
-                [ -d "$app" ] && mkdir -p staging/Applications && cp -R "$app" staging/Applications/ && break
-              done
+
+            # --- Discover and stage all build artifacts recursively ---
+            echo "=== Scanning build artifacts in $A ==="
+            find "$A" -maxdepth 3 \( -name "*.vst3" -o -name "*.component" -o -name "*.app" \) -type d | sort
+            echo "=== End scan ==="
+
+            # VST3 bundles (recursive search)
+            for f in $(find "$A" -name "*.vst3" -type d 2>/dev/null); do
+              mkdir -p staging/Library/Audio/Plug-Ins/VST3
+              cp -R "$f" staging/Library/Audio/Plug-Ins/VST3/
+              echo "Staged VST3: $(basename "$f")"
+            done
+
+            # AU bundles (recursive search)
+            for f in $(find "$A" -name "*.component" -type d 2>/dev/null); do
+              mkdir -p staging/Library/Audio/Plug-Ins/Components
+              cp -R "$f" staging/Library/Audio/Plug-Ins/Components/
+              echo "Staged AU: $(basename "$f")"
+            done
+
+            # Standalone .app — search Standalone/ first, then Release/ root
+            # Works for both juce_add_plugin (Standalone/) and juce_add_gui_app (root)
+            APP_STAGED=false
+            for f in $(find "$A" -name "*.app" -type d -maxdepth 2 2>/dev/null); do
+              mkdir -p staging/Applications
+              cp -R "$f" staging/Applications/
+              echo "Staged App: $(basename "$f") -> /Applications/"
+              APP_STAGED=true
+            done
+
+            # --- Fail-safe: refuse to create empty pkg ---
+            FILE_COUNT=$(find staging -type f 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$FILE_COUNT" -eq 0 ]; then
+              echo "::error::FATAL: No artifacts found for ${{ matrix.plugin_id }}. Staging is empty!"
+              find "$A" -maxdepth 3 -type d | head -30
+              exit 1
+            fi
+            echo "Total files staged: $FILE_COUNT"
+
+            if [ "$APP_STAGED" = "false" ]; then
+              echo "::warning::No standalone .app found for ${{ matrix.plugin_id }}"
             fi
 
-            # Generate component plist and disable BundleIsRelocatable
-            # so macOS installer places .app in /Applications/ instead of relocating
+            # --- Component plist: disable BundleIsRelocatable ---
             pkgbuild --analyze --root staging /tmp/comp.plist
             python3 -c "import plistlib; f=open('/tmp/comp.plist','rb'); p=plistlib.load(f); f.close(); [item.__setitem__('BundleIsRelocatable',False) for item in p]; f=open('/tmp/comp.plist','wb'); plistlib.dump(p,f); f.close()"
+            echo "Component plist contents:"
+            cat /tmp/comp.plist
 
             pkgbuild --root staging \
               --component-plist /tmp/comp.plist \
@@ -324,6 +358,8 @@ jobs:
               --version "$VER" \
               --install-location / \
               build-output/${{ matrix.installer_name }}_Installer.pkg
+
+            echo "Created: ${{ matrix.installer_name }}_Installer.pkg ($(du -h build-output/${{ matrix.installer_name }}_Installer.pkg | cut -f1))"
             rm -rf staging
           fi
 

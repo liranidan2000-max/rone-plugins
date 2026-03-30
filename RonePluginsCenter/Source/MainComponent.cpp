@@ -369,9 +369,16 @@ void MainComponent::handleOpen (const juce::String& pluginId)
             if (p.standaloneExe.isNotEmpty())
             {
                 auto appName = p.standaloneExe.replace (".exe", "") + ".app";
-                auto app = juce::File ("/Applications").getChildFile (appName);
-                if (! app.exists())
-                    app = VersionChecker::getStandaloneInstallDir().getChildFile (appName);
+
+                // Search multiple known locations
+                juce::File app;
+                for (auto& dir : { juce::File ("/Applications"),
+                                    juce::File ("/Applications/RONE Plugins"),
+                                    VersionChecker::getStandaloneInstallDir() })
+                {
+                    auto candidate = dir.getChildFile (appName);
+                    if (candidate.exists()) { app = candidate; break; }
+                }
 
                 if (app.exists())
                 {
@@ -556,9 +563,15 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                         if (p.standaloneExe.isNotEmpty())
                         {
                             auto appName = p.standaloneExe.replace (".exe", "") + ".app";
-                            auto app = juce::File ("/Applications").getChildFile (appName);
-                            if (! app.exists())
-                                app = VersionChecker::getStandaloneInstallDir().getChildFile (appName);
+                            juce::File app;
+                            for (auto& dir : { juce::File ("/Applications"),
+                                                juce::File ("/Applications/RONE Plugins"),
+                                                VersionChecker::getStandaloneInstallDir() })
+                            {
+                                auto candidate = dir.getChildFile (appName);
+                                if (candidate.exists()) { app = candidate; break; }
+                            }
+
                             if (app.exists())
                                 app.startAsProcess();
                             else

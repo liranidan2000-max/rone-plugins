@@ -225,16 +225,19 @@ bool VersionChecker::isStandaloneInstalled (const juce::String& exeName)
     if (exeName.isEmpty()) return false;
 
 #if JUCE_MAC
-    // On Mac, standalone apps are .app bundles — check both the install dir
-    // and /Applications
-    auto installDir = getStandaloneInstallDir();
+    // On Mac, standalone apps are .app bundles — check multiple locations
     auto appName = exeName.replace (".exe", "") + ".app";
 
-    if (installDir.getChildFile (appName).exists())
+    // 1. /Applications/  (direct install)
+    if (juce::File ("/Applications").getChildFile (appName).exists())
         return true;
 
-    // Also check /Applications
-    if (juce::File ("/Applications").getChildFile (appName).exists())
+    // 2. /Applications/RONE Plugins/  (standardized subfolder)
+    if (juce::File ("/Applications/RONE Plugins").getChildFile (appName).exists())
+        return true;
+
+    // 3. ~/Library/Application Support/RONE Plugins/
+    if (getStandaloneInstallDir().getChildFile (appName).exists())
         return true;
 
     return false;
