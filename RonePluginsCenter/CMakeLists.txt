@@ -20,17 +20,25 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(JUCE)
 
 # --- WebView2 SDK for Windows ---
+# Uses mklink wrapper so JUCE's FindWebView2.cmake can glob for Microsoft.Web.WebView2*
 if(WIN32)
     FetchContent_Declare(
-        WebView2
-        URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2903.40
-        URL_HASH SHA256=ef128016dd1e51c59178c827ed5b8aa3322c57afa8675d930f8109505542ad74
+        webview2
+        URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.1901.177
         DOWNLOAD_NO_EXTRACT FALSE
     )
-    FetchContent_MakeAvailable(WebView2)
+    FetchContent_MakeAvailable(webview2)
 
-    # Point JUCE to the WebView2 package
-    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${webview2_SOURCE_DIR}" CACHE STRING "" FORCE)
+    # JUCE expects a wrapper dir containing Microsoft.Web.WebView2/build/native/include/
+    set(_wv2_wrapper "${CMAKE_BINARY_DIR}/_webview2_wrapper")
+    set(_wv2_link "${_wv2_wrapper}/Microsoft.Web.WebView2")
+    if(NOT EXISTS "${_wv2_link}/build/native/include/WebView2.h")
+        file(MAKE_DIRECTORY "${_wv2_wrapper}")
+        cmake_path(NATIVE_PATH webview2_SOURCE_DIR _wv2_native_src)
+        cmake_path(NATIVE_PATH _wv2_link _wv2_native_link)
+        execute_process(COMMAND cmd /c mklink /J "${_wv2_native_link}" "${_wv2_native_src}")
+    endif()
+    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${_wv2_wrapper}" CACHE STRING "" FORCE)
 endif()
 
 # --- GUI Application (not a plugin) ---

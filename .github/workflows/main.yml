@@ -292,13 +292,20 @@ jobs:
           VER="1.0.${{ github.run_number }}"
 
           if [ "${{ matrix.plugin_id }}" = "plugins_center" ]; then
-            # .dmg for the Center app
-            APP=$(find "$A" -name "*.app" -type d | head -1)
+            # .dmg for the Center app — search broadly in build-ci/
+            echo "=== Searching for .app in build-ci ==="
+            find "${{ matrix.folder }}/build-ci" -name "*.app" -type d 2>/dev/null
+            APP=$(find "${{ matrix.folder }}/build-ci" -name "*.app" -type d | head -1)
             if [ -n "$APP" ]; then
+              echo "Found app: $APP"
               mkdir -p dmg_staging && cp -R "$APP" dmg_staging/
               hdiutil create -volname "RONE Plugins Center" -srcfolder dmg_staging \
                 -ov -format UDZO build-output/RONE_Plugins_Center.dmg
               rm -rf dmg_staging
+            else
+              echo "::error::No .app found for plugins_center"
+              find "${{ matrix.folder }}/build-ci" -maxdepth 5 -type d | head -40
+              exit 1
             fi
           else
             # .pkg for plugins
