@@ -9,7 +9,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# --- JUCE via FetchContent ---
+# --- FetchContent setup ---
 include(FetchContent)
 FetchContent_Declare(
     JUCE
@@ -17,10 +17,9 @@ FetchContent_Declare(
     GIT_TAG        8.0.12
     GIT_SHALLOW    TRUE
 )
-FetchContent_MakeAvailable(JUCE)
 
 # --- WebView2 SDK for Windows ---
-# Uses mklink wrapper so JUCE's FindWebView2.cmake can glob for Microsoft.Web.WebView2*
+# MUST be set up BEFORE FetchContent_MakeAvailable(JUCE) so JUCE can find WebView2.h
 if(WIN32)
     FetchContent_Declare(
         webview2
@@ -29,7 +28,7 @@ if(WIN32)
     )
     FetchContent_MakeAvailable(webview2)
 
-    # JUCE expects a wrapper dir containing Microsoft.Web.WebView2/build/native/include/
+    # JUCE's FindWebView2.cmake globs for Microsoft.Web.WebView2* inside this dir
     set(_wv2_wrapper "${CMAKE_BINARY_DIR}/_webview2_wrapper")
     set(_wv2_link "${_wv2_wrapper}/Microsoft.Web.WebView2")
     if(NOT EXISTS "${_wv2_link}/build/native/include/WebView2.h")
@@ -40,6 +39,9 @@ if(WIN32)
     endif()
     set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${_wv2_wrapper}" CACHE STRING "" FORCE)
 endif()
+
+# --- Now make JUCE available (after WebView2 is configured) ---
+FetchContent_MakeAvailable(JUCE)
 
 # --- GUI Application (not a plugin) ---
 juce_add_gui_app(RonePluginsCenter
