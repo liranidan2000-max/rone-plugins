@@ -109,7 +109,16 @@ target_link_libraries(RonePluginsCenter PRIVATE
 # causing C1083 "Cannot open include file: 'JuceHeader.h'" on every TU.
 juce_generate_juce_header(RonePluginsCenter)
 
-# Windows: link registry + shell APIs
+# Windows: link registry + shell APIs + WebView2 include path
 if(WIN32)
     target_link_libraries(RonePluginsCenter PRIVATE advapi32 shell32 urlmon)
+
+    # juce_add_gui_app doesn't support NEEDS_WEBVIEW2, so manually add include path
+    if(DEFINED JUCE_WEBVIEW2_PACKAGE_LOCATION)
+        file(GLOB _wv2_pkg "${JUCE_WEBVIEW2_PACKAGE_LOCATION}/Microsoft.Web.WebView2*")
+        if(_wv2_pkg)
+            target_include_directories(RonePluginsCenter PRIVATE "${_wv2_pkg}/build/native/include")
+            message(STATUS "WebView2 include: ${_wv2_pkg}/build/native/include")
+        endif()
+    endif()
 endif()

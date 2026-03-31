@@ -190,11 +190,10 @@ jobs:
         run: |
           $flags = @("-B","build-ci","-G","Visual Studio 17 2022","-A","x64","-DCMAKE_BUILD_TYPE=Release")
           if ("${{ matrix.needs_webview2 }}" -eq "true") {
-            if ("${{ matrix.webview2_flag }}" -eq "JUCE_WEBVIEW2_PACKAGE_LOCATION") {
-              $flags += "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=${{ github.workspace }}\webview2"
-            } else {
-              $flags += "-DFETCHCONTENT_SOURCE_DIR_WEBVIEW2=${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177"
-            }
+            $flags += "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=${{ github.workspace }}\webview2"
+            # Explicit include path — guarantees WebView2.h is found even for juce_add_gui_app targets
+            $wv2Include = "${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\include"
+            $flags += "-DCMAKE_CXX_FLAGS=/I`"$wv2Include`""
           }
           cmake @flags
 
@@ -202,11 +201,13 @@ jobs:
         if: matrix.needs_webview2 == 'true'
         shell: pwsh
         run: |
+          Write-Host "=== Searching for WebView2.h ==="
+          Get-ChildItem -Path "${{ github.workspace }}\webview2" -Recurse -Filter "WebView2.h" | Select-Object FullName
           $headerPath = "${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\include\WebView2.h"
           if (Test-Path $headerPath) {
-            Write-Host "✅ WebView2.h found at $headerPath"
+            Write-Host "WebView2.h confirmed at $headerPath"
           } else {
-            Write-Error "❌ WebView2.h NOT found at $headerPath"
+            Write-Error "WebView2.h NOT found at $headerPath"
             Get-ChildItem "${{ github.workspace }}\webview2" -Recurse -Depth 4 | Select-Object FullName
             exit 1
           }
