@@ -20,32 +20,27 @@ FetchContent_Declare(
 
 # --- WebView2 SDK for Windows ---
 # MUST be set up BEFORE FetchContent_MakeAvailable(JUCE) so JUCE can find WebView2.h
-if(WIN32)
-    if(DEFINED FETCHCONTENT_SOURCE_DIR_WEBVIEW2)
-        # CI workflow pre-downloads via nuget install to .../webview2/Microsoft.Web.WebView2.x.x.x/
-        # JUCE globs for Microsoft.Web.WebView2* inside the package location, so point one level up
-        cmake_path(GET FETCHCONTENT_SOURCE_DIR_WEBVIEW2 PARENT_PATH _wv2_parent)
-        set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${_wv2_parent}" CACHE STRING "" FORCE)
-    else()
-        # Local builds: fetch from NuGet URL
-        FetchContent_Declare(
-            webview2
-            URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.1901.177
-            DOWNLOAD_NAME webview2.zip
-        )
-        FetchContent_MakeAvailable(webview2)
+# CI passes -DJUCE_WEBVIEW2_PACKAGE_LOCATION=<path> which already contains
+# Microsoft.Web.WebView2.x.x.x/build/native/include/WebView2.h — no extra work needed.
+# For local builds without that flag, fetch from NuGet and create a wrapper.
+if(WIN32 AND NOT DEFINED JUCE_WEBVIEW2_PACKAGE_LOCATION)
+    FetchContent_Declare(
+        webview2
+        URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.1901.177
+        DOWNLOAD_NAME webview2.zip
+    )
+    FetchContent_MakeAvailable(webview2)
 
-        # JUCE's FindWebView2.cmake globs for Microsoft.Web.WebView2* inside this dir
-        set(_wv2_wrapper "${CMAKE_BINARY_DIR}/_webview2_wrapper")
-        set(_wv2_link "${_wv2_wrapper}/Microsoft.Web.WebView2")
-        if(NOT EXISTS "${_wv2_link}/build/native/include/WebView2.h")
-            file(MAKE_DIRECTORY "${_wv2_wrapper}")
-            cmake_path(NATIVE_PATH webview2_SOURCE_DIR _wv2_native_src)
-            cmake_path(NATIVE_PATH _wv2_link _wv2_native_link)
-            execute_process(COMMAND cmd /c mklink /J "${_wv2_native_link}" "${_wv2_native_src}")
-        endif()
-        set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${_wv2_wrapper}" CACHE STRING "" FORCE)
+    # JUCE's FindWebView2.cmake globs for Microsoft.Web.WebView2* inside this dir
+    set(_wv2_wrapper "${CMAKE_BINARY_DIR}/_webview2_wrapper")
+    set(_wv2_link "${_wv2_wrapper}/Microsoft.Web.WebView2")
+    if(NOT EXISTS "${_wv2_link}/build/native/include/WebView2.h")
+        file(MAKE_DIRECTORY "${_wv2_wrapper}")
+        cmake_path(NATIVE_PATH webview2_SOURCE_DIR _wv2_native_src)
+        cmake_path(NATIVE_PATH _wv2_link _wv2_native_link)
+        execute_process(COMMAND cmd /c mklink /J "${_wv2_native_link}" "${_wv2_native_src}")
     endif()
+    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${_wv2_wrapper}" CACHE STRING "" FORCE)
 endif()
 
 # --- Now make JUCE available (after WebView2 is configured) ---
