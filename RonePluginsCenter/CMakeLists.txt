@@ -61,6 +61,7 @@ target_sources(RonePluginsCenter PRIVATE
     Source/NetworkManager.cpp
     Source/VersionChecker.cpp
     Source/LicenseHandler.cpp
+    Source/RoneTrayIcon.h
 )
 
 target_compile_definitions(RonePluginsCenter PRIVATE
@@ -91,6 +92,7 @@ juce_add_binary_data(PluginsCenterUI SOURCES
     Resources/RoneStutter_icon.png
     Resources/RoneStemsFixer_icon.png
     Resources/RoneFlanger_icon.png
+    Resources/AppIcon.png
 )
 
 target_link_libraries(RonePluginsCenter PRIVATE

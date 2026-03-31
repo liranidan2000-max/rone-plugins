@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
+#include "RoneTrayIcon.h"
 
 // ============================================================================
 // RONE Plugins Center — Application entry point
@@ -14,11 +15,22 @@ public:
     void initialise (const juce::String&) override
     {
         mainWindow = std::make_unique<MainWindow> (getApplicationName());
+        trayIcon = std::make_unique<RoneTrayIcon> (*mainWindow);
     }
 
     void shutdown() override
     {
+        trayIcon.reset();
         mainWindow.reset();
+    }
+
+    void anotherInstanceStarted (const juce::String&) override
+    {
+        if (mainWindow != nullptr)
+        {
+            mainWindow->setVisible (true);
+            mainWindow->toFront (true);
+        }
     }
 
     void systemRequestedQuit() override
@@ -48,7 +60,7 @@ private:
 
         void closeButtonPressed() override
         {
-            JUCEApplication::getInstance()->systemRequestedQuit();
+            setVisible (false);
         }
 
     private:
@@ -56,6 +68,7 @@ private:
     };
 
     std::unique_ptr<MainWindow> mainWindow;
+    std::unique_ptr<RoneTrayIcon> trayIcon;
 };
 
 // Launch the app
