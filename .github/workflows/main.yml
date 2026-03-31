@@ -100,7 +100,7 @@ jobs:
           add "$SF" stems_fixer     RoneStemsFixer     RoneStemsFixer    RoneStemsFixer-latest      RoneStemsFixer             false  ""                                false    RoneStemsFixer.iss
           add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               false  ""                                true     RoneFlanger.iss
-          add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       false  ""                                false    RONE_Plugins.iss
+          add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RONE_Plugins.iss
 
           echo "windows=$win"     >> $GITHUB_OUTPUT
           echo "macos=$mac"       >> $GITHUB_OUTPUT
