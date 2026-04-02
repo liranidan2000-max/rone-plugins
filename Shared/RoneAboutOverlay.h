@@ -155,7 +155,7 @@ public:
         // ---- Version pill ----
         {
             juce::String vText = "v" + version_;
-            float pillW = std::max (52.0f, static_cast<float> (vText.length()) * 8.0f + 16.0f);
+            float pillW = std::max (52.0f, (static_cast<float> (vText.length()) * 8.0f) + 16.0f);
             float pillX = dotX + dotSize + 210.0f;
             float pillY = static_cast<float> (content.getY()) + 30.0f;
 
@@ -269,8 +269,8 @@ private:
     void layoutPanel()
     {
         auto bounds = getLocalBounds();
-        int panelW = std::min (420, bounds.getWidth()  - 60);
-        int panelH = std::min (380, bounds.getHeight() - 60);
+        int panelW = std::min (420, (bounds.getWidth()  - 60));
+        int panelH = std::min (380, (bounds.getHeight() - 60));
         panelBounds_ = juce::Rectangle<int> (0, 0, panelW, panelH)
                            .withCentre (bounds.getCentre());
 
