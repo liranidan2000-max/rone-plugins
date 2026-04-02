@@ -41,12 +41,16 @@ jobs:
           filters: |
             reverse_reverb:
               - 'ReverseReverbVST'
+              - 'Shared/**'
             stems_fixer:
               - 'RoneStemsFixer'
+              - 'Shared/**'
             stutter:
               - 'RoneStutter'
+              - 'Shared/**'
             flanger:
               - 'rone-flanger-'
+              - 'Shared/**'
             plugins_center:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
