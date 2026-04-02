@@ -1,5 +1,8 @@
 #pragma once
 
+// Shared/RoneAboutOverlay.h — Unified About overlay for all RONE plugins
+// Included by: ReverseReverbVST, RoneStemsFixer, RoneStutter, rone-flanger-
+
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <functional>
 
