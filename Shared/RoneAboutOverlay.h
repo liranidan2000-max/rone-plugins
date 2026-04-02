@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef _WIN32
+ #ifndef NOMINMAX
+  #define NOMINMAX
+ #endif
+#endif
+
 // Shared/RoneAboutOverlay.h — Unified About overlay for all RONE plugins
 // Included by: ReverseReverbVST, RoneStemsFixer, RoneStutter, rone-flanger-
 
