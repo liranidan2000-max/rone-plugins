@@ -15,6 +15,9 @@ export default function InfoModal({ plugin, onClose }) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${plugin.name} details`}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -22,7 +25,7 @@ export default function InfoModal({ plugin, onClose }) {
       transition={{ duration: 0.25 }}
     >
       <motion.div
-        className="glass-card border border-rone-border/60 rounded-2xl p-6 w-[420px] max-h-[80vh] overflow-y-auto
+        className="glass-card border border-rone-border/60 rounded-2xl p-6 w-[420px] max-w-[90vw] max-h-[80vh] overflow-y-auto
                     shadow-2xl shadow-rone-purple/10"
         initial={{ opacity: 0, y: 15, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -45,7 +48,9 @@ export default function InfoModal({ plugin, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-rone-text-dim hover:text-rone-text-primary transition-colors"
+            className="p-1 text-rone-text-dim hover:text-rone-text-primary transition-colors
+                       focus:outline-none focus:ring-2 focus:ring-rone-purple/50 rounded"
+            aria-label="Close dialog"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

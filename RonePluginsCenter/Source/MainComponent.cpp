@@ -186,6 +186,7 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
 
 juce::var MainComponent::allPluginsToVar()
 {
+    juce::ScopedLock sl (pluginDataLock);
     juce::Array<juce::var> arr;
     for (auto& p : pluginData)
         arr.add (pluginInfoToVar (p));
@@ -238,29 +239,32 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
 
     auto pluginId = args[0].toString();
 
-    for (auto& p : pluginData)
     {
-        if (p.id == pluginId)
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
         {
-            if (p.status == PluginStatus::NotInstalled
-             || p.status == PluginStatus::UpdateAvailable
-             || p.status == PluginStatus::Error
-             || p.status == PluginStatus::UpToDate)
+            if (p.id == pluginId)
             {
-                p.status = PluginStatus::Downloading;
-                p.downloadProgress = 0.0;
+                if (p.status == PluginStatus::NotInstalled
+                 || p.status == PluginStatus::UpdateAvailable
+                 || p.status == PluginStatus::Error
+                 || p.status == PluginStatus::UpToDate)
+                {
+                    p.status = PluginStatus::Downloading;
+                    p.downloadProgress = 0.0;
 
-            #if JUCE_MAC
-                networkManager.downloadInstaller (pluginId, p.downloadUrlMac);
-            #else
-                networkManager.downloadInstaller (pluginId, p.downloadUrl);
-            #endif
+                #if JUCE_MAC
+                    networkManager.downloadInstaller (pluginId, p.downloadUrlMac, p.sha256);
+                #else
+                    networkManager.downloadInstaller (pluginId, p.downloadUrl, p.sha256);
+                #endif
 
-                emitPluginsUpdated();
-                complete ("{\"started\":true}");
-                return;
+                    emitPluginsUpdated();
+                    complete ("{\"started\":true}");
+                    return;
+                }
+                break;
             }
-            break;
         }
     }
 
@@ -283,6 +287,7 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
 
     auto pluginId = args[0].toString();
 
+    juce::ScopedLock sl (pluginDataLock);
     for (auto& p : pluginData)
     {
         if (p.id == pluginId)
@@ -432,7 +437,10 @@ void MainComponent::handleGetAppVersion (NativeArgs, NativeCompletion complete)
 
 void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 {
-    pluginData = plugins;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        pluginData = plugins;
+    }
 
     if (plugins.isEmpty())
     {
@@ -443,9 +451,12 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
     emitPluginsUpdated();
 
     int updates = 0;
-    for (auto& p : pluginData)
-        if (p.status == PluginStatus::UpdateAvailable || p.status == PluginStatus::NotInstalled)
-            ++updates;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.status == PluginStatus::UpdateAvailable || p.status == PluginStatus::NotInstalled)
+                ++updates;
+    }
 
     if (updates > 0)
         emitStatusMessage (juce::String (updates) + " update(s) available", "info");
@@ -461,12 +472,15 @@ void MainComponent::onManifestError (const juce::String& errorMessage)
 void MainComponent::onDownloadProgress (const juce::String& pluginId, double progress)
 {
     // Update local state
-    for (auto& p : pluginData)
     {
-        if (p.id == pluginId)
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
         {
-            p.downloadProgress = progress;
-            break;
+            if (p.id == pluginId)
+            {
+                p.downloadProgress = progress;
+                break;
+            }
         }
     }
 
@@ -487,12 +501,15 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
     }
     else
     {
-        for (auto& p : pluginData)
         {
-            if (p.id == pluginId)
+            juce::ScopedLock sl (pluginDataLock);
+            for (auto& p : pluginData)
             {
-                p.status = PluginStatus::Error;
-                break;
+                if (p.id == pluginId)
+                {
+                    p.status = PluginStatus::Error;
+                    break;
+                }
             }
         }
 
@@ -508,12 +525,15 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
 void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                                             const juce::String& pluginId)
 {
-    for (auto& p : pluginData)
     {
-        if (p.id == pluginId)
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
         {
-            p.status = PluginStatus::Installing;
-            break;
+            if (p.id == pluginId)
+            {
+                p.status = PluginStatus::Installing;
+                break;
+            }
         }
     }
     emitPluginsUpdated();
@@ -523,16 +543,19 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
     auto pid          = pluginId;
     juce::String regKey, remoteVer, vst3Bundle, auBundle, standaloneExe;
 
-    for (auto& p : pluginData)
     {
-        if (p.id == pluginId)
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
         {
-            regKey        = p.registryKey;
-            remoteVer     = p.remoteVersion;
-            vst3Bundle    = p.vst3Bundle;
-            auBundle      = p.auBundle;
-            standaloneExe = p.standaloneExe;
-            break;
+            if (p.id == pluginId)
+            {
+                regKey        = p.registryKey;
+                remoteVer     = p.remoteVersion;
+                vst3Bundle    = p.vst3Bundle;
+                auBundle      = p.auBundle;
+                standaloneExe = p.standaloneExe;
+                break;
+            }
         }
     }
 
@@ -624,51 +647,68 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
 
         juce::MessageManager::callAsync ([this, pid, verified, remoteVer, exitCode, processFinished]
         {
-            for (auto& p : pluginData)
+            juce::String pluginName;
+
             {
-                if (p.id == pid)
+                juce::ScopedLock sl (pluginDataLock);
+                for (auto& p : pluginData)
                 {
-                    if (verified)
+                    if (p.id == pid)
                     {
-                        p.installedVersion = VersionChecker::getInstalledVersion (p.registryKey);
-                        if (p.installedVersion.isEmpty())
-                            p.installedVersion = remoteVer;
-                        p.status = PluginStatus::UpToDate;
-
-                        emitStatusMessage (p.name + " installed successfully!", "success");
-
-                        // Auto-open standalone after install
-                    #if JUCE_MAC
-                        if (p.standaloneExe.isNotEmpty())
+                        if (verified)
                         {
-                            auto appName = p.standaloneExe.replace (".exe", "") + ".app";
-                            juce::File app;
-                            for (auto& dir : { juce::File ("/Applications"),
-                                                juce::File ("/Applications/RONE Plugins"),
-                                                VersionChecker::getStandaloneInstallDir() })
-                            {
-                                auto candidate = dir.getChildFile (appName);
-                                if (candidate.exists()) { app = candidate; break; }
-                            }
-                            if (app.exists())
-                                app.startAsProcess();
+                            p.installedVersion = VersionChecker::getInstalledVersion (p.registryKey);
+                            if (p.installedVersion.isEmpty())
+                                p.installedVersion = remoteVer;
+                            p.status = PluginStatus::UpToDate;
+                            pluginName = p.name;
                         }
-                    #endif
-                    }
-                    else
-                    {
-                        p.status = PluginStatus::Error;
-
-                        if (! processFinished)
-                            emitStatusMessage ("Install timed out.", "error");
-                        else if (exitCode != 0)
-                            emitStatusMessage ("Install cancelled or failed (code " + juce::String (exitCode) + "). Enter your password when prompted.", "error");
                         else
-                            emitStatusMessage ("Install verification failed — components not found.", "error");
-                    }
+                        {
+                            p.status = PluginStatus::Error;
+                        }
 
-                    break;
+                        break;
+                    }
                 }
+            }
+
+            if (verified)
+            {
+                emitStatusMessage (pluginName + " installed successfully!", "success");
+
+                // Auto-open standalone after install
+            #if JUCE_MAC
+                juce::String standaloneExeLocal;
+                {
+                    juce::ScopedLock sl (pluginDataLock);
+                    for (auto& p : pluginData)
+                        if (p.id == pid) { standaloneExeLocal = p.standaloneExe; break; }
+                }
+                if (standaloneExeLocal.isNotEmpty())
+                {
+                    auto appName = standaloneExeLocal.replace (".exe", "") + ".app";
+                    juce::File app;
+                    for (auto& dir : { juce::File ("/Applications"),
+                                        juce::File ("/Applications/RONE Plugins"),
+                                        VersionChecker::getStandaloneInstallDir() })
+                    {
+                        auto candidate = dir.getChildFile (appName);
+                        if (candidate.exists()) { app = candidate; break; }
+                    }
+                    if (app.exists())
+                        app.startAsProcess();
+                }
+            #endif
+            }
+            else
+            {
+                if (! processFinished)
+                    emitStatusMessage ("Install timed out.", "error");
+                else if (exitCode != 0)
+                    emitStatusMessage ("Install cancelled or failed (code " + juce::String (exitCode) + "). Enter your password when prompted.", "error");
+                else
+                    emitStatusMessage ("Install verification failed — components not found.", "error");
             }
 
             // Push full updated state

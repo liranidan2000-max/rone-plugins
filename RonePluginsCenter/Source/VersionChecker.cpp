@@ -34,15 +34,20 @@ juce::String VersionChecker::getInstalledVersion (const juce::String& registryKe
 
     if (RegOpenKeyExW (HKEY_CURRENT_USER, pathWide, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        wchar_t buf[256] = {};
-        DWORD bufSize = sizeof (buf);
         DWORD type    = REG_SZ;
+        DWORD bufSize = 0;
 
+        // Query required buffer size first to avoid overflow
         if (RegQueryValueExW (hKey, L"InstalledVersion", nullptr, &type,
-                              reinterpret_cast<LPBYTE> (buf), &bufSize) == ERROR_SUCCESS)
+                              nullptr, &bufSize) == ERROR_SUCCESS && bufSize > 0)
         {
-            RegCloseKey (hKey);
-            return juce::String (buf);
+            std::vector<wchar_t> buf (bufSize / sizeof (wchar_t) + 1, 0);
+            if (RegQueryValueExW (hKey, L"InstalledVersion", nullptr, &type,
+                                  reinterpret_cast<LPBYTE> (buf.data()), &bufSize) == ERROR_SUCCESS)
+            {
+                RegCloseKey (hKey);
+                return juce::String (buf.data());
+            }
         }
         RegCloseKey (hKey);
     }
@@ -207,7 +212,8 @@ juce::File VersionChecker::getVst3InstallDir()
 #elif JUCE_MAC
     return juce::File ("/Library/Audio/Plug-Ins/VST3");
 #else
-    return juce::File ("~/.vst3/RONE");
+    return juce::File::getSpecialLocation (juce::File::userHomeDirectory)
+               .getChildFile (".vst3/RONE");
 #endif
 }
 

@@ -1,7 +1,18 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 
-export default function Header({ updatesCount, searchQuery, onSearchChange, onRefresh }) {
+function timeAgo(date) {
+  if (!date) return null
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return 'Just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.floor(hours / 24)}d ago`
+}
+
+export default function Header({ updatesCount, searchQuery, onSearchChange, onRefresh, lastSync }) {
   const [spinning, setSpinning] = useState(false)
 
   const handleRefresh = () => {
@@ -11,7 +22,7 @@ export default function Header({ updatesCount, searchQuery, onSearchChange, onRe
   }
 
   return (
-    <div className="flex-shrink-0 h-12 bg-rone-header border-b border-rone-border/40 flex items-center px-5 gap-4">
+    <div className="flex-shrink-0 h-12 surface-1 border-b border-rone-border/40 flex items-center px-5 gap-4">
       {/* Title */}
       <h1 className="text-rone-purple font-bold text-base tracking-wide whitespace-nowrap">
         RONE PLUGINS CENTER
@@ -20,14 +31,17 @@ export default function Header({ updatesCount, searchQuery, onSearchChange, onRe
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* Last sync timestamp */}
+      {lastSync && (
+        <span className="text-[10px] text-rone-text-dim whitespace-nowrap">
+          Synced {timeAgo(lastSync)}
+        </span>
+      )}
+
       {/* Status pill */}
       {updatesCount > 0 && (
         <div className="flex items-center gap-2 bg-rone-green/10 border border-rone-green/20 rounded-full px-3 py-1">
-          <motion.span
-            className="w-2 h-2 rounded-full bg-rone-green"
-            animate={{ opacity: [0.4, 1, 0.4] }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-          />
+          <span className="w-2 h-2 rounded-full bg-rone-green animate-pulse" />
           <span className="text-rone-green text-xs font-medium">
             {updatesCount} update{updatesCount !== 1 ? 's' : ''} available
           </span>
@@ -59,8 +73,10 @@ export default function Header({ updatesCount, searchQuery, onSearchChange, onRe
         onClick={handleRefresh}
         className="p-1.5 rounded-lg border border-rone-border/50 bg-rone-button/50
                    hover:bg-rone-purple/20 hover:border-rone-purple/30
-                   transition-all duration-200 active:scale-95"
+                   transition-all duration-200 active:scale-95
+                   focus:outline-none focus:ring-2 focus:ring-rone-purple/50"
         title="Refresh"
+        aria-label="Refresh plugin list"
       >
         <motion.svg
           className="w-4 h-4 text-rone-text-secondary"

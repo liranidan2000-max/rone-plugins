@@ -56,13 +56,22 @@ function createNativeFunction(name) {
       resultId: promiseId,
     });
 
-    // Parse JSON string results from C++
+    // Parse JSON string results from C++ and check for error responses
     return resultPromise.then((result) => {
+      let parsed = result;
       if (typeof result === 'string') {
-        try { return JSON.parse(result); }
+        try { parsed = JSON.parse(result); }
         catch { return result; }
       }
-      return result;
+
+      // If the C++ response indicates an error, throw so callers can catch it
+      if (parsed && typeof parsed === 'object' && parsed.success === false && parsed.error) {
+        const err = new Error(parsed.error);
+        err.response = parsed;
+        throw err;
+      }
+
+      return parsed;
     });
   };
 }

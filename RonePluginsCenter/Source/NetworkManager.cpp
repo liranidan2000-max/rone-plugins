@@ -24,12 +24,14 @@ void NetworkManager::fetchManifest()
 }
 
 void NetworkManager::downloadInstaller (const juce::String& pluginId,
-                                         const juce::String& url)
+                                         const juce::String& url,
+                                         const juce::String& sha256)
 {
     cancelDownload();
     currentTask    = DownloadFile;
     targetUrl      = url;
     activePluginId = pluginId;
+    expectedSha256 = sha256;
     startThread();
 }
 
@@ -150,6 +152,7 @@ void NetworkManager::run()
 
             constexpr int bufferSize = 32768;
             juce::HeapBlock<char> buffer (bufferSize);
+            auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
 
             while (! threadShouldExit())
             {
@@ -162,12 +165,18 @@ void NetworkManager::run()
 
                 if (totalBytes > 0)
                 {
-                    double progress = (double) downloaded / (double) totalBytes;
-                    auto pid = activePluginId;
-                    juce::MessageManager::callAsync ([this, pid, progress]
+                    auto now = juce::Time::getMillisecondCounterHiRes();
+                    // Throttle progress events to ~10/sec to avoid flooding the message queue
+                    if (now - lastProgressTime >= 100.0 || downloaded >= totalBytes)
                     {
-                        listeners.call (&Listener::onDownloadProgress, pid, progress);
-                    });
+                        lastProgressTime = now;
+                        double progress = (double) downloaded / (double) totalBytes;
+                        auto pid = activePluginId;
+                        juce::MessageManager::callAsync ([this, pid, progress]
+                        {
+                            listeners.call (&Listener::onDownloadProgress, pid, progress);
+                        });
+                    }
                 }
             }
 
@@ -187,6 +196,28 @@ void NetworkManager::run()
             auto fileSize   = fileExists ? tempFile.getSize() : 0;
             bool success    = fileExists && fileSize >= MIN_INSTALLER_SIZE;
 
+            // SHA256 verification — compare downloaded file hash against manifest
+            if (success && expectedSha256.isNotEmpty())
+            {
+                juce::FileInputStream fis (tempFile);
+                if (fis.openedOk())
+                {
+                    juce::SHA256 hash (fis);
+                    auto computed = hash.toHexString();
+
+                    if (computed.compareIgnoreCase (expectedSha256) != 0)
+                    {
+                        DBG ("[Download] SHA256 mismatch! Expected: " + expectedSha256
+                             + " Got: " + computed);
+                        success = false;
+                    }
+                    else
+                    {
+                        DBG ("[Download] SHA256 verified OK: " + computed);
+                    }
+                }
+            }
+
             auto pid  = activePluginId;
             auto file = tempFile;
 
@@ -196,6 +227,8 @@ void NetworkManager::run()
             else if (fileSize < MIN_INSTALLER_SIZE)
                 errorMsg = "Download failed — corrupt file (" + juce::String (fileSize / 1024)
                          + " KB). The download link may be invalid.";
+            else if (! success)
+                errorMsg = "Download failed — file integrity check failed (SHA256 mismatch).";
 
             juce::MessageManager::callAsync ([this, pid, file, success, errorMsg]
             {

@@ -102,6 +102,7 @@ target_link_libraries(RonePluginsCenter PRIVATE
     juce::juce_gui_extra
     juce::juce_graphics
     juce::juce_events
+    juce::juce_cryptography
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
 )

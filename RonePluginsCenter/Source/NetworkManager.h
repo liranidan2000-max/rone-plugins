@@ -41,8 +41,10 @@ public:
     void fetchManifest();
 
     // Download a file from `url` to a temp folder (async — progress via listener).
+    // If `sha256` is non-empty, the downloaded file is verified against it.
     void downloadInstaller (const juce::String& pluginId,
-                            const juce::String& url);
+                            const juce::String& url,
+                            const juce::String& sha256 = {});
 
     // Cancel any ongoing download.
     void cancelDownload();
@@ -63,6 +65,7 @@ private:
     Task               currentTask  { None };
     juce::String       targetUrl;
     juce::String       activePluginId;
+    juce::String       expectedSha256;
     juce::ListenerList<Listener> listeners;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NetworkManager)

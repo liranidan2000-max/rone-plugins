@@ -49,6 +49,16 @@ export const cardVariants = {
   },
 }
 
+// Status dot color
+const STATUS_DOT = {
+  up_to_date: 'bg-rone-green',
+  update_available: 'bg-rone-pink status-dot-pulse',
+  downloading: 'bg-rone-purple status-dot-pulse',
+  installing: 'bg-rone-purple status-dot-pulse',
+  error: 'bg-rone-error',
+  not_installed: 'bg-rone-text-dim/40',
+}
+
 function ActionIcon({ type }) {
   if (type === 'download') {
     return (
@@ -85,8 +95,9 @@ function ActionIcon({ type }) {
   return null
 }
 
-export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo, unlockPlaying = false }) {
+function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo, unlockPlaying = false }) {
   const [imgError, setImgError] = useState(false)
+  const [hovered, setHovered] = useState(false)
   const baseConfig = STATUS_CONFIG[plugin.status] || STATUS_CONFIG.not_installed
 
   // Track status transition for "just installed" pop effect
@@ -134,18 +145,24 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
     error: 'border-rone-error/30',
   }[plugin.status] || 'border-rone-border/60'
 
+  const dotClass = STATUS_DOT[plugin.status] || STATUS_DOT.not_installed
+
   return (
     <motion.div
-      className={`glass-card rounded-xl border ${borderColor} p-4 relative`}
+      className={`glass-card glass-card-glow rounded-xl border ${borderColor} p-4 relative overflow-hidden`}
       variants={cardVariants}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
       whileHover={{
         scale: 1.02,
         y: -4,
-        boxShadow: '0 8px 30px rgba(181,55,242,0.25)',
       }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       layout
     >
+      {/* Status indicator dot */}
+      <div className={`absolute top-3 right-3 w-2 h-2 rounded-full ${dotClass} z-[5]`} />
+
       {/* Lock overlay when unlicensed */}
       <AnimatePresence>
         {isLocked && !unlockPlaying && (
@@ -167,14 +184,14 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
         )}
       </AnimatePresence>
 
-      <div className="flex gap-3">
-        {/* Logo */}
-        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-rone-purple/8 flex items-center justify-center overflow-hidden">
+      <div className="flex gap-3.5">
+        {/* Logo — larger with gradient overlay */}
+        <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-rone-purple/10 to-rone-pink/5 flex items-center justify-center overflow-hidden">
           {!imgError ? (
             <img
               src={plugin.logoUrl}
               alt={plugin.name}
-              className="w-10 h-10 object-contain"
+              className="w-11 h-11 object-contain"
               onError={() => setImgError(true)}
             />
           ) : (
@@ -186,14 +203,16 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between pr-4">
             <h3 className="text-sm font-semibold text-rone-text-primary truncate">
               {plugin.name}
             </h3>
             <button
               onClick={() => onInfo(plugin)}
-              className="flex-shrink-0 ml-2 p-0.5 text-rone-text-dim hover:text-rone-purple transition-colors"
+              className="flex-shrink-0 ml-2 p-0.5 text-rone-text-dim hover:text-rone-purple transition-colors
+                         focus:outline-none focus:ring-2 focus:ring-rone-purple/50 rounded"
               title="Info"
+              aria-label={`More info about ${plugin.name}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -202,7 +221,8 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
             </button>
           </div>
 
-          <p className="text-[11px] text-rone-text-secondary truncate mt-0.5">
+          {/* Description — shows more on hover */}
+          <p className={`text-[11px] text-rone-text-secondary mt-0.5 transition-all duration-300 ${hovered ? 'line-clamp-2' : 'truncate'}`}>
             {plugin.description}
           </p>
 
@@ -213,7 +233,7 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
       </div>
 
       {/* Format badges */}
-      <div className="flex gap-1.5 mt-2.5">
+      <div className="flex gap-1.5 mt-3">
         {plugin.formats?.map(fmt => (
           <FormatBadge key={fmt} format={fmt} />
         ))}
@@ -221,7 +241,7 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
 
       {/* Progress bar */}
       {showProgress && (
-        <div className="mt-2.5">
+        <div className="mt-3">
           <ProgressBar progress={plugin.downloadProgress} />
         </div>
       )}
@@ -232,8 +252,10 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
         <motion.button
           onClick={() => !config.disabled && !isLocked && onInstall(plugin.id)}
           disabled={config.disabled || isLocked}
+          aria-label={`${config.label} ${plugin.name}`}
           className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-bold
                       text-white transition-colors duration-200
+                      focus:outline-none focus:ring-2 focus:ring-rone-purple/50
                       disabled:cursor-default ${config.className}`}
           whileTap={!config.disabled && !isLocked ? { scale: 0.95 } : {}}
           animate={isDownloading ? {
@@ -267,10 +289,12 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
           <motion.button
             onClick={() => !isLocked && onOpen(plugin.id)}
             disabled={isLocked}
+            aria-label={`Open ${plugin.name}`}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold
                        bg-rone-button text-white border border-rone-border/30
                        hover:bg-rone-purple/30 hover:border-rone-purple/30
                        transition-colors duration-200
+                       focus:outline-none focus:ring-2 focus:ring-rone-purple/50
                        disabled:opacity-40"
             whileTap={!isLocked ? { scale: 0.95 } : {}}
           >
@@ -284,3 +308,5 @@ export default function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo
     </motion.div>
   )
 }
+
+export default React.memo(PluginCard)

@@ -28,6 +28,11 @@ export default {
           'text-secondary': '#9999bb',
           'text-dim':       '#606080',
           'progress-track': '#1a0a30',
+          // Surface elevation system
+          'surface-0':  '#0B0416',
+          'surface-1':  '#120822',
+          'surface-2':  '#170B2C',
+          'surface-3':  '#1E1038',
         }
       },
       fontFamily: {
@@ -36,6 +41,8 @@ export default {
       animation: {
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
         'progress': 'progressShimmer 1.5s ease-in-out infinite',
+        'shimmer': 'shimmer 1.8s ease-in-out infinite',
+        'fade-in-up': 'fadeInUp 0.4s ease-out',
       },
       keyframes: {
         pulseGlow: {
@@ -45,6 +52,14 @@ export default {
         progressShimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(12px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
     },

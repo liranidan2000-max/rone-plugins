@@ -170,7 +170,15 @@ juce::var LicenseHandler::postToLemonSqueezy (const juce::String& endpoint,
         return juce::var();
 
     auto responseBody = stream->readEntireStreamAsString();
-    return juce::JSON::parse (responseBody);
+    auto parsed = juce::JSON::parse (responseBody);
+
+    if (! parsed.isObject())
+    {
+        DBG ("[LicenseHandler] Malformed response from Lemon Squeezy: " + responseBody.substring (0, 200));
+        return juce::var();
+    }
+
+    return parsed;
 }
 
 // ============================================================================

@@ -62,6 +62,7 @@ private:
     NetworkManager            networkManager;
     LicenseHandler            licenseHandler;
     juce::Array<PluginInfo>   pluginData;
+    juce::CriticalSection     pluginDataLock;  // guards pluginData access across threads
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

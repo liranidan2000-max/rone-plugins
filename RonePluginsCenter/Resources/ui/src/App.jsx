@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { api, onEvent, isDevMode, mockPlugins } from './bridge'
 import Header from './components/Header'
 import LicenseBar from './components/LicenseBar'
+import FeaturedSection from './components/FeaturedSection'
+import FilterBar from './components/FilterBar'
 import PluginGrid from './components/PluginGrid'
 import InfoModal from './components/InfoModal'
 import StatusToast from './components/StatusToast'
@@ -16,9 +18,12 @@ export default function App() {
     message: '',
   })
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('name')
   const [toasts, setToasts] = useState([])
   const [infoPlugin, setInfoPlugin] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [lastSync, setLastSync] = useState(null)
 
   // ---- Unlock animation orchestration ----
   const [unlockPlaying, setUnlockPlaying] = useState(false)
@@ -55,6 +60,7 @@ export default function App() {
         setPlugins(mockPlugins)
         setLicense({ licensed: true, customerName: 'Dev User', licenseKey: 'dev-key', message: '' })
         setLoading(false)
+        setLastSync(new Date())
         return
       }
 
@@ -64,7 +70,10 @@ export default function App() {
 
       // Get plugins
       const result = await api.getPlugins()
-      if (result?.plugins) setPlugins(result.plugins)
+      if (result?.plugins) {
+        setPlugins(result.plugins)
+        setLastSync(new Date())
+      }
 
       setLoading(false)
     }
@@ -76,7 +85,10 @@ export default function App() {
     if (isDevMode()) return
 
     onEvent('pluginsUpdated', (data) => {
-      if (data?.plugins) setPlugins(data.plugins)
+      if (data?.plugins) {
+        setPlugins(data.plugins)
+        setLastSync(new Date())
+      }
     })
 
     onEvent('downloadProgress', (data) => {
@@ -123,45 +135,117 @@ export default function App() {
 
   // ---- Actions ----
   const handleInstall = async (pluginId) => {
-    const result = await api.installPlugin(pluginId)
-    if (result && !result.started && result.error) {
-      addToast(result.error, 'error')
+    try {
+      const result = await api.installPlugin(pluginId)
+      if (result && !result.started && result.error) {
+        addToast(result.error, 'error')
+      }
+    } catch (err) {
+      addToast(err.message || 'Install failed', 'error')
     }
   }
 
   const handleOpen = async (pluginId) => {
-    const result = await api.openPlugin(pluginId)
-    if (result && !result.success && result.error) {
-      addToast(result.error, 'error')
+    try {
+      const result = await api.openPlugin(pluginId)
+      if (result && !result.success && result.error) {
+        addToast(result.error, 'error')
+      }
+    } catch (err) {
+      addToast(err.message || 'Could not open plugin', 'error')
     }
   }
 
   const handleRefresh = async () => {
-    addToast('Checking for updates...', 'info')
-    await api.refreshPlugins()
+    try {
+      addToast('Checking for updates...', 'info')
+      await api.refreshPlugins()
+    } catch (err) {
+      addToast(err.message || 'Refresh failed', 'error')
+    }
+  }
+
+  const handleUpdateAll = async () => {
+    const updatable = plugins.filter(p => p.status === 'update_available')
+    if (updatable.length === 0) return
+    addToast(`Updating ${updatable.length} plugin${updatable.length !== 1 ? 's' : ''}...`, 'info')
+    for (const plugin of updatable) {
+      await handleInstall(plugin.id)
+    }
   }
 
   const handleActivate = async (key) => {
-    const result = await api.activateLicense(key)
-    return result
+    try {
+      const result = await api.activateLicense(key)
+      return result
+    } catch (err) {
+      addToast(err.message || 'Activation failed', 'error')
+      return { success: false, message: err.message }
+    }
   }
 
   const handleDeactivate = async () => {
-    const result = await api.deactivateLicense()
-    return result
+    try {
+      const result = await api.deactivateLicense()
+      return result
+    } catch (err) {
+      addToast(err.message || 'Deactivation failed', 'error')
+      return { success: false, message: err.message }
+    }
   }
 
-  // ---- Filtered plugins ----
-  const filteredPlugins = plugins.filter(p =>
-    !searchQuery ||
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.description.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // ---- Filtered & sorted plugins ----
+  const processedPlugins = React.useMemo(() => {
+    let result = [...plugins]
 
-  // ---- Update counts ----
+    // Text search
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+      )
+    }
+
+    // Status filter
+    if (statusFilter === 'installed') {
+      result = result.filter(p => p.status === 'up_to_date' || p.status === 'update_available')
+    } else if (statusFilter === 'updates') {
+      result = result.filter(p => p.status === 'update_available')
+    } else if (statusFilter === 'not_installed') {
+      result = result.filter(p => p.status === 'not_installed')
+    }
+
+    // Sort
+    if (sortBy === 'name') {
+      result.sort((a, b) => a.name.localeCompare(b.name))
+    } else if (sortBy === 'status') {
+      const order = { update_available: 0, not_installed: 1, downloading: 2, installing: 3, error: 4, up_to_date: 5 }
+      result.sort((a, b) => (order[a.status] ?? 99) - (order[b.status] ?? 99))
+    }
+
+    return result
+  }, [plugins, searchQuery, statusFilter, sortBy])
+
+  // ---- Filter counts ----
+  const filterCounts = React.useMemo(() => ({
+    all: plugins.length,
+    installed: plugins.filter(p => p.status === 'up_to_date' || p.status === 'update_available').length,
+    updates: plugins.filter(p => p.status === 'update_available').length,
+    not_installed: plugins.filter(p => p.status === 'not_installed').length,
+  }), [plugins])
+
+  // ---- Update counts for header badge ----
   const updatesCount = plugins.filter(p =>
     p.status === 'update_available' || p.status === 'not_installed'
   ).length
+
+  // ---- Refresh lastSync display every minute ----
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <motion.div
@@ -194,6 +278,7 @@ export default function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onRefresh={handleRefresh}
+        lastSync={lastSync}
       />
 
       {/* License Bar */}
@@ -204,24 +289,38 @@ export default function App() {
         unlockPlaying={unlockPlaying}
       />
 
+      {/* Featured Section */}
+      {!loading && (
+        <FeaturedSection
+          plugins={plugins}
+          onInstall={handleInstall}
+          onUpdateAll={handleUpdateAll}
+          licensed={license.licensed}
+        />
+      )}
+
+      {/* Filter Bar */}
+      {!loading && plugins.length > 0 && (
+        <FilterBar
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          counts={filterCounts}
+        />
+      )}
+
       {/* Plugin Grid */}
       <div className="flex-1 overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-rone-text-secondary text-sm animate-pulse">
-              Loading plugins...
-            </div>
-          </div>
-        ) : (
-          <PluginGrid
-            plugins={filteredPlugins}
-            licensed={license.licensed}
-            onInstall={handleInstall}
-            onOpen={handleOpen}
-            onInfo={setInfoPlugin}
-            unlockPlaying={unlockPlaying}
-          />
-        )}
+        <PluginGrid
+          plugins={processedPlugins}
+          licensed={license.licensed}
+          onInstall={handleInstall}
+          onOpen={handleOpen}
+          onInfo={setInfoPlugin}
+          unlockPlaying={unlockPlaying}
+          loading={loading}
+        />
       </div>
 
       {/* Info Modal */}
