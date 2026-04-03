@@ -84,6 +84,26 @@
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneFlanger"
+    },
+    {
+      "id": "RoneSyncVerb",
+      "name": "Rone Sync Verb",
+      "version": "1.0.0.61",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "BPM-synced reverb with hard-cut tail and ducking",
+      "whats_new": "Initial release",
+      "standalone_exe": "Rone Sync Verb.exe",
+      "vst3_bundle": "Rone Sync Verb.vst3",
+      "au_bundle": "Rone Sync Verb.component",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneSyncVerb"
     }
   ]
 }
