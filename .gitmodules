@@ -10,3 +10,6 @@
 [submodule "rone-flanger-"]
 	path = rone-flanger-
 	url = https://github.com/liranidan2000-max/rone-flanger-.git
+[submodule "rone sync verb"]
+	path = rone sync verb
+	url = https://github.com/liranidan2000-max/rone-sync-verb.git

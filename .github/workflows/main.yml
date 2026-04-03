@@ -51,6 +51,9 @@ jobs:
             flanger:
               - 'rone-flanger-'
               - 'Shared/**'
+            sync_verb:
+              - 'rone sync verb'
+              - 'Shared/**'
             plugins_center:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
@@ -68,12 +71,13 @@ jobs:
 
           # Change flags — tag push forces all
           if [ "$IS_TAG" = "true" ]; then
-            RR=true; SF=true; ST=true; FL=true; PC=true
+            RR=true; SF=true; ST=true; FL=true; SV=true; PC=true
           else
             RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
             SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
             ST=${{ steps.filter.outputs.stutter         || 'false' }}
             FL=${{ steps.filter.outputs.flanger         || 'false' }}
+            SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
             PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
           fi
 
@@ -104,6 +108,7 @@ jobs:
           add "$SF" stems_fixer     RoneStemsFixer     RoneStemsFixer    RoneStemsFixer-latest      RoneStemsFixer             false  ""                                false    RoneStemsFixer.iss
           add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               false  ""                                true     RoneFlanger.iss
+          add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss
           add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       true   JUCE_WEBVIEW2_PACKAGE_LOCATION   false    RONE_Plugins.iss
 
           echo "windows=$win"     >> $GITHUB_OUTPUT
@@ -429,6 +434,7 @@ jobs:
               stems_fixer)    tag=RoneStemsFixer-latest;    title="RONE Stems Fixer (Latest)" ;;
               stutter)        tag=RoneStutter-latest;       title="Rone Stutter (Latest)" ;;
               flanger)        tag=RoneFlanger-latest;       title="Rone Flanger (Latest)" ;;
+              sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
               plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)" ;;
             esac
 
@@ -504,6 +510,7 @@ jobs:
               stems_fixer)    f=RoneStemsFixer ;;
               stutter)        f=RoneStutter ;;
               flanger)        f=rone-flanger- ;;
+              sync_verb)      f="rone sync verb" ;;
               plugins_center) f=RonePluginsCenter ;;
             esac
             git submodule update --init --depth 1 -- "$f" 2>/dev/null || true
@@ -521,6 +528,7 @@ jobs:
               stems_fixer)    folder=RoneStemsFixer;     jid=RoneStemsFixer;  tag=RoneStemsFixer-latest;  inst=RoneStemsFixer ;;
               stutter)        folder=RoneStutter;        jid=RoneStutter;     tag=RoneStutter-latest;     inst=RoneStutter ;;
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
+              sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
               plugins_center) folder=RonePluginsCenter;  jid=__center__;     tag=PluginsCenter-latest;   inst=RONE_Plugins_Center ;;
             esac
 
