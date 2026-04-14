@@ -225,6 +225,23 @@ jobs:
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel
 
+      # --- pluginval (VST3 sanity check) ---
+      - name: Run pluginval
+        if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Continue"
+          Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_Windows.zip" -OutFile pluginval.zip
+          Expand-Archive pluginval.zip -DestinationPath pluginval_bin -Force
+          $vst3 = Get-ChildItem -Path "${{ matrix.folder }}/build-ci" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
+          if ($vst3) {
+            Write-Host "Running pluginval on $($vst3.FullName)"
+            & ".\pluginval_bin\pluginval.exe" --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 60000 "$($vst3.FullName)"
+          } else {
+            Write-Host "::warning::No .vst3 found for pluginval"
+          }
+
       # --- Package with Inno Setup ---
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
@@ -306,6 +323,22 @@ jobs:
       - name: CMake build
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel
+
+      # --- pluginval (VST3 sanity check) ---
+      - name: Run pluginval
+        if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer'
+        continue-on-error: true
+        run: |
+          curl -L -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_macOS.zip
+          unzip -q pluginval.zip -d pluginval_bin
+          chmod +x "pluginval_bin/pluginval.app/Contents/MacOS/pluginval"
+          VST3=$(find "${{ matrix.folder }}/build-ci" -name "*.vst3" -type d | head -1)
+          if [ -n "$VST3" ]; then
+            echo "Running pluginval on $VST3"
+            "pluginval_bin/pluginval.app/Contents/MacOS/pluginval" --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 60000 "$VST3" || echo "::warning::pluginval reported issues for ${{ matrix.plugin_id }}"
+          else
+            echo "::warning::No .vst3 found for pluginval"
+          fi
 
       # --- Package ---
       - name: Create macOS installer
@@ -500,6 +533,12 @@ jobs:
           submodules: false
           ref: main
 
+      - name: Download installer artifacts (for sha256)
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          pattern: installer-*
+
       - name: Init changed submodules
         run: |
           git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
@@ -536,19 +575,42 @@ jobs:
             base=$(grep -oP 'VERSION\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$folder/CMakeLists.txt" | head -1 || echo "1.0.0")
             ver="${base}.${RUN}"
 
+            # Compute SHA256 for whatever we built this run (per-platform).
+            # Missing artifacts (e.g. [mac-only] / [win-only] commits) -> empty string,
+            # which is treated by the Plugins Center as "not verified".
+            sha_win=""; sha_mac=""
+            if [ "$jid" = "__center__" ]; then
+              win_file=$(find artifacts -type f -name "${inst}_Installer.exe" 2>/dev/null | head -1)
+              mac_file=$(find artifacts -type f -name "${inst}.dmg"            2>/dev/null | head -1)
+            else
+              win_file=$(find artifacts -type f -name "${inst}_Installer.exe" 2>/dev/null | head -1)
+              mac_file=$(find artifacts -type f -name "${inst}_Installer.pkg" 2>/dev/null | head -1)
+            fi
+            [ -n "$win_file" ] && sha_win=$(sha256sum "$win_file" | awk '{print $1}')
+            [ -n "$mac_file" ] && sha_mac=$(sha256sum "$mac_file" | awk '{print $1}')
+            echo "  $jid: sha_win=${sha_win:0:12}... sha_mac=${sha_mac:0:12}..."
+
             if [ "$jid" = "__center__" ]; then
               jq --arg v "$ver" \
-                 --arg u  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
-                 --arg um "https://github.com/$REPO/releases/download/$tag/${inst}.dmg" \
-                 '.center_installer.version=$v | .center_installer.url=$u | .center_installer.url_mac=$um' \
+                 --arg u   "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
+                 --arg um  "https://github.com/$REPO/releases/download/$tag/${inst}.dmg" \
+                 --arg sw  "$sha_win" \
+                 '.center_installer.version = $v
+                  | .center_installer.url      = $u
+                  | .center_installer.url_mac  = $um
+                  | .center_installer.sha256   = $sw' \
                  versions.json > tmp && mv tmp versions.json
             else
               jq --arg id "$jid" --arg v "$ver" \
-                 --arg u  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
-                 --arg um "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.pkg" \
-                 '(.plugins[]|select(.id==$id)).version=$v |
-                  (.plugins[]|select(.id==$id)).download_url=$u |
-                  (.plugins[]|select(.id==$id)).download_url_mac=$um' \
+                 --arg u   "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
+                 --arg um  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.pkg" \
+                 --arg sw  "$sha_win" \
+                 --arg sm  "$sha_mac" \
+                 '(.plugins[]|select(.id==$id)).version          = $v
+                  | (.plugins[]|select(.id==$id)).download_url     = $u
+                  | (.plugins[]|select(.id==$id)).download_url_mac = $um
+                  | (.plugins[]|select(.id==$id)).sha256           = $sw
+                  | (.plugins[]|select(.id==$id)).sha256_mac       = $sm' \
                  versions.json > tmp && mv tmp versions.json
             fi
           done

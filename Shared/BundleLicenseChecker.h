@@ -16,13 +16,30 @@
 // Usage:
 //   if (BundleLicenseChecker::isBundleLicensed())
 //       enableProFeatures();
+//
+// ----------------------------------------------------------------------------
+// BETA MODE
+// ----------------------------------------------------------------------------
+// Define RONE_BETA_MODE (e.g. via target_compile_definitions in CMake, or by
+// uncommenting the line below) to make isBundleLicensed() ALWAYS return true.
+// This is for pre-release builds sent to beta testers / colleagues, so they
+// don't get stuck on license checks before the real activation system is in
+// place. REMOVE/undefine before shipping commercially.
 // ============================================================================
+
+#define RONE_BETA_MODE 1      // <-- BETA BUILD: remove this line before commercial release
+
 class BundleLicenseChecker
 {
 public:
     // ---- Primary check: read the shared XML file ---------------------------
     static bool isBundleLicensed()
     {
+    #ifdef RONE_BETA_MODE
+        DBG ("BundleLicenseChecker: RONE_BETA_MODE active — returning LICENSED");
+        return true;
+    #endif
+
         auto file = getLicenseFile();
 
         DBG ("BundleLicenseChecker: checking file -> " + file.getFullPathName());
