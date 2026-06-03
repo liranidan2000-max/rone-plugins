@@ -254,7 +254,10 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
                     p.downloadProgress = 0.0;
 
                 #if JUCE_MAC
-                    networkManager.downloadInstaller (pluginId, p.downloadUrlMac, p.sha256);
+                    // The manifest's `sha256` field holds the Windows .exe hash, not
+                    // the macOS .pkg hash. Skip verification on Mac until the manifest
+                    // exposes a separate `sha256_mac` field.
+                    networkManager.downloadInstaller (pluginId, p.downloadUrlMac, juce::String());
                 #else
                     networkManager.downloadInstaller (pluginId, p.downloadUrl, p.sha256);
                 #endif
@@ -384,7 +387,7 @@ void MainComponent::handleActivateLicense (NativeArgs args, NativeCompletion com
             webView.emitEventIfBrowserIsVisible ("licenseActivationResult", juce::var (obj));
 
             if (success)
-                emitStatusMessage ("License activated — all plugins unlocked!", "success");
+                emitStatusMessage ("License activated - all plugins unlocked!", "success");
         });
     });
 }
@@ -444,7 +447,7 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 
     if (plugins.isEmpty())
     {
-        emitStatusMessage ("Could not load plugins — check your connection", "error");
+        emitStatusMessage ("Could not load plugins - check your connection", "error");
         return;
     }
 
@@ -466,7 +469,7 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 
 void MainComponent::onManifestError (const juce::String& errorMessage)
 {
-    emitStatusMessage ("Offline — " + errorMessage, "error");
+    emitStatusMessage ("Offline - " + errorMessage, "error");
 }
 
 void MainComponent::onDownloadProgress (const juce::String& pluginId, double progress)
@@ -514,7 +517,11 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
         }
 
         emitPluginsUpdated();
-        emitStatusMessage ("Download failed — " + errorMessage, "error");
+        // NetworkManager already prefixes errors with "Download failed - " where
+        // appropriate; just surface whatever it sent.
+        emitStatusMessage (errorMessage.isNotEmpty() ? errorMessage
+                                                     : juce::String ("Download failed."),
+                           "error");
     }
 }
 
@@ -708,7 +715,7 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                 else if (exitCode != 0)
                     emitStatusMessage ("Install cancelled or failed (code " + juce::String (exitCode) + "). Enter your password when prompted.", "error");
                 else
-                    emitStatusMessage ("Install verification failed — components not found.", "error");
+                    emitStatusMessage ("Install verification failed - components not found.", "error");
             }
 
             // Push full updated state

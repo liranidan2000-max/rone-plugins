@@ -27,16 +27,36 @@ void NetworkManager::downloadInstaller (const juce::String& pluginId,
                                          const juce::String& url,
                                          const juce::String& sha256)
 {
-    cancelDownload();
-    currentTask    = DownloadFile;
-    targetUrl      = url;
-    activePluginId = pluginId;
-    expectedSha256 = sha256;
-    startThread();
+    // Queue the job. The network thread processes downloads one at a time, so
+    // "Update All" (which fires this rapidly for every plugin) no longer has each
+    // call cancel the previous one and leave it stuck at 0%.
+    {
+        const juce::ScopedLock sl (queueLock);
+
+        // Skip duplicates already queued for this plugin.
+        for (auto& j : downloadQueue)
+            if (j.pluginId == pluginId)
+                return;
+
+        downloadQueue.add ({ pluginId, url, sha256 });
+    }
+
+    // If the thread is busy fetching the manifest, let it finish; otherwise start
+    // the download worker.
+    if (! isThreadRunning())
+    {
+        currentTask = DownloadFile;
+        startThread();
+    }
 }
 
 void NetworkManager::cancelDownload()
 {
+    {
+        const juce::ScopedLock sl (queueLock);
+        downloadQueue.clear();
+    }
+
     if (isThreadRunning())
     {
         signalThreadShouldExit();
@@ -101,20 +121,142 @@ void NetworkManager::run()
 
         case DownloadFile:
         {
-            // --- Download an installer to a temp file --------------------
-            auto tempDir  = juce::File::getSpecialLocation (juce::File::tempDirectory)
-                               .getChildFile ("RONE_Downloads");
-            tempDir.createDirectory();
+            // Drain the download queue one job at a time.
+            for (;;)
+            {
+                if (threadShouldExit())
+                    break;
 
-        #if JUCE_MAC
-            auto tempFile = tempDir.getChildFile (activePluginId + "_Installer.pkg");
-        #else
-            auto tempFile = tempDir.getChildFile (activePluginId + "_Installer.exe");
-        #endif
+                DownloadJob job;
+                {
+                    const juce::ScopedLock sl (queueLock);
+                    if (downloadQueue.isEmpty())
+                        break;
+                    job = downloadQueue.removeAndReturn (0);
+                }
+
+                runDownloadJob (job);
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+
+// ============================================================================
+// Single download job (serial worker called from run())
+// ============================================================================
+
+void NetworkManager::runDownloadJob (const DownloadJob& job)
+{
+    // --- Download an installer to a temp file --------------------
+    auto tempDir  = juce::File::getSpecialLocation (juce::File::tempDirectory)
+                       .getChildFile ("RONE_Downloads");
+    tempDir.createDirectory();
+
+#if JUCE_MAC
+    auto tempFile = tempDir.getChildFile (job.pluginId + "_Installer.pkg");
+#else
+    auto tempFile = tempDir.getChildFile (job.pluginId + "_Installer.exe");
+#endif
             if (tempFile.existsAsFile())
                 tempFile.deleteFile();
 
-            juce::URL url (targetUrl);
+        #if JUCE_MAC
+            // On macOS, juce::URL with JUCE_USE_CURL=0 (CFNetwork) does not reliably
+            // follow GitHub's cross-domain 302 redirect from github.com to the signed
+            // release-assets.githubusercontent.com URL. Shell out to /usr/bin/curl
+            // (preinstalled on every macOS) which handles redirects correctly.
+            // HEAD request to learn the final Content-Length for progress reporting.
+            juce::int64 totalBytes = 0;
+            {
+                juce::ChildProcess head;
+                juce::StringArray headArgs { "/usr/bin/curl", "-sIL", job.url };
+                if (head.start (headArgs))
+                {
+                    auto headers = head.readAllProcessOutput();
+                    head.waitForProcessToFinish (5000);
+                    for (auto& line : juce::StringArray::fromLines (headers))
+                    {
+                        auto trimmed = line.trim();
+                        if (trimmed.startsWithIgnoreCase ("content-length:"))
+                            totalBytes = trimmed.fromFirstOccurrenceOf (":", false, true)
+                                                 .trim().getLargeIntValue();
+                    }
+                }
+            }
+
+            juce::StringArray dlArgs { "/usr/bin/curl",
+                                       "-L",                  // follow redirects
+                                       "-f",                  // fail on HTTP error
+                                       "--silent",
+                                       "--show-error",
+                                       "-o", tempFile.getFullPathName(),
+                                       job.url };
+
+            juce::ChildProcess curl;
+            if (! curl.start (dlArgs, juce::ChildProcess::wantStdErr))
+            {
+                auto pid = job.pluginId;
+                juce::MessageManager::callAsync ([this, pid]
+                {
+                    listeners.call (&Listener::onDownloadComplete,
+                                    pid, juce::File(), false,
+                                    juce::String ("Failed to start download process."));
+                });
+                return;
+            }
+
+            auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
+            while (curl.isRunning())
+            {
+                if (threadShouldExit())
+                {
+                    curl.kill();
+                    tempFile.deleteFile();
+                    return;
+                }
+
+                if (totalBytes > 0 && tempFile.existsAsFile())
+                {
+                    auto now = juce::Time::getMillisecondCounterHiRes();
+                    if (now - lastProgressTime >= 100.0)
+                    {
+                        lastProgressTime = now;
+                        double progress = juce::jlimit (0.0, 1.0,
+                                            (double) tempFile.getSize() / (double) totalBytes);
+                        auto pid = job.pluginId;
+                        juce::MessageManager::callAsync ([this, pid, progress]
+                        {
+                            listeners.call (&Listener::onDownloadProgress, pid, progress);
+                        });
+                    }
+                }
+
+                juce::Thread::sleep (50);
+            }
+
+            auto curlStderr = curl.readAllProcessOutput();
+            auto exitCode   = curl.getExitCode();
+
+            if (exitCode != 0)
+            {
+                tempFile.deleteFile();
+                auto pid = job.pluginId;
+                auto err = curlStderr.trim().isNotEmpty()
+                              ? juce::String ("Download failed - ") + curlStderr.trim()
+                              : juce::String ("Download failed (curl exit ") + juce::String (exitCode) + ").";
+                juce::MessageManager::callAsync ([this, pid, err]
+                {
+                    listeners.call (&Listener::onDownloadComplete,
+                                    pid, juce::File(), false, err);
+                });
+                return;
+            }
+        #else
+            juce::URL url (job.url);
             auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
                                .withConnectionTimeoutMs (15000)
                                .withNumRedirectsToFollow (5);
@@ -123,7 +265,7 @@ void NetworkManager::run()
 
             if (stream == nullptr || threadShouldExit())
             {
-                auto pid = activePluginId;
+                auto pid = job.pluginId;
                 juce::MessageManager::callAsync ([this, pid]
                 {
                     listeners.call (&Listener::onDownloadComplete,
@@ -140,7 +282,7 @@ void NetworkManager::run()
             juce::FileOutputStream output (tempFile);
             if (! output.openedOk())
             {
-                auto pid = activePluginId;
+                auto pid = job.pluginId;
                 juce::MessageManager::callAsync ([this, pid]
                 {
                     listeners.call (&Listener::onDownloadComplete,
@@ -171,7 +313,7 @@ void NetworkManager::run()
                     {
                         lastProgressTime = now;
                         double progress = (double) downloaded / (double) totalBytes;
-                        auto pid = activePluginId;
+                        auto pid = job.pluginId;
                         juce::MessageManager::callAsync ([this, pid, progress]
                         {
                             listeners.call (&Listener::onDownloadProgress, pid, progress);
@@ -187,6 +329,7 @@ void NetworkManager::run()
                 tempFile.deleteFile();
                 return;
             }
+        #endif
 
             // Verify the downloaded file is a real installer, not an HTML error page.
             // GitHub returns small HTML 404 pages for missing/private release assets.
@@ -197,7 +340,7 @@ void NetworkManager::run()
             bool success    = fileExists && fileSize >= MIN_INSTALLER_SIZE;
 
             // SHA256 verification — compare downloaded file hash against manifest
-            if (success && expectedSha256.isNotEmpty())
+            if (success && job.sha256.isNotEmpty())
             {
                 juce::FileInputStream fis (tempFile);
                 if (fis.openedOk())
@@ -205,9 +348,9 @@ void NetworkManager::run()
                     juce::SHA256 hash (fis);
                     auto computed = hash.toHexString();
 
-                    if (computed.compareIgnoreCase (expectedSha256) != 0)
+                    if (computed.compareIgnoreCase (job.sha256) != 0)
                     {
-                        DBG ("[Download] SHA256 mismatch! Expected: " + expectedSha256
+                        DBG ("[Download] SHA256 mismatch! Expected: " + job.sha256
                              + " Got: " + computed);
                         success = false;
                     }
@@ -218,29 +361,23 @@ void NetworkManager::run()
                 }
             }
 
-            auto pid  = activePluginId;
+            auto pid  = job.pluginId;
             auto file = tempFile;
 
             juce::String errorMsg;
             if (! fileExists)
-                errorMsg = "Download failed — file was not saved.";
+                errorMsg = "Download failed - file was not saved.";
             else if (fileSize < MIN_INSTALLER_SIZE)
-                errorMsg = "Download failed — corrupt file (" + juce::String (fileSize / 1024)
+                errorMsg = "Download failed - corrupt file (" + juce::String (fileSize / 1024)
                          + " KB). The download link may be invalid.";
             else if (! success)
-                errorMsg = "Download failed — file integrity check failed (SHA256 mismatch).";
+                errorMsg = "Download failed - file integrity check failed (SHA256 mismatch).";
 
             juce::MessageManager::callAsync ([this, pid, file, success, errorMsg]
             {
                 listeners.call (&Listener::onDownloadComplete,
                                 pid, file, success, errorMsg);
             });
-            break;
-        }
-
-        default:
-            break;
-    }
 }
 
 // ============================================================================

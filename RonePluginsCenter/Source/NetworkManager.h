@@ -62,10 +62,22 @@ private:
     // ---- State -------------------------------------------------------------
     enum Task { None, FetchManifest, DownloadFile };
 
+    struct DownloadJob
+    {
+        juce::String pluginId;
+        juce::String url;
+        juce::String sha256;
+    };
+
+    // Download a single job (runs on the network thread). Fires listener callbacks.
+    void runDownloadJob (const DownloadJob& job);
+
     Task               currentTask  { None };
-    juce::String       targetUrl;
-    juce::String       activePluginId;
-    juce::String       expectedSha256;
+    juce::String       targetUrl;            // used by FetchManifest only
+
+    juce::CriticalSection      queueLock;
+    juce::Array<DownloadJob>   downloadQueue; // pending downloads (FIFO)
+
     juce::ListenerList<Listener> listeners;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NetworkManager)
