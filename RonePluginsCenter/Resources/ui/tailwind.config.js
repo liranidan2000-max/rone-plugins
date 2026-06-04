@@ -8,31 +8,42 @@ export default {
     extend: {
       colors: {
         rone: {
-          bg:           '#0B0416',
-          card:         '#150A26',
-          'card-hover': '#1A0D2E',
-          border:       '#251540',
-          header:       '#0E0620',
-          license:      '#110720',
-          purple:       '#b537f2',
+          // --- Core navy surfaces (new pro design) ---
+          bg:           '#0A0A12',
+          sidebar:      '#0C0C16',
+          card:         '#13131F',
+          'card-hover': '#181826',
+          border:       '#232333',
+          header:       '#0C0C16',
+          license:      '#0C0C16',
+
+          // --- Accents ---
+          purple:       '#8B5CF6',
+          violet:       '#A855F7',
           pink:         '#E040FB',
-          'deep-purple':'#7B1FA2',
-          'light-purple':'#CE93D8',
-          button:       '#3A1070',
-          green:        '#00C853',
-          error:        '#e94560',
-          'badge-vst3': '#6A1B9A',
-          'badge-au':   '#8E24AA',
-          'badge-standalone': '#4A148C',
-          'text-primary':   '#f0f0f0',
-          'text-secondary': '#9999bb',
-          'text-dim':       '#606080',
-          'progress-track': '#1a0a30',
-          // Surface elevation system
-          'surface-0':  '#0B0416',
-          'surface-1':  '#120822',
-          'surface-2':  '#170B2C',
-          'surface-3':  '#1E1038',
+          'deep-purple':'#7C3AED',
+          'light-purple':'#C4B5FD',
+          button:       '#1C1C2B',
+          green:        '#22C55E',
+          error:        '#F43F5E',
+          amber:        '#F59E0B',
+
+          // --- Format badges ---
+          'badge-vst3': '#6D28D9',
+          'badge-au':   '#7E22CE',
+          'badge-standalone': '#5B21B6',
+
+          // --- Text ---
+          'text-primary':   '#F4F4F8',
+          'text-secondary': '#9B9BB5',
+          'text-dim':       '#5F5F78',
+          'progress-track': '#1A1A28',
+
+          // --- Surface elevation ---
+          'surface-0':  '#0A0A12',
+          'surface-1':  '#0E0E18',
+          'surface-2':  '#13131F',
+          'surface-3':  '#1A1A28',
         }
       },
       fontFamily: {
@@ -46,8 +57,8 @@ export default {
       },
       keyframes: {
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 5px rgba(181, 55, 242, 0.3)' },
-          '50%': { boxShadow: '0 0 20px rgba(181, 55, 242, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 5px rgba(139, 92, 246, 0.3)' },
+          '50%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.6)' },
         },
         progressShimmer: {
           '0%': { backgroundPosition: '-200% 0' },

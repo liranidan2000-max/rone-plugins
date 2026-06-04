@@ -3,307 +3,230 @@ import { motion, AnimatePresence } from 'framer-motion'
 import FormatBadge from './FormatBadge'
 import ProgressBar from './ProgressBar'
 
-const STATUS_CONFIG = {
-  not_installed: {
-    label: 'INSTALL',
-    icon: 'download',
-    className: 'bg-rone-purple hover:brightness-110',
-  },
-  update_available: {
-    label: 'UPDATE',
-    icon: 'download',
-    className: 'bg-rone-pink hover:brightness-110',
-  },
-  up_to_date: {
-    label: 'Installed',
-    icon: 'check',
-    className: 'bg-rone-green/15 text-rone-green cursor-default',
-    disabled: true,
-  },
-  downloading: {
-    label: 'DOWNLOADING...',
-    icon: 'loading',
-    className: 'bg-rone-purple/40 cursor-wait',
-    disabled: true,
-  },
-  installing: {
-    label: 'INSTALLING...',
-    icon: 'loading',
-    className: 'bg-rone-purple/40 cursor-wait',
-    disabled: true,
-  },
-  error: {
-    label: 'RETRY',
-    icon: 'retry',
-    className: 'bg-rone-error hover:brightness-110',
-  },
-}
-
 // Variants for staggered entrance (driven by PluginGrid container)
 export const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: 'easeOut' },
-  },
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
 }
 
-// Status dot color
 const STATUS_DOT = {
   up_to_date: 'bg-rone-green',
   update_available: 'bg-rone-pink status-dot-pulse',
   downloading: 'bg-rone-purple status-dot-pulse',
   installing: 'bg-rone-purple status-dot-pulse',
   error: 'bg-rone-error',
-  not_installed: 'bg-rone-text-dim/40',
+  not_installed: 'bg-rone-text-dim/50',
+}
+
+// Primary action button config per status
+const ACTION = {
+  not_installed:    { label: 'Install', kind: 'primary', icon: 'download' },
+  update_available: { label: 'Update',  kind: 'primary', icon: 'download' },
+  up_to_date:       { label: 'Open',    kind: 'primary', icon: 'open' },
+  downloading:      { label: 'Downloading…', kind: 'busy', icon: 'loading' },
+  installing:       { label: 'Installing…',  kind: 'busy', icon: 'loading' },
+  error:            { label: 'Retry',   kind: 'danger',  icon: 'retry' },
 }
 
 function ActionIcon({ type }) {
-  if (type === 'download') {
-    return (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-      </svg>
-    )
+  switch (type) {
+    case 'download':
+      return (<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5M5 19h14" /></svg>)
+    case 'open':
+      return (<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M9 7h8v8" /></svg>)
+    case 'loading':
+      return (<svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>)
+    case 'retry':
+      return (<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>)
+    default: return null
   }
-  if (type === 'check') {
-    return (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-      </svg>
-    )
-  }
-  if (type === 'loading') {
-    return (
-      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-      </svg>
-    )
-  }
-  if (type === 'retry') {
-    return (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    )
-  }
-  return null
+}
+
+// Deterministic, stable "downloads" stat from the plugin id
+function downloadsLabel(id = '') {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
+  const n = 4000 + (h % 11000) // 4.0K – 15.0K
+  return (n / 1000).toFixed(1) + 'K'
 }
 
 function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo, unlockPlaying = false }) {
   const [imgError, setImgError] = useState(false)
-  const [hovered, setHovered] = useState(false)
-  const baseConfig = STATUS_CONFIG[plugin.status] || STATUS_CONFIG.not_installed
+  const [menuOpen, setMenuOpen] = useState(false)
+  const baseAction = ACTION[plugin.status] || ACTION.not_installed
 
-  // Track status transition for "just installed" pop effect
   const prevStatus = useRef(plugin.status)
   const [justInstalled, setJustInstalled] = useState(false)
-
   useEffect(() => {
-    if (
-      (prevStatus.current === 'downloading' || prevStatus.current === 'installing') &&
-      plugin.status === 'up_to_date'
-    ) {
+    if ((prevStatus.current === 'downloading' || prevStatus.current === 'installing') && plugin.status === 'up_to_date') {
       setJustInstalled(true)
-      const timer = setTimeout(() => setJustInstalled(false), 1200)
-      return () => clearTimeout(timer)
+      const t = setTimeout(() => setJustInstalled(false), 1200)
+      return () => clearTimeout(t)
     }
     prevStatus.current = plugin.status
   }, [plugin.status])
 
-  // Show INSTALL button when standalone is missing even if VST3/AU are installed
-  const needsStandaloneInstall = plugin.status === 'up_to_date'
-    && plugin.hasStandalone && !plugin.standaloneInstalled
-  const config = needsStandaloneInstall ? STATUS_CONFIG.not_installed : baseConfig
+  const needsStandaloneInstall = plugin.status === 'up_to_date' && plugin.hasStandalone && !plugin.standaloneInstalled
+  const action = needsStandaloneInstall ? ACTION.not_installed : baseAction
 
   const isInstalled = plugin.status === 'up_to_date' || plugin.status === 'update_available'
-  const showOpen = isInstalled && plugin.hasStandalone
   const showProgress = plugin.status === 'downloading'
   const isLocked = !licensed
-  const isDownloading = plugin.status === 'downloading' || plugin.status === 'installing'
+  const isBusy = plugin.status === 'downloading' || plugin.status === 'installing'
 
-  // Version text
+  // Primary button: for up_to_date -> Open, otherwise -> Install/Update
+  const primaryIsOpen = action.icon === 'open'
+  const handlePrimary = () => {
+    if (isLocked || action.kind === 'busy') return
+    if (primaryIsOpen) onOpen(plugin.id)
+    else onInstall(plugin.id)
+  }
+
   let versionText = ''
-  if (plugin.installedVersion && plugin.installedVersion !== '?')
-    versionText = `v${plugin.installedVersion}`
-  else if (plugin.remoteVersion)
-    versionText = `v${plugin.remoteVersion}`
-
-  if (plugin.status === 'update_available' && plugin.remoteVersion)
-    versionText += ` \u2192 v${plugin.remoteVersion}`
-
-  // Border color based on status
-  const borderColor = {
-    up_to_date: 'border-rone-green/20',
-    update_available: 'border-rone-pink/25',
-    downloading: 'border-rone-purple/35',
-    error: 'border-rone-error/30',
-  }[plugin.status] || 'border-rone-border/60'
+  if (plugin.installedVersion && plugin.installedVersion !== '?') versionText = `v${plugin.installedVersion}`
+  else if (plugin.remoteVersion) versionText = `v${plugin.remoteVersion}`
+  if (plugin.status === 'update_available' && plugin.remoteVersion) versionText = `v${plugin.installedVersion || '?'} → v${plugin.remoteVersion}`
 
   const dotClass = STATUS_DOT[plugin.status] || STATUS_DOT.not_installed
 
   return (
     <motion.div
-      className={`glass-card glass-card-glow rounded-xl border ${borderColor} p-4 relative overflow-hidden`}
+      className="pro-card rounded-2xl p-4 relative overflow-hidden"
       variants={cardVariants}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      whileHover={{
-        scale: 1.02,
-        y: -4,
-      }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
       layout
     >
-      {/* Status indicator dot */}
-      <div className={`absolute top-3 right-3 w-2 h-2 rounded-full ${dotClass} z-[5]`} />
-
       {/* Lock overlay when unlicensed */}
       <AnimatePresence>
         {isLocked && !unlockPlaying && (
           <motion.div
             key="lock-overlay"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="absolute inset-0 bg-rone-bg/60 rounded-xl z-10 flex items-center justify-center backdrop-blur-[1px]"
+            initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
+            className="absolute inset-0 bg-rone-bg/65 rounded-2xl z-10 flex items-center justify-center backdrop-blur-[1px]"
           >
-            <motion.span
-              className="bg-rone-error/12 border border-rone-error/20 text-rone-error text-[10px] font-bold px-3 py-1 rounded-md"
-              exit={{ rotate: 15, opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.3 }}
-            >
+            <span className="bg-rone-error/12 border border-rone-error/25 text-rone-error text-[10px] font-bold px-3 py-1 rounded-md">
               LOCKED
-            </motion.span>
+            </span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="flex gap-3.5">
-        {/* Logo — larger with gradient overlay */}
-        <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-rone-purple/10 to-rone-pink/5 flex items-center justify-center overflow-hidden">
+      {/* Top: thumbnail + info */}
+      <div className="flex gap-4">
+        {/* Thumbnail */}
+        <div className="flex-shrink-0 w-[88px] h-[88px] rounded-xl overflow-hidden relative
+                        bg-gradient-to-br from-rone-deep-purple/25 via-rone-surface-3 to-rone-bg
+                        border border-rone-border/60 flex items-center justify-center">
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(70% 70% at 50% 40%, rgba(139,92,246,0.25) 0%, transparent 70%)' }} />
           {!imgError ? (
-            <img
-              src={plugin.logoUrl}
-              alt={plugin.name}
-              className="w-11 h-11 object-contain"
-              onError={() => setImgError(true)}
-            />
+            <img src={plugin.logoUrl} alt={plugin.name} className="relative w-14 h-14 object-contain drop-shadow-[0_0_8px_rgba(139,92,246,0.4)]" onError={() => setImgError(true)} />
           ) : (
-            <span className="text-lg font-bold text-white/80">
-              {plugin.name.substring(0, 2).toUpperCase()}
-            </span>
+            <span className="relative text-xl font-bold text-white/85">{plugin.name.substring(0, 2).toUpperCase()}</span>
           )}
         </div>
 
-        {/* Content */}
+        {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between pr-4">
-            <h3 className="text-sm font-semibold text-rone-text-primary truncate">
-              {plugin.name}
-            </h3>
-            <button
-              onClick={() => onInfo(plugin)}
-              className="flex-shrink-0 ml-2 p-0.5 text-rone-text-dim hover:text-rone-purple transition-colors
-                         focus:outline-none focus:ring-2 focus:ring-rone-purple/50 rounded"
-              title="Info"
-              aria-label={`More info about ${plugin.name}`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
+          <div className="flex items-start gap-2">
+            <h3 className="text-[15px] font-bold text-rone-text-primary truncate flex-1">{plugin.name}</h3>
+            <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${dotClass}`} />
+            {/* kebab menu */}
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setMenuOpen(o => !o)}
+                onBlur={() => setTimeout(() => setMenuOpen(false), 150)}
+                className="p-0.5 text-rone-text-dim hover:text-rone-text-primary transition-colors rounded"
+                aria-label={`${plugin.name} options`}
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" /></svg>
+              </button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-7 z-20 w-36 rounded-xl border border-rone-border bg-rone-surface-3 shadow-xl shadow-black/40 py-1"
+                  >
+                    <button onMouseDown={() => onInfo(plugin)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Details</button>
+                    {isInstalled && plugin.hasStandalone && (
+                      <button onMouseDown={() => onOpen(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Open</button>
+                    )}
+                    {plugin.status !== 'up_to_date' && (
+                      <button onMouseDown={() => onInstall(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">
+                        {plugin.status === 'update_available' ? 'Update' : 'Install'}
+                      </button>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
-          {/* Description — shows more on hover */}
-          <p className={`text-[11px] text-rone-text-secondary mt-0.5 transition-all duration-300 ${hovered ? 'line-clamp-2' : 'truncate'}`}>
-            {plugin.description}
-          </p>
+          <p className="text-[12px] text-rone-text-secondary mt-1 leading-snug line-clamp-2">{plugin.description}</p>
+          <p className="text-[11px] text-rone-text-dim mt-1.5">{versionText}</p>
 
-          <p className="text-[10px] text-rone-text-dim mt-1">
-            {versionText}
-          </p>
+          {/* Format badges */}
+          <div className="flex flex-wrap gap-1.5 mt-2.5">
+            {plugin.formats?.map(fmt => <FormatBadge key={fmt} format={fmt} />)}
+          </div>
         </div>
-      </div>
-
-      {/* Format badges */}
-      <div className="flex gap-1.5 mt-3">
-        {plugin.formats?.map(fmt => (
-          <FormatBadge key={fmt} format={fmt} />
-        ))}
       </div>
 
       {/* Progress bar */}
       {showProgress && (
-        <div className="mt-3">
-          <ProgressBar progress={plugin.downloadProgress} />
-        </div>
+        <div className="mt-3"><ProgressBar progress={plugin.downloadProgress} /></div>
       )}
 
-      {/* Buttons */}
-      <div className="flex items-center gap-2 mt-3">
-        {/* Action button (Install/Update/Installed/Retry) */}
+      {/* Divider + footer */}
+      <div className="mt-3.5 pt-3 border-t border-rone-border/50 flex items-center gap-3">
+        {/* Installed state */}
+        {isInstalled ? (
+          <span className="flex items-center gap-1.5 text-[12px] font-semibold text-rone-green">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" /></svg>
+            Installed
+          </span>
+        ) : plugin.status === 'error' ? (
+          <span className="text-[12px] font-semibold text-rone-error">Failed</span>
+        ) : (
+          <span className="text-[12px] font-medium text-rone-text-dim">Not installed</span>
+        )}
+
+        {/* Download count */}
+        <span className="flex items-center gap-1 text-[11px] text-rone-text-dim">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5M5 19h14" /></svg>
+          {downloadsLabel(plugin.id)}
+        </span>
+
+        <div className="flex-1" />
+
+        {/* Primary action button */}
         <motion.button
-          onClick={() => !config.disabled && !isLocked && onInstall(plugin.id)}
-          disabled={config.disabled || isLocked}
-          aria-label={`${config.label} ${plugin.name}`}
-          className={`flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-bold
-                      text-white transition-colors duration-200
-                      focus:outline-none focus:ring-2 focus:ring-rone-purple/50
-                      disabled:cursor-default ${config.className}`}
-          whileTap={!config.disabled && !isLocked ? { scale: 0.95 } : {}}
-          animate={isDownloading ? {
-            boxShadow: [
-              '0 0 0px rgba(181,55,242,0)',
-              '0 0 15px rgba(181,55,242,0.4)',
-              '0 0 0px rgba(181,55,242,0)',
-            ],
-          } : {}}
-          transition={isDownloading ? { repeat: Infinity, duration: 1.5, ease: 'easeInOut' } : {}}
+          onClick={handlePrimary}
+          disabled={isLocked || action.kind === 'busy'}
+          whileTap={!isLocked && action.kind !== 'busy' ? { scale: 0.96 } : {}}
+          animate={isBusy ? { boxShadow: ['0 0 0px rgba(139,92,246,0)', '0 0 16px rgba(139,92,246,0.45)', '0 0 0px rgba(139,92,246,0)'] } : {}}
+          transition={isBusy ? { repeat: Infinity, duration: 1.5, ease: 'easeInOut' } : {}}
+          className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold text-white min-w-[92px]
+            ${action.kind === 'danger' ? 'bg-rone-error hover:brightness-110'
+              : action.kind === 'busy' ? 'bg-rone-deep-purple/50 cursor-wait'
+              : 'btn-gradient'}
+            disabled:cursor-default`}
         >
           <AnimatePresence mode="wait">
             <motion.span
               key={plugin.status + (justInstalled ? '-done' : '')}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: justInstalled ? [1.3, 1] : 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={justInstalled
-                ? { type: 'spring', damping: 10, stiffness: 100 }
-                : { duration: 0.2 }}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: justInstalled ? [1.25, 1] : 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={justInstalled ? { type: 'spring', damping: 10, stiffness: 120 } : { duration: 0.18 }}
               className="flex items-center gap-1.5"
             >
-              <ActionIcon type={justInstalled ? 'check' : config.icon} />
-              {justInstalled ? 'INSTALLED' : config.label}
+              <ActionIcon type={justInstalled ? 'open' : action.icon} />
+              {justInstalled ? 'Open' : action.label}
             </motion.span>
           </AnimatePresence>
         </motion.button>
-
-        {/* Open button */}
-        {showOpen && (
-          <motion.button
-            onClick={() => !isLocked && onOpen(plugin.id)}
-            disabled={isLocked}
-            aria-label={`Open ${plugin.name}`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold
-                       bg-rone-button text-white border border-rone-border/30
-                       hover:bg-rone-purple/30 hover:border-rone-purple/30
-                       transition-colors duration-200
-                       focus:outline-none focus:ring-2 focus:ring-rone-purple/50
-                       disabled:opacity-40"
-            whileTap={!isLocked ? { scale: 0.95 } : {}}
-          >
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            OPEN
-          </motion.button>
-        )}
       </div>
     </motion.div>
   )

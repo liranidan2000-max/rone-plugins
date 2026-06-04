@@ -1,137 +1,98 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import FormatBadge from './FormatBadge'
 
-export default function FeaturedSection({ plugins, onInstall, onUpdateAll, licensed }) {
+// Decorative particle-wave graphic shown on the right side of the banner
+function WaveArt() {
+  const dots = []
+  const cols = 26, rows = 6
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const wave = Math.sin(c * 0.5) * 8
+      const y = 14 + r * 9 + wave
+      const op = Math.max(0.05, 0.5 - r * 0.07) * (0.4 + (c / cols) * 0.6)
+      dots.push(<circle key={`${c}-${r}`} cx={6 + c * 7} cy={y} r={1.3} fill="#A855F7" opacity={op} />)
+    }
+  }
+  return (
+    <svg className="absolute right-0 top-0 h-full w-[55%] pointer-events-none" viewBox="0 0 190 96" preserveAspectRatio="xMaxYMid slice">
+      {dots}
+    </svg>
+  )
+}
+
+export default function FeaturedSection({ plugins, onUpdateAll, onRefresh, licensed }) {
   const updatable = plugins.filter(p => p.status === 'update_available')
   const notInstalled = plugins.filter(p => p.status === 'not_installed')
-  const allUpToDate = plugins.length > 0 && updatable.length === 0 && notInstalled.length === 0
+  const installed = plugins.filter(p => p.status === 'up_to_date' || p.status === 'update_available')
+  const pending = updatable.length + notInstalled.length
 
-  // If everything is up to date, show a celebratory state
-  if (allUpToDate) {
-    return (
-      <motion.div
-        className="mx-4 mt-3 mb-1 rounded-xl border border-rone-green/15 p-4 hero-gradient"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rone-green/10 flex items-center justify-center">
-            <svg className="w-5 h-5 text-rone-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  const allUpToDate = plugins.length > 0 && pending === 0
+
+  const title = allUpToDate
+    ? 'All plugins are up to date'
+    : `${pending} ${pending === 1 ? 'update' : 'updates'} available`
+  const subtitle = allUpToDate
+    ? `${installed.length} plugin${installed.length !== 1 ? 's' : ''} installed and ready to use`
+    : `${updatable.length} to update${notInstalled.length ? ` · ${notInstalled.length} new to install` : ''}`
+
+  return (
+    <motion.div
+      className="relative mx-6 mt-5 rounded-2xl banner-gradient overflow-hidden"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
+      <WaveArt />
+      <div className="relative flex items-center gap-5 px-6 py-6">
+        {/* Status ring icon */}
+        <div className="flex-shrink-0 w-16 h-16 rounded-full flex items-center justify-center
+                        border-2 border-rone-purple/40 bg-rone-purple/5">
+          {allUpToDate ? (
+            <svg className="w-7 h-7 text-rone-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-rone-text-primary">All plugins up to date</p>
-            <p className="text-xs text-rone-text-dim mt-0.5">
-              {plugins.length} plugin{plugins.length !== 1 ? 's' : ''} installed and ready to use
-            </p>
-          </div>
+          ) : (
+            <svg className="w-7 h-7 text-rone-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5M5 18h14" />
+            </svg>
+          )}
         </div>
-      </motion.div>
-    )
-  }
 
-  // Show updates available
-  if (updatable.length > 0) {
-    const featured = updatable[0]
-    return (
-      <motion.div
-        className="mx-4 mt-3 mb-1 rounded-xl border border-rone-pink/20 p-4 hero-gradient overflow-hidden"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
-        <div className="flex items-center gap-4">
-          {/* Featured plugin logo */}
-          <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rone-purple/10 flex items-center justify-center overflow-hidden">
-            <img
-              src={featured.logoUrl}
-              alt={featured.name}
-              className="w-12 h-12 object-contain"
-              onError={(e) => { e.target.style.display = 'none' }}
-            />
-          </div>
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <h2 className="text-[19px] font-bold text-rone-text-primary tracking-tight">{title}</h2>
+          <p className="text-[13px] text-rone-text-secondary mt-1">{subtitle}</p>
+        </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-rone-pink uppercase tracking-wider">
-                {updatable.length} Update{updatable.length !== 1 ? 's' : ''} Available
-              </span>
-            </div>
-            <p className="text-sm font-semibold text-rone-text-primary mt-0.5 truncate">
-              {featured.name} v{featured.remoteVersion}
-              {updatable.length > 1 && (
-                <span className="text-rone-text-dim font-normal"> and {updatable.length - 1} more</span>
-              )}
-            </p>
-            {featured.whatsNew && (
-              <p className="text-[11px] text-rone-text-secondary mt-0.5 truncate">{featured.whatsNew}</p>
-            )}
-          </div>
-
-          {/* Update All CTA */}
+        {/* CTA */}
+        {allUpToDate ? (
+          <button
+            onClick={onRefresh}
+            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold
+                       text-rone-text-primary border border-rone-border/80 bg-rone-surface-2
+                       hover:bg-rone-purple/10 hover:border-rone-purple/40 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Check for Updates
+          </button>
+        ) : (
           <motion.button
             onClick={onUpdateAll}
-            disabled={!licensed}
-            className="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold text-white
-                       bg-rone-pink hover:brightness-110 transition-colors
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-            whileTap={licensed ? { scale: 0.95 } : {}}
+            disabled={!licensed || updatable.length === 0}
+            whileTap={licensed ? { scale: 0.96 } : {}}
+            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white
+                       btn-gradient disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            UPDATE ALL
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5M5 18h14" />
+            </svg>
+            {updatable.length > 0 ? 'Update All' : 'Install New'}
           </motion.button>
-        </div>
-      </motion.div>
-    )
-  }
-
-  // Show "new plugins available" if there are not-installed ones
-  if (notInstalled.length > 0) {
-    const featured = notInstalled[0]
-    return (
-      <motion.div
-        className="mx-4 mt-3 mb-1 rounded-xl border border-rone-purple/20 p-4 hero-gradient overflow-hidden"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-rone-purple/10 flex items-center justify-center overflow-hidden">
-            <img
-              src={featured.logoUrl}
-              alt={featured.name}
-              className="w-12 h-12 object-contain"
-              onError={(e) => { e.target.style.display = 'none' }}
-            />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <span className="text-xs font-bold text-rone-purple uppercase tracking-wider">
-              New Plugin Available
-            </span>
-            <p className="text-sm font-semibold text-rone-text-primary mt-0.5 truncate">
-              {featured.name}
-            </p>
-            <p className="text-[11px] text-rone-text-secondary mt-0.5 truncate">{featured.description}</p>
-          </div>
-
-          <motion.button
-            onClick={() => onInstall(featured.id)}
-            disabled={!licensed}
-            className="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold text-white
-                       bg-rone-purple hover:brightness-110 transition-colors
-                       disabled:opacity-40 disabled:cursor-not-allowed"
-            whileTap={licensed ? { scale: 0.95 } : {}}
-          >
-            INSTALL
-          </motion.button>
-        </div>
-      </motion.div>
-    )
-  }
-
-  return null
+        )}
+      </div>
+    </motion.div>
+  )
 }
