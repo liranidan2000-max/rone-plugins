@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
+import logo from '../logo.js'
 
 function timeAgo(date) {
   if (!date) return null
@@ -23,10 +24,13 @@ export default function Header({ updatesCount, searchQuery, onSearchChange, onRe
 
   return (
     <div className="flex-shrink-0 h-12 surface-1 border-b border-rone-border/40 flex items-center px-5 gap-4">
-      {/* Title */}
-      <h1 className="text-rone-purple font-bold text-base tracking-wide whitespace-nowrap">
-        RONE PLUGINS CENTER
-      </h1>
+      {/* Brand logo */}
+      <img
+        src={logo}
+        alt="RONE PLUGINS"
+        className="h-7 w-auto select-none pointer-events-none"
+        draggable={false}
+      />
 
       {/* Spacer */}
       <div className="flex-1" />
