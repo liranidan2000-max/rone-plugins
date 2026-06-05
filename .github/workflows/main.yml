@@ -107,7 +107,7 @@ jobs:
           add "$RR" reverse_reverb  ReverseReverbVST  ReverseReverb     ReverseReverb-latest      ReverseReverb             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    ReverseReverb.iss
           add "$SF" stems_fixer     RoneStemsFixer     RoneStemsFixer    RoneStemsFixer-latest      RoneStemsFixer             false  ""                                false    RoneStemsFixer.iss
           add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss
-          add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               false  ""                                true     RoneFlanger.iss
+          add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss
           add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss
           add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       true   JUCE_WEBVIEW2_PACKAGE_LOCATION   false    RONE_Plugins.iss
 
