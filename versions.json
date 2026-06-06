@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-06-04T05:33:06Z",
+  "last_updated": "2026-06-06T19:50:30Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -72,7 +72,7 @@
     {
       "id": "RoneFlanger",
       "name": "Rone Flanger",
-      "version": "1.0.0.66",
+      "version": "1.0.0.73",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -85,9 +85,9 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "fedd0c5cc56cf693710342d860f4ab035e670c3305848d694598b75ca855840e",
+      "sha256": "6c9a5dae568bc6654d7efb8f14a54f2f5c5a06fb08af0257909ee9458d93b402",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "a73391262ad9d6efee77295f2d37c2f227b8ee2246bc10310e102a0f61e9be5f"
+      "sha256_mac": "750b3d44099083649aa9eae3c04a751ed32b4360d9f4019f625f672cba534454"
     },
     {
       "id": "RoneSyncVerb",
