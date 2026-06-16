@@ -58,6 +58,7 @@ jobs:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
               - 'installer/RONE_Plugins.iss'
+              - '.github/workflows/main.yml'
 
       - name: Generate build matrices
         id: matrix
@@ -206,6 +207,14 @@ jobs:
             $flags += "-DCMAKE_CXX_FLAGS=/I`"$wv2Include`""
           }
           cmake @flags
+          if ($LASTEXITCODE -ne 0) {
+            # A restored build cache can pin a Visual Studio instance that no longer
+            # exists after a runner-image update. Wipe and reconfigure from scratch.
+            Write-Host "Configure failed (stale build cache?). Wiping build-ci and retrying clean..."
+            Remove-Item -Recurse -Force build-ci -ErrorAction SilentlyContinue
+            cmake @flags
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
 
       - name: Verify WebView2 header
         if: matrix.needs_webview2 == 'true'
@@ -327,7 +336,12 @@ jobs:
       # --- Build ---
       - name: CMake configure
         working-directory: ${{ matrix.folder }}
-        run: cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+        run: |
+          cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" || {
+            echo "Configure failed (stale build cache?). Wiping build-ci and retrying clean..."
+            rm -rf build-ci
+            cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          }
 
       - name: CMake build
         working-directory: ${{ matrix.folder }}
