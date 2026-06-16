@@ -199,7 +199,10 @@ jobs:
         working-directory: ${{ matrix.folder }}
         shell: pwsh
         run: |
-          $flags = @("-B","build-ci","-G","Visual Studio 17 2022","-A","x64","-DCMAKE_BUILD_TYPE=Release")
+          # Use Ninja with the MSVC toolchain set up by msvc-dev-cmd, so the build
+          # doesn't depend on a specific Visual Studio generator version (the runner
+          # image moves between VS 2022/18/… over time).
+          $flags = @("-B","build-ci","-G","Ninja","-DCMAKE_BUILD_TYPE=Release")
           if ("${{ matrix.needs_webview2 }}" -eq "true") {
             $flags += "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=${{ github.workspace }}\webview2"
             # Explicit include path — guarantees WebView2.h is found even for juce_add_gui_app targets
