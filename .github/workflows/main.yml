@@ -57,6 +57,7 @@ jobs:
             plugins_center:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
+              - 'installer/RONE_Plugins.iss'
 
       - name: Generate build matrices
         id: matrix
@@ -245,6 +246,14 @@ jobs:
       # --- Package with Inno Setup ---
       - name: Install Inno Setup
         run: choco install innosetup --yes --no-progress
+
+      - name: Download WebView2 Runtime bootstrapper
+        if: matrix.needs_webview2 == 'true'
+        shell: pwsh
+        run: |
+          Write-Host "Downloading Microsoft Edge WebView2 evergreen bootstrapper..."
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" `
+            -OutFile "installer\MicrosoftEdgeWebview2Setup.exe"
 
       - name: Compile installer
         shell: pwsh

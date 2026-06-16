@@ -46,12 +46,19 @@ UninstallDisplayName={#MyAppName}
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 ; ============================================================================
-; Files — only the Center application
+; Files — the Center application + WebView2 Runtime bootstrapper
 ; ============================================================================
 [Files]
 Source: "..\RonePluginsCenter\build-ci\RonePluginsCenter_artefacts\Release\RONE Plugins Center.exe"; \
   DestDir: "{app}"; \
   Flags: ignoreversion
+
+; Microsoft Edge WebView2 Runtime evergreen bootstrapper.
+; Only extracted/run when WebView2 is not already present (see NeedsWebView2).
+Source: "MicrosoftEdgeWebview2Setup.exe"; \
+  DestDir: "{tmp}"; \
+  Flags: deleteafterinstall; \
+  Check: NeedsWebView2
 
 ; ============================================================================
 ; Start Menu + Desktop shortcuts
@@ -68,9 +75,41 @@ Name: "{commondesktop}\RONE Plugins Center"; Filename: "{app}\RONE Plugins Cente
 Root: HKCU; Subkey: "Software\RONE\Plugins"; Flags: uninsdeletekeyifempty
 
 ; ============================================================================
-; Post-install: launch the Center
+; Post-install: install WebView2 Runtime (if needed), then launch the Center
 ; ============================================================================
 [Run]
+; Install the WebView2 Runtime first so the Center's UI can render.
+Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; \
+  Parameters: "/silent /install"; \
+  StatusMsg: "Installing Microsoft WebView2 Runtime..."; \
+  Check: NeedsWebView2; \
+  Flags: waituntilterminated
+
 Filename: "{app}\RONE Plugins Center.exe"; \
   Description: "Launch RONE Plugins Center"; \
   Flags: nowait postinstall skipifsilent
+
+; ============================================================================
+; WebView2 detection — skip the install if the runtime is already present
+; ============================================================================
+[Code]
+function WV2Installed(const RootKey: Integer; const SubKey: String): Boolean;
+var
+  Version: String;
+begin
+  Result := False;
+  if RegQueryStringValue(RootKey, SubKey, 'pv', Version) then
+    if (Version <> '') and (Version <> '0.0.0.0') then
+      Result := True;
+end;
+
+function NeedsWebView2: Boolean;
+const
+  CLIENT = 'Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
+begin
+  Result := not (
+    WV2Installed(HKLM, 'SOFTWARE\WOW6432Node\' + CLIENT) or
+    WV2Installed(HKLM, 'SOFTWARE\' + CLIENT) or
+    WV2Installed(HKCU, 'SOFTWARE\' + CLIENT)
+  );
+end;
