@@ -104,12 +104,13 @@ begin
 end;
 
 function NeedsWebView2: Boolean;
-const
-  CLIENT = 'Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
+var
+  Client: String;
 begin
+  Client := 'Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
   Result := not (
-    WV2Installed(HKLM, 'SOFTWARE\WOW6432Node\' + CLIENT) or
-    WV2Installed(HKLM, 'SOFTWARE\' + CLIENT) or
-    WV2Installed(HKCU, 'SOFTWARE\' + CLIENT)
+    WV2Installed(HKLM, 'SOFTWARE\WOW6432Node\' + Client) or
+    WV2Installed(HKLM, 'SOFTWARE\' + Client) or
+    WV2Installed(HKCU, 'SOFTWARE\' + Client)
   );
 end;
