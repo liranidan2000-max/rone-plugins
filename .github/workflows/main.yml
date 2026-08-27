@@ -54,6 +54,8 @@ jobs:
             sync_verb:
               - 'rone sync verb'
               - 'Shared/**'
+            analyzer:
+              - 'RONEAnalyzer'
             plugins_center:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
@@ -73,7 +75,7 @@ jobs:
 
           # Change flags — tag push forces all
           if [ "$IS_TAG" = "true" ]; then
-            RR=true; SF=true; ST=true; FL=true; SV=true; PC=true
+            RR=true; SF=true; ST=true; FL=true; SV=true; PC=true; AN=true
           else
             RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
             SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
@@ -81,6 +83,7 @@ jobs:
             FL=${{ steps.filter.outputs.flanger         || 'false' }}
             SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
             PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
+            AN=${{ steps.filter.outputs.analyzer        || 'false' }}
           fi
 
           win='[]'; mac='[]'; changed='[]'
@@ -112,6 +115,7 @@ jobs:
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss
           add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss
           add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       true   JUCE_WEBVIEW2_PACKAGE_LOCATION   false    RONE_Plugins.iss
+          add "$AN" analyzer        RONEAnalyzer       RONEAnalyzer      RONEAnalyzer-latest        RONEAnalyzer              false  ""                                false    RONEAnalyzer.iss
 
           echo "windows=$win"     >> $GITHUB_OUTPUT
           echo "macos=$mac"       >> $GITHUB_OUTPUT

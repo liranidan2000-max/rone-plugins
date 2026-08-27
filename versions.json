@@ -109,6 +109,24 @@
       "sha256": "bd77aec721c9d872a79fc52a3681990a43e5fae79ab8b3e0e070b858346f9a35",
       "registry_key": "RoneSyncVerb",
       "sha256_mac": "48376a2ff01f2495ad353fa94d22a55e0e1433a7b81d008780e958acc0c0b64d"
+    },
+    {
+      "id": "RONEAnalyzer",
+      "name": "RONE Analyzer",
+      "version": "1.0.0",
+      "type": "standalone",
+      "formats": [
+        "Standalone"
+      ],
+      "description": "Real-time audio measurement: 30-band analyser, vectorscope, level meters, loudness and bit statistics",
+      "whats_new": "Initial release",
+      "standalone_exe": "RONE Analyzer.exe",
+      "vst3_bundle": "",
+      "au_bundle": "",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RONEAnalyzer"
     }
   ]
 }
