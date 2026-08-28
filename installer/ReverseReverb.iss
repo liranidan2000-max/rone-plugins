@@ -51,7 +51,7 @@ Source: "..\ReverseReverbVST\build-ci\ReverseReverb_artefacts\Release\Standalone
 ; CI downloads the NuGet package to <workspace>\webview2 before compiling.
 Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebView2Loader.dll"; \
   DestDir: "{app}"; \
-  Flags: ignoreversion
+  Flags: onlyifdoesntexist uninsneveruninstall
 
 ; ============================================================================
 ; Registry — write installed version for Center detection

@@ -59,7 +59,7 @@ Source: "..\RonePluginsCenter\build-ci\RonePluginsCenter_artefacts\Release\RONE 
 ; CI downloads the NuGet package to <workspace>\webview2 before compiling.
 Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebView2Loader.dll"; \
   DestDir: "{app}"; \
-  Flags: ignoreversion
+  Flags: ignoreversion uninsneveruninstall
 
 ; Microsoft Edge WebView2 Runtime evergreen bootstrapper.
 ; Only extracted/run when WebView2 is not already present (see NeedsWebView2).
