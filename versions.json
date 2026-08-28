@@ -18,8 +18,8 @@
         "AU",
         "Standalone"
       ],
-      "description": "Real-time reverse reverb effect with WebView2 UI",
-      "whats_new": "Initial release",
+      "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
+      "whats_new": "First public release",
       "standalone_exe": "ReverseReverb.exe",
       "vst3_bundle": "ReverseReverb.vst3",
       "au_bundle": "ReverseReverb.component",
@@ -37,8 +37,8 @@
       "formats": [
         "Standalone"
       ],
-      "description": "Audio stem analysis and repair tool",
-      "whats_new": "Initial release",
+      "description": "Drop in a folder of stems and it listens: identifies kick, bass, vocals, drums, atmos and FX, then renames the whole batch into a clean, consistent session",
+      "whats_new": "First public release",
       "standalone_exe": "RONE Stems Fixer.exe",
       "vst3_bundle": "",
       "au_bundle": "",
@@ -58,8 +58,8 @@
         "AU",
         "Standalone"
       ],
-      "description": "Glitch and stutter effect with WebView2 UI",
-      "whats_new": "Initial release",
+      "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
+      "whats_new": "First public release",
       "standalone_exe": "Rone Stutter.exe",
       "vst3_bundle": "Rone Stutter.vst3",
       "au_bundle": "Rone Stutter.component",
@@ -78,8 +78,8 @@
         "VST3",
         "Standalone"
       ],
-      "description": "Manual flanger with custom visualizer",
-      "whats_new": "Initial release",
+      "description": "A hands-on flanger you play like an instrument - manual delay control, stereo offset and a rhythmic gate, from subtle metallic motion to full jet sweeps",
+      "whats_new": "First public release",
       "standalone_exe": "Rone Flanger.exe",
       "vst3_bundle": "Rone Flanger.vst3",
       "au_bundle": "",
@@ -99,8 +99,8 @@
         "AU",
         "Standalone"
       ],
-      "description": "BPM-synced reverb with hard-cut tail and ducking",
-      "whats_new": "Initial release",
+      "description": "Reverb that lives on the grid - tail lengths in note values that cut exactly on time, with built-in ducking so the space never swallows the mix",
+      "whats_new": "First public release",
       "standalone_exe": "Rone Sync Verb.exe",
       "vst3_bundle": "Rone Sync Verb.vst3",
       "au_bundle": "Rone Sync Verb.component",
@@ -118,8 +118,8 @@
       "formats": [
         "Standalone"
       ],
-      "description": "Real-time audio measurement: 30-band analyser, vectorscope, level meters, loudness and bit statistics",
-      "whats_new": "Initial release",
+      "description": "Professional measurement suite: 30-band spectrum with reference-track comparison, vectorscope, level meters, EBU R128 loudness and bit statistics",
+      "whats_new": "First public release",
       "standalone_exe": "RONE Analyzer.exe",
       "vst3_bundle": "",
       "au_bundle": "",
