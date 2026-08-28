@@ -216,7 +216,7 @@ jobs:
           Expand-Archive asiosdk.zip -DestinationPath asiosdk_root -Force
           $common = Get-ChildItem asiosdk_root -Recurse -Directory -Filter common | Select-Object -First 1
           if (-not $common) { Write-Error "ASIO SDK layout unexpected"; exit 1 }
-          "RONE_ASIO_DIR=$($common.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "RONE_ASIO_SDK_ROOT=$($common.Parent.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "ASIO common dir: $($common.FullName)"
 
       - name: CMake configure
@@ -227,8 +227,13 @@ jobs:
           # doesn't depend on a specific Visual Studio generator version (the runner
           # image moves between VS 2022/18/… over time).
           $flags = @("-B","build-ci","-G","Ninja","-DCMAKE_BUILD_TYPE=Release")
-          if ($env:RONE_ASIO_DIR) {
-            $flags += "-DRONE_ASIO_INCLUDE=$env:RONE_ASIO_DIR"
+          if ($env:RONE_ASIO_SDK_ROOT) {
+            # The documented interface: the SDK *root*, and a hard requirement -
+            # the first attempt passed an internal variable the CMakeLists
+            # clobbers, and a WASAPI-only build sailed into the installer with
+            # nothing but a warning. Now that mistake fails the build.
+            $flags += "-DASIO_SDK_DIR=$env:RONE_ASIO_SDK_ROOT"
+            $flags += "-DRONE_REQUIRE_ASIO=1"
           }
           if ("${{ matrix.needs_webview2 }}" -eq "true") {
             $flags += "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=${{ github.workspace }}\webview2"
