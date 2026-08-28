@@ -1,17 +1,17 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-28T11:16:07Z",
+  "last_updated": "2026-08-28T12:52:18Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.0.0.93",
-    "sha256": "e3d04a19b942d6100711b6203f79d1b3cd03a58d70d5995f65db50928200dff5"
+    "version": "1.0.0.94",
+    "sha256": "3a339054a3f2c77cbf750d6a8c1213ed18c849a59493172c6ddc6928c268ffda"
   },
   "plugins": [
     {
       "id": "ReverseReverb",
       "name": "ReverseReverb",
-      "version": "1.0.0.92",
+      "version": "1.0.0.94",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -25,9 +25,9 @@
       "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "914c8e5d7cccaf70645998b412274d861221b4237a1aa861f43392aa50d6e6ac",
+      "sha256": "0631481e58b1f8462bda358ba9b8682c8dd1a389f73d39c109b25609040a2f69",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "8c5c0fd40123784605fdc81c786a4f802b99e6b14b4684468c89800926eee31f"
+      "sha256_mac": "ca54e149398b06ed0a6026eb7372429e313d9305f9d29ef766db9db1274d0e61"
     },
     {
       "id": "RoneStemsFixer",
@@ -51,7 +51,7 @@
     {
       "id": "RoneStutter",
       "name": "Rone Stutter",
-      "version": "1.0.0.66",
+      "version": "1.0.0.94",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -65,14 +65,14 @@
       "au_bundle": "Rone Stutter.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "f1790aecffb86cf535eb4d662e407e06c4638be069ebe3dc80ce02a549e62231",
+      "sha256": "95904e8d1f8033832770c8be25b82c9329cc51f47f0d76aca01ed903553629b6",
       "registry_key": "RoneStutter",
-      "sha256_mac": "cd375f3de6eae2d3a72d32497e14c5327270d85ccc5a7b92dc806e314fb440b6"
+      "sha256_mac": "83ce69219c24b7d1dd01718c5d4110c0d635832baf307c2fcc19f9c3803fd781"
     },
     {
       "id": "RoneFlanger",
       "name": "Rone Flanger",
-      "version": "1.0.0.73",
+      "version": "1.0.0.94",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -85,14 +85,14 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "6c9a5dae568bc6654d7efb8f14a54f2f5c5a06fb08af0257909ee9458d93b402",
+      "sha256": "6d63fb3db71af8bced9bad58f5aa0d39a67d1e2c7c62fa31c886f6bb220724d6",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "750b3d44099083649aa9eae3c04a751ed32b4360d9f4019f625f672cba534454"
+      "sha256_mac": "1c3c76c56a5932b3d162d4a34a074be1bdb76bcf15d976c95767e659445b78fd"
     },
     {
       "id": "RoneSyncVerb",
       "name": "Rone Sync Verb",
-      "version": "1.0.0.66",
+      "version": "1.0.0.94",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -106,9 +106,9 @@
       "au_bundle": "Rone Sync Verb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.pkg",
-      "sha256": "bd77aec721c9d872a79fc52a3681990a43e5fae79ab8b3e0e070b858346f9a35",
+      "sha256": "f3b36b084e762cab3bfaf48794b23a065a2530254bf91043b4e62722f67ed501",
       "registry_key": "RoneSyncVerb",
-      "sha256_mac": "48376a2ff01f2495ad353fa94d22a55e0e1433a7b81d008780e958acc0c0b64d"
+      "sha256_mac": "567bc48cee345dc04a4268d7db60e3ff1c6b3f9c2604dced37f4e937730be65d"
     },
     {
       "id": "RONEAnalyzer",
