@@ -34,6 +34,7 @@ MainComponent::getResource (const juce::String& url)
         { "logos/RoneStutter.png",    { BinaryData::RoneStutter_icon_png,   BinaryData::RoneStutter_icon_pngSize } },
         { "logos/RoneStemsFixer.png",  { BinaryData::RoneStemsFixer_icon_png, BinaryData::RoneStemsFixer_icon_pngSize } },
         { "logos/RoneFlanger.png",    { BinaryData::RoneFlanger_icon_png,   BinaryData::RoneFlanger_icon_pngSize } },
+        { "logos/RONEAnalyzer.png",   { BinaryData::RONEAnalyzer_icon_png,  BinaryData::RONEAnalyzer_icon_pngSize } },
     };
 
     auto it = resources.find (path);
