@@ -61,9 +61,12 @@ MainComponent::MainComponent()
         .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
         .withWinWebView2Options (
             juce::WebBrowserComponent::Options::WinWebView2{}
+                // AppData, not TEMP: anything the UI keeps in browser storage
+                // survives disk cleanups, like every other RONE plugin's data.
                 .withUserDataFolder (
-                    juce::File::getSpecialLocation (juce::File::tempDirectory)
-                        .getChildFile ("RonePluginsCenter")))
+                    juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                        .getChildFile ("RonePluginsCenter")
+                        .getChildFile ("WebView2")))
         .withNativeIntegrationEnabled()
 
         // ---- JS → C++ native functions ----
