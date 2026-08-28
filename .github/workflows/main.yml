@@ -42,20 +42,26 @@ jobs:
             reverse_reverb:
               - 'ReverseReverbVST'
               - 'Shared/**'
+              - 'installer/ReverseReverb.iss'
             stems_fixer:
               - 'RoneStemsFixer'
               - 'Shared/**'
+              - 'installer/RoneStemsFixer.iss'
             stutter:
               - 'RoneStutter'
               - 'Shared/**'
+              - 'installer/RoneStutter.iss'
             flanger:
               - 'rone-flanger-'
               - 'Shared/**'
+              - 'installer/RoneFlanger.iss'
             sync_verb:
               - 'rone sync verb'
               - 'Shared/**'
+              - 'installer/RoneSyncVerb.iss'
             analyzer:
               - 'RONEAnalyzer'
+              - 'installer/RONEAnalyzer.iss'
             plugins_center:
               - 'RonePluginsCenter/**'
               - 'Shared/**'

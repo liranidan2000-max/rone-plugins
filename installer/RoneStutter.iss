@@ -45,6 +45,14 @@ Source: "..\RoneStutter\build-ci\RoneStutter_artefacts\Release\Standalone\Rone S
   DestDir: "{app}"; \
   Flags: ignoreversion
 
+; The WebView2 loader has to sit beside the standalone executable: JUCE loads
+; it with LoadLibrary at runtime, and without it the UI silently falls back
+; to the legacy IE control and shows an error page instead of the interface.
+; CI downloads the NuGet package to <workspace>\webview2 before compiling.
+Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebView2Loader.dll"; \
+  DestDir: "{app}"; \
+  Flags: ignoreversion
+
 ; ============================================================================
 ; Registry — write installed version for Center detection
 ; ============================================================================
