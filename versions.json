@@ -1,17 +1,17 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-27T08:53:10Z",
+  "last_updated": "2026-08-28T11:12:53Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.0.0.78",
-    "sha256": "f3e1e61446a23b0ffc2d6a0330274101b7cd6fd51289523479580013f1e10e31"
+    "version": "1.0.0.92",
+    "sha256": "647a8d8d14fc14aee35567f2f402386bf52607ad50e5d3836e1a4e7e71bb02f3"
   },
   "plugins": [
     {
       "id": "ReverseReverb",
       "name": "ReverseReverb",
-      "version": "1.0.0.66",
+      "version": "1.0.0.92",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -25,9 +25,9 @@
       "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "7a81196249ac23b1d275ba5836992d88e5ea29e143d282ace06bc4797c87b4e3",
+      "sha256": "914c8e5d7cccaf70645998b412274d861221b4237a1aa861f43392aa50d6e6ac",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "5552cb4dd9a9c37b29ee53bbdc7c9bb606e4648018a48530f6f5046acc6bb758"
+      "sha256_mac": "8c5c0fd40123784605fdc81c786a4f802b99e6b14b4684468c89800926eee31f"
     },
     {
       "id": "RoneStemsFixer",
@@ -113,7 +113,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.0.0",
+      "version": "1.0.0.92",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -125,8 +125,9 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "",
-      "registry_key": "RONEAnalyzer"
+      "sha256": "572c6dce20460b10ba4872dd4d08e974c8460e56b2f0a589209d3d6fd5ee48f4",
+      "registry_key": "RONEAnalyzer",
+      "sha256_mac": "73494e97337cb25a882fc497603410471e5ed07dad9c624cf954247a07ec95c1"
     }
   ]
 }
