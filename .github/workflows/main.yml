@@ -199,6 +199,20 @@ jobs:
           Remove-Item -Recurse -Force _tmp
 
       # --- Build ---
+      - name: ASIO SDK (analyzer)
+        if: matrix.plugin_id == 'analyzer'
+        shell: pwsh
+        run: |
+          # Steinberg's SDK, fetched at build time - it may not live in the
+          # repository, but a distributed analyzer without ASIO cannot talk
+          # to the very interfaces it was built to measure.
+          Invoke-WebRequest -Uri "https://www.steinberg.net/asiosdk" -OutFile asiosdk.zip
+          Expand-Archive asiosdk.zip -DestinationPath asiosdk_root -Force
+          $common = Get-ChildItem asiosdk_root -Recurse -Directory -Filter common | Select-Object -First 1
+          if (-not $common) { Write-Error "ASIO SDK layout unexpected"; exit 1 }
+          "RONE_ASIO_DIR=$($common.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "ASIO common dir: $($common.FullName)"
+
       - name: CMake configure
         working-directory: ${{ matrix.folder }}
         shell: pwsh
@@ -207,6 +221,9 @@ jobs:
           # doesn't depend on a specific Visual Studio generator version (the runner
           # image moves between VS 2022/18/… over time).
           $flags = @("-B","build-ci","-G","Ninja","-DCMAKE_BUILD_TYPE=Release")
+          if ($env:RONE_ASIO_DIR) {
+            $flags += "-DRONE_ASIO_INCLUDE=$env:RONE_ASIO_DIR"
+          }
           if ("${{ matrix.needs_webview2 }}" -eq "true") {
             $flags += "-DJUCE_WEBVIEW2_PACKAGE_LOCATION=${{ github.workspace }}\webview2"
             # Explicit include path — guarantees WebView2.h is found even for juce_add_gui_app targets
@@ -499,6 +516,7 @@ jobs:
               flanger)        tag=RoneFlanger-latest;       title="Rone Flanger (Latest)" ;;
               sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
               plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)" ;;
+              analyzer)       tag=RONEAnalyzer-latest;      title="RONE Analyzer (Latest)" ;;
             esac
 
             # Collect all installer files for this plugin
@@ -581,6 +599,7 @@ jobs:
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               plugins_center) f=RonePluginsCenter ;;
+              analyzer)       f=RONEAnalyzer ;;
             esac
             git submodule update --init --depth 1 -- "$f" 2>/dev/null || true
           done
@@ -599,6 +618,7 @@ jobs:
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
               sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
               plugins_center) folder=RonePluginsCenter;  jid=__center__;     tag=PluginsCenter-latest;   inst=RONE_Plugins_Center ;;
+              analyzer)       folder=RONEAnalyzer;       jid=RONEAnalyzer;   tag=RONEAnalyzer-latest;    inst=RONEAnalyzer ;;
             esac
 
             # Read base version from CMakeLists.txt

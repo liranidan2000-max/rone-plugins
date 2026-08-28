@@ -46,9 +46,10 @@ Source: "..\RONEAnalyzer\build-ci\RONEAnalyzer_artefacts\Release\RONE Analyzer.e
 Source: "..\RONEAnalyzer\LICENSE";         DestDir: "{app}"; DestName: "RONE Analyzer LICENSE.txt"; Flags: ignoreversion
 Source: "..\RONEAnalyzer\THIRD-PARTY.md";  DestDir: "{app}"; DestName: "RONE Analyzer THIRD-PARTY.txt"; Flags: ignoreversion
 
-; The interface typeface is embedded in the executable. The SIL Open Font
-; License permits that; it requires the licence text to travel with it.
-Source: "..\RONEAnalyzer\Resources\fonts\OFL.txt"; DestDir: "{app}"; DestName: "Heebo OFL.txt"; Flags: ignoreversion
+; The interface typefaces are embedded in the executable. The SIL Open Font
+; License permits that; it requires the licence texts to travel with them.
+Source: "..\RONEAnalyzer\Resources\fonts\OFL-FamiljenGrotesk.txt"; DestDir: "{app}"; DestName: "Familjen Grotesk OFL.txt"; Flags: ignoreversion
+Source: "..\RONEAnalyzer\Resources\fonts\OFL-JetBrainsMono.txt"; DestDir: "{app}"; DestName: "JetBrains Mono OFL.txt"; Flags: ignoreversion
 
 ; ============================================================================
 ; Shortcuts — a standalone application, unlike the plugins, is something you

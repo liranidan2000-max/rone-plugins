@@ -531,6 +531,22 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.pkg",
       "sha256": "",
       "registry_key": "RoneSyncVerb"
+    },
+    {
+      "id": "RONEAnalyzer",
+      "name": "RONE Analyzer",
+      "version": "1.0.0",
+      "type": "standalone",
+      "formats": ["Standalone"],
+      "description": "Real-time audio measurement: 30-band analyser, vectorscope, level meters, loudness and bit statistics",
+      "whats_new": "Initial release",
+      "standalone_exe": "RONE Analyzer.exe",
+      "vst3_bundle": "",
+      "au_bundle": "",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RONEAnalyzer"
     }
   ]
 })";
