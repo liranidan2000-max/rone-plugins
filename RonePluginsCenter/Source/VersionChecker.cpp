@@ -176,8 +176,26 @@ PluginStatus VersionChecker::determineStatus (const juce::String& installed,
     if (installed.isEmpty())
         return PluginStatus::NotInstalled;
 
-    if (isNewerVersion (installed, remote))
-        return PluginStatus::UpdateAvailable;
+    // The catalog is the truth: anything that is not exactly the published
+    // version gets offered the published version. The old "only if remote is
+    // strictly newer" rule met registry stamps written in a three-part scheme
+    // ("1.0.92") against the four-part manifest ("1.0.0.98"); compared
+    // component-wise the *installed* side looked newer, and every machine in
+    // that state was told it was up to date, forever. Converging on the
+    // manifest self-heals those machines on their next sync.
+    auto a = parseVersion (installed);
+    auto b = parseVersion (remote);
+
+    const int maxLen = juce::jmax (a.size(), b.size());
+
+    for (int i = 0; i < maxLen; ++i)
+    {
+        const int ai = i < a.size() ? a[i] : 0;
+        const int bi = i < b.size() ? b[i] : 0;
+
+        if (ai != bi)
+            return PluginStatus::UpdateAvailable;
+    }
 
     return PluginStatus::UpToDate;
 }
