@@ -31,15 +31,15 @@
     },
     {
       "id": "RoneStemsFixer",
-      "name": "RONE Stems Fixer",
+      "name": "RONE Stems",
       "version": "1.0.0.66",
       "type": "standalone",
       "formats": [
         "Standalone"
       ],
       "description": "Drop in a folder of stems and it listens: identifies kick, bass, vocals, drums, atmos and FX, then renames the whole batch into a clean, consistent session",
-      "whats_new": "First public release",
-      "standalone_exe": "RONE Stems Fixer.exe",
+      "whats_new": "v1.1.0: rebuilt classifier (filename+audio fusion, per-band rhythm analysis) and a full UI redesign",
+      "standalone_exe": "RONE Stems.exe",
       "vst3_bundle": "",
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.exe",

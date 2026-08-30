@@ -9,7 +9,7 @@
 
 [Setup]
 AppId={{C3D4E5F6-A7B8-9012-CDEF-123456789012}
-AppName=RONE Stems Fixer
+AppName=RONE Stems
 AppVersion={#MyAppVersion}
 AppPublisher=Liran Rone Kalifa
 DefaultDirName={commonpf}\RONE Plugins
@@ -22,7 +22,7 @@ WizardStyle=modern
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
-UninstallDisplayName=RONE Stems Fixer (RONE)
+UninstallDisplayName=RONE Stems (RONE)
 ; Streamlined for silent operation
 DisableWelcomePage=yes
 DisableDirPage=yes
@@ -37,11 +37,17 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 ; ============================================================================
 ; Files — Standalone only (no VST3)
+; The app was renamed with the WebView2 port: PRODUCT_NAME is now
+; "RONE Stems", so the artefact is "RONE Stems.exe".
 ; ============================================================================
 [Files]
-Source: "..\RoneStemsFixer\build-ci\RoneStemsFixer_artefacts\Release\RONE Stems Fixer.exe"; \
+Source: "..\RoneStemsFixer\build-ci\RoneStemsFixer_artefacts\Release\RONE Stems.exe"; \
   DestDir: "{app}"; \
   Flags: ignoreversion
+
+; Remove the pre-rename executable so old installs don't keep a stale copy
+[InstallDelete]
+Type: files; Name: "{app}\RONE Stems Fixer.exe"
 
 ; ============================================================================
 ; Registry — write installed version for Center detection
