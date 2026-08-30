@@ -27,6 +27,10 @@ UninstallDisplayName=Rone Flanger (RONE)
 DisableWelcomePage=yes
 DisableDirPage=yes
 DisableReadyPage=yes
+; Never let a silent plugin install force-close the running Plugins Center
+; (Restart Manager would kill the app that launched this installer)
+CloseApplications=no
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

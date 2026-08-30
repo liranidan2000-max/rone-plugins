@@ -67,6 +67,11 @@ target_sources(RonePluginsCenter PRIVATE
 target_compile_definitions(RonePluginsCenter PRIVATE
     JUCE_WEB_BROWSER=1
     JUCE_USE_WIN_WEBVIEW2=1
+    # Static WebView2 loader: without this the app LoadLibrary()s
+    # WebView2Loader.dll from its own folder, and every plugin installer that
+    # ships the same DLL makes Windows Restart Manager force-close the running
+    # Center mid-update ("Update All" kills the app).
+    $<$<BOOL:${WIN32}>:JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1>
     JUCE_USE_CURL=0
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:RonePluginsCenter,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:RonePluginsCenter,JUCE_VERSION>"
@@ -123,6 +128,13 @@ if(WIN32)
         if(_wv2_pkg)
             target_include_directories(RonePluginsCenter PRIVATE "${_wv2_pkg}/build/native/include")
             message(STATUS "WebView2 include: ${_wv2_pkg}/build/native/include")
+
+            # Static loader lib — required by JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING
+            if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+                target_link_libraries(RonePluginsCenter PRIVATE "${_wv2_pkg}/build/native/x64/WebView2LoaderStatic.lib")
+            else()
+                target_link_libraries(RonePluginsCenter PRIVATE "${_wv2_pkg}/build/native/x86/WebView2LoaderStatic.lib")
+            endif()
         endif()
     endif()
 endif()

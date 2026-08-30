@@ -109,3 +109,4 @@ __pycache__/
 # NuGet (WebView2 etc.)
 packages/
 *.nupkg
+build-vs2022/
