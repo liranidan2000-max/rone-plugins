@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-30T11:29:59Z",
+  "last_updated": "2026-08-30T12:00:14Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -32,7 +32,7 @@
     {
       "id": "RoneStemsFixer",
       "name": "RONE Stems",
-      "version": "1.0.0.66",
+      "version": "1.1.0.116",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -44,9 +44,9 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.pkg",
-      "sha256": "8236213428240b15c3064f9e9316b7826cc9f65a375933d38c4ececf0aaefe0b",
+      "sha256": "9878fafe83860c5a78fe467cb675df33166b565e48989c9ece7901c4865f9b1f",
       "registry_key": "RoneStemsFixer",
-      "sha256_mac": "c4339242a15f500c71d020dd944956045755d9a15df8d1ad6a7a2886bb4c4e2a"
+      "sha256_mac": "0ce9fe1f2cd06a730428e05c3919a26af07033a9e15c966ba2edf76af4d3b550"
     },
     {
       "id": "RoneStutter",
