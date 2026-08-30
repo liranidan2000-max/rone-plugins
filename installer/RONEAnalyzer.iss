@@ -48,7 +48,7 @@ Source: "..\RONEAnalyzer\THIRD-PARTY.md";  DestDir: "{app}"; DestName: "RONE Ana
 
 ; The interface typefaces are embedded in the executable. The SIL Open Font
 ; License permits that; it requires the licence texts to travel with them.
-Source: "..\RONEAnalyzer\Resources\fonts\OFL-FamiljenGrotesk.txt"; DestDir: "{app}"; DestName: "Familjen Grotesk OFL.txt"; Flags: ignoreversion
+Source: "..\RONEAnalyzer\Resources\fonts\OFL-Inter.txt"; DestDir: "{app}"; DestName: "Inter OFL.txt"; Flags: ignoreversion
 Source: "..\RONEAnalyzer\Resources\fonts\OFL-JetBrainsMono.txt"; DestDir: "{app}"; DestName: "JetBrains Mono OFL.txt"; Flags: ignoreversion
 
 ; ============================================================================
