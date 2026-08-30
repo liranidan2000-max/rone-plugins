@@ -32,13 +32,18 @@ DisableReadyPage=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 ; ============================================================================
-; Files — Standalone only. The analyser is not a plugin: it attaches to the
-; audio device beside the DAW rather than sitting in its signal path.
+; Files — the standalone analyser plus its VST3 companion. RONE Bridge sits
+; on the DAW's master bus: it taps the master for the analyser to measure
+; and renders band solo / mono inside the DAW's own signal path.
 ; ============================================================================
 [Files]
 Source: "..\RONEAnalyzer\build-ci\RONEAnalyzer_artefacts\Release\RONE Analyzer.exe"; \
   DestDir: "{app}"; \
   Flags: ignoreversion
+
+Source: "..\RONEAnalyzer\build-ci\RONEBridge_artefacts\Release\VST3\RONE Bridge.vst3\*"; \
+  DestDir: "{commoncf64}\VST3\RONE Bridge.vst3"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; The licence and the third-party notices travel with the binary. The JUCE
 ; Starter tier and the absent ASIO SDK are both licence conditions, and a
