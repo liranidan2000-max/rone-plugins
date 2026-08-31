@@ -32,7 +32,7 @@
     {
       "id": "RoneStutter",
       "name": "Rone Stutter",
-      "version": "1.0.0.139",
+      "version": "1.1.0",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -40,7 +40,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "First public release",
+      "whats_new": "v1.1.0: RONE graphite redesign (yellow accent) - charcoal knobs with neon value arcs, live SLICE ms readout, graphite title bar in standalone, new app icon, unified About + hub licensing via RONE Plugins Center",
       "standalone_exe": "Rone Stutter.exe",
       "vst3_bundle": "Rone Stutter.vst3",
       "au_bundle": "Rone Stutter.component",
