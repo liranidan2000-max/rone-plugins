@@ -63,6 +63,10 @@ jobs:
               - 'rone sync verb'
               - 'Shared/**'
               - 'installer/RoneSyncVerb.iss'
+            afterspace:
+              - 'RONE AFTER SPACE/**'
+              - 'Shared/**'
+              - 'installer/RoneAfterspace.iss'
             analyzer:
               - 'RONEAnalyzer'
               - 'installer/RONEAnalyzer.iss'
@@ -85,7 +89,7 @@ jobs:
 
           # Change flags — tag push forces all
           if [ "$IS_TAG" = "true" ]; then
-            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true
+            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true; AS=true
           else
             RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
             SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
@@ -95,6 +99,7 @@ jobs:
             SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
             PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
             AN=${{ steps.filter.outputs.analyzer        || 'false' }}
+            AS=${{ steps.filter.outputs.afterspace      || 'false' }}
           fi
 
           win='[]'; mac='[]'; changed='[]'
@@ -126,6 +131,7 @@ jobs:
           add "$SK" stucker         RoneStucker        RoneStucker       RoneStucker-latest         RoneStucker               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStucker.iss
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss
           add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss
+          add "$AS" afterspace    "RONE AFTER SPACE" RoneAfterspace    RoneAfterspace-latest      RoneAfterspace            true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneAfterspace.iss
           add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       true   JUCE_WEBVIEW2_PACKAGE_LOCATION   false    RONE_Plugins.iss
           add "$AN" analyzer        RONEAnalyzer       RONEAnalyzer      RONEAnalyzer-latest        RONEAnalyzer              false  ""                                false    RONEAnalyzer.iss
 
@@ -166,7 +172,8 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Init submodule — ${{ matrix.folder }}
-        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}"
+        # AFTERSPACE lives in-repo (not a submodule) — tolerate that case
+        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}" || echo "::notice::${{ matrix.folder }} is not a submodule (in-repo sources)"
 
       # --- MSVC ---
       - uses: ilammy/msvc-dev-cmd@v1
@@ -354,7 +361,8 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Init submodule — ${{ matrix.folder }}
-        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}"
+        # AFTERSPACE lives in-repo (not a submodule) — tolerate that case
+        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}" || echo "::notice::${{ matrix.folder }} is not a submodule (in-repo sources)"
 
       # --- Caches ---
       - name: Build cache
@@ -541,6 +549,7 @@ jobs:
               stucker)        tag=RoneStucker-latest;       title="Rone Stucker (Latest)" ;;
               flanger)        tag=RoneFlanger-latest;       title="Rone Flanger (Latest)" ;;
               sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
+              afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)" ;;
               plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)" ;;
               analyzer)       tag=RONEAnalyzer-latest;      title="RONE Analyzer (Latest)" ;;
             esac
@@ -625,6 +634,7 @@ jobs:
               stucker)        f=RoneStucker ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
+              afterspace)     f="RONE AFTER SPACE" ;;
               plugins_center) f=RonePluginsCenter ;;
               analyzer)       f=RONEAnalyzer ;;
             esac
@@ -645,6 +655,7 @@ jobs:
               stucker)        folder=RoneStucker;        jid=RoneStucker;     tag=RoneStucker-latest;     inst=RoneStucker ;;
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
               sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
+              afterspace)     folder="RONE AFTER SPACE"; jid=RoneAfterspace; tag=RoneAfterspace-latest;  inst=RoneAfterspace ;;
               plugins_center) folder=RonePluginsCenter;  jid=__center__;     tag=PluginsCenter-latest;   inst=RONE_Plugins_Center ;;
               analyzer)       folder=RONEAnalyzer;       jid=RONEAnalyzer;   tag=RONEAnalyzer-latest;    inst=RONEAnalyzer ;;
             esac

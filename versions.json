@@ -132,6 +132,27 @@
       "sha256_mac": "9857e8ca924f519d6c2c4c3b97e0a0ab51573bacd464a4efe076c74c513ca4a3"
     },
     {
+      "id": "RoneAfterspace",
+      "name": "RONE AFTERSPACE",
+      "version": "0.1.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
+      "whats_new": "First beta build",
+      "standalone_exe": "RONE AFTERSPACE.exe",
+      "vst3_bundle": "RONE AFTERSPACE.vst3",
+      "au_bundle": "RONE AFTERSPACE.component",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneAfterspace",
+      "sha256_mac": ""
+    },
+    {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
       "version": "1.0.0.128",
