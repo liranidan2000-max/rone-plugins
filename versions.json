@@ -93,14 +93,14 @@
     {
       "id": "RoneFlanger",
       "name": "Rone Flanger",
-      "version": "1.0.0.117",
+      "version": "2.0.0",
       "type": "plugin",
       "formats": [
         "VST3",
         "Standalone"
       ],
-      "description": "A hands-on flanger you play like an instrument - manual delay control, stereo offset and a rhythmic gate, from subtle metallic motion to full jet sweeps",
-      "whats_new": "First public release",
+      "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
+      "whats_new": "v2.0.0: RONE graphite redesign + INFINITE barberpole mode - endless tempo-locked risers/falls (Shepard-Risset), inverted SWEEP (clockwise = rising energy), live comb display with energy dot. LINK removed.",
       "standalone_exe": "Rone Flanger.exe",
       "vst3_bundle": "Rone Flanger.vst3",
       "au_bundle": "",
