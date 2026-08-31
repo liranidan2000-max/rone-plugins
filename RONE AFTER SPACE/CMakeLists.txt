@@ -46,9 +46,8 @@ juce_add_plugin(RoneAfterspace
     COPY_PLUGIN_AFTER_BUILD TRUE
     NEEDS_WEB_BROWSER      TRUE
     NEEDS_WEBVIEW2         TRUE
-    # TODO(beta-launch): add Source/icon_1024.png + Source/icon_256.png, then uncomment:
-    #ICON_BIG               "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_1024.png"
-    #ICON_SMALL             "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_256.png"
+    ICON_BIG               "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_1024.png"
+    ICON_SMALL             "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_256.png"
 )
 
 juce_generate_juce_header(RoneAfterspace)

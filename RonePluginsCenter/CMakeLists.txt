@@ -101,6 +101,7 @@ juce_add_binary_data(PluginsCenterUI SOURCES
     Resources/RONEAnalyzer_icon.png
     Resources/RoneStucker_icon.png
     Resources/RoneSyncVerb_icon.png
+    Resources/RoneAfterspace_icon.png
     Resources/AppIcon.png
 )
 
