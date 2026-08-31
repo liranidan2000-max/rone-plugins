@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-31T11:09:22Z",
+  "last_updated": "2026-08-31T13:33:53Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -11,7 +11,7 @@
     {
       "id": "ReverseReverb",
       "name": "ReverseReverb",
-      "version": "1.0.0.117",
+      "version": "1.0.0.119",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -25,9 +25,9 @@
       "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "a6bf9321554043020e8959a50d4e54375bd5637761cadce0f05273aac8c10800",
+      "sha256": "15716b0104c10187f447e8055cf803b0ae6f646eecbadfdf483a9e6ce7a135d3",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "3ad4a541640d04fc741c800da5a24cb9a69893019d4be7e962bb38a0714f26c7"
+      "sha256_mac": "9a075c9bc8d90034520c7e0362776e8791653f335cb71e27dcadc768040bd125"
     },
     {
       "id": "RoneStemsFixer",
