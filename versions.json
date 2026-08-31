@@ -70,6 +70,27 @@
       "sha256_mac": "2d387f88b7600a8475d8d5014845e4d7a837dbfe99caf85165ce560a5111c696"
     },
     {
+      "id": "RoneStucker",
+      "name": "Rone Stucker",
+      "version": "1.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
+      "whats_new": "First public release",
+      "standalone_exe": "Rone Stucker.exe",
+      "vst3_bundle": "Rone Stucker.vst3",
+      "au_bundle": "Rone Stucker.component",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneStucker",
+      "sha256_mac": ""
+    },
+    {
       "id": "RoneFlanger",
       "name": "Rone Flanger",
       "version": "1.0.0.117",

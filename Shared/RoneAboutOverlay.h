@@ -17,8 +17,12 @@
     Unified About overlay for all RONE plugins.
     Header-only — include via relative path from each plugin.
 
+    Follows the RONE graphite design language: graphite panel, one neon accent
+    per plugin (pass the plugin's own colour), Sora/Manrope-style type scale.
+
     Usage:
-        RoneAboutOverlay aboutOverlay { "STUTTER", JucePlugin_VersionString };
+        RoneAboutOverlay aboutOverlay { "STUTTER", JucePlugin_VersionString,
+                                        juce::Colour (0xff2BD9FF) };
         addChildComponent (aboutOverlay);
         // In resized():  aboutOverlay.setBounds (getLocalBounds());
         // To open:       aboutOverlay.show();
@@ -34,9 +38,11 @@ public:
 
     //==========================================================================
     RoneAboutOverlay (const juce::String& pluginName,
-                      const juce::String& versionString)
+                      const juce::String& versionString,
+                      juce::Colour accentColour = juce::Colour (0xff9D6BFF))
         : pluginName_ (pluginName),
-          version_ (versionString)
+          version_ (versionString),
+          accent_ (accentColour)
     {
         setInterceptsMouseClicks (false, false);
         setVisible (false);
@@ -52,14 +58,14 @@ public:
         openCenterBtn_.setButtonText ("OPEN PLUGINS CENTER");
         openCenterBtn_.setColour (juce::TextButton::buttonColourId, accent_);
         openCenterBtn_.setColour (juce::TextButton::buttonOnColourId, accent_.brighter (0.15f));
-        openCenterBtn_.setColour (juce::TextButton::textColourOffId, juce::Colours::white);
+        openCenterBtn_.setColour (juce::TextButton::textColourOffId, juce::Colour (0xff0F1114));
         openCenterBtn_.onClick = [this] { launchPluginsCenter(); };
         addChildComponent (openCenterBtn_);
 
         // Close "X" button
         closeBtn_.setButtonText (juce::CharPointer_UTF8 ("\xc3\x97")); // multiplication sign ×
         closeBtn_.setColour (juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
-        closeBtn_.setColour (juce::TextButton::buttonOnColourId, juce::Colour (0xff2a2a50));
+        closeBtn_.setColour (juce::TextButton::buttonOnColourId, cardBg_);
         closeBtn_.setColour (juce::TextButton::textColourOffId, textSecondary_);
         closeBtn_.onClick = [this] { dismiss(); };
         addChildComponent (closeBtn_);
@@ -122,19 +128,19 @@ public:
         g.setColour (juce::Colours::black.withAlpha (alpha * 0.45f));
         g.fillRoundedRectangle (pf.translated (0.0f, 5.0f), 16.0f);
 
-        // Panel background gradient
+        // Panel background gradient (graphite: drawer -> ground)
         {
-            juce::ColourGradient grad (panelBgTop_.brighter (0.08f),
+            juce::ColourGradient grad (panelBgTop_,
                                         pf.getX(), pf.getY(),
                                         panelBg_,
                                         pf.getX(), pf.getBottom(), false);
             g.setGradientFill (grad);
-            g.fillRoundedRectangle (pf, 16.0f);
+            g.fillRoundedRectangle (pf, 14.0f);
         }
 
         // Border
-        g.setColour (accent_.withAlpha (alpha * 0.3f));
-        g.drawRoundedRectangle (pf, 16.0f, 1.0f);
+        g.setColour (borderCol_.withAlpha (alpha));
+        g.drawRoundedRectangle (pf, 14.0f, 1.0f);
 
         // Content
         auto content = panelBounds_.reduced (32, 28);
@@ -317,14 +323,16 @@ private:
 
     juce::Rectangle<int> panelBounds_;
 
-    // Brand colours
-    static inline const juce::Colour dimBg_          { 0xe6111114 };   // #111114 @ 0.9
-    static inline const juce::Colour panelBg_        { 0xff1a1a2e };
-    static inline const juce::Colour panelBgTop_     { 0xff141425 };
-    static inline const juce::Colour accent_         { 0xff7c3aed };
-    static inline const juce::Colour textPrimary_    { 0xffe8e8f0 };
-    static inline const juce::Colour textSecondary_  { 0xff7a7a92 };
-    static inline const juce::Colour textMuted_      { 0xff505068 };
+    // RONE graphite design language (see the bundle's shared tokens)
+    juce::Colour accent_;                                              // one neon per plugin
+    static inline const juce::Colour dimBg_          { 0xe60F1114 };   // graphite scrim
+    static inline const juce::Colour panelBg_        { 0xff14161A };   // --ground
+    static inline const juce::Colour panelBgTop_     { 0xff1B1E23 };   // --drawer
+    static inline const juce::Colour cardBg_         { 0xff101216 };   // --card
+    static inline const juce::Colour borderCol_      { 0xff2A2E35 };   // --line2
+    static inline const juce::Colour textPrimary_    { 0xffE8EAED };   // --text
+    static inline const juce::Colour textSecondary_  { 0xff7A7F88 };   // --dim
+    static inline const juce::Colour textMuted_      { 0xff4E535B };   // --faint
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RoneAboutOverlay)
 };

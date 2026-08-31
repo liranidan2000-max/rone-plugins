@@ -51,6 +51,10 @@ jobs:
               - 'RoneStutter'
               - 'Shared/**'
               - 'installer/RoneStutter.iss'
+            stucker:
+              - 'RoneStucker'
+              - 'Shared/**'
+              - 'installer/RoneStucker.iss'
             flanger:
               - 'rone-flanger-'
               - 'Shared/**'
@@ -81,11 +85,12 @@ jobs:
 
           # Change flags — tag push forces all
           if [ "$IS_TAG" = "true" ]; then
-            RR=true; SF=true; ST=true; FL=true; SV=true; PC=true; AN=true
+            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true
           else
             RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
             SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
             ST=${{ steps.filter.outputs.stutter         || 'false' }}
+            SK=${{ steps.filter.outputs.stucker         || 'false' }}
             FL=${{ steps.filter.outputs.flanger         || 'false' }}
             SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
             PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
@@ -118,6 +123,7 @@ jobs:
           add "$RR" reverse_reverb  ReverseReverbVST  ReverseReverb     ReverseReverb-latest      ReverseReverb             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    ReverseReverb.iss
           add "$SF" stems_fixer     RoneStemsFixer     RoneStemsFixer    RoneStemsFixer-latest      RoneStemsFixer             false  ""                                false    RoneStemsFixer.iss
           add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss
+          add "$SK" stucker         RoneStucker        RoneStucker       RoneStucker-latest         RoneStucker               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStucker.iss
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss
           add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss
           add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       true   JUCE_WEBVIEW2_PACKAGE_LOCATION   false    RONE_Plugins.iss
@@ -532,6 +538,7 @@ jobs:
               reverse_reverb) tag=ReverseReverb-latest;    title="ReverseReverb (Latest)" ;;
               stems_fixer)    tag=RoneStemsFixer-latest;    title="RONE Stems Fixer (Latest)" ;;
               stutter)        tag=RoneStutter-latest;       title="Rone Stutter (Latest)" ;;
+              stucker)        tag=RoneStucker-latest;       title="Rone Stucker (Latest)" ;;
               flanger)        tag=RoneFlanger-latest;       title="Rone Flanger (Latest)" ;;
               sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
               plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)" ;;
@@ -615,6 +622,7 @@ jobs:
               reverse_reverb) f=ReverseReverbVST ;;
               stems_fixer)    f=RoneStemsFixer ;;
               stutter)        f=RoneStutter ;;
+              stucker)        f=RoneStucker ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               plugins_center) f=RonePluginsCenter ;;
@@ -634,6 +642,7 @@ jobs:
               reverse_reverb) folder=ReverseReverbVST;  jid=ReverseReverb;  tag=ReverseReverb-latest;  inst=ReverseReverb ;;
               stems_fixer)    folder=RoneStemsFixer;     jid=RoneStemsFixer;  tag=RoneStemsFixer-latest;  inst=RoneStemsFixer ;;
               stutter)        folder=RoneStutter;        jid=RoneStutter;     tag=RoneStutter-latest;     inst=RoneStutter ;;
+              stucker)        folder=RoneStucker;        jid=RoneStucker;     tag=RoneStucker-latest;     inst=RoneStucker ;;
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
               sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
               plugins_center) folder=RonePluginsCenter;  jid=__center__;     tag=PluginsCenter-latest;   inst=RONE_Plugins_Center ;;
