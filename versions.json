@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-31T17:27:12Z",
+  "last_updated": "2026-08-31T17:31:21Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -134,7 +134,7 @@
     {
       "id": "RoneAfterspace",
       "name": "RONE AFTERSPACE",
-      "version": "0.1.0.0",
+      "version": "0.1.0.134",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -148,9 +148,9 @@
       "au_bundle": "RONE AFTERSPACE.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
-      "sha256": "",
+      "sha256": "5d458ec46b7d025ed968bc605520b340af4e9e5972ab5a8eb1d95cc383693994",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": ""
+      "sha256_mac": "063b738ff53248feff28f6eef4b3d3c5584dbfcb1823a746fad581a6147bac9d"
     },
     {
       "id": "RONEAnalyzer",
