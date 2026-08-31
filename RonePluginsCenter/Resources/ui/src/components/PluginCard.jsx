@@ -19,40 +19,6 @@ const STATUS_LED = {
   not_installed: 'led-off',
 }
 
-// Per-plugin neon tile glyphs (each product keeps its own locked neon color;
-// products without an assigned neon yet render in soft white)
-const SOFT = '#C9CDD3'
-const TILE_GLYPHS = {
-  ReverseReverb: {
-    color: '#2BD9FF',
-    paths: ['M19 19H5', 'M19 19V7c-6 1-10 6-13.5 12'],
-  },
-  RoneFlanger: {
-    color: '#FF3E6C',
-    paths: ['M4 18c2-8 4-9 6-5s4 3 6-2 3-5 4-5'],
-  },
-  RoneStucker: {
-    color: '#9D6BFF',
-    paths: ['M20 12a8 8 0 11-2.3-5.6', 'M18 3v3.5h-3.5'],
-  },
-  RoneStutter: {
-    color: '#FFD02B',
-    paths: ['M4 8v8', 'M8 5v14', 'M12 8v8', 'M16 5v14', 'M20 8v8'],
-  },
-  RoneSyncVerb: {
-    color: SOFT,
-    paths: ['M5 4v16', 'M11 9v11', 'M16 13v7', 'M20 16v4'],
-  },
-  RoneStemsFixer: {
-    color: SOFT,
-    paths: ['M4 8l8-4 8 4-8 4z', 'M4 13l8 4 8-4', 'M4 17l8 4 8-4'],
-  },
-  RONEAnalyzer: {
-    color: SOFT,
-    paths: ['M4 20v-6', 'M8.5 20V8', 'M13 20v-9', 'M17.5 20V4'],
-  },
-}
-
 // Primary action button config per status
 const ACTION = {
   not_installed:    { label: 'Install', kind: 'primary', icon: 'download' },
@@ -87,29 +53,31 @@ function downloadsLabel(id = '') {
 
 function Tile({ plugin }) {
   const [imgError, setImgError] = useState(false)
-  const glyph = TILE_GLYPHS[plugin.id]
+
+  // The icon file is the same one the plugin ships as its app icon, so the
+  // card tile and the plugin's own icon can never drift apart.
+  if (!imgError) {
+    return (
+      <img
+        src={plugin.logoUrl}
+        alt={plugin.name}
+        className="flex-shrink-0 w-[82px] h-[82px] rounded-[18px]"
+        style={{ boxShadow: '0 10px 22px rgba(0,0,0,0.45)' }}
+        onError={() => setImgError(true)}
+      />
+    )
+  }
 
   return (
-    <div className="flex-shrink-0 w-[82px] h-[82px] rounded-[10px] overflow-hidden relative
+    <div className="flex-shrink-0 w-[82px] h-[82px] rounded-[18px] overflow-hidden relative
                     border border-rone-border-2 flex items-center justify-center"
          style={{
            background: 'radial-gradient(circle at 38% 30%, #2A2E35, #1B1E23 55%, #14161A)',
            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 22px rgba(0,0,0,0.45)',
          }}>
-      {glyph ? (
-        <svg className="w-9 h-9" viewBox="0 0 24 24" fill="none"
-             style={{
-               stroke: glyph.color,
-               filter: glyph.color === SOFT ? 'none' : `drop-shadow(0 0 7px ${glyph.color}66)`,
-             }}
-             strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
-          {glyph.paths.map((d, i) => <path key={i} d={d} />)}
-        </svg>
-      ) : !imgError ? (
-        <img src={plugin.logoUrl} alt={plugin.name} className="relative w-12 h-12 object-contain" onError={() => setImgError(true)} />
-      ) : (
-        <span className="relative font-display text-lg font-bold text-white/85">{plugin.name.substring(0, 2).toUpperCase()}</span>
-      )}
+      <span className="font-display text-lg font-bold text-white/85">
+        {plugin.name.substring(0, 2).toUpperCase()}
+      </span>
     </div>
   )
 }
