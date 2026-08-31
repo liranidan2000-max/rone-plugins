@@ -96,11 +96,9 @@ juce_add_binary_data(PluginsCenterUI SOURCES
     Resources/ui/dist/styles.css
     Resources/ReverseReverb_icon.png
     Resources/RoneStutter_icon.png
-    Resources/RoneStemsFixer_icon.png
     Resources/RoneFlanger_icon.png
     Resources/RONEAnalyzer_icon.png
     Resources/RoneStucker_icon.png
-    Resources/RoneSyncVerb_icon.png
     Resources/RoneAfterspace_icon.png
     Resources/AppIcon.png
 )

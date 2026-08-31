@@ -137,15 +137,6 @@ export const mockPlugins = [
     hasStandalone: true, standaloneInstalled: false,
   },
   {
-    id: 'RoneStemsFixer', name: 'RONE Stems Fixer',
-    description: 'Audio stem analysis and repair tool',
-    remoteVersion: '1.0.0', installedVersion: '',
-    status: 'not_installed', downloadProgress: 0,
-    formats: ['Standalone'], type: 'standalone',
-    whatsNew: 'Initial release', logoUrl: '/logos/RoneStemsFixer.png',
-    hasStandalone: true, standaloneInstalled: false,
-  },
-  {
     id: 'RoneFlanger', name: 'Rone Flanger',
     description: 'Manual flanger with custom visualizer',
     remoteVersion: '1.0.0', installedVersion: '1.0.0',

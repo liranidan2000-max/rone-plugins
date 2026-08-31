@@ -39,11 +39,9 @@ MainComponent::getResource (const juce::String& url)
         { "styles.css",              { BinaryData::styles_css,             BinaryData::styles_cssSize } },
         { "logos/ReverseReverb.png",  { BinaryData::ReverseReverb_icon_png, BinaryData::ReverseReverb_icon_pngSize } },
         { "logos/RoneStutter.png",    { BinaryData::RoneStutter_icon_png,   BinaryData::RoneStutter_icon_pngSize } },
-        { "logos/RoneStemsFixer.png",  { BinaryData::RoneStemsFixer_icon_png, BinaryData::RoneStemsFixer_icon_pngSize } },
         { "logos/RoneFlanger.png",    { BinaryData::RoneFlanger_icon_png,   BinaryData::RoneFlanger_icon_pngSize } },
         { "logos/RONEAnalyzer.png",   { BinaryData::RONEAnalyzer_icon_png,  BinaryData::RONEAnalyzer_icon_pngSize } },
         { "logos/RoneStucker.png",    { BinaryData::RoneStucker_icon_png,   BinaryData::RoneStucker_icon_pngSize } },
-        { "logos/RoneSyncVerb.png",   { BinaryData::RoneSyncVerb_icon_png,  BinaryData::RoneSyncVerb_icon_pngSize } },
         { "logos/RoneAfterspace.png", { BinaryData::RoneAfterspace_icon_png, BinaryData::RoneAfterspace_icon_pngSize } },
     };
 

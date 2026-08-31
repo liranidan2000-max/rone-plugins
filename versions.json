@@ -30,25 +30,6 @@
       "sha256_mac": "e008f55d7088865cc329aa1230d7bac8c4197329c31da2fdd807cd4f67bb829f"
     },
     {
-      "id": "RoneStemsFixer",
-      "name": "RONE Stems",
-      "version": "1.1.0.120",
-      "type": "standalone",
-      "formats": [
-        "Standalone"
-      ],
-      "description": "Drop in a folder of stems and it listens: identifies kick, bass, vocals, drums, atmos and FX, then renames the whole batch into a clean, consistent session",
-      "whats_new": "v1.1.0: rebuilt classifier (filename+audio fusion, per-band rhythm analysis) and a full UI redesign",
-      "standalone_exe": "RONE Stems.exe",
-      "vst3_bundle": "",
-      "au_bundle": "",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.pkg",
-      "sha256": "ab9e7e494d7e5b5dc5fca04536aa5d641b6f233667af591ded221ab56ebc3ce9",
-      "registry_key": "RoneStemsFixer",
-      "sha256_mac": "6ac2bb2f56668e012d918c2e66ae42afac8b6624f27b5fa6297f595934c72196"
-    },
-    {
       "id": "RoneStutter",
       "name": "Rone Stutter",
       "version": "1.0.0.132",
@@ -109,27 +90,6 @@
       "sha256": "66816c29ac3d1916711037224f07918bdea59fa45d8072da758e8fe5c5c80c09",
       "registry_key": "RoneFlanger",
       "sha256_mac": "b8b229ba44f782121f9e5b9343033ad1404276cdcf4a9c4a9c61ac71b3b9854f"
-    },
-    {
-      "id": "RoneSyncVerb",
-      "name": "Rone Sync Verb",
-      "version": "1.0.0.120",
-      "type": "plugin",
-      "formats": [
-        "VST3",
-        "AU",
-        "Standalone"
-      ],
-      "description": "Reverb that lives on the grid - tail lengths in note values that cut exactly on time, with built-in ducking so the space never swallows the mix",
-      "whats_new": "First public release",
-      "standalone_exe": "Rone Sync Verb.exe",
-      "vst3_bundle": "Rone Sync Verb.vst3",
-      "au_bundle": "Rone Sync Verb.component",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.pkg",
-      "sha256": "6f863c7cc7b7a4e3683f3d51d4e84aacebf6e954c43bd8032cda9eb56e096a45",
-      "registry_key": "RoneSyncVerb",
-      "sha256_mac": "9857e8ca924f519d6c2c4c3b97e0a0ab51573bacd464a4efe076c74c513ca4a3"
     },
     {
       "id": "RoneAfterspace",
