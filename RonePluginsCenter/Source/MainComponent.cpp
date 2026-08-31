@@ -43,7 +43,6 @@ MainComponent::getResource (const juce::String& url)
         { "logos/RONEAnalyzer.png",   { BinaryData::RONEAnalyzer_icon_png,  BinaryData::RONEAnalyzer_icon_pngSize } },
         { "logos/RoneStucker.png",    { BinaryData::RoneStucker_icon_png,   BinaryData::RoneStucker_icon_pngSize } },
         { "logos/RoneAfterspace.png", { BinaryData::RoneAfterspace_icon_png, BinaryData::RoneAfterspace_icon_pngSize } },
-        { "logos/RoneAfterspace.png", { BinaryData::RoneAfterspace_icon_png, BinaryData::RoneAfterspace_icon_pngSize } },
     };
 
     auto it = resources.find (path);
@@ -114,9 +113,14 @@ MainComponent::MainComponent()
         })
 
         // ---- Resource provider ----
+        // The localhost origin is a dev-server convenience only; release builds
+        // must not extend the native bridge to anything that can bind that port.
         .withResourceProvider (
-            [this] (const auto& url) { return getResource (url); },
-            juce::URL { "http://localhost:3000/" }.getOrigin()))
+            [this] (const auto& url) { return getResource (url); }
+           #if JUCE_DEBUG
+            , juce::URL { "http://localhost:3000/" }.getOrigin()
+           #endif
+            ))
 {
     addAndMakeVisible (webView);
 
@@ -327,10 +331,9 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
                     p.downloadProgress = 0.0;
 
                 #if JUCE_MAC
-                    // The manifest's `sha256` field holds the Windows .exe hash, not
-                    // the macOS .pkg hash. Skip verification on Mac until the manifest
-                    // exposes a separate `sha256_mac` field.
-                    networkManager.downloadInstaller (pluginId, p.downloadUrlMac, juce::String());
+                    // `sha256_mac` carries the .pkg hash (empty only for a
+                    // platform that wasn't rebuilt this run = "not verified").
+                    networkManager.downloadInstaller (pluginId, p.downloadUrlMac, p.sha256Mac);
                 #else
                     networkManager.downloadInstaller (pluginId, p.downloadUrl, p.sha256);
                 #endif
@@ -587,6 +590,12 @@ void MainComponent::checkForCenterUpdate()
 
 void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion complete)
 {
+#if ! JUCE_WINDOWS
+    // Self-update is Windows-only for now; the manifest's center url/sha256
+    // point at the Windows installer, so don't download it elsewhere.
+    complete ("{\"started\":false,\"error\":\"Center self-update is Windows-only for now\"}");
+    return;
+#else
     const auto info = networkManager.getCenterInstallerInfo();
 
     if (! info.isValid())
@@ -598,6 +607,7 @@ void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion comple
     emitStatusMessage ("Downloading Center update v" + info.version + "...", "info");
     networkManager.downloadInstaller ("__center__", info.url, info.sha256);
     complete ("{\"started\":true}");
+#endif
 }
 
 void MainComponent::applyCenterUpdate (const juce::File& installerFile)

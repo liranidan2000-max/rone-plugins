@@ -28,6 +28,7 @@ struct PluginInfo
     juce::String downloadUrl;
     juce::String downloadUrlMac;      // .pkg URL for macOS
     juce::String sha256;
+    juce::String sha256Mac;           // hash of the macOS .pkg (may be empty)
     juce::String standaloneExe;
     juce::String vst3Bundle;
     juce::String auBundle;            // e.g. "ReverseReverb.component"

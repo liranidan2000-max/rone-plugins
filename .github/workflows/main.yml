@@ -570,14 +570,20 @@ jobs:
               continue
             fi
 
-            # Delete old release + recreate with fresh files
-            gh release delete "$tag" -y --cleanup-tag -R "$REPO" 2>/dev/null || true
-            sleep 2
-            gh release create "$tag" "${files[@]}" \
-              --title "$title" \
-              --notes "Build #${{ github.run_number }} · $(date -u +%Y-%m-%d)" \
-              --latest=false \
-              -R "$REPO"
+            # Replace assets in-place. The old delete+recreate wiped the OTHER
+            # platform's installer on [win-only]/[mac-only] builds, leaving the
+            # manifest pointing at dead download links.
+            NOTES="Build #${{ github.run_number }} · $(date -u +%Y-%m-%d)"
+            if gh release view "$tag" -R "$REPO" >/dev/null 2>&1; then
+              gh release upload "$tag" "${files[@]}" --clobber -R "$REPO"
+              gh release edit "$tag" --title "$title" --notes "$NOTES" -R "$REPO"
+            else
+              gh release create "$tag" "${files[@]}" \
+                --title "$title" \
+                --notes "$NOTES" \
+                --latest=false \
+                -R "$REPO"
+            fi
 
             echo "✓ $tag — ${#files[@]} file(s)"
           done
@@ -681,28 +687,41 @@ jobs:
             [ -n "$mac_file" ] && sha_mac=$(sha256sum "$mac_file" | awk '{print $1}')
             echo "  $jid: sha_win=${sha_win:0:12}... sha_mac=${sha_mac:0:12}..."
 
+            # Only touch a platform's url+sha when that platform was actually
+            # built this run — a [win-only]/[mac-only] build must never
+            # overwrite the other platform's still-valid hash with "".
             if [ "$jid" = "__center__" ]; then
-              jq --arg v "$ver" \
-                 --arg u   "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
-                 --arg um  "https://github.com/$REPO/releases/download/$tag/${inst}.dmg" \
-                 --arg sw  "$sha_win" \
-                 '.center_installer.version = $v
-                  | .center_installer.url      = $u
-                  | .center_installer.url_mac  = $um
-                  | .center_installer.sha256   = $sw' \
+              jq --arg v "$ver" '.center_installer.version = $v' \
                  versions.json > tmp && mv tmp versions.json
+              if [ -n "$sha_win" ]; then
+                jq --arg u  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
+                   --arg um "https://github.com/$REPO/releases/download/$tag/${inst}.dmg" \
+                   --arg sw "$sha_win" \
+                   '.center_installer.url      = $u
+                    | .center_installer.url_mac  = $um
+                    | .center_installer.sha256   = $sw' \
+                   versions.json > tmp && mv tmp versions.json
+              fi
             else
               jq --arg id "$jid" --arg v "$ver" \
-                 --arg u   "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
-                 --arg um  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.pkg" \
-                 --arg sw  "$sha_win" \
-                 --arg sm  "$sha_mac" \
-                 '(.plugins[]|select(.id==$id)).version          = $v
-                  | (.plugins[]|select(.id==$id)).download_url     = $u
-                  | (.plugins[]|select(.id==$id)).download_url_mac = $um
-                  | (.plugins[]|select(.id==$id)).sha256           = $sw
-                  | (.plugins[]|select(.id==$id)).sha256_mac       = $sm' \
+                 '(.plugins[]|select(.id==$id)).version = $v' \
                  versions.json > tmp && mv tmp versions.json
+              if [ -n "$sha_win" ]; then
+                jq --arg id "$jid" \
+                   --arg u  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
+                   --arg sw "$sha_win" \
+                   '(.plugins[]|select(.id==$id)).download_url = $u
+                    | (.plugins[]|select(.id==$id)).sha256       = $sw' \
+                   versions.json > tmp && mv tmp versions.json
+              fi
+              if [ -n "$sha_mac" ]; then
+                jq --arg id "$jid" \
+                   --arg um "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.pkg" \
+                   --arg sm "$sha_mac" \
+                   '(.plugins[]|select(.id==$id)).download_url_mac = $um
+                    | (.plugins[]|select(.id==$id)).sha256_mac       = $sm' \
+                   versions.json > tmp && mv tmp versions.json
+              fi
             fi
           done
 

@@ -166,10 +166,13 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
                        .getChildFile ("RONE_Downloads");
     tempDir.createDirectory();
 
+    // pluginId comes from the remote manifest — never let it shape a path
+    const auto safeId = juce::File::createLegalFileName (job.pluginId);
+
 #if JUCE_MAC
-    auto tempFile = tempDir.getChildFile (job.pluginId + "_Installer.pkg");
+    auto tempFile = tempDir.getChildFile (safeId + "_Installer.pkg");
 #else
-    auto tempFile = tempDir.getChildFile (job.pluginId + "_Installer.exe");
+    auto tempFile = tempDir.getChildFile (safeId + "_Installer.exe");
 #endif
             if (tempFile.existsAsFile())
                 tempFile.deleteFile();
@@ -417,6 +420,7 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.downloadUrl    = entry.getProperty ("download_url",     {}).toString();
         info.downloadUrlMac = entry.getProperty ("download_url_mac", {}).toString();
         info.sha256         = entry.getProperty ("sha256",           {}).toString();
+        info.sha256Mac      = entry.getProperty ("sha256_mac",       {}).toString();
         info.standaloneExe  = entry.getProperty ("standalone_exe",   {}).toString();
         info.vst3Bundle     = entry.getProperty ("vst3_bundle",      {}).toString();
         info.auBundle       = entry.getProperty ("au_bundle",        {}).toString();

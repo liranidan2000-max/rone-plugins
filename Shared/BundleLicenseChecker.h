@@ -52,23 +52,23 @@ public:
 
         DBG ("BundleLicenseChecker: file EXISTS, size = " + juce::String (file.getSize()) + " bytes");
 
-        // Read raw content for debug
-        auto rawContent = file.loadFileAsString();
-        DBG ("BundleLicenseChecker: raw content = " + rawContent.substring (0, 500));
-
         auto xml = juce::parseXML (file);
         if (xml == nullptr)
         {
-            DBG ("BundleLicenseChecker: XML parse returned nullptr — treating existing file as LICENSED (fallback)");
-            return true;  // Fallback: don't block user if file exists but can't parse
+            // Fail closed: an unparseable file is not proof of a license. A
+            // corrupted file self-heals on the next Center validation, which
+            // rewrites it; treating garbage as LICENSED means any hand-made
+            // file unlocks the bundle.
+            DBG ("BundleLicenseChecker: XML parse returned nullptr — NOT licensed");
+            return false;
         }
 
         DBG ("BundleLicenseChecker: XML tag = " + xml->getTagName());
 
         if (xml->getTagName() != "RoneBundleLicense")
         {
-            DBG ("BundleLicenseChecker: unexpected tag name, but file exists — treating as LICENSED (fallback)");
-            return true;  // Fallback: don't block user
+            DBG ("BundleLicenseChecker: unexpected tag name — NOT licensed");
+            return false;
         }
 
         // Check licensed attribute — accept "1", "true", "yes"
