@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-31T15:25:20Z",
+  "last_updated": "2026-08-31T15:50:47Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.1.0.127",
-    "sha256": "f87ffc4af8f0c3089dac77e2ea176b3c086070b7b617278061add4c299683041"
+    "version": "1.1.1.129",
+    "sha256": "c9e4f7e95217d780e9e597338db21124b4c1b4cfc7fe82291ab69cedd0e69e88"
   },
   "plugins": [
     {
