@@ -59,6 +59,26 @@ private:
     // (e.g. private repo 404, no internet, JSON parse failure).
     juce::Array<PluginInfo> getFallbackManifest();
 
+    // ---- Center self-update ------------------------------------------------
+public:
+    struct CenterInstallerInfo
+    {
+        juce::String version, url, sha256;
+        bool isValid() const { return version.isNotEmpty() && url.isNotEmpty(); }
+    };
+
+    // Snapshot of the manifest's center_installer block, captured by the last
+    // successful fetch (empty until then). Safe to call from the message thread.
+    CenterInstallerInfo getCenterInstallerInfo() const
+    {
+        const juce::ScopedLock sl (centerInfoLock);
+        return centerInfo;
+    }
+
+private:
+    mutable juce::CriticalSection centerInfoLock;
+    CenterInstallerInfo           centerInfo;
+
     // ---- State -------------------------------------------------------------
     enum Task { None, FetchManifest, DownloadFile };
 

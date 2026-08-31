@@ -22,6 +22,29 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
   const [activeNav, setActiveNav] = useState('home')
+  const [centerUpdate, setCenterUpdate] = useState(null)   // version string, or null
+
+  // ---- Center self-update ----
+  // Auto-applies once per version: download -> verify -> silent install ->
+  // relaunch (one UAC prompt). If that attempt didn't stick (UAC declined,
+  // download failed), the banner stays and updating becomes a manual click -
+  // never an every-launch UAC loop.
+  const centerUpdateSeen = useRef(null)
+  const addToastRef = useRef(null)
+  const onCenterUpdate = useCallback((version) => {
+    if (!version || centerUpdateSeen.current === version) return
+    centerUpdateSeen.current = version
+    setCenterUpdate(version)
+
+    const triedKey = 'centerAutoTried:' + version
+    let alreadyTried = false
+    try { alreadyTried = localStorage.getItem(triedKey) === '1' } catch {}
+    if (alreadyTried) return
+
+    try { localStorage.setItem(triedKey, '1') } catch {}
+    addToastRef.current?.(`Center v${version} is available - updating…`, 'info')
+    setTimeout(() => api.applyCenterUpdate(), 2200)
+  }, [])
 
   // ---- Unlock animation orchestration ----
   const [unlockPlaying, setUnlockPlaying] = useState(false)
@@ -40,6 +63,7 @@ export default function App() {
     setToasts(prev => [...prev, { id, text, type }])
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000)
   }, [])
+  addToastRef.current = addToast
   const removeToast = useCallback((id) => setToasts(prev => prev.filter(t => t.id !== id)), [])
 
   // ---- Load initial data ----
@@ -54,6 +78,7 @@ export default function App() {
       if (licStatus) setLicense(licStatus)
       const result = await api.getPlugins()
       if (result?.plugins) { setPlugins(result.plugins); setLastSync(new Date()) }
+      if (result?.centerUpdate?.version) onCenterUpdate(result.centerUpdate.version)
       setLoading(false)
     }
     init()
@@ -81,6 +106,7 @@ export default function App() {
       if (data?.success) setLicense({ licensed: false, customerName: '', licenseKey: '', message: data.message || '' })
     })
     onEvent('statusMessage', (data) => { if (data?.text) addToast(data.text, data.type || 'info') })
+    onEvent('centerUpdateAvailable', (data) => { if (data?.version) onCenterUpdate(data.version) })
   }, [addToast])
 
   // ---- Actions ----
@@ -172,6 +198,23 @@ export default function App() {
             style={{ background: 'linear-gradient(90deg, transparent, rgba(157,107,255,0.14), rgba(157,107,255,0.08), transparent)', width: '100%' }} />
         )}
       </AnimatePresence>
+
+      {/* Center self-update strip (kept when the auto attempt didn't stick) */}
+      {centerUpdate && (
+        <div className="flex-shrink-0 flex items-center gap-3 px-6 py-2 bg-rone-purple/[0.07] border-b border-rone-purple/25">
+          <span className="w-[7px] h-[7px] rounded-full led-upd status-dot-pulse" />
+          <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-rone-text-secondary">
+            Center v{centerUpdate} is ready
+          </span>
+          <div className="flex-1" />
+          <button
+            onClick={() => api.applyCenterUpdate()}
+            className="btn-gradient px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-[0.18em]"
+          >
+            Restart &amp; Update
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 min-h-0 flex">
 

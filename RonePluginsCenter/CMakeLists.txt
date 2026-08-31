@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RonePluginsCenter VERSION 1.1.2 LANGUAGES C CXX)
+project(RonePluginsCenter VERSION 1.2.0 LANGUAGES C CXX)
 
 if(APPLE)
     enable_language(OBJC)
@@ -50,7 +50,7 @@ FetchContent_MakeAvailable(JUCE)
 juce_add_gui_app(RonePluginsCenter
     PRODUCT_NAME  "RONE Plugins Center"
     COMPANY_NAME  "RONE Plugins"
-    VERSION       "1.1.2"
+    VERSION       "1.2.0"
     ICON_BIG      "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
     ICON_SMALL    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
 )
@@ -98,7 +98,6 @@ juce_add_binary_data(PluginsCenterUI SOURCES
     Resources/RoneStutter_icon.png
     Resources/RoneFlanger_icon.png
     Resources/RONEAnalyzer_icon.png
-    Resources/RoneAfterspace_icon.png
     Resources/RoneStucker_icon.png
     Resources/RoneAfterspace_icon.png
     Resources/AppIcon.png

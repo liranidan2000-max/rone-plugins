@@ -104,6 +104,9 @@ MainComponent::MainComponent()
         .withNativeFunction ("getAppVersion", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAppVersion (args, std::move (complete));
         })
+        .withNativeFunction ("applyCenterUpdate", [this] (NativeArgs args, NativeCompletion complete) {
+            handleApplyCenterUpdate (args, std::move (complete));
+        })
         .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
             if (args.size() > 0)
                 juce::URL (args[0].toString()).launchInDefaultBrowser();
@@ -270,9 +273,26 @@ void MainComponent::emitStatusMessage (const juce::String& text, const juce::Str
 // Native function handlers
 // ============================================================================
 
+static juce::String pendingCenterUpdateVersion (const NetworkManager::CenterInstallerInfo& info);
+
 void MainComponent::handleGetPlugins (NativeArgs, NativeCompletion complete)
 {
     auto result = allPluginsToVar();
+
+    // Ride the update flag along with the catalog: at startup the UI pulls
+    // this before any events can reach it, so a pending Center update must be
+    // in the pulled payload too.
+    const auto centerVersion = pendingCenterUpdateVersion (networkManager.getCenterInstallerInfo());
+    if (centerVersion.isNotEmpty())
+    {
+        if (auto* obj = result.getDynamicObject())
+        {
+            auto* upd = new juce::DynamicObject();
+            upd->setProperty ("version", centerVersion);
+            obj->setProperty ("centerUpdate", juce::var (upd));
+        }
+    }
+
     complete (juce::JSON::toString (result));
 }
 
@@ -519,6 +539,105 @@ bool MainComponent::beginNativeWindowDrag()
 }
 
 // ============================================================================
+// Center self-update — the Center treats itself like any catalog product:
+// compare the version its installer stamped against center_installer in the
+// manifest, download + SHA256-verify through the same pipeline as plugins,
+// then hand the swap to a detached script (an exe cannot replace itself).
+// ============================================================================
+
+juce::String MainComponent::readInstalledCenterVersion()
+{
+#if JUCE_WINDOWS
+    return juce::WindowsRegistry::getValue (
+        "HKEY_CURRENT_USER\\Software\\RONE\\Plugins\\__center__\\InstalledVersion", {});
+#else
+    return {};
+#endif
+}
+
+// Empty string = up to date (or unknowable); otherwise the catalog version.
+static juce::String pendingCenterUpdateVersion (const NetworkManager::CenterInstallerInfo& info)
+{
+    if (! info.isValid())
+        return {};
+
+    const auto installed = MainComponent::readInstalledCenterVersion();
+
+    if (installed.isNotEmpty())
+        return installed == info.version ? juce::String() : info.version;   // catalog is truth
+
+    // Installs older than this feature never stamped their version; only the
+    // CMake base is known. A base change (which any release carrying this
+    // feature makes) is detectable - same-base rebuilds are not.
+    const juce::String base (JUCE_APPLICATION_VERSION_STRING);
+    const bool sameBase = info.version == base || info.version.startsWith (base + ".");
+    return sameBase ? juce::String() : info.version;
+}
+
+void MainComponent::checkForCenterUpdate()
+{
+    const auto version = pendingCenterUpdateVersion (networkManager.getCenterInstallerInfo());
+    if (version.isEmpty())
+        return;
+
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("version", version);
+    webView.emitEventIfBrowserIsVisible ("centerUpdateAvailable", juce::var (obj));
+}
+
+void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion complete)
+{
+    const auto info = networkManager.getCenterInstallerInfo();
+
+    if (! info.isValid())
+    {
+        complete ("{\"started\":false,\"error\":\"No update information yet - refresh first\"}");
+        return;
+    }
+
+    emitStatusMessage ("Downloading Center update v" + info.version + "...", "info");
+    networkManager.downloadInstaller ("__center__", info.url, info.sha256);
+    complete ("{\"started\":true}");
+}
+
+void MainComponent::applyCenterUpdate (const juce::File& installerFile)
+{
+#if JUCE_WINDOWS
+    const auto exePath = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+                             .getFullPathName();
+
+    // The script outlives this process: waits for our exit, runs the installer
+    // elevated (one UAC prompt), then relaunches the exe - the old build if the
+    // user declined UAC, the new one after a successful swap.
+    juce::String script;
+    script << "Wait-Process -Id " << (int) GetCurrentProcessId() << " -ErrorAction SilentlyContinue; "
+           << "try { Start-Process -FilePath '" << installerFile.getFullPathName().replace ("'", "''")
+           << "' -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Verb RunAs -Wait } catch { }; "
+           << "Start-Process -FilePath '" << exePath.replace ("'", "''") << "'";
+
+    juce::ChildProcess updater;
+    const juce::StringArray cmd { "powershell.exe", "-NoProfile", "-WindowStyle", "Hidden",
+                                  "-ExecutionPolicy", "Bypass", "-Command", script };
+
+    if (updater.start (cmd, 0))   // 0 = capture nothing; fully detached
+    {
+        emitStatusMessage ("Restarting to finish the Center update...", "info");
+        juce::Timer::callAfterDelay (600, []
+        {
+            juce::JUCEApplication::getInstance()->systemRequestedQuit();
+        });
+    }
+    else
+    {
+        emitStatusMessage ("Could not start the Center updater.", "error");
+    }
+#else
+    juce::ignoreUnused (installerFile);
+    emitStatusMessage ("Center self-update is Windows-only for now.", "info");
+#endif
+}
+
+// ============================================================================
 // NetworkManager callbacks → push to JS
 // ============================================================================
 
@@ -536,6 +655,7 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
     }
 
     emitPluginsUpdated();
+    checkForCenterUpdate();
 
     int updates = 0;
     {
@@ -582,6 +702,17 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
                                          bool success,
                                          const juce::String& errorMessage)
 {
+    if (pluginId == "__center__")
+    {
+        if (success)
+            applyCenterUpdate (localFile);
+        else
+            emitStatusMessage (errorMessage.isNotEmpty() ? errorMessage
+                                                         : juce::String ("Center update download failed."),
+                               "error");
+        return;
+    }
+
     if (success)
     {
         launchSilentInstaller (localFile, pluginId);

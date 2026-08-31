@@ -107,6 +107,16 @@ void NetworkManager::run()
 
             auto plugins = parseManifest (body);
 
+            // Capture the manifest's own-update block for the Center
+            {
+                auto root = juce::JSON::parse (body);
+                auto ci   = root.getProperty ("center_installer", {});
+                const juce::ScopedLock sl (centerInfoLock);
+                centerInfo.version = ci.getProperty ("version", {}).toString();
+                centerInfo.url     = ci.getProperty ("url",     {}).toString();
+                centerInfo.sha256  = ci.getProperty ("sha256",  {}).toString();
+            }
+
             // If remote JSON was unparseable (e.g. 404 HTML from private repo),
             // fall back to a hardcoded catalog so the UI always shows plugins.
             if (plugins.isEmpty())

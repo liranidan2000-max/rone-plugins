@@ -55,6 +55,18 @@ private:
     // ---- Window controls ----
     bool beginNativeWindowDrag();
 
+    // ---- Center self-update ----
+public:
+    // Reads the version the installer stamped for the Center itself; empty on
+    // installs older than the self-update feature. Public: the version-compare
+    // helper lives at file scope in the .cpp.
+    static juce::String readInstalledCenterVersion();
+
+private:
+    void checkForCenterUpdate();                       // call after each manifest fetch
+    void handleApplyCenterUpdate (NativeArgs args, NativeCompletion complete);
+    void applyCenterUpdate (const juce::File& installerFile);
+
     // ---- Backend logic (carried over) ----
     void launchSilentInstaller (const juce::File& installer,
                                  const juce::String& pluginId);

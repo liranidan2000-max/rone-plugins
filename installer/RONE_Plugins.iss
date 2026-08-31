@@ -81,6 +81,9 @@ Name: "{commondesktop}\RONE Plugins Center"; Filename: "{app}\RONE Plugins Cente
 ; ============================================================================
 [Registry]
 Root: HKCU; Subkey: "Software\RONE\Plugins"; Flags: uninsdeletekeyifempty
+; The Center's own installed version - read back by the app so it can offer
+; (and apply) its own updates exactly like it does for plugins.
+Root: HKCU; Subkey: "Software\RONE\Plugins\__center__"; ValueType: string;   ValueName: "InstalledVersion"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
 
 ; ============================================================================
 ; Post-install: install WebView2 Runtime (if needed), then launch the Center

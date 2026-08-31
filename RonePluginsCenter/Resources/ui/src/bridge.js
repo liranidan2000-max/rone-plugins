@@ -110,6 +110,7 @@ export const api = {
   deactivateLicense: createNativeFunction('deactivateLicense'),
   getLicenseStatus:  createNativeFunction('getLicenseStatus'),
   getAppVersion:     createNativeFunction('getAppVersion'),
+  applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
 };
 
 // ---- Dev mode mock data (when running outside JUCE) ----
