@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { api, isDevMode } from '../bridge'
+import BackPanel from './BackPanel'
 
 function Toggle({ on, onChange }) {
   return (
@@ -29,6 +30,7 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
   const [autoCheck, setAutoCheck] = useState(true)
   const [notify, setNotify] = useState(true)
   const [beta, setBeta] = useState(false)
+  const [showBackPanel, setShowBackPanel] = useState(false)
 
   // Real app version, straight from the running binary
   const [version, setVersion] = useState('')
@@ -63,14 +65,28 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
         </Row>
       </div>
 
-      <div className="pro-card rounded-2xl p-5 mt-4">
-        <p className="text-[13px] font-semibold text-rone-text-primary">About</p>
+      <div
+        className="pro-card rounded-2xl p-5 mt-4 cursor-pointer transition-colors hover:border-rone-purple/40 group"
+        onClick={() => setShowBackPanel(true)}
+        role="button"
+        title="About — flip the unit around"
+      >
+        <div className="flex items-center justify-between">
+          <p className="text-[13px] font-semibold text-rone-text-primary">About</p>
+          <span className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-rone-text-dim group-hover:text-rone-text-secondary transition-colors">
+            View back panel &rarr;
+          </span>
+        </div>
         <div className="mt-3 space-y-2 text-[12px]">
           <div className="flex justify-between"><span className="text-rone-text-dim">Application</span><span className="text-rone-text-secondary">RONE Plugins Center</span></div>
           <div className="flex justify-between"><span className="text-rone-text-dim">Version</span><span className="text-rone-text-secondary tabular-nums">{version || '—'}</span></div>
           <div className="flex justify-between"><span className="text-rone-text-dim">Last synced</span><span className="text-rone-text-secondary">{lastSync ? lastSync.toLocaleString() : '—'}</span></div>
         </div>
       </div>
+
+      {showBackPanel && (
+        <BackPanel version={version} onClose={() => setShowBackPanel(false)} />
+      )}
     </motion.div>
   )
 }

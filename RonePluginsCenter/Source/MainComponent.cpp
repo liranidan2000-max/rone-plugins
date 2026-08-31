@@ -104,6 +104,11 @@ MainComponent::MainComponent()
         .withNativeFunction ("getAppVersion", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAppVersion (args, std::move (complete));
         })
+        .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
+            if (args.size() > 0)
+                juce::URL (args[0].toString()).launchInDefaultBrowser();
+            complete (juce::var ("ok"));
+        })
 
         // ---- Resource provider ----
         .withResourceProvider (
