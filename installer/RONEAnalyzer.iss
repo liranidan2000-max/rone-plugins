@@ -36,7 +36,7 @@ RestartApplications=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 ; ============================================================================
-; Files — the standalone analyser plus its VST3 companion. RONE Bridge sits
+; Files — the standalone analyser plus its VST3 companion. The bridge sits
 ; on the DAW's master bus: it taps the master for the analyser to measure
 ; and renders band solo / mono inside the DAW's own signal path.
 ; ============================================================================
@@ -45,8 +45,8 @@ Source: "..\RONEAnalyzer\build-ci\RONEAnalyzer_artefacts\Release\RONE Analyzer.e
   DestDir: "{app}"; \
   Flags: ignoreversion
 
-Source: "..\RONEAnalyzer\build-ci\RONEBridge_artefacts\Release\VST3\RONE Bridge.vst3\*"; \
-  DestDir: "{commoncf64}\VST3\RONE Bridge.vst3"; \
+Source: "..\RONEAnalyzer\build-ci\RONEBridge_artefacts\Release\VST3\RONE Analyzer Bridge.vst3\*"; \
+  DestDir: "{commoncf64}\VST3\RONE Analyzer Bridge.vst3"; \
   Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; The licence and the third-party notices travel with the binary. The JUCE
@@ -73,3 +73,11 @@ Name: "{commonprograms}\RONE Analyzer"; Filename: "{app}\RONE Analyzer.exe"
 [Registry]
 Root: HKCU; Subkey: "Software\RONE\Plugins\RONEAnalyzer"; ValueType: string; \
   ValueName: "InstalledVersion"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
+
+; ============================================================================
+; The bridge was called "RONE Bridge" before this build. Left behind, a DAW
+; rescan lists the plugin twice - one plugin code, two names - and half the
+; time the user loads the stale copy.
+; ============================================================================
+[InstallDelete]
+Type: filesandordirs; Name: "{commoncf64}\VST3\RONE Bridge.vst3"
