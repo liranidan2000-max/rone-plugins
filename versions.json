@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-31T17:31:21Z",
+  "last_updated": "2026-08-31T17:46:52Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.1.2.130",
-    "sha256": "f9846237857b309c6f5e037f615ea701e6dca3bd22069241ea9b92efb2eaf2f7"
+    "version": "1.1.2.135",
+    "sha256": "01413841d14d3c6d18367238853702ac5b159272ec0eedf583c7e4cc658f400a"
   },
   "plugins": [
     {
@@ -72,7 +72,7 @@
     {
       "id": "RoneStucker",
       "name": "Rone Stucker",
-      "version": "1.0.0.120",
+      "version": "1.0.0.135",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -86,9 +86,9 @@
       "au_bundle": "Rone Stucker.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "2d4783d5dbc5f5959c55294e1075e2a1c8ced22f39eceef8654bcf9d874f6466",
+      "sha256": "67df752d873c99ef286a5dca26688a8621496e6d82912cd27f1d86492777a913",
       "registry_key": "RoneStucker",
-      "sha256_mac": "78163088982f14355d02a3ac4e441627fe18889060fa165faa6b4c5ba60aeb78"
+      "sha256_mac": "62b934baf1afc43355d32ba16c5a5df3c5c57cb3d7aff34e725875dfe7a7e1a3"
     },
     {
       "id": "RoneFlanger",
@@ -134,7 +134,7 @@
     {
       "id": "RoneAfterspace",
       "name": "RONE AFTERSPACE",
-      "version": "0.1.0.134",
+      "version": "0.1.0.135",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -148,9 +148,9 @@
       "au_bundle": "RONE AFTERSPACE.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
-      "sha256": "5d458ec46b7d025ed968bc605520b340af4e9e5972ab5a8eb1d95cc383693994",
+      "sha256": "2bb60f4816729dac716c9b180013aafde752623b33824fabb80ef2dd47a0ab44",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "063b738ff53248feff28f6eef4b3d3c5584dbfcb1823a746fad581a6147bac9d"
+      "sha256_mac": "fd4645036b6c0c7ef6ec0693ec522e0973d4e5d6c463b3fa80446e45ad583c84"
     },
     {
       "id": "RONEAnalyzer",
