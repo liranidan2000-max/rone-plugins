@@ -54,11 +54,21 @@ body {
 }
 #app {
     width: 1150px; height: 780px;
+    background: #0E1014;   /* outer stage behind the floating window (UI kit) */
+    padding: 10px;
+    position: relative;
+    transform-origin: top left;
+}
+#win {
+    height: 100%;
     display: flex;
     flex-direction: column;
     background: linear-gradient(180deg, var(--panel) 0%, var(--ground) 100%);
+    border: 1px solid #262A31;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.5);
     position: relative;
-    transform-origin: top left;
 }
 
 /* ---- Resize handle (family pattern — the WebView owns the corner) ---- */
@@ -276,7 +286,7 @@ body {
 #viz-wrap {
     margin: 12px 16px 0;
     position: relative;
-    height: 306px; min-height: 306px;
+    height: 288px; min-height: 288px;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -394,8 +404,14 @@ body {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    gap: 52px;
-    padding: 20px 16px 8px;
+    gap: 42px;
+    padding: 18px 16px 8px;
+}
+.vsep {
+    width: 1px;
+    align-self: stretch;
+    margin: 22px 0 26px;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.07), transparent);
 }
 #solowet-btn {
     height: 28px;
@@ -430,9 +446,9 @@ body {
 }
 .module {
     flex: 1;
-    background: var(--drawer);
+    background: linear-gradient(180deg, #1B1E24, #16191E); /* UI-kit panel gradient */
     border: 1px solid var(--line2);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px 16px 12px;
     position: relative;
 }
@@ -538,17 +554,18 @@ body {
 .action-btn {
     padding: 10px 22px;
     border-radius: 8px;
-    border: 1px solid #383D45;
-    background: transparent;
+    border: 1px solid #30343D;
+    background: linear-gradient(180deg, #191C22, #14161A); /* UI-kit button fill */
     color: var(--text2);
     font-family: 'Manrope', 'Segoe UI', sans-serif;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.2em;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.11s;
 }
-.action-btn:hover { border-color: var(--dim); color: var(--text); }
+.action-btn:hover { border-color: #454A55; color: var(--text); }
+.action-btn:active { transform: translateY(1px); }
 .action-btn.active {
     border-color: var(--neon);
     background: var(--neon-soft);
@@ -586,30 +603,47 @@ body {
     cursor: ew-resize;
 }
 #char-track .rail {
-    position: absolute; left: 0; right: 0; top: 12px; height: 3px;
-    background: var(--line2); border-radius: 2px;
+    position: absolute; left: 0; right: 0; top: 12px; height: 5px;
+    background: #0B0D10; border: 1px solid var(--line);
+    border-radius: 3px;
 }
 #char-track .fill {
-    position: absolute; left: 0; top: 12px; height: 3px;
+    position: absolute; left: 0; top: 13px; height: 3px;
     background: var(--neon); border-radius: 2px;
     box-shadow: 0 0 8px var(--neon-glow);
 }
 #char-track .handle {
-    position: absolute; top: 7px;
-    width: 13px; height: 13px;
+    position: absolute; top: 4px;
+    width: 18px; height: 18px;
     border-radius: 50%;
-    margin-left: -6.5px;
-    background: #F2F4F6;
-    box-shadow: 0 0 8px var(--neon-glow);
+    margin-left: -9px;
+    background: #14161A;                       /* UI-kit thumb: dark core */
+    border: 2px solid var(--neon);             /* + accent ring */
+    box-shadow: 0 0 14px var(--neon-soft);
+}
+#char-track::after {                            /* tick marks under the rail */
+    content: "";
+    position: absolute; left: 2px; right: 2px; top: 22px; height: 3px;
+    background-image: repeating-linear-gradient(90deg,
+        rgba(255,255,255,0.10) 0 1px, transparent 1px 34px);
 }
 #char-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.24em;
     color: var(--faint);
     position: absolute;
-    top: -6px; left: 50%;
+    top: -8px; left: 50%;
     transform: translateX(-50%);
+    white-space: nowrap;
+}
+#char-label::before, #char-label::after {
+    content: "";
+    width: 56px; height: 1px;
+    background: rgba(255,255,255,0.07);
 }
 
 /* ---- Advanced drawer (floats above the bottom row, family pattern) ---- */
@@ -713,6 +747,7 @@ body {
 </head>
 <body>
 <div id="app">
+<div id="win">
 
   <!-- ================= HEADER ================= -->
   <header id="logo-banner">
@@ -747,8 +782,11 @@ body {
   <!-- ================= MAIN KNOBS ================= -->
   <div id="main-knobs">
     <div id="knob-size"></div>
+    <div class="vsep"></div>
     <div id="knob-decay"></div>
+    <div class="vsep"></div>
     <div id="knob-bloom"></div>
+    <div class="vsep"></div>
     <div id="knob-silk"></div>
     <div id="knob-mix"></div>
   </div>
@@ -828,6 +866,7 @@ body {
     </div>
   </div>
 
+</div><!-- /win -->
   <div id="tooltip"></div>
 </div>
 <div id="resize-handle" title="Resize"></div>
@@ -1302,17 +1341,18 @@ sizeViz(); window.addEventListener("resize",sizeViz);
 
 var particles=[];
 (function(){
-  for (var i=0;i<150;++i){
+  for (var i=0;i<220;++i){
     particles.push({
       ang:Math.random()*Math.PI*2,
-      rad:0.25+Math.pow(Math.random(),0.7)*0.85,
+      rad:0.12+Math.pow(Math.random(),1.35)*1.0,   // denser toward the core
       spd:(0.0018+Math.random()*0.004)*(Math.random()<0.5?1:-1),
-      sz:0.9+Math.random()*2.1,
+      sz:0.8+Math.random()*2.1,
       tw:Math.random()*Math.PI*2,
       band:Math.random()
     });
   }
 })();
+var filamentRot=0;
 var lastFrame=0;
 function drawViz(ts){
   requestAnimationFrame(drawViz);
@@ -1345,14 +1385,31 @@ function drawViz(ts){
   vctx.ellipse(cx,cy,baseR*1.28*wScale,baseR*1.28*vScale,0,0,7);
   vctx.stroke(); vctx.setLineDash([]);
 
-  // Core glow
-  var coreR=baseR*0.5;
+  // Core glow — two layers: hot amber heart + wide halo (mockup's bright core)
+  var coreR=baseR*0.55;
   var cg=vctx.createRadialGradient(cx,cy,0,cx,cy,coreR);
-  cg.addColorStop(0,"rgba(255,196,150,"+(0.26*energy*(1-grK*0.4)).toFixed(3)+")");
-  cg.addColorStop(0.5,"rgba(255,138,61,"+(0.11*energy).toFixed(3)+")");
+  cg.addColorStop(0,"rgba(255,224,196,"+(0.50*energy*(1-grK*0.4)).toFixed(3)+")");
+  cg.addColorStop(0.25,"rgba(255,170,110,"+(0.22*energy).toFixed(3)+")");
+  cg.addColorStop(0.6,"rgba(255,138,61,"+(0.09*energy).toFixed(3)+")");
   cg.addColorStop(1,"rgba(255,138,61,0)");
   vctx.fillStyle=cg;
   vctx.beginPath(); vctx.ellipse(cx,cy,coreR*wScale,coreR*vScale*1.3,0,0,7); vctx.fill();
+
+  // Elliptical filaments — slow swirling strands around the core
+  filamentRot+=0.0016*dt*(frozen?0.03:1);
+  vctx.shadowColor="rgba(255,138,61,0.55)";
+  for (var fi=0;fi<3;++fi){
+    var fr=baseR*(0.55+fi*0.28);
+    var rot=filamentRot*(fi%2?-1:1)+fi*1.1;
+    vctx.strokeStyle="rgba(255,"+(150+fi*18)+","+(75+fi*22)+","
+                     +(0.10*energy*(1+bloom*0.8)).toFixed(3)+")";
+    vctx.lineWidth=1.4+fi*0.4;
+    vctx.shadowBlur=8;
+    vctx.beginPath();
+    vctx.ellipse(cx,cy,fr*wScale,fr*vScale*(0.75+fi*0.12),rot*0.22,0,7);
+    vctx.stroke();
+  }
+  vctx.shadowBlur=0;
 
   // Particles
   vctx.globalCompositeOperation="lighter";
@@ -1379,6 +1436,7 @@ requestAnimationFrame(drawViz);
 // Duck meter — thin GR history line in a card (spec §7 METERING)
 // ============================================================================
 var dm=document.getElementById("duck-meter"), dctx=dm.getContext("2d");
+var duckWaveT=0;
 function drawDuckMeter(){
   requestAnimationFrame(drawDuckMeter);
   var w=dm.clientWidth, h=dm.clientHeight;
@@ -1386,15 +1444,20 @@ function drawDuckMeter(){
   var W=dm.width,H=dm.height;
   if(W===0) return;
   dctx.clearRect(0,0,W,H);
-  dctx.strokeStyle="rgba(255,255,255,0.07)";
+  duckWaveT+=0.055;
+  dctx.strokeStyle="rgba(255,255,255,0.06)";
   dctx.lineWidth=1;
-  dctx.beginPath(); dctx.moveTo(0,H*0.28); dctx.lineTo(W,H*0.28); dctx.stroke();
+  dctx.beginPath(); dctx.moveTo(0,H*0.32); dctx.lineTo(W,H*0.32); dctx.stroke();
+  // Living wave (mockup squiggle): breathes with wet energy, dips with GR
+  var idleAmp=H*0.075*(0.55+clamp01(wetRms*6)*0.9);
   dctx.strokeStyle="#FF8A3D"; dctx.lineWidth=2.5; dctx.lineJoin="round";
   dctx.shadowColor="rgba(255,138,61,0.5)"; dctx.shadowBlur=6;
   dctx.beginPath();
   for (var i=0;i<grHistory.length;++i){
     var x=i/(grHistory.length-1)*W;
-    var y=H*0.28+clamp01(grHistory[i]/24)*H*0.55;
+    var grN=clamp01(grHistory[i]/24);
+    var y=H*0.32+grN*H*0.5
+          +Math.sin(x*0.05+duckWaveT)*idleAmp*(1-grN*0.75);
     if(i===0) dctx.moveTo(x,y); else dctx.lineTo(x,y);
   }
   dctx.stroke();
