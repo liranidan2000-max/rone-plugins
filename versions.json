@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-31T16:49:24Z",
+  "last_updated": "2026-08-31T17:22:24Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -51,7 +51,7 @@
     {
       "id": "RoneStutter",
       "name": "Rone Stutter",
-      "version": "1.0.0.120",
+      "version": "1.0.0.132",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -65,9 +65,9 @@
       "au_bundle": "Rone Stutter.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "a7445f23779e282adf4486d2b0447d88dc721b60a6667d0ebf4df12caadf2bf3",
+      "sha256": "a6bf09de2edf42030992d52ec8fa68ffb576faf47b235c5a8c5bfc10bf97080b",
       "registry_key": "RoneStutter",
-      "sha256_mac": "5b12089af1250c92f6164460af80a91cde35a1bc34a1c0e23d521ab36feaa22c"
+      "sha256_mac": "b689a2173ebb4ae68d0c939158feaa2a1cf752657aae8d588aa05f7d476d24ad"
     },
     {
       "id": "RoneStucker",
