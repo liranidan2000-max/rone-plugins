@@ -1,17 +1,17 @@
 {
   "manifest_version": 2,
-  "last_updated": "2026-08-31T13:33:53Z",
+  "last_updated": "2026-08-31T14:08:27Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.0.0.117",
-    "sha256": "f82ec37331038d637f2c6c09aae58cacd0ce4dd570998bb29f6fd6cde768a00b"
+    "version": "1.0.0.120",
+    "sha256": "917c7c4811e9767932730891e161170193f8a33a36390be2a68a36a59ee93b00"
   },
   "plugins": [
     {
       "id": "ReverseReverb",
       "name": "ReverseReverb",
-      "version": "1.0.0.119",
+      "version": "1.0.0.120",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -25,14 +25,14 @@
       "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "15716b0104c10187f447e8055cf803b0ae6f646eecbadfdf483a9e6ce7a135d3",
+      "sha256": "d71f5e03941f58273676d0ed96bac609e42e96eb3efce9bd40b96cfee6be31cb",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "9a075c9bc8d90034520c7e0362776e8791653f335cb71e27dcadc768040bd125"
+      "sha256_mac": "e008f55d7088865cc329aa1230d7bac8c4197329c31da2fdd807cd4f67bb829f"
     },
     {
       "id": "RoneStemsFixer",
       "name": "RONE Stems",
-      "version": "1.1.0.117",
+      "version": "1.1.0.120",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -44,14 +44,14 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.pkg",
-      "sha256": "641d7dc08a30b1c1e6aaf75cad33cbfd483110e806c5d65717d33b933bf885d0",
+      "sha256": "ab9e7e494d7e5b5dc5fca04536aa5d641b6f233667af591ded221ab56ebc3ce9",
       "registry_key": "RoneStemsFixer",
-      "sha256_mac": "869696c81c0201192ea0dfedaf15a11ff1159712665e0dd1f0b7100a2aa137e0"
+      "sha256_mac": "6ac2bb2f56668e012d918c2e66ae42afac8b6624f27b5fa6297f595934c72196"
     },
     {
       "id": "RoneStutter",
       "name": "Rone Stutter",
-      "version": "1.0.0.117",
+      "version": "1.0.0.120",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -65,14 +65,14 @@
       "au_bundle": "Rone Stutter.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "a324608fc564c9758f4c229535d248dd4c66d552903b44f0b143c5e6e3231b43",
+      "sha256": "a7445f23779e282adf4486d2b0447d88dc721b60a6667d0ebf4df12caadf2bf3",
       "registry_key": "RoneStutter",
-      "sha256_mac": "2d387f88b7600a8475d8d5014845e4d7a837dbfe99caf85165ce560a5111c696"
+      "sha256_mac": "5b12089af1250c92f6164460af80a91cde35a1bc34a1c0e23d521ab36feaa22c"
     },
     {
       "id": "RoneStucker",
       "name": "Rone Stucker",
-      "version": "1.0.0",
+      "version": "1.0.0.120",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -86,14 +86,14 @@
       "au_bundle": "Rone Stucker.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "",
+      "sha256": "2d4783d5dbc5f5959c55294e1075e2a1c8ced22f39eceef8654bcf9d874f6466",
       "registry_key": "RoneStucker",
-      "sha256_mac": ""
+      "sha256_mac": "78163088982f14355d02a3ac4e441627fe18889060fa165faa6b4c5ba60aeb78"
     },
     {
       "id": "RoneFlanger",
       "name": "Rone Flanger",
-      "version": "2.0.0",
+      "version": "2.0.0.120",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -106,14 +106,14 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "cf4f38ad939350bda11556eb6972e117d0e4b192536d11b01084491d2f12c792",
+      "sha256": "45a60b330114b59cef026554a8e96c8c49f7e209de7ce4facbd2060c2d5a518f",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "1f9c8cdf84a2ead35b7cc2194179d5f68bd9385234e8dfa5f7dcc7366deb2481"
+      "sha256_mac": "04a1e09367822490d1cb788b5c7bcc186f2aaf1b5f0e874a32540141457694e1"
     },
     {
       "id": "RoneSyncVerb",
       "name": "Rone Sync Verb",
-      "version": "1.0.0.117",
+      "version": "1.0.0.120",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -127,9 +127,9 @@
       "au_bundle": "Rone Sync Verb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.pkg",
-      "sha256": "dea585030bf6a0049c86ff02b9482dcd8ba4f3aee53f3a302380743b533a251f",
+      "sha256": "6f863c7cc7b7a4e3683f3d51d4e84aacebf6e954c43bd8032cda9eb56e096a45",
       "registry_key": "RoneSyncVerb",
-      "sha256_mac": "955061167fa81a5a98d6a01e542f0cee3fc6a046e40a587afbbbd51a0af3188f"
+      "sha256_mac": "9857e8ca924f519d6c2c4c3b97e0a0ab51573bacd464a4efe076c74c513ca4a3"
     },
     {
       "id": "RONEAnalyzer",
