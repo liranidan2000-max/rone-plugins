@@ -16,3 +16,6 @@
 [submodule "RONEAnalyzer"]
 	path = RONEAnalyzer
 	url = https://github.com/liranidan2000-max/RONEAnalyzer.git
+[submodule "RoneStucker"]
+	path = RoneStucker
+	url = https://github.com/liranidan2000-max/RoneStucker.git

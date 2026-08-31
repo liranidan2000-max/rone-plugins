@@ -1,8 +1,0 @@
-build/
-build-win/
-build-ci/
-out/
-.vs/
-*.user
-.DS_Store
-nul
