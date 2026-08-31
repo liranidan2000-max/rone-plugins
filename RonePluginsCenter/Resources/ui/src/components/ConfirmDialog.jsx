@@ -43,10 +43,10 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
               </button>
               <button
                 onClick={onConfirm}
-                className={`px-4 py-1.5 text-xs font-bold text-white rounded-lg transition-colors
+                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors
                   ${variant === 'danger'
-                    ? 'bg-rone-error hover:bg-rone-error/80'
-                    : 'bg-rone-purple hover:brightness-110'
+                    ? 'bg-rone-error text-white hover:bg-rone-error/80'
+                    : 'btn-gradient'
                   }`}
               >
                 {confirmLabel}

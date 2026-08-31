@@ -34,7 +34,7 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
       className="px-6 py-6 max-w-[760px]"
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
     >
-      <h2 className="text-[18px] font-bold text-rone-text-primary mb-4">Settings</h2>
+      <h2 className="font-display text-[18px] font-bold text-rone-text-primary mb-4">Settings</h2>
 
       <div className="pro-card rounded-2xl px-5 py-2">
         <Row title="Automatic update checks" desc="Check for new plugin versions on launch">
@@ -47,7 +47,7 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
           <Toggle on={beta} onChange={setBeta} />
         </Row>
         <Row title="Check for updates now" desc="Manually re-sync with the RONE update server">
-          <button onClick={onRefresh} className="px-4 py-1.5 text-[12px] font-semibold text-white rounded-xl btn-gradient">
+          <button onClick={onRefresh} className="px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] rounded-lg btn-gradient">
             Check now
           </button>
         </Row>

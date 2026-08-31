@@ -47,12 +47,21 @@ private:
     public:
         explicit MainWindow (const juce::String& name)
             : DocumentWindow (name,
-                              juce::Colour (0xff0B0416),
+                              juce::Colour (0xff14161A),
                               DocumentWindow::allButtons)
         {
+           #if JUCE_WINDOWS
+            // Frameless: the React UI renders its own graphite title bar and
+            // hands dragging/resizing back to the OS via native bridge calls.
+            setUsingNativeTitleBar (false);
+            setTitleBarHeight (0);
+            setContentOwned (new MainComponent(), true);
+            setResizable (true, false);
+           #else
             setUsingNativeTitleBar (true);
             setContentOwned (new MainComponent(), true);
             setResizable (true, true);
+           #endif
             setResizeLimits (700, 500, 1400, 1000);
             centreWithSize (getWidth(), getHeight());
             setVisible (true);

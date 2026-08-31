@@ -49,6 +49,13 @@ private:
     void handleGetLicenseStatus(NativeArgs args, NativeCompletion complete);
     void handleGetAppVersion   (NativeArgs args, NativeCompletion complete);
 
+    // ---- Window controls (frameless window on Windows) ----
+    void handleGetWindowMode   (NativeArgs args, NativeCompletion complete);
+    void handleStartWindowDrag (NativeArgs args, NativeCompletion complete);
+    void handleStartWindowResize (NativeArgs args, NativeCompletion complete);
+    void handleWindowMinimize  (NativeArgs args, NativeCompletion complete);
+    void handleWindowClose     (NativeArgs args, NativeCompletion complete);
+
     // ---- Backend logic (carried over) ----
     void launchSilentInstaller (const juce::File& installer,
                                  const juce::String& pluginId);

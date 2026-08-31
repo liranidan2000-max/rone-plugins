@@ -1,6 +1,13 @@
 #include "MainComponent.h"
 #include "BinaryData.h"
 
+#if JUCE_WINDOWS
+ #ifndef WIN32_LEAN_AND_MEAN
+  #define WIN32_LEAN_AND_MEAN
+ #endif
+ #include <windows.h>
+#endif
+
 // ============================================================================
 // Resource provider — serves embedded HTML/CSS/JS + logos
 // ============================================================================
@@ -94,6 +101,23 @@ MainComponent::MainComponent()
         })
         .withNativeFunction ("getAppVersion", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAppVersion (args, std::move (complete));
+        })
+
+        // ---- Window controls (frameless window on Windows) ----
+        .withNativeFunction ("getWindowMode", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetWindowMode (args, std::move (complete));
+        })
+        .withNativeFunction ("startWindowDrag", [this] (NativeArgs args, NativeCompletion complete) {
+            handleStartWindowDrag (args, std::move (complete));
+        })
+        .withNativeFunction ("startWindowResize", [this] (NativeArgs args, NativeCompletion complete) {
+            handleStartWindowResize (args, std::move (complete));
+        })
+        .withNativeFunction ("windowMinimize", [this] (NativeArgs args, NativeCompletion complete) {
+            handleWindowMinimize (args, std::move (complete));
+        })
+        .withNativeFunction ("windowClose", [this] (NativeArgs args, NativeCompletion complete) {
+            handleWindowClose (args, std::move (complete));
         })
 
         // ---- Resource provider ----
@@ -436,6 +460,69 @@ void MainComponent::handleGetAppVersion (NativeArgs, NativeCompletion complete)
     obj->setProperty ("platform", "linux");
 #endif
     complete (juce::JSON::toString (juce::var (obj)));
+}
+
+// ============================================================================
+// Window controls — the frameless window (Windows) gets its title bar from
+// the React UI; dragging/resizing is handed back to the OS so Aero-snap and
+// the resize constrainer keep working.
+// ============================================================================
+
+#if JUCE_WINDOWS
+static void beginNativeWindowHitDrag (juce::Component& comp, int hitTestCode)
+{
+    if (auto* top = comp.getTopLevelComponent())
+    {
+        if (auto* peer = top->getPeer())
+        {
+            if (auto hwnd = (HWND) peer->getNativeHandle())
+            {
+                ReleaseCapture();
+                PostMessage (hwnd, WM_NCLBUTTONDOWN, (WPARAM) hitTestCode, 0);
+            }
+        }
+    }
+}
+#endif
+
+void MainComponent::handleGetWindowMode (NativeArgs, NativeCompletion complete)
+{
+#if JUCE_WINDOWS
+    complete ("{\"customTitleBar\":true}");
+#else
+    complete ("{\"customTitleBar\":false}");
+#endif
+}
+
+void MainComponent::handleStartWindowDrag (NativeArgs, NativeCompletion complete)
+{
+#if JUCE_WINDOWS
+    beginNativeWindowHitDrag (*this, HTCAPTION);
+#endif
+    complete ("{}");
+}
+
+void MainComponent::handleStartWindowResize (NativeArgs, NativeCompletion complete)
+{
+#if JUCE_WINDOWS
+    beginNativeWindowHitDrag (*this, HTBOTTOMRIGHT);
+#endif
+    complete ("{}");
+}
+
+void MainComponent::handleWindowMinimize (NativeArgs, NativeCompletion complete)
+{
+    if (auto* window = dynamic_cast<juce::ResizableWindow*> (getTopLevelComponent()))
+        window->setMinimised (true);
+    complete ("{}");
+}
+
+void MainComponent::handleWindowClose (NativeArgs, NativeCompletion complete)
+{
+    // Same behaviour as the native close button: hide to tray, keep running
+    if (auto* window = getTopLevelComponent())
+        window->setVisible (false);
+    complete ("{}");
 }
 
 // ============================================================================

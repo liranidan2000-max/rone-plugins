@@ -42,7 +42,7 @@ export default function InfoModal({ plugin, onClose }) {
               onError={(e) => { e.target.style.display = 'none' }}
             />
             <div>
-              <h2 className="text-lg font-bold text-rone-text-primary">{plugin.name}</h2>
+              <h2 className="font-display text-lg font-bold text-rone-text-primary">{plugin.name}</h2>
               <p className="text-xs text-rone-text-dim">v{plugin.remoteVersion}</p>
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function InfoModal({ plugin, onClose }) {
         {/* What's New */}
         {plugin.whatsNew && (
           <div className="mb-4">
-            <h3 className="text-xs font-bold text-rone-purple uppercase tracking-wider mb-1.5">
+            <h3 className="text-[10px] font-extrabold text-rone-purple uppercase tracking-[0.18em] mb-1.5">
               What's New
             </h3>
             <p className="text-sm text-rone-text-secondary bg-rone-bg/40 rounded-lg p-3 border border-rone-border/30">
@@ -75,7 +75,7 @@ export default function InfoModal({ plugin, onClose }) {
 
         {/* Formats */}
         <div className="mb-4">
-          <h3 className="text-xs font-bold text-rone-purple uppercase tracking-wider mb-1.5">
+          <h3 className="text-[10px] font-extrabold text-rone-purple uppercase tracking-[0.18em] mb-1.5">
             Formats
           </h3>
           <div className="flex gap-2">

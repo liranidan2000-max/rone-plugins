@@ -36,17 +36,21 @@ export default function AccountPanel({ license, onActivate, onDeactivate, plugin
       className="px-6 py-6 max-w-[760px]"
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
     >
-      <h2 className="text-[18px] font-bold text-rone-text-primary mb-4">Account</h2>
+      <h2 className="font-display text-[18px] font-bold text-rone-text-primary mb-4">Account</h2>
 
       {/* Profile card */}
       <div className="pro-card rounded-2xl p-5 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rone-deep-purple to-rone-violet flex items-center justify-center text-white text-base font-bold shadow-lg shadow-rone-purple/25">
+        <div className="w-14 h-14 rounded-full border border-rone-border-2 flex items-center justify-center font-display text-base font-bold text-rone-purple"
+             style={{
+               background: 'radial-gradient(circle at 38% 30%, #363B42, #26292F 52%, #1A1C21)',
+               boxShadow: '0 6px 14px rgba(0,0,0,0.4)',
+             }}>
           {initials(license.customerName)}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-bold text-rone-text-primary">{license.customerName || 'Guest'}</p>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`px-2 py-0.5 text-[10px] font-bold tracking-wider rounded ${license.licensed ? 'bg-rone-purple/15 text-rone-light-purple border border-rone-purple/25' : 'bg-rone-surface-3 text-rone-text-dim border border-rone-border'}`}>
+            <span className={`px-2 py-0.5 text-[9px] font-extrabold tracking-[0.18em] rounded ${license.licensed ? 'bg-rone-purple/[0.07] text-rone-purple border border-rone-purple/35' : 'bg-rone-surface-3 text-rone-text-dim border border-rone-border'}`}>
               {license.licensed ? 'PRO' : 'FREE'}
             </span>
             <span className="text-[12px] text-rone-text-dim">
@@ -67,12 +71,12 @@ export default function AccountPanel({ license, onActivate, onDeactivate, plugin
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 mt-4">
         <div className="pro-card rounded-2xl p-4">
-          <p className="text-[11px] text-rone-text-dim uppercase tracking-wider">Plugins installed</p>
-          <p className="text-[24px] font-bold text-rone-text-primary mt-1">{pluginCount}</p>
+          <p className="text-[10px] font-bold text-rone-text-dim uppercase tracking-[0.16em]">Plugins installed</p>
+          <p className="font-display text-[24px] font-bold text-rone-text-primary mt-1 tabular-nums">{pluginCount}</p>
         </div>
         <div className="pro-card rounded-2xl p-4">
-          <p className="text-[11px] text-rone-text-dim uppercase tracking-wider">License status</p>
-          <p className={`text-[24px] font-bold mt-1 ${license.licensed ? 'text-rone-green' : 'text-rone-text-dim'}`}>
+          <p className="text-[10px] font-bold text-rone-text-dim uppercase tracking-[0.16em]">License status</p>
+          <p className={`font-display text-[24px] font-bold mt-1 ${license.licensed ? 'text-rone-green' : 'text-rone-text-dim'}`}>
             {license.licensed ? 'Active' : 'Inactive'}
           </p>
         </div>
@@ -94,7 +98,7 @@ export default function AccountPanel({ license, onActivate, onDeactivate, plugin
             <button
               onClick={handleActivate}
               disabled={activating || !keyInput.trim()}
-              className="px-5 py-2 text-[12px] font-bold rounded-xl text-white btn-gradient disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] rounded-lg btn-gradient disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {activating ? 'Activating…' : 'Activate'}
             </button>

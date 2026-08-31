@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { api, onEvent, isDevMode, mockPlugins } from './bridge'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
+import TitleBar from './components/TitleBar'
 import FeaturedSection from './components/FeaturedSection'
 import FilterBar from './components/FilterBar'
 import PluginGrid from './components/PluginGrid'
@@ -22,6 +23,15 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
   const [activeNav, setActiveNav] = useState('home')
+  const [customTitleBar, setCustomTitleBar] = useState(false)
+
+  // ---- Custom title bar (frameless window on Windows; dev mode shows it too) ----
+  useEffect(() => {
+    if (isDevMode()) { setCustomTitleBar(true); return }
+    api.getWindowMode()
+      .then(mode => setCustomTitleBar(!!mode?.customTitleBar))
+      .catch(() => setCustomTitleBar(false))
+  }, [])
 
   // ---- Unlock animation orchestration ----
   const [unlockPlaying, setUnlockPlaying] = useState(false)
@@ -160,7 +170,7 @@ export default function App() {
 
   return (
     <motion.div
-      className="h-screen flex bg-rone-bg overflow-hidden"
+      className="h-screen flex flex-col bg-rone-bg overflow-hidden"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut' }}
     >
       {/* Unlock shimmer */}
@@ -169,9 +179,14 @@ export default function App() {
           <motion.div key="shimmer" className="fixed inset-0 z-50 pointer-events-none"
             initial={{ x: '-100%' }} animate={{ x: '100%' }} exit={{ opacity: 0 }}
             transition={{ duration: 0.8, ease: 'easeInOut' }}
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.15), rgba(168,85,247,0.1), transparent)', width: '100%' }} />
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(157,107,255,0.14), rgba(157,107,255,0.08), transparent)', width: '100%' }} />
         )}
       </AnimatePresence>
+
+      {/* Custom window title bar (frameless window) */}
+      {customTitleBar && <TitleBar />}
+
+      <div className="flex-1 min-h-0 flex">
 
       {/* Sidebar */}
       <Sidebar active={activeNav} onNavigate={handleNavigate} updatesCount={updatesCount} license={license} />
@@ -236,6 +251,23 @@ export default function App() {
           )}
         </div>
       </main>
+
+      </div>
+
+      {/* Resize grip (frameless window: OS-driven resize via native call) */}
+      {customTitleBar && (
+        <div
+          className="resize-grip"
+          onMouseDown={(e) => { if (e.button === 0) api.startWindowResize() }}
+          title="Resize"
+        >
+          <svg className="w-full h-full text-rone-text-faint/60" viewBox="0 0 16 16" fill="currentColor">
+            <circle cx="12.5" cy="12.5" r="1" />
+            <circle cx="12.5" cy="7.5" r="1" />
+            <circle cx="7.5" cy="12.5" r="1" />
+          </svg>
+        </div>
+      )}
 
       {/* Info Modal */}
       <AnimatePresence>
