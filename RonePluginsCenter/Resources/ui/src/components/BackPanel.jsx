@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { callNative, isDevMode } from '../bridge'
 
 // ============================================================================
@@ -387,7 +388,9 @@ export default function BackPanel({ version, onClose }) {
 
   const verline = `${version || '1.1.0.127'} / DESKTOP APP / WIN&middot;MAC`
 
-  return (
+  // Portal to <body>: Settings lives inside a framer-motion transform, which
+  // would otherwise trap position:fixed and keep the overlay off the sidebar.
+  return createPortal(
     <div
       id="bp-about"
       role="dialog"
@@ -407,6 +410,7 @@ export default function BackPanel({ version, onClose }) {
           dangerouslySetInnerHTML={{ __html: unitHTML(verline) }}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
