@@ -168,26 +168,6 @@ input, textarea {
 }
 .eq-bar { transform-origin: bottom; animation: eqBar 1.6s ease-in-out infinite; }
 
-/* Custom title bar (frameless window on Windows) */
-.titlebar {
-  background: #17191E;
-  border-bottom: 1px solid #23262C;
-}
-.titlebar-btn {
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.titlebar-btn:hover { background: rgba(255, 255, 255, 0.06); color: #E8EAED; }
-.titlebar-btn-close:hover { background: #F43F5E; color: #ffffff; }
-
-/* Resize grip (bottom-right, frameless window) */
-.resize-grip {
-  position: fixed;
-  right: 0; bottom: 0;
-  width: 16px; height: 16px;
-  cursor: nwse-resize;
-  z-index: 70;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .eq-bar, .skeleton, .status-dot-pulse, .progress-shimmer { animation: none !important; }
 }

@@ -110,13 +110,6 @@ export const api = {
   deactivateLicense: createNativeFunction('deactivateLicense'),
   getLicenseStatus:  createNativeFunction('getLicenseStatus'),
   getAppVersion:     createNativeFunction('getAppVersion'),
-
-  // Window controls (frameless window on Windows)
-  getWindowMode:     createNativeFunction('getWindowMode'),
-  startWindowDrag:   createNativeFunction('startWindowDrag'),
-  startWindowResize: createNativeFunction('startWindowResize'),
-  windowMinimize:    createNativeFunction('windowMinimize'),
-  windowClose:       createNativeFunction('windowClose'),
 };
 
 // ---- Dev mode mock data (when running outside JUCE) ----

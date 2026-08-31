@@ -3,6 +3,7 @@
 #include "NetworkManager.h"
 #include "VersionChecker.h"
 #include "LicenseHandler.h"
+#include "CustomTitleBar.h"
 
 // ============================================================================
 // MainComponent — WebView host for the React UI
@@ -15,6 +16,8 @@ public:
     ~MainComponent() override;
 
     void resized() override;
+    void paint (juce::Graphics&) override;
+    void parentHierarchyChanged() override;
 
     // NetworkManager::Listener
     void onManifestReady  (const juce::Array<PluginInfo>& plugins) override;
@@ -49,12 +52,8 @@ private:
     void handleGetLicenseStatus(NativeArgs args, NativeCompletion complete);
     void handleGetAppVersion   (NativeArgs args, NativeCompletion complete);
 
-    // ---- Window controls (frameless window on Windows) ----
-    void handleGetWindowMode   (NativeArgs args, NativeCompletion complete);
-    void handleStartWindowDrag (NativeArgs args, NativeCompletion complete);
-    void handleStartWindowResize (NativeArgs args, NativeCompletion complete);
-    void handleWindowMinimize  (NativeArgs args, NativeCompletion complete);
-    void handleWindowClose     (NativeArgs args, NativeCompletion complete);
+    // ---- Window controls ----
+    bool beginNativeWindowDrag();
 
     // ---- Backend logic (carried over) ----
     void launchSilentInstaller (const juce::File& installer,
@@ -65,6 +64,7 @@ private:
     void emitStatusMessage (const juce::String& text, const juce::String& type);
 
     // ---- Members ----
+    CustomTitleBar            titleBar;
     juce::WebBrowserComponent webView;
     NetworkManager            networkManager;
     LicenseHandler            licenseHandler;

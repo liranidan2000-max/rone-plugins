@@ -103,29 +103,18 @@ MainComponent::MainComponent()
             handleGetAppVersion (args, std::move (complete));
         })
 
-        // ---- Window controls (frameless window on Windows) ----
-        .withNativeFunction ("getWindowMode", [this] (NativeArgs args, NativeCompletion complete) {
-            handleGetWindowMode (args, std::move (complete));
-        })
-        .withNativeFunction ("startWindowDrag", [this] (NativeArgs args, NativeCompletion complete) {
-            handleStartWindowDrag (args, std::move (complete));
-        })
-        .withNativeFunction ("startWindowResize", [this] (NativeArgs args, NativeCompletion complete) {
-            handleStartWindowResize (args, std::move (complete));
-        })
-        .withNativeFunction ("windowMinimize", [this] (NativeArgs args, NativeCompletion complete) {
-            handleWindowMinimize (args, std::move (complete));
-        })
-        .withNativeFunction ("windowClose", [this] (NativeArgs args, NativeCompletion complete) {
-            handleWindowClose (args, std::move (complete));
-        })
-
         // ---- Resource provider ----
         .withResourceProvider (
             [this] (const auto& url) { return getResource (url); },
             juce::URL { "http://localhost:3000/" }.getOrigin()))
 {
     addAndMakeVisible (webView);
+
+#if JUCE_WINDOWS
+    titleBar.startNativeDrag = [this] { return beginNativeWindowDrag(); };
+    addAndMakeVisible (titleBar);
+#endif
+
     setSize (920, 640);
 
     networkManager.addListener (this);
@@ -156,9 +145,38 @@ MainComponent::~MainComponent()
     networkManager.removeListener (this);
 }
 
+void MainComponent::paint (juce::Graphics& g)
+{
+    // Shows through the grab strip below - same vertical ramp as the web UI's
+    // body, so the strip reads as the window edge rather than a border.
+    g.setGradientFill (juce::ColourGradient::vertical (juce::Colour (0xff17191E), 0.0f,
+                                                       juce::Colour (0xff14161A), (float) getHeight()));
+    g.fillAll();
+}
+
 void MainComponent::resized()
 {
-    webView.setBounds (getLocalBounds());
+    auto area = getLocalBounds();
+
+    if (titleBar.isVisible())
+        titleBar.setBounds (area.removeFromTop (CustomTitleBar::kHeight));
+
+#if JUCE_WINDOWS
+    // The WebView is a real child window, so anything it covers can never reach
+    // the window's resize frame. Keep a thin strip clear along the edges the
+    // title bar doesn't already leave open, so the window stays resizable.
+    constexpr int grabStrip = 5;
+    area = area.withTrimmedLeft   (grabStrip)
+               .withTrimmedRight  (grabStrip)
+               .withTrimmedBottom (grabStrip);
+#endif
+
+    webView.setBounds (area);
+}
+
+void MainComponent::parentHierarchyChanged()
+{
+    titleBar.setWindowToDrag (getTopLevelComponent());
 }
 
 // ============================================================================
@@ -463,66 +481,34 @@ void MainComponent::handleGetAppVersion (NativeArgs, NativeCompletion complete)
 }
 
 // ============================================================================
-// Window controls — the frameless window (Windows) gets its title bar from
-// the React UI; dragging/resizing is handed back to the OS so Aero-snap and
-// the resize constrainer keep working.
+// Window controls — the title bar is a native component (CustomTitleBar), so
+// the drag can be handed straight to the OS and keep Aero-snap behaviour.
 // ============================================================================
 
-#if JUCE_WINDOWS
-static void beginNativeWindowHitDrag (juce::Component& comp, int hitTestCode)
+bool MainComponent::beginNativeWindowDrag()
 {
-    if (auto* top = comp.getTopLevelComponent())
+#if JUCE_WINDOWS
+    if (auto* peer = getPeer())
     {
-        if (auto* peer = top->getPeer())
+        if (auto hwnd = (HWND) peer->getNativeHandle())
         {
-            if (auto hwnd = (HWND) peer->getNativeHandle())
-            {
-                ReleaseCapture();
-                PostMessage (hwnd, WM_NCLBUTTONDOWN, (WPARAM) hitTestCode, 0);
-            }
+            POINT screenPos {};
+            GetCursorPos (&screenPos);
+
+            // Hand the drag to the OS so Aero Snap and multi-monitor work.
+            //
+            // WM_NCLBUTTONDOWN is not usable here: JUCE swallows it and only
+            // defers to DefWindowProc once it sees a *non-client* mouse move,
+            // which never arrives for a borderless window whose title bar
+            // lives in the client area. SC_MOVE is passed straight through.
+            ReleaseCapture();
+            PostMessage (hwnd, WM_SYSCOMMAND, (WPARAM) (SC_MOVE | HTCAPTION),
+                         MAKELPARAM (screenPos.x, screenPos.y));
+            return true;
         }
     }
-}
 #endif
-
-void MainComponent::handleGetWindowMode (NativeArgs, NativeCompletion complete)
-{
-#if JUCE_WINDOWS
-    complete ("{\"customTitleBar\":true}");
-#else
-    complete ("{\"customTitleBar\":false}");
-#endif
-}
-
-void MainComponent::handleStartWindowDrag (NativeArgs, NativeCompletion complete)
-{
-#if JUCE_WINDOWS
-    beginNativeWindowHitDrag (*this, HTCAPTION);
-#endif
-    complete ("{}");
-}
-
-void MainComponent::handleStartWindowResize (NativeArgs, NativeCompletion complete)
-{
-#if JUCE_WINDOWS
-    beginNativeWindowHitDrag (*this, HTBOTTOMRIGHT);
-#endif
-    complete ("{}");
-}
-
-void MainComponent::handleWindowMinimize (NativeArgs, NativeCompletion complete)
-{
-    if (auto* window = dynamic_cast<juce::ResizableWindow*> (getTopLevelComponent()))
-        window->setMinimised (true);
-    complete ("{}");
-}
-
-void MainComponent::handleWindowClose (NativeArgs, NativeCompletion complete)
-{
-    // Same behaviour as the native close button: hide to tray, keep running
-    if (auto* window = getTopLevelComponent())
-        window->setVisible (false);
-    complete ("{}");
+    return false;
 }
 
 // ============================================================================

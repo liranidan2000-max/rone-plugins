@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { api, onEvent, isDevMode, mockPlugins } from './bridge'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
-import TitleBar from './components/TitleBar'
 import FeaturedSection from './components/FeaturedSection'
 import FilterBar from './components/FilterBar'
 import PluginGrid from './components/PluginGrid'
@@ -23,15 +22,6 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
   const [activeNav, setActiveNav] = useState('home')
-  const [customTitleBar, setCustomTitleBar] = useState(false)
-
-  // ---- Custom title bar (frameless window on Windows; dev mode shows it too) ----
-  useEffect(() => {
-    if (isDevMode()) { setCustomTitleBar(true); return }
-    api.getWindowMode()
-      .then(mode => setCustomTitleBar(!!mode?.customTitleBar))
-      .catch(() => setCustomTitleBar(false))
-  }, [])
 
   // ---- Unlock animation orchestration ----
   const [unlockPlaying, setUnlockPlaying] = useState(false)
@@ -183,9 +173,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Custom window title bar (frameless window) */}
-      {customTitleBar && <TitleBar />}
-
       <div className="flex-1 min-h-0 flex">
 
       {/* Sidebar */}
@@ -253,21 +240,6 @@ export default function App() {
       </main>
 
       </div>
-
-      {/* Resize grip (frameless window: OS-driven resize via native call) */}
-      {customTitleBar && (
-        <div
-          className="resize-grip"
-          onMouseDown={(e) => { if (e.button === 0) api.startWindowResize() }}
-          title="Resize"
-        >
-          <svg className="w-full h-full text-rone-text-faint/60" viewBox="0 0 16 16" fill="currentColor">
-            <circle cx="12.5" cy="12.5" r="1" />
-            <circle cx="12.5" cy="7.5" r="1" />
-            <circle cx="7.5" cy="12.5" r="1" />
-          </svg>
-        </div>
-      )}
 
       {/* Info Modal */}
       <AnimatePresence>
