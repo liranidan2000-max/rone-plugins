@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { api, isDevMode } from '../bridge'
 
 function Toggle({ on, onChange }) {
   return (
@@ -29,6 +30,15 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
   const [notify, setNotify] = useState(true)
   const [beta, setBeta] = useState(false)
 
+  // Real app version, straight from the running binary
+  const [version, setVersion] = useState('')
+  useEffect(() => {
+    if (isDevMode()) { setVersion('dev'); return }
+    api.getAppVersion()
+      .then(info => setVersion(info?.version || ''))
+      .catch(() => setVersion(''))
+  }, [])
+
   return (
     <motion.div
       className="px-6 py-6 max-w-[760px]"
@@ -57,7 +67,7 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
         <p className="text-[13px] font-semibold text-rone-text-primary">About</p>
         <div className="mt-3 space-y-2 text-[12px]">
           <div className="flex justify-between"><span className="text-rone-text-dim">Application</span><span className="text-rone-text-secondary">RONE Plugins Center</span></div>
-          <div className="flex justify-between"><span className="text-rone-text-dim">Version</span><span className="text-rone-text-secondary">1.0.0</span></div>
+          <div className="flex justify-between"><span className="text-rone-text-dim">Version</span><span className="text-rone-text-secondary tabular-nums">{version || '—'}</span></div>
           <div className="flex justify-between"><span className="text-rone-text-dim">Last synced</span><span className="text-rone-text-secondary">{lastSync ? lastSync.toLocaleString() : '—'}</span></div>
         </div>
       </div>

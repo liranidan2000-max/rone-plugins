@@ -177,8 +177,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ matrix.folder }}/build-ci
-          key:  build-${{ matrix.plugin_id }}-win-${{ github.sha }}
-          restore-keys: build-${{ matrix.plugin_id }}-win-
+          key:  build-${{ matrix.plugin_id }}-win-${{ hashFiles(format('{0}/CMakeLists.txt', matrix.folder)) }}-${{ github.sha }}
+          restore-keys: build-${{ matrix.plugin_id }}-win-${{ hashFiles(format('{0}/CMakeLists.txt', matrix.folder)) }}-
 
       - name: WebView2 cache
         if: matrix.needs_webview2 == 'true'
@@ -361,8 +361,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ matrix.folder }}/build-ci
-          key:  build-${{ matrix.plugin_id }}-mac-${{ github.sha }}
-          restore-keys: build-${{ matrix.plugin_id }}-mac-
+          key:  build-${{ matrix.plugin_id }}-mac-${{ hashFiles(format('{0}/CMakeLists.txt', matrix.folder)) }}-${{ github.sha }}
+          restore-keys: build-${{ matrix.plugin_id }}-mac-${{ hashFiles(format('{0}/CMakeLists.txt', matrix.folder)) }}-
 
       - name: JUCE extras cache (flanger)
         if: matrix.is_flanger == 'true'
