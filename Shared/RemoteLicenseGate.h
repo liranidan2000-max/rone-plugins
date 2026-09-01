@@ -28,6 +28,10 @@
 //     RemoteLicenseGate::refreshFromNetworkAsync();      // throttled, async
 //     bool unlocked = RemoteLicenseGate::isOpenMode()
 //                  || BundleLicenseChecker::isBundleLicensed();
+//
+// NOTE: RoneStutter carries its own copy (RoneStutter/Source/
+// RemoteLicenseGate.h) because its repo builds without Shared/ —
+// keep the two files in sync when editing this one.
 // ============================================================================
 
 class RemoteLicenseGate
