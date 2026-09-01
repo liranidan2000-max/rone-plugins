@@ -738,4 +738,12 @@ jobs:
           git add versions.json
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "ci: auto-update versions.json (build #${{ github.run_number }}) [skip ci]"
+          # main may have moved while this run was building (a new push, or a
+          # parallel run's own auto-commit) - #148 lost exactly this race and
+          # left stale versions/hashes against already-replaced release assets.
+          for attempt in 1 2 3; do
+            git push && exit 0
+            echo "push rejected (attempt $attempt) - rebasing over new main"
+            git pull --rebase origin main
+          done
           git push
