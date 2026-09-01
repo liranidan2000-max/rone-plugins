@@ -5,6 +5,14 @@
 #include <juce_core/juce_core.h>
 
 #if JUCE_WINDOWS
+ // windows.h must not leak min/max macros into JUCE headers included after
+ // this one (std::numeric_limits<>::max() turns into a syntax error).
+ #ifndef WIN32_LEAN_AND_MEAN
+  #define WIN32_LEAN_AND_MEAN
+ #endif
+ #ifndef NOMINMAX
+  #define NOMINMAX
+ #endif
  #include <windows.h>
 #endif
 
