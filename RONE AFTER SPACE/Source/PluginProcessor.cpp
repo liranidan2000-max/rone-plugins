@@ -10,6 +10,11 @@ RoneAfterspaceAudioProcessor::RoneAfterspaceAudioProcessor()
           .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "Parameters", createParameterLayout())
 {
+    // Standalone builds own their process: capture crashes into the shared
+    // report queue (the Plugins Center uploads it). Never installed in a DAW.
+    if (wrapperType == wrapperType_Standalone)
+        RoneCrashReporter::installCrashHandler (JucePlugin_Name, JucePlugin_VersionString, "Standalone");
+
     auto raw = [this] (const char* id) { return apvts.getRawParameterValue (id); };
 
     pMix         = raw (ParamIDs::mix);

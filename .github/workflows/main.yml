@@ -256,6 +256,12 @@ jobs:
             $wv2Include = "${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\include"
             $flags += "-DCMAKE_CXX_FLAGS=/I`"$wv2Include`""
           }
+          # Crash-report upload token — Center only (plugins queue to disk and
+          # never hold the token). Empty secret => uploads disabled, still builds.
+          if ("${{ matrix.plugin_id }}" -eq "plugins_center") {
+            $tok = "${{ secrets.CRASH_REPORT_TOKEN }}"
+            if ($tok -ne "") { $flags += "-DRONE_CRASH_TOKEN=$tok" }
+          }
           cmake @flags
           if ($LASTEXITCODE -ne 0) {
             # A restored build cache can pin a Visual Studio instance that no longer
@@ -395,10 +401,16 @@ jobs:
       - name: CMake configure
         working-directory: ${{ matrix.folder }}
         run: |
-          cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" || {
+          # Crash-report upload token — Center only (plugins queue to disk and
+          # never hold the token). Empty secret => uploads disabled, still builds.
+          EXTRA=()
+          if [ "${{ matrix.plugin_id }}" = "plugins_center" ] && [ -n "${{ secrets.CRASH_REPORT_TOKEN }}" ]; then
+            EXTRA+=("-DRONE_CRASH_TOKEN=${{ secrets.CRASH_REPORT_TOKEN }}")
+          fi
+          cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" "${EXTRA[@]}" || {
             echo "Configure failed (stale build cache?). Wiping build-ci and retrying clean..."
             rm -rf build-ci
-            cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+            cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" "${EXTRA[@]}"
           }
 
       - name: CMake build

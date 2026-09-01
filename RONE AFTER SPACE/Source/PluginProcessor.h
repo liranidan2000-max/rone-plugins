@@ -8,6 +8,7 @@
 #include "dsp/SilkProcessor.h"
 #include "../../Shared/BundleLicenseChecker.h"
 #include "../../Shared/RemoteLicenseGate.h"
+#include "../../Shared/RoneCrashReporter.h"
 
 // Lock-free visualization data (audio -> UI), sync-verb pattern
 static constexpr int kVisualizerBufferSize = 256;

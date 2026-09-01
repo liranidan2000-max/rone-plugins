@@ -65,7 +65,14 @@ target_sources(RonePluginsCenter PRIVATE
     Source/CustomTitleBar.h
 )
 
+# Fine-grained GitHub token for crash-report uploads (Issues read/write on the
+# private rone-crash-reports repo ONLY). Injected by CI from the
+# CRASH_REPORT_TOKEN secret; empty (the default) disables uploading and
+# reports simply stay queued on disk.
+set(RONE_CRASH_TOKEN "" CACHE STRING "Crash-report upload token (Issues RW on rone-crash-reports only)")
+
 target_compile_definitions(RonePluginsCenter PRIVATE
+    RONE_CRASH_TOKEN="${RONE_CRASH_TOKEN}"
     JUCE_WEB_BROWSER=1
     JUCE_USE_WIN_WEBVIEW2=1
     # Static WebView2 loader: without this the app LoadLibrary()s

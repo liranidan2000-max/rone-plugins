@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 #include "BinaryData.h"
 #include "../../Shared/RemoteLicenseGate.h"
+#include "CrashReportUploader.h"   // also brings in Shared/RoneCrashReporter.h
 
 // Open mode (remote kill-switch OFF) counts as licensed everywhere:
 // the C++ side and the web UI both key off this one predicate.
@@ -130,6 +131,14 @@ MainComponent::MainComponent()
            #endif
             ))
 {
+    // Crash & error reporting: the Center owns its process, so it installs the
+    // crash handler, and it is the bundle's single uploader — drain whatever
+    // the plugins/standalones queued since the last run.
+    RoneCrashReporter::installCrashHandler ("RONE Plugins Center",
+                                            JUCE_APPLICATION_VERSION_STRING,
+                                            "Center");
+    CrashReportUploader::uploadPendingAsync();
+
     addAndMakeVisible (webView);
 
 #if JUCE_WINDOWS
@@ -279,6 +288,17 @@ void MainComponent::emitStatusMessage (const juce::String& text, const juce::Str
     obj->setProperty ("text", text);
     obj->setProperty ("type", type);
     webView.emitEventIfBrowserIsVisible ("statusMessage", juce::var (obj));
+
+    // Every user-visible error is also a queued report (throttled per message,
+    // see RoneCrashReporter) — this is the "why didn't it install/open" feed
+    // the devs see without the tester having to describe anything.
+    if (type == "error")
+    {
+        RoneCrashReporter::reportError ("RONE Plugins Center",
+                                        JUCE_APPLICATION_VERSION_STRING,
+                                        "Center", "CENTER_ERROR", text);
+        CrashReportUploader::uploadPendingAsync();
+    }
 }
 
 // ============================================================================
