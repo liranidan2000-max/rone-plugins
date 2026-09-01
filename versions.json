@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "open",
   "license_message": "",
-  "last_updated": "2026-08-31T21:00:54Z",
+  "last_updated": "2026-09-01T05:51:52Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -55,7 +55,7 @@
     {
       "id": "RoneStucker",
       "name": "Rone Stucker",
-      "version": "1.0.0.143",
+      "version": "1.0.0.146",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -69,9 +69,9 @@
       "au_bundle": "Rone Stucker.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "fc6a17aadc5c54be19ef5a2015faf576de7a02e39c991faad6638aeaa4aa04e5",
+      "sha256": "410470e1e37eb0d5490029a3eb37bdfd098572db5899e58fac9c8e28dcc4d68e",
       "registry_key": "RoneStucker",
-      "sha256_mac": "be92d30cdf8358202a0bac0dabfe057532138ef40ce5013463a73f4bdad786b2"
+      "sha256_mac": "4797a64d95555d7c4166ba2176bfd0209d0d12e46e6818a2e7a057dcd288a293"
     },
     {
       "id": "RoneFlanger",
