@@ -1,5 +1,8 @@
 # RONE crash & error reporting
 
+> Activated 2026-09-01: private repo + CRASH_REPORT_TOKEN secret are live
+> (verified end-to-end — test issue #1 created and closed via the token).
+
 One pipeline for the whole bundle: every product captures its own crashes and
 errors, everything lands in one private issue tracker, and fixes ship back
 through the Plugins Center.
