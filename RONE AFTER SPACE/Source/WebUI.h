@@ -104,11 +104,25 @@ body {
     border-bottom: 1px solid var(--line);
     flex-shrink: 0;
 }
+/* Header brand = the About trigger: hover glows + slightly grows, click opens the back panel */
+#p-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transform-origin: left center;
+    transition: transform 0.18s ease;
+}
+#p-logo:hover  { transform: scale(1.06); }
+#p-logo:active { transform: scale(0.99); }
+#p-logo:hover #glyph { filter: drop-shadow(0 0 11px var(--neon)); }
+#p-logo:hover h1 i { text-shadow: 0 0 18px var(--neon); }
 #glyph {
     width: 40px; height: 21px;
     flex-shrink: 0;
     overflow: visible;
     filter: drop-shadow(0 0 6px var(--neon-glow));
+    transition: filter 0.18s ease;
 }
 #glyph .r-stem {
     fill: var(--neon);
@@ -129,6 +143,7 @@ body {
     font-style: normal;
     color: var(--neon);
     text-shadow: 0 0 12px var(--neon-glow);
+    transition: text-shadow 0.18s ease;
 }
 #logo-banner .subtitle {
     font-size: 9px;
@@ -235,24 +250,6 @@ body {
     accent-color: var(--neon);
     cursor: pointer;
     width: 13px; height: 13px;
-}
-#about-btn {
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    border: 1px solid #383D45;
-    background: transparent;
-    color: var(--text2);
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-left: 10px;
-    flex-shrink: 0;
-}
-#about-btn:hover {
-    border-color: var(--neon);
-    color: var(--neon);
-    box-shadow: 0 0 10px var(--neon-glow);
 }
 #bypass {
     height: 28px;
@@ -949,11 +946,13 @@ body {
 
   <!-- ================= HEADER ================= -->
   <header id="logo-banner">
-    <svg id="glyph" viewBox="0 0 100 52" aria-label="RONE" role="img">
-        <path class="r-stem" d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"/>
-        <path class="r-line" d="M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100"/>
-    </svg>
-    <h1>AFTER<i>SPACE</i></h1>
+    <div id="p-logo" title="About" role="button">
+      <svg id="glyph" viewBox="0 0 100 52" aria-label="RONE" role="img">
+          <path class="r-stem" d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"/>
+          <path class="r-line" d="M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100"/>
+      </svg>
+      <h1>AFTER<i>SPACE</i></h1>
+    </div>
     <span class="subtitle">RONE PLUGINS</span>
     <div class="preset">
       <button id="p-prev" title="Previous preset">&#9664;</button>
@@ -961,7 +960,6 @@ body {
       <button id="p-next" title="Next preset">&#9654;</button>
       <div id="preset-menu"></div>
     </div>
-    <button id="about-btn" title="About">i</button>
     <button id="solowet-btn" data-tip="Listen to the space alone.">
       <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
         <path d="M1.5 8V6a4.5 4.5 0 019 0v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
@@ -1523,7 +1521,7 @@ function bpRescale(){
   bpU.style.setProperty('--s',s);
 }
 function bpClose(){ bpM.classList.add('bp-hidden'); }
-document.getElementById("about-btn").addEventListener("click",function(){
+document.getElementById("p-logo").addEventListener("click",function(){
   bpM.classList.remove('bp-hidden');
   bpRescale();
   bpU.classList.remove('bp-off','bp-entering');
@@ -1915,15 +1913,17 @@ function fitScale(){
 window.addEventListener("resize",fitScale);
 fitScale();
 
+// Deltas only: the editor knows its own size (window.innerWidth is unreliable
+// across WebView2 zoom/DPI, and an absolute size makes the window jump on click).
 var rsDrag=null;
 document.getElementById("resize-handle").addEventListener("mousedown",function(e){
-  rsDrag={x:e.screenX,y:e.screenY,w:window.innerWidth,h:window.innerHeight};
+  rsDrag={x:e.screenX,y:e.screenY};
+  emit("beginResize",{});
   e.preventDefault(); e.stopPropagation();
 });
 document.addEventListener("mousemove",function(e){
   if(!rsDrag) return;
-  emit("requestResize",{width:rsDrag.w+(e.screenX-rsDrag.x),
-                        height:rsDrag.h+(e.screenY-rsDrag.y)});
+  emit("requestResize",{dx:e.screenX-rsDrag.x, dy:e.screenY-rsDrag.y});
 });
 document.addEventListener("mouseup",function(){ rsDrag=null; });
 

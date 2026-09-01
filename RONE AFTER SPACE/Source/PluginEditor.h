@@ -37,6 +37,9 @@ private:
     std::unique_ptr<CustomTitleBar> customTitleBar;
     bool isStandalone = false;
 
+    // Content width when a corner-grip drag started (see "beginResize")
+    int resizeBaseW = kWidth;
+
     // License check throttle (~5s at 30Hz)
     static constexpr int kLicenseCheckInterval = 150;
     int licenseCheckCounter = kLicenseCheckInterval;

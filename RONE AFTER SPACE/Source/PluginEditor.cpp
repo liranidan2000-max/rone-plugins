@@ -43,13 +43,20 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
           {
               processorRef.setPresetName (payload["name"].toString());
           })
-          // JS -> C++: corner-grip resize (the WebView covers JUCE's resizer)
+          // JS -> C++: corner-grip resize (the WebView covers JUCE's resizer).
+          // The grip sends screen-px deltas from the drag start; the editor
+          // supplies the base size itself, so DPI/zoom mismatches between the
+          // page and the editor can never snap the window to a wrong size.
+          .withEventListener ("beginResize", [this] (const juce::var&)
+          {
+              resizeBaseW = getWidth();
+          })
           .withEventListener ("requestResize", [this] (const juce::var& payload)
           {
-              int w = juce::jlimit (kMinWidth,  kMaxWidth,  (int) payload["width"]);
-              int h = juce::jlimit (kMinHeight, kMaxHeight, (int) payload["height"]);
+              int w = juce::jlimit (kMinWidth, kMaxWidth,
+                                    resizeBaseW + (int) payload["dx"]);
               // Keep the plugin's aspect ratio
-              h = juce::roundToInt ((double) w * kHeight / kWidth);
+              int h = juce::roundToInt ((double) w * kHeight / kWidth);
               h = juce::jlimit (kMinHeight, kMaxHeight, h);
               setSize (w, h + (customTitleBar != nullptr ? CustomTitleBar::kHeight : 0));
           })
@@ -87,7 +94,9 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
         customTitleBar = std::make_unique<CustomTitleBar>();
         addAndMakeVisible (*customTitleBar);
         customTitleBar->toFront (false);
-        setSize (startW, startH + CustomTitleBar::kHeight);
+        // The app always opens at its natural size — the auto-restored session
+        // state may carry a shrunken size from a previous run (Liran, 2026-09-01)
+        setSize (kWidth, kHeight + CustomTitleBar::kHeight);
     }
     else
     {
