@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "open",
   "license_message": "",
-  "last_updated": "2026-09-01T09:48:55Z",
+  "last_updated": "2026-09-01T10:55:59Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -117,7 +117,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.0.0.139",
+      "version": "1.0.0.154",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -129,9 +129,9 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "cb584a4f7edce1fc1462908a1ca5db54e7b8d40c9223db83b67532165e2073bd",
+      "sha256": "98d0db818adff2e00c06d721ef6b471171ade3437754d5a291d665be992fedac",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "e1ad763784dc08869b117f94dfd874254e25e8409edcd8d4c2303f4a6d6c3d22"
+      "sha256_mac": "80f5de6ed8248430e31da23d738ba5d566d53f8200fe40f2b931834f550052df"
     }
   ]
 }
