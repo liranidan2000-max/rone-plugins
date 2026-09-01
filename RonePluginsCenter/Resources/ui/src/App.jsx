@@ -14,6 +14,7 @@ import StatusToast from './components/StatusToast'
 export default function App() {
   const [plugins, setPlugins] = useState([])
   const [license, setLicense] = useState({ licensed: false, customerName: '', licenseKey: '', message: '' })
+  const [account, setAccount] = useState({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, message: '' })
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('name')
@@ -71,11 +72,21 @@ export default function App() {
     async function init() {
       if (isDevMode()) {
         setPlugins(mockPlugins)
-        setLicense({ licensed: true, customerName: 'Liran Kalifa', licenseKey: 'dev-key', message: '' })
+        // ?signedout=1 previews the sign-in form without a running backend
+        const devSignedOut = new URLSearchParams(location.search).has('signedout')
+        setLicense({ licensed: !devSignedOut, customerName: devSignedOut ? '' : 'Liran Kalifa',
+                     licenseKey: devSignedOut ? '' : 'dev-key', message: '' })
+        setAccount(devSignedOut
+          ? { signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, message: '' }
+          : { signedIn: true, licensed: true, email: 'liran@roneaudio.com',
+              name: 'Liran Kalifa', plan: 'all-access', deviceLimit: 2,
+              renewsAt: Date.now() + 21 * 86400000, expiresAt: 0, message: '' })
         setLoading(false); setLastSync(new Date()); return
       }
       const licStatus = await api.getLicenseStatus()
       if (licStatus) setLicense(licStatus)
+      const acct = await api.getAccountStatus()
+      if (acct) setAccount(acct)
       const result = await api.getPlugins()
       if (result?.plugins) { setPlugins(result.plugins); setLastSync(new Date()) }
       if (result?.centerUpdate?.version) onCenterUpdate(result.centerUpdate.version)
@@ -96,6 +107,7 @@ export default function App() {
     })
     onEvent('downloadComplete', () => {})
     onEvent('licenseChanged', (data) => { if (data) setLicense(prev => ({ ...prev, ...data })) })
+    onEvent('accountChanged', (data) => { if (data) setAccount(data) })
     onEvent('licenseActivationResult', (data) => {
       if (data) {
         setLicense(prev => ({ ...prev, licensed: data.success || false, customerName: data.customerName || prev.customerName, message: data.message || '' }))
@@ -131,6 +143,33 @@ export default function App() {
     if (updatable.length === 0) return
     addToast(`Updating ${updatable.length} plugin${updatable.length !== 1 ? 's' : ''}…`, 'info')
     for (const plugin of updatable) await handleInstall(plugin.id)
+  }
+  const handleSignIn = async (email, password) => {
+    try {
+      const res = await api.accountSignIn(email, password)
+      if (res?.account) setAccount(res.account)
+      if (res?.ok) {
+        setLicense(prev => ({ ...prev, licensed: !!res.account?.licensed,
+                              customerName: res.account?.name || res.account?.email || prev.customerName }))
+        addToast(res.message || 'Signed in', 'success')
+      }
+      return res
+    } catch (err) {
+      addToast(err.message || 'Sign-in failed', 'error')
+      return { ok: false, message: err.message }
+    }
+  }
+  const handleSignOut = async () => {
+    try {
+      const res = await api.accountSignOut()
+      setAccount({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', message: '' })
+      setLicense(prev => ({ ...prev, licensed: false, customerName: '' }))
+      addToast(res?.message || 'Signed out', 'info')
+      return res
+    } catch (err) {
+      addToast(err.message || 'Sign-out failed', 'error')
+      return { ok: false }
+    }
   }
   const handleActivate = async (key) => {
     try { return await api.activateLicense(key) }
@@ -235,7 +274,8 @@ export default function App() {
         <div className="flex-1 flex flex-col min-h-0">
           {activeNav === 'account' && (
             <div className="flex-1 overflow-y-auto plugin-grid-scroll">
-              <AccountPanel license={license} onActivate={handleActivate} onDeactivate={handleDeactivate} pluginCount={filterCounts.installed} />
+              <AccountPanel license={license} account={account} onSignIn={handleSignIn} onSignOut={handleSignOut}
+                            onActivate={handleActivate} onDeactivate={handleDeactivate} pluginCount={filterCounts.installed} />
             </div>
           )}
 

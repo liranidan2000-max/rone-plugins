@@ -3,6 +3,7 @@
 #include "NetworkManager.h"
 #include "VersionChecker.h"
 #include "LicenseHandler.h"
+#include "AccountClient.h"
 #include "CustomTitleBar.h"
 
 // ============================================================================
@@ -50,6 +51,13 @@ private:
     void handleActivateLicense (NativeArgs args, NativeCompletion complete);
     void handleDeactivateLicense (NativeArgs args, NativeCompletion complete);
     void handleGetLicenseStatus(NativeArgs args, NativeCompletion complete);
+
+    // Account sign-in (roneaudio.com); the license-key handlers above stay for
+    // customers who bought before accounts existed.
+    void handleAccountSignIn (NativeArgs args, NativeCompletion complete);
+    void handleAccountSignOut (NativeArgs args, NativeCompletion complete);
+    void handleGetAccountStatus (NativeArgs args, NativeCompletion complete);
+    juce::var accountStatusVar() const;
     void handleGetAppVersion   (NativeArgs args, NativeCompletion complete);
 
     // ---- Window controls ----
@@ -80,6 +88,7 @@ private:
     juce::WebBrowserComponent webView;
     NetworkManager            networkManager;
     LicenseHandler            licenseHandler;
+    AccountClient             accountClient;
     juce::Array<PluginInfo>   pluginData;
     juce::CriticalSection     pluginDataLock;  // guards pluginData access across threads
 

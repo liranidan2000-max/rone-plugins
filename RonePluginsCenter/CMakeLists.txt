@@ -61,6 +61,7 @@ target_sources(RonePluginsCenter PRIVATE
     Source/NetworkManager.cpp
     Source/VersionChecker.cpp
     Source/LicenseHandler.cpp
+    Source/AccountClient.cpp
     Source/RoneTrayIcon.h
     Source/CustomTitleBar.h
 )
@@ -86,6 +87,9 @@ target_compile_definitions(RonePluginsCenter PRIVATE
     JUCE_DISPLAY_SPLASH_SCREEN=0
     # URL for the remote version manifest — fetched on startup
     VERSIONS_JSON_URL="https://raw.githubusercontent.com/liranidan2000-max/rone-plugins/main/versions.json"
+    # Accounts API (sign-in, entitlement checks) — Cloudflare Pages Functions
+    # served from the website itself, so it moves with the site.
+    RONE_API_BASE="https://roneaudio.com/api/v1"
     # Windows Registry root for installed plugin versions
     RONE_REGISTRY_PATH="Software\\\\RONE\\\\Plugins"
     # Default standalone install folder

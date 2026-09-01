@@ -5,9 +5,19 @@
 
 // Open mode (remote kill-switch OFF) counts as licensed everywhere:
 // the C++ side and the web UI both key off this one predicate.
+//
+// Three ways to be unlocked, in the order they arrived historically: the
+// remote kill-switch being open, a Lemon Squeezy serial (pre-account
+// customers), or being signed in to a roneaudio.com account with an active
+// pass — which is what new customers use.
 static bool isEffectivelyLicensed (const LicenseHandler& handler)
 {
     return RemoteLicenseGate::isOpenMode() || handler.isLicensed();
+}
+
+static bool isEffectivelyLicensed (const LicenseHandler& handler, const AccountClient& account)
+{
+    return isEffectivelyLicensed (handler) || account.getState().licensed;
 }
 
 #if JUCE_WINDOWS
@@ -109,6 +119,15 @@ MainComponent::MainComponent()
         .withNativeFunction ("getLicenseStatus", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetLicenseStatus (args, std::move (complete));
         })
+        .withNativeFunction ("accountSignIn", [this] (NativeArgs args, NativeCompletion complete) {
+            handleAccountSignIn (args, std::move (complete));
+        })
+        .withNativeFunction ("accountSignOut", [this] (NativeArgs args, NativeCompletion complete) {
+            handleAccountSignOut (args, std::move (complete));
+        })
+        .withNativeFunction ("getAccountStatus", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetAccountStatus (args, std::move (complete));
+        })
         .withNativeFunction ("getAppVersion", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAppVersion (args, std::move (complete));
         })
@@ -154,7 +173,8 @@ MainComponent::MainComponent()
     licenseHandler.onLicenseStateChanged = [this] (bool isLicensed)
     {
         auto* obj = new juce::DynamicObject();
-        obj->setProperty ("licensed",     isLicensed || RemoteLicenseGate::isOpenMode());
+        juce::ignoreUnused (isLicensed);
+        obj->setProperty ("licensed",     isEffectivelyLicensed (licenseHandler, accountClient));
         obj->setProperty ("customerName", licenseHandler.getCustomerName());
         obj->setProperty ("message",      licenseHandler.getStatusMessage());
         webView.emitEventIfBrowserIsVisible ("licenseChanged", juce::var (obj));
@@ -163,6 +183,23 @@ MainComponent::MainComponent()
         emitPluginsUpdated();
     };
     licenseHandler.initialize();
+
+    // Account sign-in shares the same UI surface as the serial: whichever one
+    // unlocks the bundle, the cards and the account panel react the same way.
+    accountClient.onStateChanged = [this]
+    {
+        const auto s = accountClient.getState();
+
+        auto* obj = new juce::DynamicObject();
+        obj->setProperty ("licensed",     isEffectivelyLicensed (licenseHandler, accountClient));
+        obj->setProperty ("customerName", s.name.isNotEmpty() ? s.name : s.email);
+        obj->setProperty ("message",      s.message);
+        webView.emitEventIfBrowserIsVisible ("licenseChanged", juce::var (obj));
+
+        webView.emitEventIfBrowserIsVisible ("accountChanged", accountStatusVar());
+        emitPluginsUpdated();
+    };
+    accountClient.initialize();
 
     // Navigate to resource provider root (uses JUCE's internal scheme, not actual HTTP)
     webView.goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
@@ -336,7 +373,7 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
         return;
     }
 
-    if (! isEffectivelyLicensed (licenseHandler))
+    if (! isEffectivelyLicensed (licenseHandler, accountClient))
     {
         complete ("{\"started\":false,\"error\":\"License required\"}");
         return;
@@ -386,7 +423,7 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
         return;
     }
 
-    if (! isEffectivelyLicensed (licenseHandler))
+    if (! isEffectivelyLicensed (licenseHandler, accountClient))
     {
         complete ("{\"success\":false,\"error\":\"License required\"}");
         return;
@@ -516,19 +553,88 @@ void MainComponent::handleDeactivateLicense (NativeArgs, NativeCompletion comple
 
 void MainComponent::handleGetLicenseStatus (NativeArgs, NativeCompletion complete)
 {
-    const bool effective = isEffectivelyLicensed (licenseHandler);
+    const bool effective = isEffectivelyLicensed (licenseHandler, accountClient);
+    const auto account = accountClient.getState();
 
     auto* obj = new juce::DynamicObject();
     obj->setProperty ("licensed",     effective);
-    obj->setProperty ("customerName", licenseHandler.getCustomerName());
+    // A signed-in account owns the identity shown in the UI; the serial path
+    // only supplies a name when no account is in play.
+    obj->setProperty ("customerName", account.signedIn && account.name.isNotEmpty()
+                                          ? account.name
+                                          : (account.signedIn ? account.email
+                                                              : licenseHandler.getCustomerName()));
     obj->setProperty ("licenseKey",   licenseHandler.getLicenseKey());
 
     // When the remote kill-switch is engaged, surface its message (if any)
     // over the generic local one.
     auto lockMsg = (! effective) ? RemoteLicenseGate::getLockMessage() : juce::String();
-    obj->setProperty ("message", lockMsg.isNotEmpty() ? lockMsg
-                                                      : licenseHandler.getStatusMessage());
+    obj->setProperty ("message", lockMsg.isNotEmpty()
+                                     ? lockMsg
+                                     : (account.signedIn ? account.message
+                                                         : licenseHandler.getStatusMessage()));
     complete (juce::JSON::toString (juce::var (obj)));
+}
+
+// ============================================================================
+// Account sign-in (roneaudio.com)
+// ============================================================================
+
+juce::var MainComponent::accountStatusVar() const
+{
+    const auto s = accountClient.getState();
+
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("signedIn",    s.signedIn);
+    obj->setProperty ("licensed",    s.licensed);
+    obj->setProperty ("email",       s.email);
+    obj->setProperty ("name",        s.name);
+    obj->setProperty ("plan",        s.plan);
+    obj->setProperty ("deviceLimit", s.deviceLimit);
+    obj->setProperty ("message",     s.message);
+    // Dates cross the bridge as milliseconds; 0 means "not applicable".
+    obj->setProperty ("expiresAt",   (double) s.expiresAt);
+    obj->setProperty ("renewsAt",    (double) s.renewsAt);
+    return juce::var (obj);
+}
+
+void MainComponent::handleAccountSignIn (NativeArgs args, NativeCompletion complete)
+{
+    if (args.size() < 2)
+    {
+        complete ("{\"ok\":false,\"message\":\"Enter your email and password\"}");
+        return;
+    }
+
+    const auto email    = args[0].toString();
+    const auto password = args[1].toString();
+
+    auto shared = std::make_shared<NativeCompletion> (std::move (complete));
+
+    accountClient.signIn (email, password, [this, shared] (bool success, juce::String message)
+    {
+        auto* obj = new juce::DynamicObject();
+        obj->setProperty ("ok",      success);
+        obj->setProperty ("message", message);
+        obj->setProperty ("account", accountStatusVar());
+        (*shared) (juce::JSON::toString (juce::var (obj)));
+    });
+}
+
+void MainComponent::handleAccountSignOut (NativeArgs, NativeCompletion complete)
+{
+    accountClient.signOut ([complete = std::move (complete)] (bool, juce::String message) mutable
+    {
+        auto* obj = new juce::DynamicObject();
+        obj->setProperty ("ok",      true);
+        obj->setProperty ("message", message);
+        complete (juce::JSON::toString (juce::var (obj)));
+    });
+}
+
+void MainComponent::handleGetAccountStatus (NativeArgs, NativeCompletion complete)
+{
+    complete (juce::JSON::toString (accountStatusVar()));
 }
 
 void MainComponent::handleGetAppVersion (NativeArgs, NativeCompletion complete)

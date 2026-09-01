@@ -109,6 +109,9 @@ export const api = {
   activateLicense:   createNativeFunction('activateLicense'),
   deactivateLicense: createNativeFunction('deactivateLicense'),
   getLicenseStatus:  createNativeFunction('getLicenseStatus'),
+  accountSignIn:     createNativeFunction('accountSignIn'),
+  accountSignOut:    createNativeFunction('accountSignOut'),
+  getAccountStatus:  createNativeFunction('getAccountStatus'),
   getAppVersion:     createNativeFunction('getAppVersion'),
   applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
 };
