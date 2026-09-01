@@ -189,7 +189,10 @@ void RoneAfterspaceAudioProcessorEditor::parentHierarchyChanged()
                 }
 
                 customTitleBar->setWindowToDrag (dw);
-                dw->setContentComponentSize (getWidth(), getHeight());
+                // Assert the natural size explicitly — if anything sized the
+                // window down before the editor attached (seen as a tiny
+                // window when launched from the Center), this snaps it back.
+                dw->setContentComponentSize (kWidth, kHeight + CustomTitleBar::kHeight);
             }
         }
     }

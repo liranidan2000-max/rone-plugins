@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "Standalone now always opens in Reverse Only mode. The About panel opens by clicking the glowing RONE logo in the header (the i button is gone)",
+      "whats_new": "Knob glow no longer clips, and the bundle's resize triangle (bottom right) is here - drag it to scale the whole plugin. Standalone always opens in Reverse Only",
       "standalone_exe": "ReverseReverb.exe",
       "vst3_bundle": "ReverseReverb.vst3",
       "au_bundle": "ReverseReverb.component",
@@ -42,7 +42,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "No more license screen flashing at startup. The About panel opens by clicking the glowing RONE logo in the header (the i button is gone)",
+      "whats_new": "Resizable via the new corner triangle (bottom right), and DRAG TO EXPORT is now in Stutter yellow. No more license screen flashing at startup",
       "standalone_exe": "Rone Stutter.exe",
       "vst3_bundle": "Rone Stutter.vst3",
       "au_bundle": "Rone Stutter.component",
@@ -63,7 +63,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "Standalone gets the bundle's graphite title bar (no more legacy Windows frame). The About panel now opens by clicking the glowing RONE logo in the header",
+      "whats_new": "Advanced mini knobs redesigned to match the big knob (neon arcs), plus the bundle's resize triangle (bottom right). Graphite title bar in standalone",
       "standalone_exe": "Rone Stucker.exe",
       "vst3_bundle": "Rone Stucker.vst3",
       "au_bundle": "Rone Stucker.component",
@@ -83,7 +83,7 @@
         "Standalone"
       ],
       "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
-      "whats_new": "Fixes the update that didn't fully apply: the standalone app now really carries v2 (graphite redesign, R logo, About back panel). The About panel opens by clicking the glowing RONE logo in the header",
+      "whats_new": "Resizable via the bundle's corner triangle (bottom right) and knob glow no longer clips. Also completes the v2 standalone update (graphite redesign, R logo, About back panel)",
       "standalone_exe": "Rone Flanger.exe",
       "vst3_bundle": "Rone Flanger.vst3",
       "au_bundle": "",
@@ -104,7 +104,7 @@
         "Standalone"
       ],
       "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
-      "whats_new": "Standalone opens at its full size every launch, and the corner resize no longer jumps. The About panel opens by clicking the glowing RONE logo in the header",
+      "whats_new": "Standalone opens at its full size every launch, the corner resize no longer jumps or snaps back, and knob glow no longer clips",
       "standalone_exe": "RONE AFTERSPACE.exe",
       "vst3_bundle": "RONE AFTERSPACE.vst3",
       "au_bundle": "RONE AFTERSPACE.component",

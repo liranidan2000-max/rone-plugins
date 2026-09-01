@@ -334,7 +334,8 @@ body {
 
 /* ---- Arc knob (family component, identical to ReverseReverb/Flanger) ---- */
 .arck { position: relative; flex-shrink: 0; }
-.arck svg { position: absolute; inset: 0; pointer-events: none; }
+/* overflow visible: the arc's neon drop-shadow must not clip at the svg box */
+.arck svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .arck .track { fill: none; stroke: var(--line); stroke-linecap: round; }
 .arck .lit {
     fill: none; stroke: var(--neon); stroke-linecap: round;
@@ -566,7 +567,10 @@ body {
   background:repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px);}
 .bp-panel::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");}
-.bp-g{position:absolute;transform:scale(var(--s));}
+/* decorative groups must not steal hover from links/buttons */
+.bp-g{position:absolute;transform:scale(var(--s));pointer-events:none;}
+a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
+.bpg-site{z-index:6;}
 .bpg-brand{left:calc(58px * var(--s));top:calc(44px * var(--s));transform-origin:top left;}
 .bpg-site{right:calc(64px * var(--s));top:max(48px,calc(96px * var(--s)));transform-origin:top right;}
 .bpg-left{left:calc(64px * var(--s));top:37%;transform-origin:left top;
