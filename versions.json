@@ -2,18 +2,18 @@
   "manifest_version": 2,
   "license_mode": "open",
   "license_message": "",
-  "last_updated": "2026-09-01T09:00:53Z",
+  "last_updated": "2026-09-01T09:48:55Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.2.1.147",
-    "sha256": "ed6238ecac5b05cc1b20d369c092f27b509f9ee877f92d7ae345526221d93856"
+    "version": "1.2.1.153",
+    "sha256": "b3ba77c4a57f281f5d3063136124f427ae7574e4acdcb3d83fee30e567fc2afa"
   },
   "plugins": [
     {
       "id": "ReverseReverb",
       "name": "ReverseReverb",
-      "version": "1.0.0.152",
+      "version": "1.0.0.153",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -27,14 +27,14 @@
       "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "b91020f9db78419e981fb7172614fa6a7d4a6f2be15abe799f01312cf7fa5d67",
+      "sha256": "6c33277064fb9c59616964e15b6e737454cf30b4f037c587cef3c0eb97cc4e51",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "bc9f49e9ea2ec375a069ed135e66993e17b4627c29d18557e299675ee1937582"
+      "sha256_mac": "24f0b427b184750627e42ec2d76048ff9e29f2116141fbc716a915878c185639"
     },
     {
       "id": "RoneStutter",
       "name": "Rone Stutter",
-      "version": "1.1.0.152",
+      "version": "1.1.0.153",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -48,14 +48,14 @@
       "au_bundle": "Rone Stutter.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "40ecca29cd53de6e1a2b5883e0a62868dcb39bbc6ed5d43328f244d2352366de",
+      "sha256": "ab70ec12214c93bb1f443382920ec742b9713217cc8f36dafe211c91f3451d31",
       "registry_key": "RoneStutter",
-      "sha256_mac": "fffd5db208b1924bcfae924350444756e8f3170b29aa64be02818a2388d8651a"
+      "sha256_mac": "f3c9608c3b6dfaff334b6300a91353a062917f15497d07586c4ff2041fcdc994"
     },
     {
       "id": "RoneStucker",
       "name": "Rone Stucker",
-      "version": "1.0.0.152",
+      "version": "1.0.0.153",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -69,14 +69,14 @@
       "au_bundle": "Rone Stucker.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "552ff4692f8fa07f6b72c8a4462937aea1551c9f15a77831621bba3d72ccdd66",
+      "sha256": "b499125119552c801770c48079f92ebec9c0edcc2492fb3c3caa5cb80f6d62a2",
       "registry_key": "RoneStucker",
-      "sha256_mac": "e7898901ad6ec18565e3d2ff40710a73fb8dbf6344ac883d975b9fb2f57e0690"
+      "sha256_mac": "f2fc198a8c444a830a85018a4c723630ed00db380167af0aa1eaa284fb7568a3"
     },
     {
       "id": "RoneFlanger",
       "name": "Rone Flanger",
-      "version": "2.0.1.152",
+      "version": "2.0.1.153",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -89,14 +89,14 @@
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "9f90e3f1925a5a37f6d4bbcc2f3e716284c40a34b4db1f922934d4ce8aee0fe1",
+      "sha256": "3e182a12e3dadb2c4a1a5b71162c80c18efd9bb2457c9df79de889cb5a2cb3e5",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "2513fb25f5c9160853b9b832d89f517031f2fa922cf000b66228176074c63100"
+      "sha256_mac": "e20cc4f26f3eaddd08aec5f5084728116a5ba1d6d154bb1c4059626b8bffd90b"
     },
     {
       "id": "RoneAfterspace",
       "name": "RONE AFTERSPACE",
-      "version": "0.1.0.152",
+      "version": "0.1.0.153",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -110,9 +110,9 @@
       "au_bundle": "RONE AFTERSPACE.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
-      "sha256": "9b8ceff3e77fe722ca0add2984d7ec3969dc0624fef2e88b17b8f2a964db042f",
+      "sha256": "6f240c5705807bce5f17893e4a8ae0018e150e9c67c1af76fa6cac20bc3892eb",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "3b5ae2aafd1e31e5421e345a777fd2d11b52c3b4d4520016fa489b183b3eeca9"
+      "sha256_mac": "40f6dfef6aabe0e4d3d973262dfbe7a51247c5dec0693848cc63057d294cb011"
     },
     {
       "id": "RONEAnalyzer",
