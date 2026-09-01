@@ -1,6 +1,8 @@
 #include "PluginEditor.h"
 #include "WebUI.h"
 
+#include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
+
 // =============================================================================
 // Editor Construction
 // =============================================================================
@@ -91,6 +93,11 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
 
     if (isStandalone)
     {
+        // Keep the input live so JUCE's yellow "Audio input is muted" banner
+        // never appears (bundle rule — same as Rone Flanger)
+        if (auto* holder = juce::StandalonePluginHolder::getInstance())
+            holder->getMuteInputValue().setValue (false);
+
         customTitleBar = std::make_unique<CustomTitleBar>();
         addAndMakeVisible (*customTitleBar);
         customTitleBar->toFront (false);
