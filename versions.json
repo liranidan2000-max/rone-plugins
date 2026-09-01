@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "Knob glow no longer clips, the bundle's resize triangle (bottom right) is here, and the standalone lost the 'Audio input is muted' banner. Always opens in Reverse Only",
+      "whats_new": "Right-click no longer opens a browser menu. Knob glow no longer clips, the bundle's resize triangle (bottom right) is here, and the standalone lost the input-muted banner",
       "standalone_exe": "ReverseReverb.exe",
       "vst3_bundle": "ReverseReverb.vst3",
       "au_bundle": "ReverseReverb.component",
@@ -42,7 +42,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "Resizable via the new corner triangle (bottom right), DRAG TO EXPORT is now in Stutter yellow, and the standalone lost the 'Audio input is muted' banner",
+      "whats_new": "Right-click on any control opens FL's automation menu (VST3). Resizable via the corner triangle, DRAG TO EXPORT in Stutter yellow, no input-muted banner",
       "standalone_exe": "Rone Stutter.exe",
       "vst3_bundle": "Rone Stutter.vst3",
       "au_bundle": "Rone Stutter.component",
@@ -63,7 +63,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "Advanced mini knobs redesigned to match the big knob (neon arcs), the bundle's resize triangle (bottom right), graphite title bar and no input-muted banner in standalone",
+      "whats_new": "Right-click on any control opens FL's automation menu (VST3). Advanced mini knobs redesigned to match the big knob, resize triangle, graphite title bar in standalone",
       "standalone_exe": "Rone Stucker.exe",
       "vst3_bundle": "Rone Stucker.vst3",
       "au_bundle": "Rone Stucker.component",
@@ -83,7 +83,7 @@
         "Standalone"
       ],
       "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
-      "whats_new": "Resizable via the bundle's corner triangle (bottom right) and knob glow no longer clips. Also completes the v2 standalone update (graphite redesign, R logo, About back panel)",
+      "whats_new": "Right-click on any control opens FL's automation menu (VST3), never a browser menu. Resizable via the corner triangle, knob glow no longer clips, v2 standalone completed",
       "standalone_exe": "Rone Flanger.exe",
       "vst3_bundle": "Rone Flanger.vst3",
       "au_bundle": "",
@@ -104,7 +104,7 @@
         "Standalone"
       ],
       "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
-      "whats_new": "Standalone opens at its full size every launch without the 'Audio input is muted' banner, the corner resize no longer jumps or snaps back, and knob glow no longer clips",
+      "whats_new": "Right-click on any knob opens FL's automation menu (VST3). Standalone opens at full size without the input-muted banner, corner resize no longer jumps, knob glow no longer clips",
       "standalone_exe": "RONE AFTERSPACE.exe",
       "vst3_bundle": "RONE AFTERSPACE.vst3",
       "au_bundle": "RONE AFTERSPACE.component",

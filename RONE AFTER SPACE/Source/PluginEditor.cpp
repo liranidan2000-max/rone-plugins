@@ -67,6 +67,21 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
               aboutOverlay.setBounds (getLocalBounds());
               aboutOverlay.show();
           })
+          // JS -> C++: right-click on a control asks the host for its parameter
+          // context menu (FL Studio: automation / link options)
+          .withEventListener ("paramContextMenu", [this] (const juce::var& payload)
+          {
+              auto name = payload["name"].toString();
+              if (auto* ctx = getHostContext())
+                  for (auto* p : processorRef.getParameters())
+                      if (auto* rp = dynamic_cast<juce::RangedAudioParameter*> (p))
+                          if (rp->paramID == name)
+                          {
+                              if (auto menu = ctx->getContextMenuForParameter (rp))
+                                  menu->showNativeMenu (getMouseXYRelative());
+                              break;
+                          }
+          })
           .withEventListener ("launchCenter", [] (const juce::var&)
           {
               RoneAboutOverlay::launchPluginsCenter();

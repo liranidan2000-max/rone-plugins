@@ -1346,6 +1346,11 @@ function mkKnob(holderId,cfg){
     setKnob(K, clamp01(K.norm - Math.sign(e.deltaY)*step), true);
     e.preventDefault();
   },{passive:false});
+  // Right-click = the host's parameter menu (FL: automation/link)
+  el.addEventListener("contextmenu", function(e){
+    e.preventDefault(); e.stopPropagation();
+    emit("paramContextMenu",{name:cfg.id});
+  });
 
   renderKnob(K);
   return K;
@@ -1901,6 +1906,24 @@ function drawEchoDots(){
   ectx.shadowBlur=0;
 }
 requestAnimationFrame(drawEchoDots);
+
+// ============================================================================
+// Right-click = the host's parameter menu, never the browser menu
+// ============================================================================
+document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+(function(){
+  function bind(id, param){
+    var el=document.getElementById(id);
+    if(!el) return;
+    el.addEventListener("contextmenu", function(e){
+      e.preventDefault(); e.stopPropagation();
+      emit("paramContextMenu",{name:param});
+    });
+  }
+  bind("char-track","main.character");
+  bind("bypass","main.bypass");
+  bind("solowet-btn","main.solowet");
+})();
 
 // ============================================================================
 // Proportional UI scaling + corner resize grip
