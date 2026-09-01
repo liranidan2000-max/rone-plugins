@@ -105,21 +105,18 @@ body {
     flex-shrink: 0;
 }
 #glyph {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    border: 2px solid var(--neon);
-    position: relative;
-    box-shadow: 0 0 10px var(--neon-glow);
+    width: 40px; height: 21px;
     flex-shrink: 0;
+    overflow: visible;
+    filter: drop-shadow(0 0 6px var(--neon-glow));
 }
-#glyph::after {
-    content: '';
-    position: absolute;
-    left: 50%; top: 2px;
-    width: 2px; height: 7px;
-    margin-left: -1px;
-    background: var(--neon);
-    border-radius: 2px;
+#glyph .r-stem {
+    fill: var(--neon);
+}
+#glyph .r-line {
+    fill: none;
+    stroke: var(--neon);
+    stroke-width: 4.2;
 }
 #logo-banner h1 {
     font-family: 'Sora', 'Segoe UI', sans-serif;
@@ -952,7 +949,10 @@ body {
 
   <!-- ================= HEADER ================= -->
   <header id="logo-banner">
-    <div id="glyph"></div>
+    <svg id="glyph" viewBox="0 0 100 52" aria-label="RONE" role="img">
+        <path class="r-stem" d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"/>
+        <path class="r-line" d="M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100"/>
+    </svg>
     <h1>AFTER<i>SPACE</i></h1>
     <span class="subtitle">RONE PLUGINS</span>
     <div class="preset">
