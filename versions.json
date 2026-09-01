@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "open",
   "license_message": "",
-  "last_updated": "2026-09-01T05:59:59Z",
+  "last_updated": "2026-09-01T06:53:25Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -13,7 +13,7 @@
     {
       "id": "ReverseReverb",
       "name": "ReverseReverb",
-      "version": "1.0.0.147",
+      "version": "1.0.0.149",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -27,9 +27,9 @@
       "au_bundle": "ReverseReverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "cd0db51e2bf8e692eb1174280beb7d3f37552dbf5eb8bf2e923a796a207c0ee9",
+      "sha256": "3507057ec37536bad376eccbffb68f55aeeaa7b01ba98437a024822dbc2018f9",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "249476918e7f4d057f1ea5617c55f7d5b0aa8e63bbbfde1965ff2258f26aa3d0"
+      "sha256_mac": "fe778f3ab08c04924fd7ad58997b9a9fdaa5eb3ffb89f55fa37d99034e68e363"
     },
     {
       "id": "RoneStutter",
