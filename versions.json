@@ -1,5 +1,7 @@
 {
   "manifest_version": 2,
+  "license_mode": "open",
+  "license_message": "",
   "last_updated": "2026-08-31T21:00:54Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",

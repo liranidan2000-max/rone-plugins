@@ -47,6 +47,9 @@ RoneAfterspaceAudioProcessor::RoneAfterspaceAudioProcessor()
     pModDepth    = raw (ParamIDs::modDepth);
     pWidth       = raw (ParamIDs::width);
     pMonoLow     = raw (ParamIDs::monoLow);
+
+    // Prime the license/kill-switch cache (constructor = message thread)
+    checkBundleLicense();
 }
 
 // =============================================================================
@@ -55,6 +58,9 @@ RoneAfterspaceAudioProcessor::RoneAfterspaceAudioProcessor()
 void RoneAfterspaceAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
+
+    // Not the realtime thread yet — refresh the license/kill-switch cache
+    checkBundleLicense();
 
     reverb.prepare (sampleRate, samplesPerBlock);
     echo.prepare (sampleRate, samplesPerBlock);
@@ -151,6 +157,11 @@ void RoneAfterspaceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
     // Mono-in/stereo-out: duplicate the mono channel so the wet field decorrelates
     if (getTotalNumInputChannels() == 1 && buffer.getNumChannels() >= 2)
         buffer.copyFrom (1, 0, buffer, 0, 0, numSamples);
+
+    // Remote kill-switch / license gate: locked -> clean bypass, the dry
+    // signal passes through untouched (never silences a customer's mix).
+    if (! licenseValid.load (std::memory_order_relaxed))
+        return;
 
     auto* dataL = buffer.getWritePointer (0);
     auto* dataR = buffer.getNumChannels() > 1 ? buffer.getWritePointer (1) : dataL;
@@ -397,7 +408,11 @@ double RoneAfterspaceAudioProcessor::getTailLengthSeconds() const
 
 void RoneAfterspaceAudioProcessor::checkBundleLicense()
 {
-    licenseValid.store (BundleLicenseChecker::isBundleLicensed());
+    // Remote kill-switch: open mode (versions.json license_mode) plays free;
+    // enforced mode requires the real bundle license.
+    RemoteLicenseGate::refreshFromNetworkAsync();
+    licenseValid.store (RemoteLicenseGate::isOpenMode()
+                         || BundleLicenseChecker::isBundleLicensed());
 }
 
 // =============================================================================

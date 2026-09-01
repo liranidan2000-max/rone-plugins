@@ -1,6 +1,8 @@
 #pragma once
 
-#include <JuceHeader.h>
+// juce_core only — so this header also compiles in plugins that include
+// JUCE modules directly instead of a generated JuceHeader.h (e.g. Flanger).
+#include <juce_core/juce_core.h>
 
 #if JUCE_WINDOWS
  #include <windows.h>
@@ -18,16 +20,17 @@
 //       enableProFeatures();
 //
 // ----------------------------------------------------------------------------
-// BETA MODE
+// OPEN / LOCKED STATE
 // ----------------------------------------------------------------------------
-// Define RONE_BETA_MODE (e.g. via target_compile_definitions in CMake, or by
-// uncommenting the line below) to make isBundleLicensed() ALWAYS return true.
-// This is for pre-release builds sent to beta testers / colleagues, so they
-// don't get stuck on license checks before the real activation system is in
-// place. REMOVE/undefine before shipping commercially.
+// The old compile-time RONE_BETA_MODE flag is gone. "Everything runs free"
+// is now controlled REMOTELY via RemoteLicenseGate (the `license_mode` field
+// of versions.json). Plugins combine the two:
+//
+//     unlocked = RemoteLicenseGate::isOpenMode() || isBundleLicensed()
+//
+// so flipping license_mode to "enforced" on GitHub locks every install that
+// has this build, without recompiling anything.
 // ============================================================================
-
-#define RONE_BETA_MODE 1      // <-- BETA BUILD: remove this line before commercial release
 
 class BundleLicenseChecker
 {
@@ -35,11 +38,6 @@ public:
     // ---- Primary check: read the shared XML file ---------------------------
     static bool isBundleLicensed()
     {
-    #ifdef RONE_BETA_MODE
-        DBG ("BundleLicenseChecker: RONE_BETA_MODE active — returning LICENSED");
-        return true;
-    #endif
-
         auto file = getLicenseFile();
 
         DBG ("BundleLicenseChecker: checking file -> " + file.getFullPathName());

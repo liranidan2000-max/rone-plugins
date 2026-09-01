@@ -1,4 +1,5 @@
 #include "NetworkManager.h"
+#include "../../Shared/RemoteLicenseGate.h"
 
 NetworkManager::NetworkManager()
     : Thread ("RONE-Network")
@@ -110,6 +111,14 @@ void NetworkManager::run()
             // Capture the manifest's own-update block for the Center
             {
                 auto root = juce::JSON::parse (body);
+
+                // Propagate the remote kill-switch (license_mode) to the
+                // shared cache file that every RONE plugin reads.
+                if (root.isObject())
+                    RemoteLicenseGate::writeMode (
+                        root.getProperty ("license_mode",    "open").toString(),
+                        root.getProperty ("license_message", ""    ).toString());
+
                 auto ci   = root.getProperty ("center_installer", {});
                 const juce::ScopedLock sl (centerInfoLock);
                 centerInfo.version = ci.getProperty ("version", {}).toString();

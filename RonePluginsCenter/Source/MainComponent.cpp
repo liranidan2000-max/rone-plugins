@@ -1,5 +1,13 @@
 #include "MainComponent.h"
 #include "BinaryData.h"
+#include "../../Shared/RemoteLicenseGate.h"
+
+// Open mode (remote kill-switch OFF) counts as licensed everywhere:
+// the C++ side and the web UI both key off this one predicate.
+static bool isEffectivelyLicensed (const LicenseHandler& handler)
+{
+    return RemoteLicenseGate::isOpenMode() || handler.isLicensed();
+}
 
 #if JUCE_WINDOWS
  #ifndef WIN32_LEAN_AND_MEAN
@@ -137,7 +145,7 @@ MainComponent::MainComponent()
     licenseHandler.onLicenseStateChanged = [this] (bool isLicensed)
     {
         auto* obj = new juce::DynamicObject();
-        obj->setProperty ("licensed",     isLicensed);
+        obj->setProperty ("licensed",     isLicensed || RemoteLicenseGate::isOpenMode());
         obj->setProperty ("customerName", licenseHandler.getCustomerName());
         obj->setProperty ("message",      licenseHandler.getStatusMessage());
         webView.emitEventIfBrowserIsVisible ("licenseChanged", juce::var (obj));
@@ -308,7 +316,7 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
         return;
     }
 
-    if (! licenseHandler.isLicensed())
+    if (! isEffectivelyLicensed (licenseHandler))
     {
         complete ("{\"started\":false,\"error\":\"License required\"}");
         return;
@@ -358,7 +366,7 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
         return;
     }
 
-    if (! licenseHandler.isLicensed())
+    if (! isEffectivelyLicensed (licenseHandler))
     {
         complete ("{\"success\":false,\"error\":\"License required\"}");
         return;
@@ -488,11 +496,18 @@ void MainComponent::handleDeactivateLicense (NativeArgs, NativeCompletion comple
 
 void MainComponent::handleGetLicenseStatus (NativeArgs, NativeCompletion complete)
 {
+    const bool effective = isEffectivelyLicensed (licenseHandler);
+
     auto* obj = new juce::DynamicObject();
-    obj->setProperty ("licensed",     licenseHandler.isLicensed());
+    obj->setProperty ("licensed",     effective);
     obj->setProperty ("customerName", licenseHandler.getCustomerName());
     obj->setProperty ("licenseKey",   licenseHandler.getLicenseKey());
-    obj->setProperty ("message",      licenseHandler.getStatusMessage());
+
+    // When the remote kill-switch is engaged, surface its message (if any)
+    // over the generic local one.
+    auto lockMsg = (! effective) ? RemoteLicenseGate::getLockMessage() : juce::String();
+    obj->setProperty ("message", lockMsg.isNotEmpty() ? lockMsg
+                                                      : licenseHandler.getStatusMessage());
     complete (juce::JSON::toString (juce::var (obj)));
 }
 
