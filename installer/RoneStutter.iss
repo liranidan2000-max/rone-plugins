@@ -8,6 +8,14 @@
 #endif
 
 [Setup]
+#ifdef SIGN
+; CI passes /DSIGN + /Srone=... (scripts/ci/sign-windows.ps1): Setup.exe and the
+; uninstaller get an Authenticode signature. Without /DSIGN nothing changes.
+SignTool=rone
+SignedUninstaller=yes
+SignToolRunMinimized=yes
+SignToolRetryCount=3
+#endif
 AppId={{D4E5F6A7-B8C9-0123-DEFA-234567890123}
 AppName=RONE Stutter
 AppVersion={#MyAppVersion}

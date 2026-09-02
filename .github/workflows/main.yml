@@ -167,6 +167,22 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_windows == 'true'
     runs-on: windows-latest
+    env:
+      # Code signing (docs/CODE-SIGNING.md). All optional: without them the
+      # build is produced unsigned. First complete set wins, see scripts/ci/sign-windows.ps1.
+      AZURE_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
+      ACS_ENDPOINT:          ${{ secrets.ACS_ENDPOINT }}
+      ACS_ACCOUNT:           ${{ secrets.ACS_ACCOUNT }}
+      ACS_PROFILE:           ${{ secrets.ACS_PROFILE }}
+      ESIGNER_USERNAME:      ${{ secrets.ESIGNER_USERNAME }}
+      ESIGNER_PASSWORD:      ${{ secrets.ESIGNER_PASSWORD }}
+      ESIGNER_CREDENTIAL_ID: ${{ secrets.ESIGNER_CREDENTIAL_ID }}
+      ESIGNER_TOTP_SECRET:   ${{ secrets.ESIGNER_TOTP_SECRET }}
+      WIN_SIGN_PFX_BASE64:   ${{ secrets.WIN_SIGN_PFX_BASE64 }}
+      WIN_SIGN_PFX_PASSWORD: ${{ secrets.WIN_SIGN_PFX_PASSWORD }}
+      GITHUB_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -300,6 +316,18 @@ jobs:
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel
 
+      # --- Code signing (Authenticode) - a no-op until the secrets exist ---
+      - name: Sign binaries
+        shell: pwsh
+        run: |
+          $backend = (& scripts/ci/sign-windows.ps1 -Status | Select-Object -Last 1)
+          "RONE_SIGN_BACKEND=$backend" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Windows signing backend: $backend"
+          if ($backend -ne 'none') {
+            & scripts/ci/sign-windows.ps1 -Require "${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
       # --- pluginval (VST3 sanity check) ---
       - name: Run pluginval
         if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer'
@@ -341,10 +369,24 @@ jobs:
           $m = Select-String -Path "${{ matrix.folder }}\CMakeLists.txt" -Pattern 'VERSION\s+(\d+\.\d+\.\d+)' | Select-Object -First 1
           $base = if ($m) { $m.Matches[0].Groups[1].Value } else { "1.0.0" }
           $ver = "$base.${{ github.run_number }}"
+          # With a signing backend, Inno Setup signs the uninstaller and Setup.exe
+          # itself through scripts/ci/sign-windows.ps1 (SignTool=rone in the .iss).
+          $signArgs = @()
+          if ($env:RONE_SIGN_BACKEND -and $env:RONE_SIGN_BACKEND -ne 'none') {
+            $signer = (Resolve-Path 'scripts\ci\sign-windows.ps1').Path
+            $signArgs = @('/DSIGN', ('/Srone=pwsh -NoProfile -ExecutionPolicy Bypass -File $q' + $signer + '$q -Require $q$f$q'))
+          }
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
             "/DMyAppVersion=$ver" `
             "/F${{ matrix.installer_name }}_Installer" `
+            @signArgs `
             "installer\${{ matrix.iss_file }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($env:RONE_SIGN_BACKEND -and $env:RONE_SIGN_BACKEND -ne 'none') {
+            $sig = Get-AuthenticodeSignature "build-output\${{ matrix.installer_name }}_Installer.exe"
+            if (-not $sig.SignerCertificate) { Write-Host "::error::The installer came out unsigned"; exit 1 }
+            Write-Host "Installer signed: $($sig.Status) [$($sig.SignerCertificate.Subject)]"
+          }
 
       # --- Upload ---
       - name: Upload installer
@@ -362,6 +404,14 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_macos == 'true'
     runs-on: macos-latest
+    env:
+      # Code signing + notarization (docs/CODE-SIGNING.md). All optional:
+      # without them the build is produced unsigned. See scripts/ci/sign-macos.sh.
+      MAC_CERT_P12_BASE64:     ${{ secrets.MAC_CERT_P12_BASE64 }}
+      MAC_CERT_PASSWORD:       ${{ secrets.MAC_CERT_PASSWORD }}
+      APPLE_API_KEY_ID:        ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER_ID:     ${{ secrets.APPLE_API_ISSUER_ID }}
+      APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
     strategy:
       fail-fast: false
       matrix:
@@ -426,6 +476,13 @@ jobs:
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel
 
+      # --- Code signing (Developer ID) - a no-op until the secrets exist ---
+      - name: Import signing identity
+        run: bash scripts/ci/sign-macos.sh import
+
+      - name: Sign bundles
+        run: bash scripts/ci/sign-macos.sh sign "${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
+
       # --- pluginval (VST3 sanity check) ---
       - name: Run pluginval
         if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer'
@@ -460,6 +517,7 @@ jobs:
               mkdir -p dmg_staging && cp -R "$APP" dmg_staging/
               hdiutil create -volname "RONE Plugins Center" -srcfolder dmg_staging \
                 -ov -format UDZO build-output/RONE_Plugins_Center.dmg
+              bash scripts/ci/sign-macos.sh dmg build-output/RONE_Plugins_Center.dmg
               rm -rf dmg_staging
             else
               echo "::error::No .app found for plugins_center"
@@ -549,6 +607,7 @@ jobs:
               build-output/${{ matrix.installer_name }}_Installer.pkg
 
             echo "Created: ${{ matrix.installer_name }}_Installer.pkg ($(du -h build-output/${{ matrix.installer_name }}_Installer.pkg | cut -f1))"
+            bash scripts/ci/sign-macos.sh pkg "build-output/${{ matrix.installer_name }}_Installer.pkg"
             rm -rf staging
           fi
 
@@ -561,6 +620,10 @@ jobs:
             build-output/*.pkg
             build-output/*.dmg
           retention-days: 5
+
+      - name: Remove signing keychain
+        if: always()
+        run: bash scripts/ci/sign-macos.sh cleanup
 
   # ================================================================
   # 4. RELEASE — per-plugin rolling releases with stable download URLs

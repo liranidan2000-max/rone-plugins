@@ -43,6 +43,9 @@ juce_add_plugin(RoneAfterspace
     PLUGIN_CODE            RnAS
     FORMATS                VST3 Standalone AU
     PRODUCT_NAME           "RONE AFTERSPACE"
+    # macOS: without a usage description the system kills an app the moment it opens the microphone
+    MICROPHONE_PERMISSION_ENABLED TRUE
+    MICROPHONE_PERMISSION_TEXT "RONE AFTERSPACE needs your audio input to process live audio."
     COPY_PLUGIN_AFTER_BUILD TRUE
     NEEDS_WEB_BROWSER      TRUE
     NEEDS_WEBVIEW2         TRUE
