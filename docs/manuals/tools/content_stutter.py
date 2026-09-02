@@ -78,7 +78,7 @@ def manual(G):
  ("Status line", "what the plugin is doing and what it expects next"),
  ("Resize grip", "drag to resize the window"),
 ])}
-<p>Below the interface (not visible in the picture) sits the <strong>DRAG TO EXPORT</strong> strip. Once a result exists, press the mouse on the strip and drag into your DAW's arrangement; the plugin hands over a WAV file. It also works into Explorer / Finder.</p>
+<p>Below the interface (not visible in the picture) sits the <strong>DRAG TO EXPORT</strong> strip. Once a result exists, press the mouse on the strip and drag into your DAW's arrangement; the plugin saves a WAV into <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> and hands that file over. It also works into Explorer / Finder.</p>
 """})
 
     S.append({"title": "Controls reference", "sub": "what every control does, its range and default", "html": f"""
@@ -102,8 +102,8 @@ def manual(G):
 {ctl("&#9654; ORIGINAL", "", "<p>Plays the loaded file from the selected slice start. Press again to stop.</p>")}
 {ctl("STUTTER", "render", "<p>Renders the clip with the current settings. Rendering is instant for normal clip lengths. Every change to GRID, BARS, fades or STEREO needs a new render - the status line reminds you.</p>")}
 {ctl("&#9654; RESULT", "", "<p>Plays the rendered clip through the plugin's channel. The playback position is drawn on the waveform.</p>")}
-{ctl("EXPORT", "save WAV", "<p>Saves the rendered clip as a WAV file at the source sample rate. The suggested file name contains the source name, the grid and the bar count.</p>")}
-{ctl("DRAG TO EXPORT", "strip under the interface", "<p>Drag from the strip directly into your DAW. The clip is written to a temporary file and handed to the DAW as an audio drop; most DAWs copy it into the project folder.</p>", "Drop it at the bar line where the fill should start. Because the clip is exactly N bars long, its end lands on the next bar line.")}
+{ctl("EXPORT", "save to the Exports folder", "<p>Saves the rendered clip into <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> as <em>&lt;source&gt;_stutter_&lt;grid&gt;_&lt;bars&gt;_&lt;date&gt;_&lt;time&gt;.wav</em>, at the session's sample rate. The status line shows the file name. Nothing is ever deleted from that folder by the plugin.</p>")}
+{ctl("DRAG TO EXPORT", "strip under the interface", "<p>Drag from the strip directly into your DAW. The clip is first saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> (a permanent folder, never cleaned up), then handed to the DAW as an audio drop - so a project that references the file always finds it again, even if your DAW does not copy dropped files into the project folder.</p>", "Drop it at the bar line where the fill should start. Because the clip is exactly N bars long, its end lands on the next bar line.")}
 <h3>Host parameters without a knob</h3>
 {table(["Parameter", "Range", "What it does"], [
  ("Fade In Curve / Fade Out Curve", "0.1 to 4 (default 2)", "Shape of the fades. 1 is linear, 2 (default) is a gentle quadratic, higher values are sharper."),
@@ -151,7 +151,7 @@ def manual(G):
 <li>Use small FADE IN values (5-10 %) whenever you hear a click at the start of the repeats.</li>
 <li>Keep a dedicated "Stutter" mixer channel. All previews play through it, so you can EQ and compress the auditions the same way you will treat the printed clip.</li>
 <li>Render variations rather than automating: 1/8 &rarr; 1/16 &rarr; 1/32 clips placed back to back is the fastest way to build a roll that accelerates.</li>
-<li>Name your exports; the suggested name already contains the grid and bar count.</li>
+<li>Exports are named for you (source, grid, bars, date) and collected in <code>Documents\\RONE Plugins\\Exports</code>; back that folder up with your projects.</li>
 </ul></div>
 <div><h4>Avoid</h4><ul>
 <li>Selecting far ahead of the transient. Silence before the hit is repeated too, and the roll loses its punch.</li>
@@ -175,6 +175,7 @@ def manual(G):
         ("The roll is out of time in my DAW", "Check the BPM chip. If it says MANUAL inside a DAW, the host is not sending tempo (some hosts only do so while playing); type the project tempo and render again."),
         ("Drag to export does nothing", "Render first - the strip only becomes active after a result exists. Drag from the strip itself, not from the waveform."),
         ("No transients are found", "The material is too soft or sustained for the detector. Click the waveform to place the selection by hand; everything else works the same."),
+        ("The DAW says a dropped clip is missing", "Clips are saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter</code>; point the DAW there. Versions before 1.1.1 wrote to the temp folder, which Windows and macOS clean up - re-export those clips once."),
     ]))
 
     m["sections"] = S

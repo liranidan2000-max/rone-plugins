@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "Now named RONE Reverse Reverb in your DAW so every RONE plugin sits together in the list (rescan once; existing projects load unchanged). A full user manual ships in the install folder and opens from the Center.",
+      "whats_new": "Now named RONE Reverse Reverb in your DAW so every RONE plugin sits together (rescan once; projects load unchanged). Pitch fix: the file is resampled to the session rate, so a 44.1k file no longer plays sharp in a 48k session. Drag-to-export clips are saved to Documents/RONE Plugins/Exports instead of the temp folder. A full user manual ships in the install folder.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
@@ -43,7 +43,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "Now named RONE Stutter in your DAW so every RONE plugin sits together in the list (rescan once; existing projects load unchanged). A full user manual ships in the install folder and opens from the Center.",
+      "whats_new": "Now named RONE Stutter in your DAW so every RONE plugin sits together (rescan once; projects load unchanged). Exports and drag-to-export clips are saved to Documents/RONE Plugins/Exports - no more missing samples - and keep the session's sample rate. A full user manual ships in the install folder and opens from the Center.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",

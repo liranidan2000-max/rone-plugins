@@ -50,7 +50,7 @@ def manual(G):
  "<strong>Shape it.</strong> Drag the fade handles on the left and right edges of the waveform to fade the result in and out, and drag the small curve dots to bend the fades.",
  "<strong>Choose the mode.</strong> REVERSE ONLY renders the reversed tail alone. TRANSITION renders the reversed tail followed by the original sound with a matching forward reverb - the complete 'swell into the hit'.",
  "<strong>Add rhythm (optional).</strong> Turn the TREMOLO on. In RAMP mode it chops the swell faster and faster towards the end - the classic riser.",
- "<strong>Export.</strong> Drag the result from the plugin into your DAW, or use your DAW's render if you prefer to record the playback.",
+ "<strong>Export.</strong> Drag the waveform out of the plugin into your DAW. The clip is saved to <code>Documents\\RONE Plugins\\Exports\\RONE Reverse Reverb\\</code> first and that permanent file is what the DAW receives, so the project can always find it again.",
 ])}
 """})
 
@@ -77,6 +77,7 @@ def manual(G):
 <h3>Source and playback</h3>
 {ctl("Waveform", "drop zone &middot; fade handles &middot; curve dots", "<p>Drop files here. Once a sound is loaded it shows the reversed result. Drag the handle at the left edge to set FADE IN and the handle at the right edge to set FADE OUT; drag the small dots to change the fade curve from logarithmic to exponential. The playback cursor moves across the waveform while playing.</p>", "A short fade in (5-10 %) hides the abrupt start that some reversed tails have; a fade out that ends a little before the end keeps the last transient clean.")}
 {ctl("PLAY", "", "<p>Plays the rendered result. In a DAW, MIDI note on also triggers playback and note off stops it, so you can place a MIDI note where the swell should start.</p>")}
+{ctl("Drag to export", "drag the waveform into the DAW", "<p>Press on the waveform and drag into your DAW's arrangement (or into Explorer / Finder). The rendered clip is written to <code>Documents\\RONE Plugins\\Exports\\RONE Reverse Reverb\\</code> as <em>&lt;source&gt;_ReverseReverb_&lt;date&gt;_&lt;time&gt;.wav</em> at the session's sample rate, and never deleted by the plugin.</p>", "Drop it so that it ends on the downbeat; the clip is exactly TAIL LENGTH long.")}
 {ctl("REVERSE ONLY / TRANSITION", "default REVERSE ONLY", "<p><strong>REVERSE ONLY</strong>: the output is the reversed reverb tail; the original sound is not included. <strong>TRANSITION</strong>: the reversed tail is followed by the original sound, itself sent through the same reverb forwards - swell, hit and decay in one clip, already glued.</p>")}
 <h3>Main knobs</h3>
 {img("reversereverb/tour_knobs.png", "<b>LOW CUT, WIDTH, TAIL LENGTH, ROOM SIZE, DRY/WET.</b>")}
@@ -156,6 +157,8 @@ def manual(G):
         ("The file does not load", "Files longer than 8 seconds are rejected. Trim the sound in your DAW and try again. WAV, AIFF, FLAC and MP3 are supported."),
         ("The swell does not land on the beat", "Check the tempo shown next to the status line. In the standalone app set the BPM slider; in a DAW the host tempo is used - re-render if you changed it."),
         ("PLAY is greyed out", "No sound is loaded yet, or the render is still running (very long tails take a moment)."),
+        ("The swell sounds a semitone or so too high or too low", "Fixed in 1.0.1: files are now resampled to the session's sample rate. If an old project still sounds off, re-drop the source file once."),
+        ("The DAW says a dropped clip is missing", "Clips are saved to <code>Documents\\RONE Plugins\\Exports\\RONE Reverse Reverb</code>; point the DAW there. Versions before 1.0.1 wrote to the temp folder - re-export those clips once."),
         ("I hear nothing when I send MIDI", "The MIDI must reach the plugin's channel; in some DAWs an effect plugin needs a MIDI routing or a 'MIDI to plugin' setting. The PLAY button works regardless."),
     ]))
 
