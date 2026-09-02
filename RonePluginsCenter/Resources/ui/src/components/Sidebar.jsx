@@ -1,4 +1,5 @@
 import React from 'react'
+import { callNative } from '../bridge'
 
 function IconHome() {
   return (
@@ -37,7 +38,16 @@ function IconSettings() {
   return (
     <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" strokeWidth={1.8} />
-      <path strokeWidth={1.8} strokeLinecap="round" d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8L6 18M18 6l1.8-1.8" />
+      <path strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function IconGlobe() {
+  return (
+    <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
+      <path strokeWidth={1.8} strokeLinecap="round" d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18M5 7.5h14M5 16.5h14" />
     </svg>
   )
 }
@@ -79,13 +89,18 @@ function EqualizerArt() {
 export default function Sidebar({ active, onNavigate, updatesCount = 0, license }) {
   return (
     <div className="sidebar-panel flex-shrink-0 w-[230px] h-full flex flex-col">
-      {/* Wordmark: RONE white + PLUGINS neon (house pattern) */}
-      <div className="px-5 pt-5 pb-4 select-none">
-        <div className="font-display font-extrabold text-[19px] tracking-[0.02em] text-rone-text-primary whitespace-nowrap">
-          RONE<span className="ml-1.5 text-rone-purple" style={{ textShadow: '0 0 12px rgba(157,107,255,0.35)' }}>PLUGINS</span>
+      {/* Wordmark: RONE white + PLUGINS neon (house pattern). Clicking it always goes Home. */}
+      <button
+        onClick={() => onNavigate('home')}
+        className="group px-5 pt-5 pb-4 select-none text-left cursor-pointer"
+        title="Home"
+        aria-label="Home"
+      >
+        <div className="font-display font-extrabold text-[19px] tracking-[0.02em] text-rone-text-primary whitespace-nowrap transition-transform duration-200 group-hover:scale-[1.03] origin-left">
+          RONE<span className="ml-1.5 text-rone-purple transition-[text-shadow] duration-200" style={{ textShadow: '0 0 12px rgba(157,107,255,0.35)' }}>PLUGINS</span>
         </div>
-        <div className="mt-0.5 text-[9px] font-bold tracking-[0.34em] text-rone-text-faint uppercase">Center</div>
-      </div>
+        <div className="mt-0.5 text-[9px] font-bold tracking-[0.34em] text-rone-text-faint uppercase group-hover:text-rone-text-dim transition-colors">Center</div>
+      </button>
 
       {/* Nav */}
       <nav className="px-3 mt-1 flex flex-col gap-1">
@@ -114,6 +129,22 @@ export default function Sidebar({ active, onNavigate, updatesCount = 0, license 
           )
         })}
       </nav>
+
+      {/* The website - always one click away */}
+      <div className="px-3 mt-3">
+        <button
+          onClick={() => callNative('openExternalUrl', 'https://roneaudio.com').catch(() => {})}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-rone-border/70 text-[11px] font-bold uppercase tracking-[0.14em]
+                     text-rone-text-dim hover:text-rone-purple hover:border-rone-purple/40 hover:bg-white/[0.025] transition-colors duration-200"
+          title="Open roneaudio.com in your browser"
+        >
+          <span className="text-rone-text-faint"><IconGlobe /></span>
+          <span className="flex-1 text-left normal-case tracking-[0.06em]">roneaudio.com</span>
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M7 17L17 7M9 7h8v8" />
+          </svg>
+        </button>
+      </div>
 
       {/* Decorative art */}
       <div className="flex-1 flex items-center">

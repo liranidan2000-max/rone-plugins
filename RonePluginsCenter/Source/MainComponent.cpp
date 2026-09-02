@@ -184,7 +184,7 @@ MainComponent::MainComponent()
     addAndMakeVisible (titleBar);
 #endif
 
-    setSize (920, 640);
+    setSize (1200, 800);   // two plugin cards per row from the first launch
 
     networkManager.addListener (this);
 

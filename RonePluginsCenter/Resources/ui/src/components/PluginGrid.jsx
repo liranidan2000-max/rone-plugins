@@ -12,7 +12,7 @@ export default function PluginGrid({ plugins, licensed, onInstall, onOpen, onOpe
   if (loading) {
     return (
       <div className="h-full overflow-y-auto plugin-grid-scroll px-6 py-5">
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 max-w-[1100px]">
+        <div className="grid grid-cols-2 gap-4 max-w-[1100px]">
           {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
         </div>
       </div>
@@ -33,7 +33,7 @@ export default function PluginGrid({ plugins, licensed, onInstall, onOpen, onOpe
   return (
     <div className="h-full overflow-y-auto plugin-grid-scroll px-6 py-5">
       <motion.div
-        className="grid grid-cols-1 xl:grid-cols-2 gap-4 max-w-[1100px]"
+        className="grid grid-cols-2 gap-4 max-w-[1100px]"
         variants={containerVariants}
         initial="hidden"
         animate="show"
