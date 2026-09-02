@@ -113,3 +113,6 @@ build-vs2022/
 
 # RONE user manuals: regenerated intermediates (see docs/manuals/README.md)
 docs/manuals/work/
+
+# wrangler cache from running the site tooling out of this folder
+.wrangler/
