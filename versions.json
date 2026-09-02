@@ -12,7 +12,7 @@
   "plugins": [
     {
       "id": "ReverseReverb",
-      "name": "ReverseReverb",
+      "name": "RONE Reverse Reverb",
       "version": "1.0.0.153",
       "type": "plugin",
       "formats": [
@@ -21,10 +21,11 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "Right-click no longer opens a browser menu. Knob glow no longer clips, the bundle's resize triangle (bottom right) is here, and the standalone lost the input-muted banner",
-      "standalone_exe": "ReverseReverb.exe",
-      "vst3_bundle": "ReverseReverb.vst3",
-      "au_bundle": "ReverseReverb.component",
+      "whats_new": "Now named RONE Reverse Reverb in your DAW so every RONE plugin sits together in the list (rescan once; existing projects load unchanged). A full user manual ships in the install folder and opens from the Center.",
+      "standalone_exe": "RONE Reverse Reverb.exe",
+      "vst3_bundle": "RONE Reverse Reverb.vst3",
+      "au_bundle": "RONE Reverse Reverb.component",
+      "manual": "RONE Reverse Reverb - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
       "sha256": "6c33277064fb9c59616964e15b6e737454cf30b4f037c587cef3c0eb97cc4e51",
@@ -33,7 +34,7 @@
     },
     {
       "id": "RoneStutter",
-      "name": "Rone Stutter",
+      "name": "RONE Stutter",
       "version": "1.1.0.153",
       "type": "plugin",
       "formats": [
@@ -42,10 +43,11 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "Right-click on any control opens FL's automation menu (VST3). Resizable via the corner triangle, DRAG TO EXPORT in Stutter yellow, no input-muted banner",
-      "standalone_exe": "Rone Stutter.exe",
-      "vst3_bundle": "Rone Stutter.vst3",
-      "au_bundle": "Rone Stutter.component",
+      "whats_new": "Now named RONE Stutter in your DAW so every RONE plugin sits together in the list (rescan once; existing projects load unchanged). A full user manual ships in the install folder and opens from the Center.",
+      "standalone_exe": "RONE Stutter.exe",
+      "vst3_bundle": "RONE Stutter.vst3",
+      "au_bundle": "RONE Stutter.component",
+      "manual": "RONE Stutter - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
       "sha256": "ab70ec12214c93bb1f443382920ec742b9713217cc8f36dafe211c91f3451d31",
@@ -54,7 +56,7 @@
     },
     {
       "id": "RoneStucker",
-      "name": "Rone Stucker",
+      "name": "RONE Stucker",
       "version": "1.0.0.153",
       "type": "plugin",
       "formats": [
@@ -63,10 +65,11 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "Right-click on any control opens FL's automation menu (VST3). Advanced mini knobs redesigned to match the big knob, resize triangle, graphite title bar in standalone",
-      "standalone_exe": "Rone Stucker.exe",
-      "vst3_bundle": "Rone Stucker.vst3",
-      "au_bundle": "Rone Stucker.component",
+      "whats_new": "Now named RONE Stucker in your DAW so every RONE plugin sits together in the list (rescan once; existing projects load unchanged). A full user manual ships in the install folder and opens from the Center.",
+      "standalone_exe": "RONE Stucker.exe",
+      "vst3_bundle": "RONE Stucker.vst3",
+      "au_bundle": "RONE Stucker.component",
+      "manual": "RONE Stucker - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
       "sha256": "b499125119552c801770c48079f92ebec9c0edcc2492fb3c3caa5cb80f6d62a2",
@@ -75,7 +78,7 @@
     },
     {
       "id": "RoneFlanger",
-      "name": "Rone Flanger",
+      "name": "RONE Flanger",
       "version": "2.0.1.153",
       "type": "plugin",
       "formats": [
@@ -83,10 +86,11 @@
         "Standalone"
       ],
       "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
-      "whats_new": "Right-click on any control opens FL's automation menu (VST3), never a browser menu. Resizable via the corner triangle, knob glow no longer clips, v2 standalone completed",
-      "standalone_exe": "Rone Flanger.exe",
-      "vst3_bundle": "Rone Flanger.vst3",
+      "whats_new": "Now named RONE Flanger in your DAW so every RONE plugin sits together in the list (rescan once; existing projects load unchanged). A full user manual ships in the install folder and opens from the Center.",
+      "standalone_exe": "RONE Flanger.exe",
+      "vst3_bundle": "RONE Flanger.vst3",
       "au_bundle": "",
+      "manual": "RONE Flanger - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
       "sha256": "3e182a12e3dadb2c4a1a5b71162c80c18efd9bb2457c9df79de889cb5a2cb3e5",
@@ -104,10 +108,11 @@
         "Standalone"
       ],
       "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
-      "whats_new": "Right-click on any knob opens FL's automation menu (VST3). Standalone opens at full size without the input-muted banner, corner resize no longer jumps, knob glow no longer clips",
+      "whats_new": "A full user manual now ships in the install folder and opens from the Center's card menu.",
       "standalone_exe": "RONE AFTERSPACE.exe",
       "vst3_bundle": "RONE AFTERSPACE.vst3",
       "au_bundle": "RONE AFTERSPACE.component",
+      "manual": "RONE AFTERSPACE - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
       "sha256": "6f240c5705807bce5f17893e4a8ae0018e150e9c67c1af76fa6cac20bc3892eb",
@@ -123,10 +128,11 @@
         "Standalone"
       ],
       "description": "Professional measurement suite: 30-band spectrum with reference-track comparison, vectorscope, level meters, EBU R128 loudness and bit statistics",
-      "whats_new": "First public release",
+      "whats_new": "A full user manual now ships in the install folder and opens from the Center's card menu.",
       "standalone_exe": "RONE Analyzer.exe",
       "vst3_bundle": "",
       "au_bundle": "",
+      "manual": "RONE Analyzer - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
       "sha256": "98d0db818adff2e00c06d721ef6b471171ade3437754d5a291d665be992fedac",
