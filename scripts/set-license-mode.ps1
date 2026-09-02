@@ -40,7 +40,9 @@ $escapedMsg = $Message -replace '\\', '\\\\' -replace '"', '\"'
 $content = $content -replace '"license_mode":\s*"[^"]*"',    ('"license_mode": "' + $Mode + '"')
 $content = $content -replace '"license_message":\s*"[^"]*"', ('"license_message": "' + $escapedMsg + '"')
 
-Set-Content -Path $manifest -Value $content -Encoding utf8 -NoNewline
+# Windows PowerShell 5.1's -Encoding utf8 writes a BOM, and a BOM in front of
+# '{' breaks strict JSON parsers (the Center, jq in CI). Write plain UTF-8.
+[System.IO.File]::WriteAllText($manifest, $content, (New-Object System.Text.UTF8Encoding($false)))
 
 git -C $repo add versions.json
 git -C $repo commit -m "license: set mode to $Mode [skip ci]"
