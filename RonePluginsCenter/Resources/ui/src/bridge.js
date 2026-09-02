@@ -106,6 +106,7 @@ export const api = {
   installPlugin:     createNativeFunction('installPlugin'),
   openPlugin:        createNativeFunction('openPlugin'),
   openManual:        createNativeFunction('openManual'),
+  openFolder:        createNativeFunction('openFolder'),
   refreshPlugins:    createNativeFunction('refreshPlugins'),
   activateLicense:   createNativeFunction('activateLicense'),
   deactivateLicense: createNativeFunction('deactivateLicense'),
@@ -114,6 +115,8 @@ export const api = {
   accountSignOut:    createNativeFunction('accountSignOut'),
   getAccountStatus:  createNativeFunction('getAccountStatus'),
   getAppVersion:     createNativeFunction('getAppVersion'),
+  getAutoStart:      createNativeFunction('getAutoStart'),
+  setAutoStart:      createNativeFunction('setAutoStart'),
   applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
 };
 

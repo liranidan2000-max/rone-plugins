@@ -32,6 +32,25 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
   const [beta, setBeta] = useState(false)
   const [showBackPanel, setShowBackPanel] = useState(false)
 
+  // Start with Windows / Open at login - the OS entry is the source of truth
+  const [autoStart, setAutoStart] = useState({ supported: false, enabled: false, platform: 'windows' })
+  const [autoStartMsg, setAutoStartMsg] = useState('')
+  useEffect(() => {
+    if (isDevMode()) { setAutoStart({ supported: true, enabled: true, platform: 'windows' }); return }
+    Promise.all([api.getAutoStart(), api.getAppVersion()])
+      .then(([a, v]) => setAutoStart({ supported: !!a?.supported, enabled: !!a?.enabled, platform: v?.platform || 'windows' }))
+      .catch(() => {})
+  }, [])
+  const toggleAutoStart = async (on) => {
+    setAutoStart(s => ({ ...s, enabled: on }))
+    if (isDevMode()) return
+    try {
+      const r = await api.setAutoStart(on)
+      setAutoStart(s => ({ ...s, enabled: !!r?.enabled }))
+      setAutoStartMsg(r?.success === false ? (r.error || 'Could not change the login entry') : '')
+    } catch (e) { setAutoStartMsg(e.message || 'Could not change the login entry') }
+  }
+
   // Real app version, straight from the running binary
   const [version, setVersion] = useState('')
   useEffect(() => {
@@ -49,6 +68,10 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
       <h2 className="font-display text-[18px] font-bold text-rone-text-primary mb-4">Settings</h2>
 
       <div className="pro-card rounded-2xl px-5 py-2">
+        <Row title={autoStart.platform === 'mac' ? 'Open at login' : 'Start with Windows'}
+             desc={(autoStart.platform === 'mac' ? 'The Center opens minimised in the menu bar when you log in' : 'The Center starts minimised in the tray when you log in') + ' - keeps your plugins licensed and updates checked without opening it' + (autoStartMsg ? ' - ' + autoStartMsg : '')}>
+          <Toggle on={autoStart.enabled} onChange={toggleAutoStart} />
+        </Row>
         <Row title="Automatic update checks" desc="Check for new plugin versions on launch">
           <Toggle on={autoCheck} onChange={setAutoCheck} />
         </Row>

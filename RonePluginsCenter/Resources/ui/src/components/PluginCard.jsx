@@ -23,7 +23,7 @@ const STATUS_LED = {
 const ACTION = {
   not_installed:    { label: 'Install', kind: 'primary', icon: 'download' },
   update_available: { label: 'Update',  kind: 'primary', icon: 'download' },
-  up_to_date:       { label: 'Open',    kind: 'open',    icon: 'open' },
+  up_to_date:       { label: 'Open Standalone', kind: 'open', icon: 'open' },
   downloading:      { label: 'Downloading…', kind: 'busy', icon: 'loading' },
   installing:       { label: 'Installing…',  kind: 'busy', icon: 'loading' },
   error:            { label: 'Retry',   kind: 'danger',  icon: 'retry' },
@@ -82,7 +82,7 @@ function Tile({ plugin }) {
   )
 }
 
-function PluginCard({ plugin, licensed, onInstall, onOpen, onManual, onInfo, unlockPlaying = false }) {
+function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManual, onInfo, unlockPlaying = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const baseAction = ACTION[plugin.status] || ACTION.not_installed
 
@@ -171,8 +171,8 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onManual, onInfo, unl
                     className="absolute right-0 top-7 z-20 w-36 rounded-lg border border-rone-border bg-rone-drawer shadow-xl shadow-black/40 py-1"
                   >
                     <button onMouseDown={() => onInfo(plugin)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Details</button>
-                    {isInstalled && plugin.hasStandalone && (
-                      <button onMouseDown={() => onOpen(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Open</button>
+                    {isInstalled && onOpenFolder && (
+                      <button onMouseDown={() => onOpenFolder(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Open Folder</button>
                     )}
                     {plugin.hasManual && onManual && (
                       <button onMouseDown={() => onManual(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Manual</button>
@@ -256,7 +256,7 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onManual, onInfo, unl
               className="flex items-center gap-1.5"
             >
               <ActionIcon type={justInstalled ? 'open' : action.icon} />
-              {justInstalled ? 'Open' : action.label}
+              {justInstalled ? 'Open Standalone' : action.label}
             </motion.span>
           </AnimatePresence>
         </motion.button>

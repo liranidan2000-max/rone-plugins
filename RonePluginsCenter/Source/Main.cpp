@@ -1,6 +1,7 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
 #include "RoneTrayIcon.h"
+#include "AutoStart.h"
 
 // ============================================================================
 // RONE Plugins Center — Application entry point
@@ -12,10 +13,17 @@ public:
     const juce::String getApplicationVersion() override { return JUCE_APPLICATION_VERSION_STRING; }
     bool moreThanOneInstanceAllowed()          override { return false; }
 
-    void initialise (const juce::String&) override
+    void initialise (const juce::String& commandLine) override
     {
-        mainWindow = std::make_unique<MainWindow> (getApplicationName());
+        // Launched by the OS at login (AutoStart): live in the tray, validate
+        // the licence in the background, and only show a window when asked.
+        const bool startInTray = commandLine.contains (AutoStart::kTrayFlag);
+
+        mainWindow = std::make_unique<MainWindow> (getApplicationName(), startInTray);
         trayIcon = std::make_unique<RoneTrayIcon> (*mainWindow);
+
+        AutoStart::applyDefaultOnce();   // on by default, once; the Settings toggle owns it afterwards
+        AutoStart::refreshIfEnabled();   // an update may have moved the executable
     }
 
     void shutdown() override
@@ -45,7 +53,7 @@ private:
     class MainWindow : public juce::DocumentWindow
     {
     public:
-        explicit MainWindow (const juce::String& name)
+        explicit MainWindow (const juce::String& name, bool startHidden = false)
             : DocumentWindow (name,
                               juce::Colour (0xff14161A),
                               DocumentWindow::allButtons)
@@ -64,7 +72,7 @@ private:
            #endif
             setResizeLimits (700, 500, 1400, 1000);
             centreWithSize (getWidth(), getHeight());
-            setVisible (true);
+            setVisible (! startHidden);
         }
 
         void closeButtonPressed() override

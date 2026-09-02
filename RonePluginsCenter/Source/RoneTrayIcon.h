@@ -1,6 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include <BinaryData.h>
+#include "AutoStart.h"
 
 class RoneTrayIcon : public juce::SystemTrayIconComponent,
                      private juce::Timer
@@ -47,6 +48,12 @@ private:
         juce::PopupMenu menu;
         menu.addItem (1, "Open RONE Center");
         menu.addSeparator();
+       #if JUCE_MAC
+        menu.addItem (3, "Open at login", AutoStart::isSupported(), AutoStart::isEnabled());
+       #else
+        menu.addItem (3, "Start with Windows", AutoStart::isSupported(), AutoStart::isEnabled());
+       #endif
+        menu.addSeparator();
         menu.addItem (2, "Quit");
 
         menu.showMenuAsync (juce::PopupMenu::Options(),
@@ -62,6 +69,8 @@ private:
             showWindow();
         else if (id == 2)
             juce::JUCEApplication::getInstance()->systemRequestedQuit();
+        else if (id == 3)
+            AutoStart::setEnabled (! AutoStart::isEnabled());
     }
 
     juce::DocumentWindow& mainWindow;

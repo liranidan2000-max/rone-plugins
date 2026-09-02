@@ -134,6 +134,12 @@ export default function App() {
       if (result && !result.success && result.error) addToast(result.error, 'error')
     } catch (err) { addToast(err.message || 'Could not open plugin', 'error') }
   }
+  const handleOpenFolder = async (pluginId) => {
+    try {
+      const result = await api.openFolder(pluginId)
+      if (result && !result.success && result.error) addToast(result.error, 'error')
+    } catch (err) { addToast(err.message || 'Could not open the folder', 'error') }
+  }
   const handleManual = async (pluginId) => {
     try {
       const result = await api.openManual(pluginId)
@@ -321,6 +327,7 @@ export default function App() {
                   licensed={license.licensed}
                   onInstall={handleInstall}
                   onOpen={handleOpen}
+                  onOpenFolder={handleOpenFolder}
                   onManual={handleManual}
                   onInfo={setInfoPlugin}
                   unlockPlaying={unlockPlaying}

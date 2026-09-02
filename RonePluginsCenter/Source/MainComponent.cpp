@@ -2,6 +2,7 @@
 #include "BinaryData.h"
 #include "../../Shared/RemoteLicenseGate.h"
 #include "CrashReportUploader.h"   // also brings in Shared/RoneCrashReporter.h
+#include "AutoStart.h"
 
 // Open mode (remote kill-switch OFF) counts as licensed everywhere:
 // the C++ side and the web UI both key off this one predicate.
@@ -110,6 +111,9 @@ MainComponent::MainComponent()
         .withNativeFunction ("openManual", [this] (NativeArgs args, NativeCompletion complete) {
             handleOpenManual (args, std::move (complete));
         })
+        .withNativeFunction ("openFolder", [this] (NativeArgs args, NativeCompletion complete) {
+            handleOpenFolder (args, std::move (complete));
+        })
         .withNativeFunction ("refreshPlugins", [this] (NativeArgs args, NativeCompletion complete) {
             handleRefreshPlugins (args, std::move (complete));
         })
@@ -133,6 +137,12 @@ MainComponent::MainComponent()
         })
         .withNativeFunction ("getAppVersion", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAppVersion (args, std::move (complete));
+        })
+        .withNativeFunction ("getAutoStart", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetAutoStart (args, std::move (complete));
+        })
+        .withNativeFunction ("setAutoStart", [this] (NativeArgs args, NativeCompletion complete) {
+            handleSetAutoStart (args, std::move (complete));
         })
         .withNativeFunction ("applyCenterUpdate", [this] (NativeArgs args, NativeCompletion complete) {
             handleApplyCenterUpdate (args, std::move (complete));
@@ -466,6 +476,59 @@ void MainComponent::handleOpenManual (NativeArgs args, NativeCompletion complete
     complete ("{\"success\":true,\"source\":\"online\"}");
 }
 
+// ============================================================================
+// "Open Folder": reveal where the plugin actually lives - the VST3 bundle
+// (or the AU on macOS), falling back to the standalone - in Explorer/Finder.
+// ============================================================================
+void MainComponent::handleOpenFolder (NativeArgs args, NativeCompletion complete)
+{
+    if (args.size() < 1)
+    {
+        complete ("{\"success\":false,\"error\":\"Missing plugin id\"}");
+        return;
+    }
+
+    auto pluginId = args[0].toString();
+    juce::String vst3, au, exe;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == pluginId) { vst3 = p.vst3Bundle; au = p.auBundle; exe = p.standaloneExe; break; }
+    }
+
+    juce::Array<juce::File> candidates;
+    if (vst3.isNotEmpty())
+    {
+        candidates.add (VersionChecker::getVst3InstallDir().getChildFile (vst3));
+       #if JUCE_WINDOWS
+        candidates.add (VersionChecker::getVst3InstallDir().getParentDirectory().getChildFile (vst3)); // top-level VST3 folder
+       #endif
+    }
+   #if JUCE_MAC
+    if (au.isNotEmpty())  candidates.add (VersionChecker::getAUInstallDir().getChildFile (au));
+    if (exe.isNotEmpty())
+    {
+        auto appName = exe.replace (".exe", "") + ".app";
+        candidates.add (juce::File ("/Applications").getChildFile (appName));
+        candidates.add (juce::File ("/Applications/RONE Plugins").getChildFile (appName));
+    }
+   #else
+    if (exe.isNotEmpty()) candidates.add (VersionChecker::getStandaloneInstallDir().getChildFile (exe));
+   #endif
+
+    for (auto& f : candidates)
+    {
+        if (f.exists())
+        {
+            f.revealToUser();
+            complete ("{\"success\":true}");
+            return;
+        }
+    }
+
+    complete ("{\"success\":false,\"error\":\"Nothing installed on disk for this plugin yet\"}");
+}
+
 void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete)
 {
     if (args.isEmpty())
@@ -686,6 +749,30 @@ void MainComponent::handleAccountSignOut (NativeArgs, NativeCompletion complete)
 void MainComponent::handleGetAccountStatus (NativeArgs, NativeCompletion complete)
 {
     complete (juce::JSON::toString (accountStatusVar()));
+}
+
+// ============================================================================
+// Start with Windows / Open at login (AutoStart.h). The OS entry is the
+// source of truth, so the toggle always shows what will really happen.
+// ============================================================================
+void MainComponent::handleGetAutoStart (NativeArgs, NativeCompletion complete)
+{
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("supported", AutoStart::isSupported());
+    obj->setProperty ("enabled",   AutoStart::isEnabled());
+    complete (juce::JSON::toString (juce::var (obj)));
+}
+
+void MainComponent::handleSetAutoStart (NativeArgs args, NativeCompletion complete)
+{
+    const bool wanted = args.size() > 0 && (bool) args[0];
+    const bool ok = AutoStart::setEnabled (wanted);
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("success",   ok);
+    obj->setProperty ("enabled",   AutoStart::isEnabled());
+    obj->setProperty ("supported", AutoStart::isSupported());
+    if (! ok) obj->setProperty ("error", "Could not change the login entry");
+    complete (juce::JSON::toString (juce::var (obj)));
 }
 
 void MainComponent::handleGetAppVersion (NativeArgs, NativeCompletion complete)

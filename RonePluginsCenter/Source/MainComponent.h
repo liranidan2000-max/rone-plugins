@@ -48,6 +48,7 @@ private:
     void handleInstallPlugin   (NativeArgs args, NativeCompletion complete);
     void handleOpenPlugin      (NativeArgs args, NativeCompletion complete);
     void handleOpenManual      (NativeArgs args, NativeCompletion complete);
+    void handleOpenFolder      (NativeArgs args, NativeCompletion complete);
     void handleRefreshPlugins  (NativeArgs args, NativeCompletion complete);
     void handleActivateLicense (NativeArgs args, NativeCompletion complete);
     void handleDeactivateLicense (NativeArgs args, NativeCompletion complete);
@@ -60,6 +61,8 @@ private:
     void handleGetAccountStatus (NativeArgs args, NativeCompletion complete);
     juce::var accountStatusVar() const;
     void handleGetAppVersion   (NativeArgs args, NativeCompletion complete);
+    void handleGetAutoStart    (NativeArgs args, NativeCompletion complete);
+    void handleSetAutoStart    (NativeArgs args, NativeCompletion complete);
 
     // ---- Window controls ----
     bool beginNativeWindowDrag();
