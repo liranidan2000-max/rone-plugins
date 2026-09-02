@@ -16,7 +16,8 @@
 // shared XML file (next to BundleLicense.xml), refresh it from the network
 // in the background at most once per kRefreshIntervalHours, and read the
 // cache cheaply on the message thread. Missing/unreadable data defaults to
-// OPEN, so a fresh offline install is never locked out by accident.
+// ENFORCED (fail closed): since the bundle went on sale, an install that has
+// never fetched the manifest needs a real licence like any other.
 //
 // To lock every install that has ever shipped: edit versions.json on the
 // monorepo's main branch, set "license_mode": "enforced" (optionally with a
@@ -45,9 +46,9 @@ public:
     {
         auto xml = juce::parseXML (getModeFile());
         if (xml == nullptr || xml->getTagName() != "RoneLicenseMode")
-            return true; // no data yet -> open (beta-friendly default)
+            return false; // no data yet -> enforced (fail closed; the Center writes the cache on its first run)
 
-        return ! xml->getStringAttribute ("mode", "open")
+        return ! xml->getStringAttribute ("mode", "enforced")
                      .equalsIgnoreCase ("enforced");
     }
 
@@ -90,7 +91,7 @@ public:
             if (! parsed.isObject())
                 return; // garbage (captive portal etc.) — keep cache
 
-            writeMode (parsed.getProperty ("license_mode",    "open").toString(),
+            writeMode (parsed.getProperty ("license_mode",    "enforced").toString(),
                        parsed.getProperty ("license_message", ""    ).toString());
         });
     }
@@ -103,7 +104,7 @@ public:
         file.getParentDirectory().createDirectory();
 
         juce::XmlElement xml ("RoneLicenseMode");
-        xml.setAttribute ("mode", mode.isNotEmpty() ? mode : "open");
+        xml.setAttribute ("mode", mode.isNotEmpty() ? mode : "enforced");
         xml.setAttribute ("message", message);
         xml.setAttribute ("fetchedAt", juce::String (juce::Time::currentTimeMillis()));
         xml.writeTo (file, {});
@@ -135,11 +136,11 @@ private:
     // Rewrite the cache with the same mode but a fresh timestamp.
     static void touchFetchStamp()
     {
-        juce::String mode = "open", msg;
+        juce::String mode = "enforced", msg;
         if (auto xml = juce::parseXML (getModeFile());
             xml != nullptr && xml->getTagName() == "RoneLicenseMode")
         {
-            mode = xml->getStringAttribute ("mode", "open");
+            mode = xml->getStringAttribute ("mode", "enforced");
             msg  = xml->getStringAttribute ("message", juce::String());
         }
         writeMode (mode, msg);

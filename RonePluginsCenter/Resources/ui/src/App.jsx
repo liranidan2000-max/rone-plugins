@@ -300,6 +300,8 @@ export default function App() {
                   onUpdateAll={handleUpdateAll}
                   onRefresh={handleRefresh}
                   licensed={license.licensed}
+                  signedIn={!!account.signedIn}
+                  onSignIn={() => setActiveNav('account')}
                 />
               )}
 

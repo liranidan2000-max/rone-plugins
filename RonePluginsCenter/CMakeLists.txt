@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RonePluginsCenter VERSION 1.3.1 LANGUAGES C CXX)
+project(RonePluginsCenter VERSION 1.3.2 LANGUAGES C CXX)
 
 # Build nonce 2026-09-02-a. The v1.3.0 release push never produced a run: its
 # commit body quoted the CI skip token while explaining an earlier commit, and
@@ -55,7 +55,7 @@ FetchContent_MakeAvailable(JUCE)
 juce_add_gui_app(RonePluginsCenter
     PRODUCT_NAME  "RONE Plugins Center"
     COMPANY_NAME  "RONE Plugins"
-    VERSION       "1.3.1"
+    VERSION       "1.3.2"
     ICON_BIG      "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
     ICON_SMALL    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
 )

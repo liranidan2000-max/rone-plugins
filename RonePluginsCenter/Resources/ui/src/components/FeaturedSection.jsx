@@ -29,7 +29,51 @@ function Chip({ label, value }) {
   )
 }
 
-export default function FeaturedSection({ plugins, onUpdateAll, onRefresh, licensed }) {
+export default function FeaturedSection({ plugins, onUpdateAll, onRefresh, licensed, signedIn = false, onSignIn }) {
+  // Nobody is signed in (or the pass is not active): the banner's one job is to get them signed in.
+  if (!licensed) {
+    return (
+      <motion.div
+        className="relative mx-6 mt-[18px] rounded-xl banner-gradient overflow-hidden"
+        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
+        <WaveArt />
+        <div className="relative flex items-center gap-[18px] px-[22px] py-5">
+          <div className="flex-shrink-0 w-[58px] h-[58px] rounded-full flex items-center justify-center border-2 border-rone-purple/40 bg-rone-purple/5"
+               style={{ boxShadow: '0 0 14px rgba(157,107,255,0.15)' }}>
+            <svg className="w-6 h-6 text-rone-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-display text-[19px] font-bold text-rone-text-primary tracking-tight">
+              {signedIn ? 'Your pass is not active' : (<><b className="font-extrabold text-rone-purple">Sign in</b> to unlock all the plugins</>)}
+            </h2>
+            <p className="text-[12px] text-rone-text-secondary mt-0.5">
+              {signedIn
+                ? 'Renew RONE ALL ACCESS at roneaudio.com and every plugin unlocks on this computer.'
+                : 'Your roneaudio.com account unlocks every RONE plugin on this computer. New accounts get a 7-day free trial.'}
+            </p>
+            <div className="flex gap-2 mt-2.5">
+              <Chip label="Plugins" value={plugins.length} />
+              <Chip label="Devices" value={2} />
+            </div>
+          </div>
+          <motion.button
+            onClick={onSignIn}
+            whileTap={{ scale: 0.96 }}
+            className="btn-gradient flex-shrink-0 flex items-center gap-2 px-5 py-[11px] rounded-lg text-[11px] font-extrabold uppercase tracking-[0.18em]"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            {signedIn ? 'My Account' : 'Sign In'}
+          </motion.button>
+        </div>
+      </motion.div>
+    )
+  }
+
   const updatable = plugins.filter(p => p.status === 'update_available')
   const notInstalled = plugins.filter(p => p.status === 'not_installed')
   const installed = plugins.filter(p => p.status === 'up_to_date' || p.status === 'update_available')

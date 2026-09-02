@@ -116,7 +116,7 @@ void NetworkManager::run()
                 // shared cache file that every RONE plugin reads.
                 if (root.isObject())
                     RemoteLicenseGate::writeMode (
-                        root.getProperty ("license_mode",    "open").toString(),
+                        root.getProperty ("license_mode",    "enforced").toString(),
                         root.getProperty ("license_message", ""    ).toString());
 
                 auto ci   = root.getProperty ("center_installer", {});

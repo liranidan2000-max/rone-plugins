@@ -942,9 +942,25 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
 ::-webkit-scrollbar { width: 9px; }
 ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* -- Lock screen (RONE ALL ACCESS required) -- */
+.rl-overlay{position:fixed;inset:0;z-index:99999;background:#14161A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:'Manrope','Segoe UI',sans-serif;transition:opacity .35s ease}
+.rl-overlay.rl-hidden{opacity:0;pointer-events:none}
+.rl-name{font-family:'Sora','Segoe UI',sans-serif;font-size:22px;font-weight:800;letter-spacing:.14em;color:#E8EAED}
+.rl-name i{font-style:normal;color:#FF8A3D}
+.rl-prompt{font-family:'Sora','Segoe UI',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;color:#E8EAED;margin-top:6px}
+.rl-hint,.rl-sub{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7A7F88;text-align:center;max-width:80%;line-height:1.6}
+.rl-btn{margin-top:8px;padding:11px 24px;background:#FF8A3D;border:1px solid #FF8A3D;border-radius:8px;color:#0F1114;font-family:'Manrope','Segoe UI',sans-serif;font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
 </style>
 </head>
 <body>
+<div class="rl-overlay rl-hidden" id="rlOverlay" style="display:none">
+  <div class="rl-name">RONE <i>AFTERSPACE</i></div>
+  <span class="rl-prompt">RONE ALL ACCESS required</span>
+  <span class="rl-hint">Sign in with your roneaudio.com account in the RONE Plugins Center</span>
+  <button class="rl-btn" id="rlLaunch">OPEN RONE PLUGINS CENTER</button>
+  <span class="rl-sub">No account yet? 7-day free trial at roneaudio.com</span>
+</div>
 <div id="app">
 <div id="win">
 
@@ -1250,6 +1266,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
 // ============================================================================
 // Bridge
 // ============================================================================
+function rlSetLicensed(ok){var o=document.getElementById('rlOverlay');if(!o)return;if(ok){o.classList.add('rl-hidden');setTimeout(function(){if(o.classList.contains('rl-hidden'))o.style.display='none';},400);}else{o.style.display='';void o.offsetWidth;o.classList.remove('rl-hidden');}}
 function emit(n,v){ if(window.__JUCE__ && window.__JUCE__.backend) window.__JUCE__.backend.emitEvent(n,v||{}); }
 function setParam(id,v){ emit("setParameter",{name:id,value:v}); }
 
@@ -1711,7 +1728,8 @@ function setupBridge(){
     grHistory.push(duckGrDb); if(grHistory.length>120) grHistory.shift();
     document.getElementById("duckgr-val").textContent="-"+duckGrDb.toFixed(1);
   });
-  B.addEventListener("licenseStatus",function(d){ /* beta: always licensed */ });
+  B.addEventListener("licenseStatus",function(d){ rlSetLicensed(!!(d && d.licensed)); });
+  var rlBtn=document.getElementById('rlLaunch'); if(rlBtn) rlBtn.addEventListener('click',function(){ emit('launchCenter',{}); });
 }
 setupBridge();
 

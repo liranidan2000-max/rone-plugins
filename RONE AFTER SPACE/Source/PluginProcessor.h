@@ -14,7 +14,8 @@
 static constexpr int kVisualizerBufferSize = 256;
 static constexpr int kVisualizerPoints     = 64;
 
-class RoneAfterspaceAudioProcessor : public juce::AudioProcessor
+class RoneAfterspaceAudioProcessor : public juce::AudioProcessor,
+                                    private juce::Timer
 {
 public:
     RoneAfterspaceAudioProcessor();
@@ -61,6 +62,7 @@ public:
     // === License ===
     std::atomic<bool> licenseValid { false };
     void checkBundleLicense();
+    void timerCallback() override { checkBundleLicense(); }
 
     // === UI size (content area, excl. standalone title bar; spec §24) ===
     std::atomic<int> uiWidth  { 1150 };

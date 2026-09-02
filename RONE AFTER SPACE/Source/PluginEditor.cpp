@@ -21,6 +21,18 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
               return getResource (url);
           })
           // JS -> C++: generic APVTS parameter set (real-world values)
+          // JS -> C++: the lock screen's OPEN RONE PLUGINS CENTER button
+          .withEventListener ("launchCenter", [] (const juce::var&)
+          {
+             #if JUCE_MAC
+              juce::File app ("/Applications/RONE Plugins Center.app");
+              if (! app.exists()) app = juce::File ("/Applications/RONE Plugins/RONE Plugins Center.app");
+             #else
+              auto app = juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
+                             .getChildFile ("RONE Plugins").getChildFile ("RONE Plugins Center.exe");
+             #endif
+              if (app.exists()) app.startAsProcess();
+          })
           .withEventListener ("setParameter", [this] (const juce::var& payload)
           {
               auto name  = payload["name"].toString();

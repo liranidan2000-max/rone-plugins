@@ -55,6 +55,10 @@ RoneAfterspaceAudioProcessor::RoneAfterspaceAudioProcessor()
 
     // Prime the license/kill-switch cache (constructor = message thread)
     checkBundleLicense();
+
+    // The licence is re-read every minute (message thread) so signing out in the
+    // Center, a remote revoke or an expired pass locks a running instance too.
+    startTimer (60 * 1000);
 }
 
 // =============================================================================
