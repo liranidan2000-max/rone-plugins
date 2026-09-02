@@ -1,0 +1,14 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000;overflow:hidden}iframe{border:0;display:block}</style></head>
+<body><script>
+const q = new URLSearchParams(location.search);
+const p = q.get('p'), w = +q.get('w'), h = +q.get('h'), state = q.get('state') || '';
+const f = document.createElement('iframe');
+f.width = w; f.height = h; f.style.width = w + 'px'; f.style.height = h + 'px';
+f.src = '/' + p + '/index.html?state=' + encodeURIComponent(state);
+document.body.appendChild(f);
+window.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'rects') return;
+  const s = document.createElement('script'); s.type = 'application/json'; s.id = '__rects';
+  s.textContent = JSON.stringify(e.data.payload); document.body.appendChild(s);
+});
+</script></body></html>

@@ -47,6 +47,7 @@ private:
     void handleGetPlugins      (NativeArgs args, NativeCompletion complete);
     void handleInstallPlugin   (NativeArgs args, NativeCompletion complete);
     void handleOpenPlugin      (NativeArgs args, NativeCompletion complete);
+    void handleOpenManual      (NativeArgs args, NativeCompletion complete);
     void handleRefreshPlugins  (NativeArgs args, NativeCompletion complete);
     void handleActivateLicense (NativeArgs args, NativeCompletion complete);
     void handleDeactivateLicense (NativeArgs args, NativeCompletion complete);

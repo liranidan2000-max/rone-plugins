@@ -105,6 +105,7 @@ export const api = {
   getPlugins:        createNativeFunction('getPlugins'),
   installPlugin:     createNativeFunction('installPlugin'),
   openPlugin:        createNativeFunction('openPlugin'),
+  openManual:        createNativeFunction('openManual'),
   refreshPlugins:    createNativeFunction('refreshPlugins'),
   activateLicense:   createNativeFunction('activateLicense'),
   deactivateLicense: createNativeFunction('deactivateLicense'),
@@ -123,16 +124,16 @@ export function isDevMode() {
 
 export const mockPlugins = [
   {
-    id: 'ReverseReverb', name: 'ReverseReverb',
+    id: 'ReverseReverb', name: 'RONE Reverse Reverb',
     description: 'Real-time reverse reverb effect with WebView2 UI',
     remoteVersion: '1.0.0', installedVersion: '1.0.0',
     status: 'up_to_date', downloadProgress: 0,
     formats: ['VST3', 'AU', 'Standalone'], type: 'plugin',
     whatsNew: 'Initial release', logoUrl: '/logos/ReverseReverb.png',
-    hasStandalone: true, standaloneInstalled: true,
+    hasStandalone: true, standaloneInstalled: true, hasManual: true,
   },
   {
-    id: 'RoneStutter', name: 'Rone Stutter',
+    id: 'RoneStutter', name: 'RONE Stutter',
     description: 'Glitch and stutter effect with WebView2 UI',
     remoteVersion: '1.1.0', installedVersion: '1.0.0',
     status: 'update_available', downloadProgress: 0,
@@ -141,7 +142,7 @@ export const mockPlugins = [
     hasStandalone: true, standaloneInstalled: false,
   },
   {
-    id: 'RoneFlanger', name: 'Rone Flanger',
+    id: 'RoneFlanger', name: 'RONE Flanger',
     description: 'Manual flanger with custom visualizer',
     remoteVersion: '1.0.0', installedVersion: '1.0.0',
     status: 'up_to_date', downloadProgress: 0,

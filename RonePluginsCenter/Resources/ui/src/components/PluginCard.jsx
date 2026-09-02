@@ -82,7 +82,7 @@ function Tile({ plugin }) {
   )
 }
 
-function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo, unlockPlaying = false }) {
+function PluginCard({ plugin, licensed, onInstall, onOpen, onManual, onInfo, unlockPlaying = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const baseAction = ACTION[plugin.status] || ACTION.not_installed
 
@@ -173,6 +173,9 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onInfo, unlockPlaying
                     <button onMouseDown={() => onInfo(plugin)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Details</button>
                     {isInstalled && plugin.hasStandalone && (
                       <button onMouseDown={() => onOpen(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Open</button>
+                    )}
+                    {plugin.hasManual && onManual && (
+                      <button onMouseDown={() => onManual(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Manual</button>
                     )}
                     {plugin.status !== 'up_to_date' && (
                       <button onMouseDown={() => onInstall(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">

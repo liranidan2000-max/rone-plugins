@@ -31,7 +31,8 @@ struct PluginInfo
     juce::String sha256Mac;           // hash of the macOS .pkg (may be empty)
     juce::String standaloneExe;
     juce::String vst3Bundle;
-    juce::String auBundle;            // e.g. "ReverseReverb.component"
+    juce::String auBundle;            // e.g. "RONE Reverse Reverb.component"
+    juce::String manualPdf;           // "RONE Stutter - User Manual.pdf" (ships in the install folder)
     juce::String registryKey;
     juce::String type;                // "plugin" or "standalone"
     juce::StringArray formats;

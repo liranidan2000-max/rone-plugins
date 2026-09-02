@@ -110,3 +110,6 @@ __pycache__/
 packages/
 *.nupkg
 build-vs2022/
+
+# RONE user manuals: regenerated intermediates (see docs/manuals/README.md)
+docs/manuals/work/

@@ -57,6 +57,13 @@ Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebVie
   DestDir: "{app}"; \
   Flags: onlyifdoesntexist uninsneveruninstall
 
+
+; The user manual ships with the plugin (docs/manuals in the monorepo, built by
+; docs/manuals/tools). The Center's "Manual" menu entry opens it from here.
+Source: "..\docs\manuals\RONE AFTERSPACE - User Manual.pdf"; \
+  DestDir: "{app}\Manuals"; \
+  Flags: ignoreversion
+
 ; ============================================================================
 ; Registry — write installed version for Center detection
 ; ============================================================================

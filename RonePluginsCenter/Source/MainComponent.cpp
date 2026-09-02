@@ -107,6 +107,9 @@ MainComponent::MainComponent()
         .withNativeFunction ("openPlugin", [this] (NativeArgs args, NativeCompletion complete) {
             handleOpenPlugin (args, std::move (complete));
         })
+        .withNativeFunction ("openManual", [this] (NativeArgs args, NativeCompletion complete) {
+            handleOpenManual (args, std::move (complete));
+        })
         .withNativeFunction ("refreshPlugins", [this] (NativeArgs args, NativeCompletion complete) {
             handleRefreshPlugins (args, std::move (complete));
         })
@@ -294,6 +297,7 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
                              && VersionChecker::isStandaloneInstalled (info.standaloneExe);
     obj->setProperty ("hasStandalone",       hasStandalone);
     obj->setProperty ("standaloneInstalled", standaloneInstalled);
+    obj->setProperty ("hasManual",           info.manualPdf.isNotEmpty());
 
     return juce::var (obj);
 }
@@ -413,6 +417,53 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
     }
 
     complete ("{\"started\":false,\"error\":\"Plugin not in installable state\"}");
+}
+
+// ============================================================================
+// Open the plugin's user manual. The PDF ships inside the installer
+// (Windows: <Program Files>\RONE Plugins\Manuals, macOS: /Users/Shared/RONE
+// Plugins/Manuals); when the local copy is missing (older install, manual
+// deleted) the same file is served from the public monorepo.
+// ============================================================================
+void MainComponent::handleOpenManual (NativeArgs args, NativeCompletion complete)
+{
+    if (args.size() < 1)
+    {
+        complete ("{\"success\":false,\"error\":\"Missing plugin id\"}");
+        return;
+    }
+
+    auto pluginId = args[0].toString();
+    juce::String manualPdf;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == pluginId) { manualPdf = p.manualPdf; break; }
+    }
+
+    if (manualPdf.isEmpty())
+    {
+        complete ("{\"success\":false,\"error\":\"No manual is available for this plugin yet\"}");
+        return;
+    }
+
+   #if JUCE_MAC
+    juce::File local = juce::File ("/Users/Shared/RONE Plugins/Manuals").getChildFile (manualPdf);
+   #else
+    juce::File local = VersionChecker::getStandaloneInstallDir().getChildFile ("Manuals").getChildFile (manualPdf);
+   #endif
+
+    if (local.existsAsFile())
+    {
+        local.startAsProcess();
+        complete ("{\"success\":true,\"source\":\"local\"}");
+        return;
+    }
+
+    juce::URL online ("https://github.com/liranidan2000-max/rone-plugins/raw/main/docs/manuals/"
+                      + juce::URL::addEscapeChars (manualPdf, false));
+    online.launchInDefaultBrowser();
+    complete ("{\"success\":true,\"source\":\"online\"}");
 }
 
 void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete)

@@ -134,6 +134,13 @@ export default function App() {
       if (result && !result.success && result.error) addToast(result.error, 'error')
     } catch (err) { addToast(err.message || 'Could not open plugin', 'error') }
   }
+  const handleManual = async (pluginId) => {
+    try {
+      const result = await api.openManual(pluginId)
+      if (result && !result.success && result.error) addToast(result.error, 'error')
+      else if (result?.source === 'online') addToast('Opening the manual from roneaudio.com', 'info')
+    } catch (err) { addToast(err.message || 'Could not open the manual', 'error') }
+  }
   const handleRefresh = async () => {
     try { addToast('Checking for updates…', 'info'); await api.refreshPlugins() }
     catch (err) { addToast(err.message || 'Refresh failed', 'error') }
@@ -312,6 +319,7 @@ export default function App() {
                   licensed={license.licensed}
                   onInstall={handleInstall}
                   onOpen={handleOpen}
+                  onManual={handleManual}
                   onInfo={setInfoPlugin}
                   unlockPlaying={unlockPlaying}
                   loading={loading}

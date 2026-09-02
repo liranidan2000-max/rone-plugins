@@ -9,7 +9,7 @@
 
 [Setup]
 AppId={{DEDF18E3-6C8E-4090-B461-655FE6048BA6}
-AppName=Rone Stucker
+AppName=RONE Stucker
 AppVersion={#MyAppVersion}
 AppPublisher=Liran Rone Kalifa
 DefaultDirName={commonpf}\RONE Plugins
@@ -22,7 +22,7 @@ WizardStyle=modern
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
-UninstallDisplayName=Rone Stucker (RONE)
+UninstallDisplayName=RONE Stucker (RONE)
 ; Streamlined for silent operation
 DisableWelcomePage=yes
 DisableDirPage=yes
@@ -40,12 +40,12 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; ============================================================================
 [Files]
 ; VST3 plugin bundle
-Source: "..\RoneStucker\build-ci\RoneStucker_artefacts\Release\VST3\Rone Stucker.vst3\*"; \
-  DestDir: "{commoncf}\VST3\RONE\Rone Stucker.vst3"; \
+Source: "..\RoneStucker\build-ci\RoneStucker_artefacts\Release\VST3\RONE Stucker.vst3\*"; \
+  DestDir: "{commoncf}\VST3\RONE\RONE Stucker.vst3"; \
   Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Standalone executable
-Source: "..\RoneStucker\build-ci\RoneStucker_artefacts\Release\Standalone\Rone Stucker.exe"; \
+Source: "..\RoneStucker\build-ci\RoneStucker_artefacts\Release\Standalone\RONE Stucker.exe"; \
   DestDir: "{app}"; \
   Flags: ignoreversion
 
@@ -57,9 +57,26 @@ Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebVie
   DestDir: "{app}"; \
   Flags: onlyifdoesntexist uninsneveruninstall
 
+
+; The user manual ships with the plugin (docs/manuals in the monorepo, built by
+; docs/manuals/tools). The Center's "Manual" menu entry opens it from here.
+Source: "..\docs\manuals\RONE Stucker - User Manual.pdf"; \
+  DestDir: "{app}\Manuals"; \
+  Flags: ignoreversion
+
 ; ============================================================================
 ; Registry — write installed version for Center detection
 ; ============================================================================
 [Registry]
 Root: HKCU; Subkey: "Software\RONE\Plugins\RoneStucker"; ValueType: string; \
   ValueName: "InstalledVersion"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
+
+; ============================================================================
+; The plugin was called "Rone Stucker" before this build. Left behind, a DAW
+; rescan lists it twice - one plugin code, two names - and half the time the
+; user loads the stale copy. The plugin code is unchanged, so projects that
+; saved the old name load the renamed plugin without a remap.
+; ============================================================================
+[InstallDelete]
+Type: filesandordirs; Name: "{commoncf}\VST3\RONE\Rone Stucker.vst3"
+Type: files; Name: "{app}\Rone Stucker.exe"

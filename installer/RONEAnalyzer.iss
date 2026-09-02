@@ -67,6 +67,13 @@ Source: "..\RONEAnalyzer\Resources\fonts\OFL-JetBrainsMono.txt"; DestDir: "{app}
 [Icons]
 Name: "{commonprograms}\RONE Analyzer"; Filename: "{app}\RONE Analyzer.exe"
 
+
+; The user manual ships with the plugin (docs/manuals in the monorepo, built by
+; docs/manuals/tools). The Center's "Manual" menu entry opens it from here.
+Source: "..\docs\manuals\RONE Analyzer - User Manual.pdf"; \
+  DestDir: "{app}\Manuals"; \
+  Flags: ignoreversion
+
 ; ============================================================================
 ; Registry — write installed version for Center detection
 ; ============================================================================

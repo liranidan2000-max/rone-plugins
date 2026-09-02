@@ -43,6 +43,7 @@ jobs:
               - 'ReverseReverbVST'
               - 'Shared/**'
               - 'installer/ReverseReverb.iss'
+              - 'docs/manuals/RONE Reverse Reverb - User Manual.pdf'
             stems_fixer:
               - 'RoneStemsFixer'
               - 'Shared/**'
@@ -51,25 +52,31 @@ jobs:
               - 'RoneStutter'
               - 'Shared/**'
               - 'installer/RoneStutter.iss'
+              - 'docs/manuals/RONE Stutter - User Manual.pdf'
             stucker:
               - 'RoneStucker'
               - 'Shared/**'
               - 'installer/RoneStucker.iss'
+              - 'docs/manuals/RONE Stucker - User Manual.pdf'
             flanger:
               - 'rone-flanger-'
               - 'Shared/**'
               - 'installer/RoneFlanger.iss'
+              - 'docs/manuals/RONE Flanger - User Manual.pdf'
             sync_verb:
               - 'rone sync verb'
               - 'Shared/**'
               - 'installer/RoneSyncVerb.iss'
+              - 'docs/manuals/RONE Sync Verb - User Manual.pdf'
             afterspace:
               - 'RONE AFTER SPACE/**'
               - 'Shared/**'
               - 'installer/RoneAfterspace.iss'
+              - 'docs/manuals/RONE AFTERSPACE - User Manual.pdf'
             analyzer:
               - 'RONEAnalyzer'
               - 'installer/RONEAnalyzer.iss'
+              - 'docs/manuals/RONE Analyzer - User Manual.pdf'
             plugins_center:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
@@ -105,7 +112,7 @@ jobs:
           win='[]'; mac='[]'; changed='[]'
 
           add() {
-            local flag=$1 id=$2 folder=$3 cmake=$4 tag=$5 inst=$6 wv=$7 wvf=${8:-} flg=$9 iss=${10}
+            local flag=$1 id=$2 folder=$3 cmake=$4 tag=$5 inst=$6 wv=$7 wvf=${8:-} flg=$9 iss=${10} manual=${11:-} legacy=${12:-}
             [ "$flag" != "true" ] && return
             changed=$(echo "$changed" | jq -c ". + [\"$id\"]")
             local e
@@ -119,23 +126,25 @@ jobs:
               --arg webview2_flag  "$wvf"    \
               --arg is_flanger     "$flg"    \
               --arg iss_file       "$iss"    \
+              --arg manual_pdf     "$manual" \
+              --arg legacy_name    "$legacy" \
               '$ARGS.named')
             [ "$SKIP_WIN" != "true" ] && win=$(echo "$win" | jq -c ". + [$e]")
             [ "$SKIP_MAC" != "true" ] && mac=$(echo "$mac" | jq -c ". + [$e]")
           }
 
-          #        flag  id                folder              cmake             release-tag               installer-name        wv     wv-flag                           flanger  iss
-          add "$RR" reverse_reverb  ReverseReverbVST  ReverseReverb     ReverseReverb-latest      ReverseReverb             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    ReverseReverb.iss
+          #        flag  id                folder              cmake             release-tag               installer-name        wv     wv-flag                           flanger  iss                 manual (docs/manuals)                   legacy name (pre-#155)
+          add "$RR" reverse_reverb  ReverseReverbVST  ReverseReverb     ReverseReverb-latest      ReverseReverb             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    ReverseReverb.iss   "RONE Reverse Reverb - User Manual.pdf" "ReverseReverb"
           # shelved 2026-08-31 (Liran): Stems is out of the bundle for now - uncomment to bring it back
           #add "$SF" stems_fixer     RoneStemsFixer     RoneStemsFixer    RoneStemsFixer-latest      RoneStemsFixer             false  ""                                false    RoneStemsFixer.iss
-          add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss
-          add "$SK" stucker         RoneStucker        RoneStucker       RoneStucker-latest         RoneStucker               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStucker.iss
-          add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss
+          add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss     "RONE Stutter - User Manual.pdf"        "Rone Stutter"
+          add "$SK" stucker         RoneStucker        RoneStucker       RoneStucker-latest         RoneStucker               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStucker.iss     "RONE Stucker - User Manual.pdf"        "Rone Stucker"
+          add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
-          #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss
-          add "$AS" afterspace    "RONE AFTER SPACE" RoneAfterspace    RoneAfterspace-latest      RoneAfterspace            true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneAfterspace.iss
+          #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
+          add "$AS" afterspace    "RONE AFTER SPACE" RoneAfterspace    RoneAfterspace-latest      RoneAfterspace            true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneAfterspace.iss  "RONE AFTERSPACE - User Manual.pdf"     ""
           add "$PC" plugins_center  RonePluginsCenter  RonePluginsCenter PluginsCenter-latest       RONE_Plugins_Center       true   JUCE_WEBVIEW2_PACKAGE_LOCATION   false    RONE_Plugins.iss
-          add "$AN" analyzer        RONEAnalyzer       RONEAnalyzer      RONEAnalyzer-latest        RONEAnalyzer              false  ""                                false    RONEAnalyzer.iss
+          add "$AN" analyzer        RONEAnalyzer       RONEAnalyzer      RONEAnalyzer-latest        RONEAnalyzer              false  ""                                false    RONEAnalyzer.iss    "RONE Analyzer - User Manual.pdf"       ""
 
           echo "windows=$win"     >> $GITHUB_OUTPUT
           echo "macos=$mac"       >> $GITHUB_OUTPUT
@@ -488,6 +497,16 @@ jobs:
               echo "Staged App: $(basename "$f") -> /Applications/"
             done
 
+            # --- User manual (docs/manuals, shipped with every plugin) ---
+            MANUAL="docs/manuals/${{ matrix.manual_pdf }}"
+            if [ -n "${{ matrix.manual_pdf }}" ] && [ -f "$MANUAL" ]; then
+              mkdir -p "staging/Users/Shared/RONE Plugins/Manuals"
+              cp "$MANUAL" "staging/Users/Shared/RONE Plugins/Manuals/"
+              echo "Staged manual: $(basename "$MANUAL")"
+            else
+              echo "::warning::No manual found for ${{ matrix.plugin_id }} (expected $MANUAL)"
+            fi
+
             # --- Fail-safe: refuse to create empty pkg ---
             FILE_COUNT=$(find staging -type f 2>/dev/null | wc -l | tr -d ' ')
             if [ "$FILE_COUNT" -eq 0 ]; then
@@ -507,8 +526,23 @@ jobs:
             echo "Component plist contents:"
             cat /tmp/comp.plist
 
+            # The plugins were renamed "RONE <Name>" (build #155). A preinstall
+            # script removes the old bundles so a DAW rescan never lists the
+            # plugin twice; the plugin code is unchanged, so projects still load.
+            mkdir -p pkgscripts
+            {
+              echo '#!/bin/sh'
+              echo 'old="${{ matrix.legacy_name }}"'
+              echo 'if [ -n "$old" ]; then'
+              echo '  rm -rf "/Library/Audio/Plug-Ins/VST3/$old.vst3" "/Library/Audio/Plug-Ins/Components/$old.component" "/Applications/$old.app" "/Applications/RONE Plugins/$old.app"'
+              echo 'fi'
+              echo 'exit 0'
+            } > pkgscripts/preinstall
+            chmod +x pkgscripts/preinstall
+
             pkgbuild --root staging \
               --component-plist /tmp/comp.plist \
+              --scripts pkgscripts \
               --identifier "com.roneplugins.${{ matrix.plugin_id }}" \
               --version "$VER" \
               --install-location / \
@@ -557,11 +591,11 @@ jobs:
 
           for id in $(echo "$changed" | jq -r '.[]'); do
             case "$id" in
-              reverse_reverb) tag=ReverseReverb-latest;    title="ReverseReverb (Latest)" ;;
+              reverse_reverb) tag=ReverseReverb-latest;    title="RONE Reverse Reverb (Latest)" ;;
               stems_fixer)    tag=RoneStemsFixer-latest;    title="RONE Stems Fixer (Latest)" ;;
-              stutter)        tag=RoneStutter-latest;       title="Rone Stutter (Latest)" ;;
-              stucker)        tag=RoneStucker-latest;       title="Rone Stucker (Latest)" ;;
-              flanger)        tag=RoneFlanger-latest;       title="Rone Flanger (Latest)" ;;
+              stutter)        tag=RoneStutter-latest;       title="RONE Stutter (Latest)" ;;
+              stucker)        tag=RoneStucker-latest;       title="RONE Stucker (Latest)" ;;
+              flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)" ;;
               sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
               afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)" ;;
               plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)" ;;

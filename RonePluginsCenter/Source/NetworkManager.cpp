@@ -433,6 +433,7 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.standaloneExe  = entry.getProperty ("standalone_exe",   {}).toString();
         info.vst3Bundle     = entry.getProperty ("vst3_bundle",      {}).toString();
         info.auBundle       = entry.getProperty ("au_bundle",        {}).toString();
+        info.manualPdf      = entry.getProperty ("manual",           {}).toString();
         info.registryKey    = entry.getProperty ("registry_key",     {}).toString();
         info.type          = entry.getProperty ("type",         {}).toString();
 
@@ -477,15 +478,15 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
   "plugins": [
     {
       "id": "ReverseReverb",
-      "name": "ReverseReverb",
+      "name": "RONE Reverse Reverb",
       "version": "1.0.0",
       "type": "plugin",
       "formats": ["VST3", "AU", "Standalone"],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
       "whats_new": "First public release",
-      "standalone_exe": "ReverseReverb.exe",
-      "vst3_bundle": "ReverseReverb.vst3",
-      "au_bundle": "ReverseReverb.component",
+      "standalone_exe": "RONE Reverse Reverb.exe",
+      "vst3_bundle": "RONE Reverse Reverb.vst3",
+      "au_bundle": "RONE Reverse Reverb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
       "sha256": "",
@@ -509,15 +510,15 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
     },
     {
       "id": "RoneStutter",
-      "name": "Rone Stutter",
+      "name": "RONE Stutter",
       "version": "1.0.0",
       "type": "plugin",
       "formats": ["VST3", "AU", "Standalone"],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
       "whats_new": "First public release",
-      "standalone_exe": "Rone Stutter.exe",
-      "vst3_bundle": "Rone Stutter.vst3",
-      "au_bundle": "Rone Stutter.component",
+      "standalone_exe": "RONE Stutter.exe",
+      "vst3_bundle": "RONE Stutter.vst3",
+      "au_bundle": "RONE Stutter.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
       "sha256": "",
@@ -525,14 +526,14 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
     },
     {
       "id": "RoneFlanger",
-      "name": "Rone Flanger",
+      "name": "RONE Flanger",
       "version": "1.0.0",
       "type": "plugin",
       "formats": ["VST3", "Standalone"],
       "description": "A hands-on flanger you play like an instrument - manual delay control, stereo offset and a rhythmic gate, from subtle metallic motion to full jet sweeps",
       "whats_new": "First public release",
-      "standalone_exe": "Rone Flanger.exe",
-      "vst3_bundle": "Rone Flanger.vst3",
+      "standalone_exe": "RONE Flanger.exe",
+      "vst3_bundle": "RONE Flanger.vst3",
       "au_bundle": "",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
@@ -541,15 +542,15 @@ juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
     },
     {
       "id": "RoneSyncVerb",
-      "name": "Rone Sync Verb",
+      "name": "RONE Sync Verb",
       "version": "1.0.0",
       "type": "plugin",
       "formats": ["VST3", "AU", "Standalone"],
       "description": "Reverb that lives on the grid - tail lengths in note values that cut exactly on time, with built-in ducking so the space never swallows the mix",
       "whats_new": "First public release",
-      "standalone_exe": "Rone Sync Verb.exe",
-      "vst3_bundle": "Rone Sync Verb.vst3",
-      "au_bundle": "Rone Sync Verb.component",
+      "standalone_exe": "RONE Sync Verb.exe",
+      "vst3_bundle": "RONE Sync Verb.vst3",
+      "au_bundle": "RONE Sync Verb.component",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.pkg",
       "sha256": "",
