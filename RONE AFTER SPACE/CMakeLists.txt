@@ -42,6 +42,10 @@ juce_add_plugin(RoneAfterspace
     PLUGIN_MANUFACTURER_CODE Rone
     PLUGIN_CODE            RnAS
     FORMATS                VST3 Standalone AU
+    # No moduleinfo.json step: JUCE's juce_vst3_helper loads the freshly built plugin at
+    # build time and crashes at random on the CI runners (runs #167/#168, macOS). The file
+    # is optional - hosts scan the binary instead, as they do for most plugins.
+    VST3_AUTO_MANIFEST                FALSE
     PRODUCT_NAME           "RONE AFTERSPACE"
     # macOS: without a usage description the system kills an app the moment it opens the microphone
     MICROPHONE_PERMISSION_ENABLED TRUE
