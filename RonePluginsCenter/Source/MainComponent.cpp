@@ -132,6 +132,12 @@ MainComponent::MainComponent()
         .withNativeFunction ("accountSignOut", [this] (NativeArgs args, NativeCompletion complete) {
             handleAccountSignOut (args, std::move (complete));
         })
+        .withNativeFunction ("accountGoogleSignIn", [this] (NativeArgs args, NativeCompletion complete) {
+            handleAccountGoogleSignIn (args, std::move (complete));
+        })
+        .withNativeFunction ("accountGoogleCancel", [this] (NativeArgs args, NativeCompletion complete) {
+            handleAccountGoogleCancel (args, std::move (complete));
+        })
         .withNativeFunction ("getAccountStatus", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAccountStatus (args, std::move (complete));
         })
@@ -733,6 +739,26 @@ void MainComponent::handleAccountSignIn (NativeArgs args, NativeCompletion compl
         obj->setProperty ("account", accountStatusVar());
         (*shared) (juce::JSON::toString (juce::var (obj)));
     });
+}
+
+void MainComponent::handleAccountGoogleSignIn (NativeArgs, NativeCompletion complete)
+{
+    auto shared = std::make_shared<NativeCompletion> (std::move (complete));
+
+    accountClient.signInWithGoogle ([this, shared] (bool success, juce::String message)
+    {
+        auto* obj = new juce::DynamicObject();
+        obj->setProperty ("ok",      success);
+        obj->setProperty ("message", message);
+        obj->setProperty ("account", accountStatusVar());
+        (*shared) (juce::JSON::toString (juce::var (obj)));
+    });
+}
+
+void MainComponent::handleAccountGoogleCancel (NativeArgs, NativeCompletion complete)
+{
+    accountClient.cancelGoogleSignIn();
+    complete (juce::var ("ok"));
 }
 
 void MainComponent::handleAccountSignOut (NativeArgs, NativeCompletion complete)

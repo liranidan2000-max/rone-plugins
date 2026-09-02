@@ -45,6 +45,12 @@ public:
     using Callback = std::function<void (bool success, juce::String message)>;
 
     void signIn  (const juce::String& email, const juce::String& password, Callback);
+
+    /** Google: opens the browser on roneaudio.com, waits for it to hand a one-time
+        code back on 127.0.0.1, exchanges it for a device token and finishes exactly
+        like signIn(). Up to four minutes; cancelGoogleSignIn() aborts the wait. */
+    void signInWithGoogle (Callback);
+    void cancelGoogleSignIn();
     void signOut (Callback);
 
     /** Re-checks the token with the server; also called every 24h by the timer. */
@@ -91,6 +97,7 @@ private:
 
     // Guards against two overlapping network calls stomping on each other.
     std::atomic<bool> busy { false };
+    std::atomic<bool> googleCancel { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AccountClient)
 };

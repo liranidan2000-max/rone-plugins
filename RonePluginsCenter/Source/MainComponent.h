@@ -58,6 +58,8 @@ private:
     // customers who bought before accounts existed.
     void handleAccountSignIn (NativeArgs args, NativeCompletion complete);
     void handleAccountSignOut (NativeArgs args, NativeCompletion complete);
+    void handleAccountGoogleSignIn (NativeArgs args, NativeCompletion complete);
+    void handleAccountGoogleCancel (NativeArgs args, NativeCompletion complete);
     void handleGetAccountStatus (NativeArgs args, NativeCompletion complete);
     juce::var accountStatusVar() const;
     void handleGetAppVersion   (NativeArgs args, NativeCompletion complete);

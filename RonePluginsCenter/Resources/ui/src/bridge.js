@@ -112,6 +112,8 @@ export const api = {
   deactivateLicense: createNativeFunction('deactivateLicense'),
   getLicenseStatus:  createNativeFunction('getLicenseStatus'),
   accountSignIn:     createNativeFunction('accountSignIn'),
+  accountGoogleSignIn: createNativeFunction('accountGoogleSignIn'),
+  accountGoogleCancel: createNativeFunction('accountGoogleCancel'),
   accountSignOut:    createNativeFunction('accountSignOut'),
   getAccountStatus:  createNativeFunction('getAccountStatus'),
   getAppVersion:     createNativeFunction('getAppVersion'),

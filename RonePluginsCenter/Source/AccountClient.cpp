@@ -1,4 +1,5 @@
 #include "AccountClient.h"
+#include <cstring>
 
 #if JUCE_WINDOWS
  #ifndef WIN32_LEAN_AND_MEAN
@@ -328,6 +329,170 @@ void AccountClient::signIn (const juce::String& email, const juce::String& passw
 
         if (cb)
             juce::MessageManager::callAsync ([cb, success, message] { cb (success, message); });
+    });
+}
+
+// ============================================================================
+// Google sign-in: browser hand-off
+//
+// The Center cannot show Google's page itself (Google blocks sign-in inside
+// embedded views), so it listens on a random localhost port, opens the system
+// browser on roneaudio.com/api/v1/app/google with that port + a nonce, and
+// the website - after Google confirmed the e-mail - sends the browser to
+// http://127.0.0.1:<port>/callback?code=...&nonce=... . The code is single
+// use and 5 minutes old at most; exchanging it returns the same device token
+// a password sign-in returns, so everything after this point is shared.
+// ============================================================================
+
+static const char* const kBrowserReply =
+    "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nConnection: close\r\n\r\n"
+    "<!doctype html><html><head><meta charset=\"utf-8\"><title>RONE Plugins Center</title></head>"
+    "<body style=\"background:#14161A;color:#E8EAED;font-family:Segoe UI,Arial,sans-serif;text-align:center;padding:60px\">"
+    "<h2 style=\"font-weight:800\">Signed in to the RONE Plugins Center</h2>"
+    "<p style=\"color:#9AA0A8\">You can close this tab and go back to the Center.</p></body></html>";
+
+void AccountClient::cancelGoogleSignIn()
+{
+    googleCancel = true;
+}
+
+void AccountClient::signInWithGoogle (Callback cb)
+{
+    if (busy.exchange (true))
+    {
+        if (cb) cb (false, "A sign-in is already in progress");
+        return;
+    }
+    googleCancel = false;
+
+    juce::Thread::launch ([this, cb]
+    {
+        auto finish = [this, cb] (bool success, juce::String message)
+        {
+            {
+                const juce::ScopedLock sl (lock);
+                state.message = message;
+            }
+            busy = false;
+            notifyChanged();
+            if (cb)
+                juce::MessageManager::callAsync ([cb, success, message] { cb (success, message); });
+        };
+
+        // 1. A listener on localhost, on whatever high port is free.
+        juce::StreamingSocket server;
+        int port = 0;
+        juce::Random rng;
+        for (int attempt = 0; attempt < 25 && port == 0; ++attempt)
+        {
+            const int candidate = 49152 + rng.nextInt (16000);
+            if (server.createListener (candidate, "127.0.0.1"))
+                port = candidate;
+        }
+        if (port == 0)
+        {
+            finish (false, "Could not open a local port for the browser hand-off.");
+            return;
+        }
+
+        // 2. Open the browser on roneaudio.com with our nonce + machine details.
+        const juce::String nonce = juce::SHA256 (juce::Uuid().toDashedString().toUTF8()).toHexString().substring (0, 32);
+        juce::URL start (juce::String (RONE_API_BASE) + "/app/google");
+        start = start.withParameter ("port",        juce::String (port))
+                     .withParameter ("nonce",       nonce)
+                     .withParameter ("machineId",   getMachineId())
+                     .withParameter ("machineName", getMachineName())
+                     .withParameter ("platform",    juce::SystemStats::getOperatingSystemName());
+        juce::MessageManager::callAsync ([start] { start.launchInDefaultBrowser(); });
+
+        // 3. Wait (up to four minutes) for the browser to come back with the code.
+        juce::String code;
+        const auto deadline = juce::Time::currentTimeMillis() + 4 * 60 * 1000;
+
+        while (code.isEmpty() && ! googleCancel && juce::Time::currentTimeMillis() < deadline)
+        {
+            if (server.waitUntilReady (true, 500) != 1)
+                continue;
+
+            std::unique_ptr<juce::StreamingSocket> conn (server.waitForNextConnection());
+            if (conn == nullptr)
+                continue;
+
+            char buf[4096] = {};
+            int got = 0;
+            if (conn->waitUntilReady (true, 3000) == 1)
+                got = conn->read (buf, (int) sizeof (buf) - 1, false);
+
+            const juce::String request   = juce::String::fromUTF8 (buf, juce::jmax (0, got));
+            const juce::String firstLine = request.upToFirstOccurrenceOf ("\r\n", false, false);
+            const juce::String path      = firstLine.fromFirstOccurrenceOf ("GET ", false, false)
+                                                    .upToFirstOccurrenceOf (" ", false, false);
+
+            if (path.startsWith ("/callback?"))
+            {
+                juce::URL cbUrl ("http://127.0.0.1" + path);
+                auto names  = cbUrl.getParameterNames();
+                auto values = cbUrl.getParameterValues();
+                juce::String gotCode, gotNonce;
+                for (int i = 0; i < names.size(); ++i)
+                {
+                    if (names[i] == "code")  gotCode  = values[i];
+                    if (names[i] == "nonce") gotNonce = values[i];
+                }
+                conn->write (kBrowserReply, (int) std::strlen (kBrowserReply));
+                if (gotNonce == nonce && gotCode.isNotEmpty())
+                    code = gotCode;
+            }
+            else
+            {
+                static const char* const notFound = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 0\r\n\r\n";
+                conn->write (notFound, (int) std::strlen (notFound));
+            }
+        }
+        server.close();
+
+        if (code.isEmpty())
+        {
+            finish (false, googleCancel ? "Google sign-in cancelled."
+                                        : "The browser did not come back in time. Please try again.");
+            return;
+        }
+
+        // 4. Swap the code for a device token - the same response shape as /app/login.
+        auto* payload = new juce::DynamicObject();
+        payload->setProperty ("code",        code);
+        payload->setProperty ("nonce",       nonce);
+        payload->setProperty ("machineId",   getMachineId());
+        payload->setProperty ("machineName", getMachineName());
+        payload->setProperty ("platform",    juce::SystemStats::getOperatingSystemName());
+
+        int status = 0;
+        auto response = post ("/app/google/exchange", juce::var (payload), {}, status);
+
+        if (! response.isObject())
+        {
+            finish (false, "Cannot reach roneaudio.com. Check your internet connection.");
+            return;
+        }
+        if (! (bool) response.getProperty ("ok", false))
+        {
+            finish (false, response.getProperty ("message", "Sign-in failed").toString());
+            return;
+        }
+
+        {
+            const juce::ScopedLock sl (lock);
+            token = response.getProperty ("token", "").toString();
+        }
+        applyServerState (response);
+        saveAccountFile();
+
+        const bool licensed = getState().licensed;
+        writeBundleLicense (licensed);
+        startTimer (VALIDATION_INTERVAL_MS);
+
+        finish (true, licensed ? "Signed in with Google - all plugins unlocked"
+                               : "Signed in, but this account has no active pass");
     });
 }
 

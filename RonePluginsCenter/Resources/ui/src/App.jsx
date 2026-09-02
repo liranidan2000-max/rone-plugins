@@ -157,6 +157,22 @@ export default function App() {
     addToast(`Updating ${updatable.length} plugin${updatable.length !== 1 ? 's' : ''}…`, 'info')
     for (const plugin of updatable) await handleInstall(plugin.id)
   }
+  // Google: the native side opens the browser and resolves when it comes back (or fails / is cancelled)
+  const handleGoogleSignIn = async () => {
+    try {
+      const res = await api.accountGoogleSignIn()
+      if (res?.account) setAccount(res.account)
+      if (res?.ok) {
+        setLicense(prev => ({ ...prev, licensed: !!res.account?.licensed,
+                              customerName: res.account?.name || res.account?.email || prev.customerName }))
+        addToast(res.message || 'Signed in with Google', 'success')
+      }
+      return res
+    } catch (err) {
+      return { ok: false, message: err.message || 'Google sign-in failed' }
+    }
+  }
+  const handleGoogleCancel = () => api.accountGoogleCancel().catch(() => {})
   const handleSignIn = async (email, password) => {
     try {
       const res = await api.accountSignIn(email, password)
@@ -288,6 +304,7 @@ export default function App() {
           {activeNav === 'account' && (
             <div className="flex-1 overflow-y-auto plugin-grid-scroll">
               <AccountPanel license={license} account={account} onSignIn={handleSignIn} onSignOut={handleSignOut}
+                            onGoogleSignIn={handleGoogleSignIn} onGoogleCancel={handleGoogleCancel}
                             onActivate={handleActivate} onDeactivate={handleDeactivate} pluginCount={filterCounts.installed} />
             </div>
           )}
