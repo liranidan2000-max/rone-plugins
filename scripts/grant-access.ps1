@@ -43,6 +43,8 @@ $q = $email -replace "'", "''"
 $now = [int64]([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds())
 
 function Invoke-D1([string]$sql) {
+    # npx is a .cmd shim on Windows: a multi-line argument does not survive it.
+    $sql = ($sql -replace "\r?\n", " ") -replace "\s{2,}", " "
     Push-Location $site
     try {
         & npx wrangler d1 execute rone-accounts --remote --command $sql
