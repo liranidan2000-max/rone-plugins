@@ -60,12 +60,26 @@ public:
                               : juce::String();
     }
 
+    // ---- JUCE's VST3 manifest helper (juce_vst3_helper) links the plugin code
+    // into a tiny build-time process that enumerates the classes and exits at
+    // once. A background thread or a timer started from the constructor is
+    // still running when its statics are torn down -> "Segmentation fault: 11"
+    // in CI (AFTERSPACE, run #167). Nothing that outlives the constructor may
+    // start in there.
+    static bool isRunningInPluginBuildHelper()
+    {
+        static const bool inHelper = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+                                         .getFileNameWithoutExtension()
+                                         .containsIgnoreCase ("vst3_helper");
+        return inHelper;
+    }
+
     // ---- Background refresh (throttled fire-and-forget). -------------------
     // Call from constructors / prepareToPlay / editor timers. Never blocks:
     // the fetch runs on a disposable thread and only rewrites the cache file.
     static void refreshFromNetworkAsync()
     {
-        if (! isCacheStale())
+        if (isRunningInPluginBuildHelper() || ! isCacheStale())
             return;
 
         // Stamp first so a wall of plugin instances loading together doesn't

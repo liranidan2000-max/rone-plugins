@@ -58,7 +58,9 @@ RoneAfterspaceAudioProcessor::RoneAfterspaceAudioProcessor()
 
     // The licence is re-read every minute (message thread) so signing out in the
     // Center, a remote revoke or an expired pass locks a running instance too.
-    startTimer (60 * 1000);
+    // Not inside JUCE's VST3 manifest helper: it exits immediately and a live timer thread crashes it.
+    if (! RemoteLicenseGate::isRunningInPluginBuildHelper())
+        startTimer (60 * 1000);
 }
 
 // =============================================================================
