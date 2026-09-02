@@ -9,7 +9,7 @@
 //
 //     <Documents>/RONE Plugins/Exports/<Product>/<name>_<date>_<time>.<ext>
 //
-// and is never deleted by the plugin.
+// and is never deleted by the plugin. Shipped first in v1.1.0 (Stutter, Reverse Reverb).
 
 #include <juce_core/juce_core.h>
 
