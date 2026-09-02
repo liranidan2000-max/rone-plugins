@@ -3,6 +3,13 @@
 #include "RoneTrayIcon.h"
 #include "AutoStart.h"
 
+#if JUCE_WINDOWS
+ #ifndef NOMINMAX
+  #define NOMINMAX
+ #endif
+ #include <windows.h>
+#endif
+
 // ============================================================================
 // RONE Plugins Center — Application entry point
 // ============================================================================
@@ -32,13 +39,12 @@ public:
         mainWindow.reset();
     }
 
+    // A second launch (the OPEN RONE PLUGINS CENTER button on a plugin's lock
+    // screen, a Start-menu click) hands its command line to us and quits.
     void anotherInstanceStarted (const juce::String&) override
     {
         if (mainWindow != nullptr)
-        {
-            mainWindow->setVisible (true);
-            mainWindow->toFront (true);
-        }
+            mainWindow->showAndRaise();
     }
 
     void systemRequestedQuit() override
@@ -78,6 +84,34 @@ private:
         void closeButtonPressed() override
         {
             setVisible (false);
+        }
+
+        // Show the window and put it in front of whatever the user is in -
+        // typically the DAW whose plugin just asked for us. A background
+        // process may not take the foreground on Windows (the request only
+        // flashes the taskbar button), so borrow the foreground thread's input
+        // state for the call, the standard way round that rule.
+        void showAndRaise()
+        {
+            setVisible (true);
+            setMinimised (false);
+
+           #if JUCE_WINDOWS
+            if (auto* hwnd = (HWND) getWindowHandle())
+            {
+                const DWORD fgThread = GetWindowThreadProcessId (GetForegroundWindow(), nullptr);
+                const DWORD myThread = GetCurrentThreadId();
+                const bool attached = fgThread != 0 && fgThread != myThread
+                                      && AttachThreadInput (fgThread, myThread, TRUE);
+                ShowWindow (hwnd, SW_SHOW);
+                SetForegroundWindow (hwnd);
+                BringWindowToTop (hwnd);
+                if (attached)
+                    AttachThreadInput (fgThread, myThread, FALSE);
+            }
+           #endif
+
+            toFront (true);
         }
 
     private:
