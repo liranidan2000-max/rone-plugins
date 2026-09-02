@@ -2,12 +2,12 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "The RONE beta has ended. Sign in with your roneaudio.com account to unlock the plugins - new accounts get a 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-02T21:52:36Z",
+  "last_updated": "2026-09-02T22:16:58Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.3.4.163",
-    "sha256": "d6f3b4bf59497ac07b2d48c6637ec608b22c858cc3f301905f28e8f0f37b2dfe"
+    "version": "1.3.5.164",
+    "sha256": "5a9c2ac6a1762f36348c0ef42154fe16a3b2ac0a0f528f3ebe8f002e3a3bbdd3"
   },
   "plugins": [
     {
@@ -57,7 +57,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.0.2.161",
+      "version": "1.0.3.164",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -72,9 +72,9 @@
       "manual": "RONE Stucker - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "cab62a621ff64d9fbc328ef9649e0f7cbd97416e76ae490785d6ee141506df0a",
+      "sha256": "21b71053a5b9a05aba321c123cd7b71ad58b0ea53e0a6f30b21f2c21a364933e",
       "registry_key": "RoneStucker",
-      "sha256_mac": "d136218eed64ad723dabe990af23cdd461953e2f954431d4eb03d1401c3dc87c"
+      "sha256_mac": "cadd95bed5c2487fce096859691507de9c78a23500c731bcf19c8091c6baa325"
     },
     {
       "id": "RoneFlanger",
