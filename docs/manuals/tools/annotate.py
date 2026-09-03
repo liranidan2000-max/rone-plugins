@@ -92,7 +92,7 @@ def main():
     annotate("stucker", "stucker/tour.png", [
         ("#pLogo", "Header logo"), ("#bypassBtn", "BYPASS"), ("#syncSeg", "SYNC / FREE"), ("#gridLabel", "GRID"),
         ("#knob", "STUCK"), ("#loopMs", "LOOP"), ("#leds", "LEDs"), ("#advToggle", "ADVANCED"),
-        ("#resize-handle", "Resize grip")], A, crops=[("knob", "#stage", 10), ("header", "#syncSeg+#gridLabel", 10)])
+        ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A, crops=[("knob", "#stage", 10), ("header", "#syncSeg+#gridLabel", 10)])
     annotate("stucker_adv", "stucker/adv.png", [
         ("@smooth", "SMOOTH"), ("@range", "RANGE"), ("@lowcut", "LOW CUT"), ("#lenGroup", "LENGTH")], A,
         crops=[("panel", "#advPanel", 8)])

@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also in this release: exports go to Documents/RONE Plugins/Exports and keep the session's sample rate.",
+      "whats_new": "Dragging audio in from Cubase now works. Cubase cannot hand a project-window event over as a file - it is a region with fades that only exists once it is rendered - so it offers a promise instead; the plugin now accepts that on both Windows and macOS and an event dragged straight off the timeline lands in the waveform. Dragging the result back out also announces itself as a copy, which some hosts require before they will take it.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
@@ -43,7 +43,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also in this release: exports go to Documents/RONE Plugins/Exports and keep the session's sample rate.",
+      "whats_new": "Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
@@ -65,7 +65,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also: the plugin is named RONE Stucker in your DAW and ships with a PDF manual.",
+      "whats_new": "A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
       "standalone_exe": "RONE Stucker.exe",
       "vst3_bundle": "RONE Stucker.vst3",
       "au_bundle": "RONE Stucker.component",
@@ -86,7 +86,7 @@
         "Standalone"
       ],
       "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
-      "whats_new": "Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also: the plugin is named RONE Flanger in your DAW and ships with a PDF manual.",
+      "whats_new": "Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
       "standalone_exe": "RONE Flanger.exe",
       "vst3_bundle": "RONE Flanger.vst3",
       "au_bundle": "",
