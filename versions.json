@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "The RONE beta has ended. Sign in with your roneaudio.com account to unlock the plugins - new accounts get a 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-03T06:37:24Z",
+  "last_updated": "2026-09-03T22:35:35Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -13,7 +13,7 @@
     {
       "id": "ReverseReverb",
       "name": "RONE Reverse Reverb",
-      "version": "1.0.2.169",
+      "version": "1.0.3.173",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -28,14 +28,14 @@
       "manual": "RONE Reverse Reverb - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "e06bb3c36950b5eaa9e85dc44d8657b3b881ac2bd3f28549c12aed80e5407d96",
+      "sha256": "63d505285be0b45b8d163918c807d1608e08452d36fd9d90d4333e4180210f07",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "f38aa0eef12998b78179d25f76941a07d0536b9db6470e93fc8344bd1c342939"
+      "sha256_mac": "69a685677e6f206c7fcab2f5dcda70d844f6ffcd7c186407ea599fcd8af5b651"
     },
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.1.2.169",
+      "version": "1.1.3.173",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -50,14 +50,14 @@
       "manual": "RONE Stutter - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "61d5d86a3f62aa6e9eaac8ea5e56b7ea5ae3c76c6ffcbd24bfda44981c106550",
+      "sha256": "dc46ad57a38019f123d96a036aa41f78ee92a8afafacbfa8da45a6d957837045",
       "registry_key": "RoneStutter",
-      "sha256_mac": "0a47e987e8cfcf46d98e328bf2971db1de2856b3e8bd4ce1924c16dace5fc0a8"
+      "sha256_mac": "8dbf0b49b0c251fcda6b3d3c394e9101c609337023e8dd2c10449476aec3a3b9"
     },
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.0.3.169",
+      "version": "1.0.4.173",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -72,14 +72,14 @@
       "manual": "RONE Stucker - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "b15457dff35c57c378fbd776da7785950f1a70df3b817371011d8fdc64b27c7b",
+      "sha256": "a4fdee0f77ad0a693f55a8d123b3e3838d3438f8460a8a654e48d6a24fb520a9",
       "registry_key": "RoneStucker",
-      "sha256_mac": "a0695a8f1c22ba58708588d69dec4124ab81b3c6399afb7b93779b88e753954e"
+      "sha256_mac": "dbe6bb8d83b16db5f0d32cdea90d5444c71040f2634f3f2bf4a6bc640cf634eb"
     },
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.0.3.169",
+      "version": "2.0.4.173",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -93,9 +93,9 @@
       "manual": "RONE Flanger - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "29e02489b014123e092feba1b0009dcf3fc072a325a0fbb643dbd27f15466fb0",
+      "sha256": "35142ae2644d359b7cc7fa0c06631511a04e14a0248b3b0b03d732a5faba443b",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "908f3744acf8062ebcfa404a1d7fe253e79684ad244dd1f4f64cdc67bb27ff9e"
+      "sha256_mac": "9d677ccbab58ffe565014e7e78f21336872dea1613af2530df8f577312811f91"
     },
     {
       "id": "RoneAfterspace",
