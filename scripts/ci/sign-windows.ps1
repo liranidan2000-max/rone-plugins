@@ -14,8 +14,9 @@
         ACS_ACCOUNT    the Artifact Signing account name
         ACS_PROFILE    the certificate profile name
 
-      SSL.com eSigner - individuals, OV certificate in their cloud
+      SSL.com eSigner - individuals, IV/OV certificate in their cloud (the chosen path)
         ESIGNER_USERNAME, ESIGNER_PASSWORD, ESIGNER_CREDENTIAL_ID, ESIGNER_TOTP_SECRET
+        ESIGNER_SANDBOX=1 (optional) rehearses against SSL.com's sandbox with their demo account
 
       PFX file - any certificate you hold as a .pfx (testing, self-hosted)
         WIN_SIGN_PFX_BASE64, WIN_SIGN_PFX_PASSWORD
@@ -178,11 +179,38 @@ function Sign-ESigner([string[]] $targets) {
         $bat = Get-ChildItem $toolDir -Recurse -Filter CodeSignTool.bat | Select-Object -First 1
         if (-not $bat) { throw 'CodeSignTool.bat not found after download.' }
     }
-    foreach ($t in $targets) {
-        & $bat.FullName sign -username $env:ESIGNER_USERNAME -password $env:ESIGNER_PASSWORD `
-            -credential_id $env:ESIGNER_CREDENTIAL_ID -totp_secret $env:ESIGNER_TOTP_SECRET `
-            -input_file_path $t -override
-        if ($LASTEXITCODE -ne 0) { throw "CodeSignTool failed for $t" }
+    # ESIGNER_SANDBOX=1 points the tool at SSL.com's sandbox (demo credentials, test root):
+    # lets the whole pipeline be rehearsed before a real certificate exists.
+    $conf = Join-Path $bat.Directory.FullName 'conf/code_sign_tool.properties'
+    if ($env:ESIGNER_SANDBOX -eq '1') {
+        Write-Host '::warning::eSigner SANDBOX signing - the signature chains to a TEST root, not for release.'
+        @('CLIENT_ID=qOUeZCCzSqgA93acB3LYq6lBNjgZdiOxQc-KayC3UMw',
+          'OAUTH2_ENDPOINT=https://oauth-sandbox.ssl.com/oauth2/token',
+          'CSC_API_ENDPOINT=https://cs-try.ssl.com',
+          'TSA_URL=http://ts.ssl.com') | Set-Content -Path $conf -Encoding ascii
+    } elseif ((Test-Path $conf) -and (Select-String -Path $conf -Pattern 'sandbox|cs-try' -Quiet)) {
+        throw "CodeSignTool config at $conf still points at the sandbox - delete the cached tool folder."
+    }
+    # CodeSignTool.bat resolves its bundled JDK and jar relative to the current
+    # directory (unquoted, so spaces would break it): call java on the jar directly
+    # from inside the tool folder, where conf/code_sign_tool.properties is read.
+    $toolHome = $bat.Directory.FullName
+    $jar  = Get-ChildItem (Join-Path $toolHome 'jar') -Filter 'code_sign_tool*.jar' | Select-Object -First 1
+    $java = Get-ChildItem $toolHome -Directory -Filter 'jdk-*' | ForEach-Object { Join-Path $_.FullName 'bin/java.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $java) { $java = 'java' }   # CI runners ship a JDK on PATH
+    if (-not $jar)  { throw "code_sign_tool jar not found under $toolHome" }
+    Push-Location $toolHome
+    try {
+        foreach ($t in $targets) {
+            # WINDOWS-ROOT: trust what Windows trusts - the bundled JDK 11 truststore is from 2019
+            # and rejects SSL.com's current chain ("PKIX path building failed").
+            & $java '-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT' -jar $jar.FullName sign "-username=$env:ESIGNER_USERNAME" "-password=$env:ESIGNER_PASSWORD" `
+                "-credential_id=$env:ESIGNER_CREDENTIAL_ID" "-totp_secret=$env:ESIGNER_TOTP_SECRET" `
+                "-input_file_path=$t" -override
+            if ($LASTEXITCODE -ne 0) { throw "CodeSignTool failed for $t" }
+        }
+    } finally {
+        Pop-Location
     }
 }
 
