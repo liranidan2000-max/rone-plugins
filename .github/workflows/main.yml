@@ -44,44 +44,53 @@ jobs:
               - 'Shared/**'
               - 'installer/ReverseReverb.iss'
               - 'docs/manuals/RONE Reverse Reverb - User Manual.pdf'
+              - '.github/workflows/main.yml'
             stems_fixer:
               - 'RoneStemsFixer'
               - 'Shared/**'
               - 'installer/RoneStemsFixer.iss'
+              - '.github/workflows/main.yml'
             stutter:
               - 'RoneStutter'
               - 'Shared/**'
               - 'installer/RoneStutter.iss'
               - 'docs/manuals/RONE Stutter - User Manual.pdf'
+              - '.github/workflows/main.yml'
             stucker:
               - 'RoneStucker'
               - 'Shared/**'
               - 'installer/RoneStucker.iss'
               - 'docs/manuals/RONE Stucker - User Manual.pdf'
+              - '.github/workflows/main.yml'
             throw:
               - 'RoneThrow'
               - 'Shared/**'
               - 'installer/RoneThrow.iss'
               - 'docs/manuals/RONE Throw - User Manual.pdf'
+              - '.github/workflows/main.yml'
             flanger:
               - 'rone-flanger-'
               - 'Shared/**'
               - 'installer/RoneFlanger.iss'
               - 'docs/manuals/RONE Flanger - User Manual.pdf'
+              - '.github/workflows/main.yml'
             sync_verb:
               - 'rone sync verb'
               - 'Shared/**'
               - 'installer/RoneSyncVerb.iss'
               - 'docs/manuals/RONE Sync Verb - User Manual.pdf'
+              - '.github/workflows/main.yml'
             afterspace:
               - 'RONE AFTER SPACE/**'
               - 'Shared/**'
               - 'installer/RoneAfterspace.iss'
               - 'docs/manuals/RONE AFTERSPACE - User Manual.pdf'
+              - '.github/workflows/main.yml'
             analyzer:
               - 'RONEAnalyzer'
               - 'installer/RONEAnalyzer.iss'
               - 'docs/manuals/RONE Analyzer - User Manual.pdf'
+              - '.github/workflows/main.yml'
             plugins_center:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
@@ -145,7 +154,10 @@ jobs:
           #add "$SF" stems_fixer     RoneStemsFixer     RoneStemsFixer    RoneStemsFixer-latest      RoneStemsFixer             false  ""                                false    RoneStemsFixer.iss
           add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss     "RONE Stutter - User Manual.pdf"        "Rone Stutter"
           add "$SK" stucker         RoneStucker        RoneStucker       RoneStucker-latest         RoneStucker               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStucker.iss     "RONE Stucker - User Manual.pdf"        "Rone Stucker"
-          add "$TH" throw           RoneThrow          RoneThrow         RoneThrow-latest           RoneThrow                 true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneThrow.iss       "RONE Throw - User Manual.pdf"          ""
+          # shelved 2026-09-04: RoneThrow/ and installer/RoneThrow.iss are not in the
+          # repo yet, so a runner has nothing to configure - build #177 failed here and
+          # took the whole release down with it. Uncomment once they are committed.
+          #add "$TH" throw           RoneThrow          RoneThrow         RoneThrow-latest           RoneThrow                 true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneThrow.iss       "RONE Throw - User Manual.pdf"          ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
