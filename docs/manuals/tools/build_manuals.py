@@ -164,7 +164,7 @@ def install_section(m):
 <h3>Step by step</h3>
 {steps([
  "Download the Center from <a href='https://roneaudio.com'>roneaudio.com</a> and run the installer (Windows: <code>RONE_Plugins_Center_Installer.exe</code>, macOS: <code>RONE_Plugins_Center.dmg</code>). On Windows the installer also adds the Microsoft WebView2 runtime if your PC does not have it yet; it is required for the plugin interfaces.",
- "Open the Center and sign in with your <strong>roneaudio.com account</strong> (the same e-mail and password you used on the website). Your plan and device slots are checked automatically; an active ALL ACCESS plan unlocks every plugin.",
+ f"Open the Center and sign in with your <strong>roneaudio.com account</strong> (the same e-mail and password you used on the website). Your licences and device slots are checked automatically: an active <strong>ALL ACCESS</strong> plan unlocks every plugin, and a <strong>lifetime licence</strong> unlocks the plugin it was bought for &mdash; so {m['product']} opens either way.",
  f"Find <strong>{m['product']}</strong> in the list and press <span class='pill'>INSTALL</span>. The Center downloads the signed installer, verifies its checksum, installs it silently and registers the version.",
  "When the card shows <span class='pill'>INSTALLED</span>, start (or restart) your DAW and rescan plugins if it does not pick up new plugins automatically. All RONE plugins appear next to each other in your plugin list because every name starts with <strong>RONE</strong>.",
  "Updates appear on the same card. Press <span class='pill'>UPDATE</span> on one plugin or <span class='pill'>UPDATE ALL</span> at the top. Close the standalone version of a plugin before updating it."])}
@@ -175,7 +175,8 @@ def install_section(m):
 </div>
 {note("Manual inside the Center", "Every installed plugin has a <strong>Manual</strong> entry in its card menu (the three dots on the card). It opens this PDF from the install folder, or from roneaudio.com if the local copy is missing.")}
 <h3>Licence and activation</h3>
-<p>Licensing is tied to your account, not to a key. The plugin checks the licence file that the Center writes when you sign in. If a plugin ever shows a <em>RONE Bundle License Required</em> screen, open the Center, make sure you are signed in and your plan is active, then reopen the plugin. Two devices can be signed in at the same time; sign out on an old machine from the Center's Account page to free a slot.</p>
+<p>Licensing is tied to your account, not to a key. The plugin checks the licence file that the Center writes when you sign in. There are two ways to own it: an <strong>ALL ACCESS</strong> plan, which unlocks every RONE plugin for as long as it is active, or a <strong>lifetime licence</strong> for this plugin alone, which never expires. Either one opens {m['product']}, and buying the lifetime licence later does not disturb a plan you already have.</p>
+<p>If a plugin ever shows a <em>RONE Bundle License Required</em> screen, open the Center, make sure you are signed in and the plugin shows as licensed, then reopen it. Two devices can be signed in at the same time on either kind of licence; sign out on an old machine from the Center's Account page to free a slot. A lifetime licence keeps working offline for far longer than a plan does &mdash; there is nothing for it to expire against &mdash; but the Center still needs to reach the internet occasionally to confirm it.</p>
 <h3>Uninstalling</h3>
 <p>Windows: Settings &rarr; Apps &rarr; <em>{m['product']} (RONE)</em>. macOS: delete the bundles listed above. Presets and settings in your user folder are kept.</p>
 """
