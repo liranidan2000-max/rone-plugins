@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "Dragging audio in from Cubase now works. Cubase cannot hand a project-window event over as a file - it is a region with fades that only exists once it is rendered - so it offers a promise instead; the plugin now accepts that on both Windows and macOS and an event dragged straight off the timeline lands in the waveform. Dragging the result back out also announces itself as a copy, which some hosts require before they will take it.",
+      "whats_new": "The playback controls are real host parameters now. Reverse Reverb had none at all - nothing of it appeared in a DAW automation list - and OUTPUT GAIN, the four fade controls and the whole tremolo section (on/off, depth, pan, rate, shape, mode and all three divisions) can now be automated, wrapped in proper automation gestures so Touch and Latch record them, and right-clicked for the host menu. The interface follows an automation clip live. The controls that feed the offline re-render of the tail - reverb size, dry/wet, tail, BPM, width, low cut, transition - stay interface-only on purpose: re-rendering a tail mid-playback is not something automation can do sanely. Fades are also saved with the session now, which they never were.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
