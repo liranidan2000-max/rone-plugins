@@ -423,7 +423,7 @@ void RoneAfterspaceAudioProcessor::checkBundleLicense()
     // enforced mode requires the real bundle license.
     RemoteLicenseGate::refreshFromNetworkAsync();
     licenseValid.store (RemoteLicenseGate::isOpenMode()
-                         || BundleLicenseChecker::isBundleLicensed());
+                         || BundleLicenseChecker::isProductLicensed ("RoneAfterspace"));
 }
 
 // =============================================================================

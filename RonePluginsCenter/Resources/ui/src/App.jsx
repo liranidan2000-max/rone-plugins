@@ -11,10 +11,40 @@ import SettingsPanel from './components/SettingsPanel'
 import InfoModal from './components/InfoModal'
 import StatusToast from './components/StatusToast'
 
+// ---- The one ownership comparison ----
+// An owned id travels server -> C++ -> here, and every hop has its own idea of
+// casing and padding. BundleLicenseChecker and MainComponent settled on one
+// rule — trim, ignore case, whole token, never a substring — so the UI has to
+// use exactly that one or a customer who paid still sees a lock.
+const productKey = (id) => (typeof id === 'string' ? id.trim().toLowerCase() : '')
+
+// The server sends an array; the licence file keeps the same ids comma-joined.
+// Accept either shape, drop the blanks, and keep the first spelling of each
+// product. Splitting on commas is what makes the compare a whole-token one:
+// "RoneStut" must never match "RoneStutter".
+function ownedProductIds (owned) {
+  const entries = Array.isArray(owned) ? owned : typeof owned === 'string' ? [owned] : []
+  const seen = new Set()
+  const ids = []
+  for (const entry of entries) {
+    if (typeof entry !== 'string') continue
+    for (const token of entry.split(',')) {
+      const id = token.trim()
+      const key = productKey(id)
+      if (key === '' || seen.has(key)) continue
+      seen.add(key)
+      ids.push(id)
+    }
+  }
+  return ids
+}
+
 export default function App() {
   const [plugins, setPlugins] = useState([])
   const [license, setLicense] = useState({ licensed: false, customerName: '', licenseKey: '', message: '' })
-  const [account, setAccount] = useState({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, message: '' })
+  // `owned` = canonical ids of plugins bought outright (LIFETIME). The pass is
+  // separate: `licensed` still means ALL ACCESS, which unlocks everything.
+  const [account, setAccount] = useState({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], message: '' })
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('name')
@@ -72,15 +102,22 @@ export default function App() {
     async function init() {
       if (isDevMode()) {
         setPlugins(mockPlugins)
-        // ?signedout=1 previews the sign-in form without a running backend
-        const devSignedOut = new URLSearchParams(location.search).has('signedout')
-        setLicense({ licensed: !devSignedOut, customerName: devSignedOut ? '' : 'Liran Kalifa',
+        // ?signedout=1 previews the sign-in form without a running backend,
+        // ?lifetime=1 the customer who bought single plugins instead of the pass
+        const devQuery = new URLSearchParams(location.search)
+        const devSignedOut = devQuery.has('signedout')
+        const devLifetime = devQuery.has('lifetime')
+        setLicense({ licensed: !devSignedOut && !devLifetime, customerName: devSignedOut ? '' : 'Liran Kalifa',
                      licenseKey: devSignedOut ? '' : 'dev-key', message: '' })
         setAccount(devSignedOut
-          ? { signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, message: '' }
+          ? { signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], message: '' }
+          : devLifetime
+          ? { signedIn: true, licensed: false, email: 'liran@roneaudio.com',
+              name: 'Liran Kalifa', plan: 'none', deviceLimit: 2,
+              owned: ['RoneStutter', 'RoneFlanger'], message: '' }
           : { signedIn: true, licensed: true, email: 'liran@roneaudio.com',
               name: 'Liran Kalifa', plan: 'all-access', deviceLimit: 2,
-              renewsAt: Date.now() + 21 * 86400000, expiresAt: 0, message: '' })
+              renewsAt: Date.now() + 21 * 86400000, expiresAt: 0, owned: [], message: '' })
         setLoading(false); setLastSync(new Date()); return
       }
       const licStatus = await api.getLicenseStatus()
@@ -191,7 +228,7 @@ export default function App() {
   const handleSignOut = async () => {
     try {
       const res = await api.accountSignOut()
-      setAccount({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', message: '' })
+      setAccount({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', owned: [], message: '' })
       setLicense(prev => ({ ...prev, licensed: false, customerName: '' }))
       addToast(res?.message || 'Signed out', 'info')
       return res
@@ -215,9 +252,33 @@ export default function App() {
     else if (key === 'plugins' || key === 'home') setStatusFilter('all')
   }
 
+  // ---- Individually-owned (LIFETIME) plugins ----
+  // An older Center build has no `owned` field at all — that reads as "owns
+  // nothing", which is the safe answer.
+  const ownedIds = React.useMemo(() => ownedProductIds(account.owned), [account.owned])
+  const ownedKeys = React.useMemo(() => new Set(ownedIds.map(productKey)), [ownedIds])
+
+  // Names come from the manifest so there is no second product table in the UI.
+  // Matching on the key means a differently-cased id still finds its entry, and
+  // once it does the manifest's own spelling is the one shown.
+  const ownedPlugins = React.useMemo(() => {
+    const byKey = new Map(plugins.map(p => [productKey(p.id), p]))
+    return ownedIds.map(id => {
+      const match = byKey.get(productKey(id))
+      return { id: match?.id || id, name: match?.name || id }
+    })
+  }, [ownedIds, plugins])
+
+  // Ownership travels on the plugin object: the grid hands the entry straight
+  // to the card. Tagged here rather than in the filter below so the entries
+  // keep their identity while the user types and React.memo still holds.
+  const taggedPlugins = React.useMemo(
+    () => plugins.map(p => (ownedKeys.has(productKey(p.id)) ? { ...p, owned: true } : p)),
+    [plugins, ownedKeys])
+
   // ---- Filtered & sorted plugins ----
   const processedPlugins = React.useMemo(() => {
-    let result = [...plugins]
+    let result = [...taggedPlugins]
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       result = result.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
@@ -232,7 +293,7 @@ export default function App() {
       result.sort((a, b) => (order[a.status] ?? 99) - (order[b.status] ?? 99))
     }
     return result
-  }, [plugins, searchQuery, statusFilter, sortBy])
+  }, [taggedPlugins, searchQuery, statusFilter, sortBy])
 
   const filterCounts = React.useMemo(() => ({
     all: plugins.length,
@@ -287,7 +348,8 @@ export default function App() {
       <div className="flex-1 min-h-0 flex">
 
       {/* Sidebar */}
-      <Sidebar active={activeNav} onNavigate={handleNavigate} updatesCount={updatesCount} license={license} />
+      <Sidebar active={activeNav} onNavigate={handleNavigate} updatesCount={updatesCount} license={license}
+               ownedPlugins={ownedPlugins} />
 
       {/* Main column */}
       <main className="flex-1 flex flex-col min-w-0">
@@ -305,7 +367,8 @@ export default function App() {
             <div className="flex-1 overflow-y-auto plugin-grid-scroll">
               <AccountPanel license={license} account={account} onSignIn={handleSignIn} onSignOut={handleSignOut}
                             onGoogleSignIn={handleGoogleSignIn} onGoogleCancel={handleGoogleCancel}
-                            onActivate={handleActivate} onDeactivate={handleDeactivate} pluginCount={filterCounts.installed} />
+                            onActivate={handleActivate} onDeactivate={handleDeactivate} pluginCount={filterCounts.installed}
+                            ownedPlugins={ownedPlugins} />
             </div>
           )}
 

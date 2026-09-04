@@ -15,6 +15,11 @@
 // Squeezy key path writes, because every plugin already reads that file — the
 // account system needed no plugin changes at all.
 //
+// That file now also carries `products=` — the plugins bought outright as a
+// one-off LIFETIME licence. `licensed=` keeps meaning "the ALL ACCESS pass is
+// active" and nothing else, so already-shipped builds, which only read
+// `licensed`, stay locked for a lifetime-only customer. That is deliberate.
+//
 // The LS key path (LicenseHandler) stays in place as a fallback for customers
 // who bought before accounts existed.
 // ============================================================================
@@ -34,6 +39,9 @@ public:
         juce::int64  expiresAt = 0;     // 0 = no expiry (perpetual)
         juce::int64  renewsAt  = 0;
         int deviceLimit = 2;
+        // Canonical ids of the plugins bought outright (LIFETIME). Independent
+        // of `licensed`: an account can own plugins and hold no pass at all.
+        juce::StringArray ownedProducts;
         juce::String message;
     };
 
@@ -64,19 +72,35 @@ public:
 
 private:
     // Same 7-day offline tolerance as the license-key path: a working studio
-    // must not go dark because the internet did.
+    // must not go dark because the internet did. It gates the PASS only — a
+    // lifetime plugin was paid for outright and has nothing to expire, so it
+    // stays written however long we have been unable to reach the server.
     static constexpr juce::int64 OFFLINE_GRACE_MS      = 7LL * 24 * 60 * 60 * 1000;
     static constexpr int         VALIDATION_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
     juce::File getAccountFile() const;   // token + profile (Center only)
-    juce::File getLicenseFile() const;   // the file every plugin reads
 
     void saveAccountFile();
     bool loadAccountFile();
     void clearAccountFile();
 
-    /** Mirrors the current state into BundleLicense.xml (and the registry). */
-    void writeBundleLicense (bool licensed);
+    /** Mirrors this account's two attributes into BundleLicense.xml through
+        BundleLicenseFile: licensed="1" only for an active pass, products="..."
+        for the plugins bought outright. The serial path's claim on the same
+        file is left exactly as it was found, and the file is deleted only once
+        NEITHER side holds anything — that absence is what every plugin reads
+        as "not licensed".
+
+        The lastValidationTime it hands over is the last time the SERVER
+        answered, not the moment of writing. Every plugin's offline grace is
+        measured from it, so it must only ever move forward in
+        applyServerState(); a write from an offline path that refreshed it
+        would make a refund impossible to enforce. */
+    void writeLicenseFile();
+
+    /** Drops the account's claim on BundleLicense.xml. A legacy Lemon Squeezy
+        serial on the same machine survives it. */
+    void clearLicenseFile();
 
     /** Stable per-machine id, hashed so the raw device id never leaves the PC. */
     static juce::String getMachineId();

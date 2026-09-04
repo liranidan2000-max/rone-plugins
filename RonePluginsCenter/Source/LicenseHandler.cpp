@@ -1,4 +1,5 @@
 #include "LicenseHandler.h"
+#include "BundleLicenseFile.h"
 
 // ============================================================================
 // Construction / Destruction
@@ -40,36 +41,28 @@ juce::String LicenseHandler::getStatusMessage() const
 }
 
 // ============================================================================
-// License file location — shared across all RONE plugins
-// ============================================================================
-
-juce::File LicenseHandler::getLicenseFile() const
-{
-    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-               .getChildFile ("RonePlugins")
-               .getChildFile ("BundleLicense.xml");
-}
-
-// ============================================================================
-// Save license state to shared XML + Windows Registry
+// The shared XML file — written through BundleLicenseFile so that the account
+// path's claim on the same file survives everything this class does to it.
 // ============================================================================
 
 void LicenseHandler::saveLicenseFile()
 {
-    juce::ScopedLock sl (lock);
+    bool isLicensed = licensed.load();
+    juce::String key, instId, custName;
+    juce::int64 validatedAt = 0;
 
-    juce::XmlElement xml ("RoneBundleLicense");
-    xml.setAttribute ("licenseKey",          licenseKey);
-    xml.setAttribute ("instanceId",          instanceId);
-    xml.setAttribute ("customerName",        customerName);
-    xml.setAttribute ("lastValidationTime",  juce::String (lastValidationTime));
-    xml.setAttribute ("licensed",            licensed.load());
+    {
+        juce::ScopedLock sl (lock);
+        key         = licenseKey;
+        instId      = instanceId;
+        custName    = customerName;
+        validatedAt = lastValidationTime;
+    }
 
-    auto file = getLicenseFile();
-    file.getParentDirectory().createDirectory();
-    xml.writeTo (file, {});
-
-    updateRegistryStatus ("active");
+    // Only the serial's own attributes go out. Composing the whole document
+    // here is what used to erase products= — the plugins the same customer had
+    // bought outright — every time this serial re-validated.
+    BundleLicenseFile::writeSerial (isLicensed, key, instId, custName, validatedAt);
 }
 
 // ============================================================================
@@ -78,61 +71,45 @@ void LicenseHandler::saveLicenseFile()
 
 bool LicenseHandler::loadLicenseFile()
 {
-    auto file = getLicenseFile();
-    if (! file.existsAsFile())
+    const auto file = BundleLicenseFile::load();
+
+    // serialLicensed is this class's own claim, and it is the only one worth
+    // reading here. The merged `licensed` can be true because the ACCOUNT's
+    // pass is active, and adopting that would send a non-key to Lemon Squeezy
+    // and let the failure tear down a perfectly good file.
+    if (! file.serialLicensed)
         return false;
 
-    auto xml = juce::parseXML (file);
-    if (xml == nullptr || xml->getTagName() != "RoneBundleLicense")
+    // A file written by an older Center could still carry the account path's
+    // "account:<email>" where a serial belongs. Not ours to re-validate.
+    if (file.licenseKey.startsWith ("account:"))
         return false;
 
+    if (file.licenseKey.isEmpty() || file.instanceId.isEmpty())
+        return false;
+
+    // Committed only once the file is known to be ours, so a rejected one
+    // never leaves half its contents in the fields the UI reads.
     juce::ScopedLock sl (lock);
-    licenseKey         = xml->getStringAttribute ("licenseKey",         "");
-    instanceId         = xml->getStringAttribute ("instanceId",         "");
-    customerName       = xml->getStringAttribute ("customerName",       "");
-    lastValidationTime = xml->getStringAttribute ("lastValidationTime", "0").getLargeIntValue();
+    licenseKey         = file.licenseKey;
+    instanceId         = file.instanceId;
+    customerName       = file.customerName;
+    lastValidationTime = file.lastValidationTime;
 
-    return licenseKey.isNotEmpty() && instanceId.isNotEmpty();
+    return true;
 }
 
 // ============================================================================
-// Clear license file + registry
+// Drop this class's claim on the shared file
 // ============================================================================
 
 void LicenseHandler::clearLicenseFile()
 {
-    auto file = getLicenseFile();
-    if (file.existsAsFile())
-        file.deleteFile();
-
-    updateRegistryStatus ("");
-}
-
-// ============================================================================
-// Mirror status to Windows Registry (no-op on macOS/Linux)
-// ============================================================================
-
-void LicenseHandler::updateRegistryStatus (const juce::String& status)
-{
-#if JUCE_WINDOWS
-    HKEY hKey = nullptr;
-    DWORD disposition = 0;
-
-    if (RegCreateKeyExW (HKEY_CURRENT_USER,
-                         L"Software\\RONE\\License",
-                         0, nullptr,
-                         REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr,
-                         &hKey, &disposition) == ERROR_SUCCESS)
-    {
-        auto wide = status.toWideCharPointer();
-        RegSetValueExW (hKey, L"BundleStatus", 0, REG_SZ,
-                        reinterpret_cast<const BYTE*> (wide),
-                        (DWORD) ((status.length() + 1) * sizeof (wchar_t)));
-        RegCloseKey (hKey);
-    }
-#else
-    juce::ignoreUnused (status);
-#endif
+    // Drops the serial only. A revoked or deactivated Lemon Squeezy key says
+    // nothing about a plugin the same person bought outright, and deleting the
+    // file here used to revoke it anyway. BundleLicenseFile removes the file
+    // when — and only when — nothing is left to claim.
+    BundleLicenseFile::clearSerial();
 }
 
 // ============================================================================
@@ -395,8 +372,10 @@ void LicenseHandler::validateLicenseAsync (std::function<void (bool)> callback)
                     statusMessage = "License is no longer valid.";
                 }
                 licensed.store (false);
+                // Only this serial goes. The registry mirror follows from what
+                // is left in the file, so an account pass on the same machine
+                // keeps its "active".
                 clearLicenseFile();
-                updateRegistryStatus ("expired");
 
                 if (onLicenseStateChanged)
                     onLicenseStateChanged (false);

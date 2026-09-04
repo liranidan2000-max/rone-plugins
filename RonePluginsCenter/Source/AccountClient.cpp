@@ -1,15 +1,9 @@
 #include "AccountClient.h"
 #include <cstring>
 
-#if JUCE_WINDOWS
- #ifndef WIN32_LEAN_AND_MEAN
-  #define WIN32_LEAN_AND_MEAN
- #endif
- #ifndef NOMINMAX
-  #define NOMINMAX
- #endif
- #include <windows.h>
-#endif
+// Brings the guarded <windows.h> with it; the registry mirror this file used
+// to own now lives there, next to the file it describes.
+#include "BundleLicenseFile.h"
 
 #ifndef RONE_API_BASE
  #define RONE_API_BASE "https://roneaudio.com/api/v1"
@@ -49,13 +43,6 @@ juce::File AccountClient::getAccountFile() const
                .getChildFile ("Account.xml");
 }
 
-juce::File AccountClient::getLicenseFile() const
-{
-    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-               .getChildFile ("RonePlugins")
-               .getChildFile ("BundleLicense.xml");
-}
-
 void AccountClient::saveAccountFile()
 {
     const juce::ScopedLock sl (lock);
@@ -69,6 +56,7 @@ void AccountClient::saveAccountFile()
     xml.setAttribute ("expiresAt",          juce::String (state.expiresAt));
     xml.setAttribute ("renewsAt",           juce::String (state.renewsAt));
     xml.setAttribute ("deviceLimit",        state.deviceLimit);
+    xml.setAttribute ("ownedProducts",      state.ownedProducts.joinIntoString (","));
     xml.setAttribute ("lastValidationTime", juce::String (lastValidationTime));
 
     auto file = getAccountFile();
@@ -95,6 +83,9 @@ bool AccountClient::loadAccountFile()
     state.expiresAt    = xml->getStringAttribute ("expiresAt", "0").getLargeIntValue();
     state.renewsAt     = xml->getStringAttribute ("renewsAt",  "0").getLargeIntValue();
     state.deviceLimit  = xml->getIntAttribute    ("deviceLimit", 2);
+    state.ownedProducts = juce::StringArray::fromTokens (xml->getStringAttribute ("ownedProducts"), ",", "");
+    state.ownedProducts.trim();
+    state.ownedProducts.removeEmptyStrings();
     lastValidationTime = xml->getStringAttribute ("lastValidationTime", "0").getLargeIntValue();
     state.signedIn     = token.isNotEmpty();
 
@@ -112,62 +103,47 @@ void AccountClient::clearAccountFile()
 
 // ============================================================================
 // BundleLicense.xml — the contract with every plugin
+//
+// Written through BundleLicenseFile, which merges these two attributes into
+// whatever the Lemon Squeezy path has already claimed in the same file. This
+// class must not compose the document: doing so used to wipe a pre-accounts
+// customer's serial every time the account re-validated.
 // ============================================================================
 
-void AccountClient::writeBundleLicense (bool licensed)
+void AccountClient::clearLicenseFile()
 {
-    auto file = getLicenseFile();
+    // The account's claim goes; a legacy serial on the same machine was never
+    // part of it and stays. BundleLicenseFile removes the file only once
+    // nothing is left, which is still what the plugins read as "not licensed".
+    BundleLicenseFile::clearAccount();
+}
 
-    if (! licensed)
-    {
-        // Removing the file is exactly what BundleLicenseChecker treats as
-        // "not licensed" — cleaner than leaving a stale licensed="0" behind.
-        file.deleteFile();
-       #if JUCE_WINDOWS
-        HKEY hKey = nullptr;
-        if (RegOpenKeyExW (HKEY_CURRENT_USER, L"Software\\RONE\\License", 0, KEY_SET_VALUE, &hKey)
-            == ERROR_SUCCESS)
-        {
-            RegDeleteValueW (hKey, L"BundleStatus");
-            RegCloseKey (hKey);
-        }
-       #endif
-        return;
-    }
-
-    juce::String email, name;
+void AccountClient::writeLicenseFile()
+{
+    bool licensed = false;
+    juce::String products;
+    juce::int64 validatedAt = 0;
     {
         const juce::ScopedLock sl (lock);
-        email = state.email;
-        name  = state.name;
+        licensed    = state.licensed;
+        products    = state.ownedProducts.joinIntoString (",");
+        validatedAt = lastValidationTime;
     }
 
-    juce::XmlElement xml ("RoneBundleLicense");
-    xml.setAttribute ("licensed",           true);
-    xml.setAttribute ("customerName",       name.isNotEmpty() ? name : email);
-    xml.setAttribute ("lastValidationTime", juce::String (juce::Time::currentTimeMillis()));
-    // The account path has no serial; these keep the file shape identical for
-    // any older reader that expects the attributes to exist.
-    xml.setAttribute ("licenseKey",         "account:" + email);
-    xml.setAttribute ("instanceId",         getMachineId());
-
-    file.getParentDirectory().createDirectory();
-    xml.writeTo (file, {});
-
-   #if JUCE_WINDOWS
-    HKEY hKey = nullptr;
-    DWORD disposition = 0;
-    if (RegCreateKeyExW (HKEY_CURRENT_USER, L"Software\\RONE\\License", 0, nullptr,
-                         REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, &disposition)
-        == ERROR_SUCCESS)
-    {
-        const wchar_t* value = L"active";
-        RegSetValueExW (hKey, L"BundleStatus", 0, REG_SZ,
-                        reinterpret_cast<const BYTE*> (value),
-                        (DWORD) ((wcslen (value) + 1) * sizeof (wchar_t)));
-        RegCloseKey (hKey);
-    }
-   #endif
+    // `licensed` here is the ALL ACCESS pass and nothing else. Widening it to
+    // cover a lifetime plugin would hand the whole bundle to anyone who bought
+    // one, because every already-shipped build reads only that attribute — so
+    // products travels beside it, never folded into it.
+    //
+    // `validatedAt` is the last time the SERVER said yes, never the moment of
+    // writing: that stamp is the clock every plugin's offline grace runs on
+    // (8 days for the pass, 90 for a plugin bought outright), and re-stamping
+    // it on a launch that never reached the internet would leave a refunded
+    // licence working forever.
+    //
+    // Nothing held? writeAccount() still runs, and BundleLicenseFile deletes
+    // the file if the serial path has nothing in it either.
+    BundleLicenseFile::writeAccount (licensed, products, validatedAt);
 }
 
 // ============================================================================
@@ -243,8 +219,9 @@ juce::var AccountClient::post (const juce::String& path, const juce::var& body,
 
 void AccountClient::applyServerState (const juce::var& response)
 {
-    auto user = response.getProperty ("user", juce::var());
-    auto ent  = response.getProperty ("entitlements", juce::var());
+    auto user  = response.getProperty ("user", juce::var());
+    auto ent   = response.getProperty ("entitlements", juce::var());
+    auto owned = ent.getProperty ("owned", juce::var());
 
     const juce::ScopedLock sl (lock);
     state.signedIn    = true;
@@ -255,6 +232,16 @@ void AccountClient::applyServerState (const juce::var& response)
     state.expiresAt   = (juce::int64) (double) ent.getProperty ("expiresAt", 0.0);
     state.renewsAt    = (juce::int64) (double) ent.getProperty ("renewsAt", 0.0);
     state.deviceLimit = (int) ent.getProperty ("deviceLimit", 2);
+
+    // Rebuilt from scratch every time: a refund that removes a product has to
+    // remove it here too, and a server that says nothing about `owned` (an
+    // older worker) must leave nobody holding a plugin.
+    state.ownedProducts.clear();
+    if (auto* ids = owned.getArray())
+        for (const auto& id : *ids)
+            state.ownedProducts.addIfNotAlreadyThere (id.toString().trim());
+    state.ownedProducts.removeEmptyStrings();
+
     lastValidationTime = juce::Time::currentTimeMillis();
 }
 
@@ -262,6 +249,21 @@ void AccountClient::notifyChanged()
 {
     if (onStateChanged)
         juce::MessageManager::callAsync ([cb = onStateChanged] { cb(); });
+}
+
+// Someone who bought a plugin outright and holds no pass is not "unlicensed" —
+// saying so would read like the sign-in failed. `lead` carries its own dash so
+// both sign-in paths keep the wording they already had.
+static juce::String signedInMessage (const AccountClient::State& s, const juce::String& lead)
+{
+    if (s.licensed)
+        return lead + " all plugins unlocked";
+
+    if (! s.ownedProducts.isEmpty())
+        return lead + (s.ownedProducts.size() == 1 ? " your lifetime plugin is unlocked"
+                                                   : " your lifetime plugins are unlocked");
+
+    return "Signed in, but this account has no active pass";
 }
 
 // ============================================================================
@@ -304,12 +306,10 @@ void AccountClient::signIn (const juce::String& email, const juce::String& passw
             applyServerState (response);
             saveAccountFile();
 
-            const bool licensed = getState().licensed;
-            writeBundleLicense (licensed);
+            writeLicenseFile();
 
             success = true;
-            message = licensed ? "Signed in — all plugins unlocked"
-                               : "Signed in, but this account has no active pass";
+            message = signedInMessage (getState(), "Signed in —");
             startTimer (VALIDATION_INTERVAL_MS);
         }
         else
@@ -487,12 +487,10 @@ void AccountClient::signInWithGoogle (Callback cb)
         applyServerState (response);
         saveAccountFile();
 
-        const bool licensed = getState().licensed;
-        writeBundleLicense (licensed);
+        writeLicenseFile();
         startTimer (VALIDATION_INTERVAL_MS);
 
-        finish (true, licensed ? "Signed in with Google - all plugins unlocked"
-                               : "Signed in, but this account has no active pass");
+        finish (true, signedInMessage (getState(), "Signed in with Google -"));
     });
 }
 
@@ -505,9 +503,11 @@ void AccountClient::signOut (Callback cb)
     }
 
     // Local state is cleared immediately: signing out must work offline too.
+    // Everything goes, lifetime plugins included — they come back with the
+    // next sign-in, and this machine is no longer claiming the account.
     stopTimer();
     clearAccountFile();
-    writeBundleLicense (false);
+    clearLicenseFile();
     notifyChanged();
 
     if (cb) cb (true, "Signed out");
@@ -525,6 +525,11 @@ void AccountClient::signOut (Callback cb)
 // ============================================================================
 // Validation
 // ============================================================================
+
+// Said to someone whose pass could not be confirmed but who owns plugins
+// outright: nothing of theirs stopped working, so nothing should sound alarming.
+static const char* const kOfflineOwnedMessage =
+    "Offline — your lifetime plugins keep working.";
 
 void AccountClient::validateAsync (std::function<void (bool)> done)
 {
@@ -552,7 +557,7 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
             applyServerState (response);
             licensed = getState().licensed;
             saveAccountFile();
-            writeBundleLicense (licensed);
+            writeLicenseFile();
         }
         else if (status == 401)
         {
@@ -560,7 +565,7 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
             // account page, or the account was deleted). Only THIS answer
             // clears the token — a network failure must not.
             clearAccountFile();
-            writeBundleLicense (false);
+            clearLicenseFile();
             {
                 const juce::ScopedLock sl (lock);
                 state.message = "This computer was signed out. Please sign in again.";
@@ -568,16 +573,24 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         }
         else
         {
-            // Offline: keep working until the grace period runs out.
+            // Offline: the PASS keeps working until the grace period runs out.
             const auto elapsed = juce::Time::currentTimeMillis() - lastValidationTime;
             licensed = getState().licensed && elapsed < OFFLINE_GRACE_MS;
 
             if (! licensed && getState().signedIn)
             {
-                writeBundleLicense (false);
-                const juce::ScopedLock sl (lock);
-                state.licensed = false;
-                state.message  = "Could not verify your pass. Connect to the internet.";
+                {
+                    const juce::ScopedLock sl (lock);
+                    state.licensed = false;
+                    state.message  = state.ownedProducts.isEmpty()
+                                         ? "Could not verify your pass. Connect to the internet."
+                                         : kOfflineOwnedMessage;
+                }
+
+                // Rewritten, not deleted: this drops the pass and keeps every
+                // plugin bought outright. A lifetime licence has nothing to
+                // expire, so no amount of downtime may take it away.
+                writeLicenseFile();
             }
         }
 
@@ -606,15 +619,25 @@ void AccountClient::initialize()
 
     if (elapsed < OFFLINE_GRACE_MS)
     {
-        // Trust the cached verdict so the UI is correct instantly, then confirm
-        // with the server in the background.
-        writeBundleLicense (getState().licensed);
+        // Trust the cached verdict so the UI and the plugins are correct
+        // instantly, then confirm with the server in the background. The stamp
+        // that goes out is still the last one the server gave us, so this
+        // rewrite hands nobody a fresh grace period.
+        writeLicenseFile();
     }
     else
     {
+        // Too long since the server last confirmed the pass to go on claiming
+        // it here. The file on disk is deliberately left as it is rather than
+        // rewritten: it already carries that same stale stamp, and each plugin
+        // runs its own clock off it — 8 days for the pass, 90 for a plugin
+        // bought outright. validateAsync() below corrects the file the moment
+        // it learns anything, online or offline.
         const juce::ScopedLock sl (lock);
         state.licensed = false;
-        state.message  = "Please connect to the internet to verify your pass.";
+        state.message  = state.ownedProducts.isEmpty()
+                             ? "Please connect to the internet to verify your pass."
+                             : kOfflineOwnedMessage;
     }
 
     validateAsync();

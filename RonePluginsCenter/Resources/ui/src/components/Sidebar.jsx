@@ -86,7 +86,22 @@ function EqualizerArt() {
   )
 }
 
-export default function Sidebar({ active, onNavigate, updatesCount = 0, license }) {
+export default function Sidebar({ active, onNavigate, updatesCount = 0, license, ownedPlugins = [] }) {
+  // Plugins bought outright, same list AccountPanel gets. The card at the
+  // bottom is on every screen, so it is the one place that must never tell a
+  // customer who paid for two plugins that nothing is activated.
+  const lifetime = Array.isArray(ownedPlugins) ? ownedPlugins : []
+  const passActive = !!license?.licensed
+  // ALL ACCESS already covers every plugin - it wins, and its card is untouched.
+  const lifetimeOnly = !passActive && lifetime.length > 0
+
+  // The card is 174px wide inside its padding: two short names still read as a
+  // list, anything longer only survives as a count.
+  const lifetimeNames = lifetime.map(p => p.name || p.id).join(', ')
+  const lifetimeLine = lifetime.length <= 2 && lifetimeNames.length <= 30
+    ? lifetimeNames
+    : `${lifetime.length} plugin${lifetime.length !== 1 ? 's' : ''} unlocked`
+
   return (
     <div className="sidebar-panel flex-shrink-0 w-[230px] h-full flex flex-col">
       {/* Wordmark: RONE white + PLUGINS neon (house pattern). Clicking it always goes Home. */}
@@ -153,7 +168,7 @@ export default function Sidebar({ active, onNavigate, updatesCount = 0, license 
         </div>
       </div>
 
-      {/* PRO plan card */}
+      {/* PRO plan card - or LIFETIME, for someone who bought plugins instead of the pass */}
       <div className="p-3">
         <div className="rounded-xl border border-rone-border p-4"
              style={{ background: 'linear-gradient(160deg, #1B1E23 0%, #101216 100%)' }}>
@@ -161,19 +176,26 @@ export default function Sidebar({ active, onNavigate, updatesCount = 0, license 
             <svg className="w-3.5 h-3.5" fill="#9D6BFF" viewBox="0 0 24 24">
               <path d="M13 2L4 14h6l-1 8 9-12h-6z" />
             </svg>
-            <span className="font-display text-[12px] font-extrabold text-rone-text-primary tracking-[0.22em]">PRO</span>
+            <span className="font-display text-[12px] font-extrabold text-rone-text-primary tracking-[0.22em]">
+              {lifetimeOnly ? 'LIFETIME' : 'PRO'}
+            </span>
           </div>
-          <p className="text-[11px] text-rone-text-secondary mt-2 font-semibold">Professional Plan</p>
+          <p className="text-[11px] text-rone-text-secondary mt-2 font-semibold">
+            {lifetimeOnly ? `Lifetime Licence${lifetime.length !== 1 ? 's' : ''}` : 'Professional Plan'}
+          </p>
           <p className="text-[10px] text-rone-text-dim mt-0.5">
-            {license?.licensed
+            {passActive
               ? (<><span className="text-rone-green font-bold">Active</span> &middot; all plugins unlocked</>)
+              : lifetimeOnly
+              ? (<><span className="text-rone-green font-bold">Active</span> &middot; {lifetimeLine}</>)
               : 'Not activated'}
           </p>
           <button
             onClick={() => onNavigate('account')}
             className="mt-3 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-rone-purple hover:text-rone-light-purple transition-colors"
           >
-            Manage Plan
+            {/* No plan to manage when the plugins are owned outright */}
+            {lifetimeOnly ? 'Your Licences' : 'Manage Plan'}
             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M9 5l7 7-7 7" />
             </svg>

@@ -437,6 +437,13 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.registryKey    = entry.getProperty ("registry_key",     {}).toString();
         info.type          = entry.getProperty ("type",         {}).toString();
 
+        // Only the plugins sold on their own carry these. Left as raw vars so a
+        // manifest without them (an ALL-ACCESS-only plugin, or a cached older
+        // catalog) stays distinguishable from one priced at nothing.
+        info.price       = entry.getProperty ("price",        {});
+        info.launchPrice = entry.getProperty ("launch_price", {});
+        info.storeUrl    = entry.getProperty ("store_url",    {}).toString();
+
         auto* fmts = entry.getProperty ("formats", {}).getArray();
         if (fmts != nullptr)
             for (auto& f : *fmts)

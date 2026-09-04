@@ -20,6 +20,7 @@ function formatDate(ms) {
 
 export default function AccountPanel({
   license, account = {}, onSignIn, onSignOut, onGoogleSignIn, onGoogleCancel, onActivate, onDeactivate, pluginCount,
+  ownedPlugins = [],
 }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -48,6 +49,11 @@ export default function AccountPanel({
 
   const signedIn = !!account.signedIn
   const displayName = account.name || account.email || license.customerName || 'Guest'
+
+  // Plugins bought outright. Someone can hold these instead of a pass, so
+  // "no pass" must never read as "free" to a customer who has paid.
+  const lifetime = Array.isArray(ownedPlugins) ? ownedPlugins : []
+  const hasLifetime = lifetime.length > 0
 
   const handleSignIn = async () => {
     if (!email.trim() || !password) return
@@ -104,11 +110,13 @@ export default function AccountPanel({
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-bold text-rone-text-primary truncate">{displayName}</p>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`px-2 py-0.5 text-[9px] font-extrabold tracking-[0.18em] rounded ${license.licensed ? 'bg-rone-purple/[0.07] text-rone-purple border border-rone-purple/35' : 'bg-rone-surface-3 text-rone-text-dim border border-rone-border'}`}>
-              {license.licensed ? 'ALL ACCESS' : 'FREE'}
+            <span className={`px-2 py-0.5 text-[9px] font-extrabold tracking-[0.18em] rounded ${license.licensed || hasLifetime ? 'bg-rone-purple/[0.07] text-rone-purple border border-rone-purple/35' : 'bg-rone-surface-3 text-rone-text-dim border border-rone-border'}`}>
+              {license.licensed ? 'ALL ACCESS' : hasLifetime ? 'LIFETIME' : 'FREE'}
             </span>
             <span className="text-[12px] text-rone-text-dim truncate">
-              {license.licensed ? renewLine : 'No active pass'}
+              {license.licensed ? renewLine
+                : hasLifetime ? `${lifetime.length} plugin${lifetime.length !== 1 ? 's' : ''} owned forever`
+                : 'No active pass'}
             </span>
           </div>
         </div>
@@ -143,6 +151,35 @@ export default function AccountPanel({
           </p>
         </div>
       </div>
+
+      {/* Lifetime licences. An ALL ACCESS holder owns every plugin by
+          definition — don't hand them an empty list to puzzle over. */}
+      {(hasLifetime || (signedIn && !license.licensed)) && (
+        <div className="pro-card rounded-2xl p-5 mt-4">
+          <p className="text-[10px] font-bold text-rone-text-dim uppercase tracking-[0.16em]">Lifetime licences</p>
+          {hasLifetime ? (
+            <>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {lifetime.map(p => (
+                  <motion.span
+                    key={p.id}
+                    initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rone-purple/[0.07] border border-rone-purple/35 text-[11px] font-semibold text-rone-text-primary"
+                  >
+                    <svg className="w-[12px] h-[12px] text-rone-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" /></svg>
+                    {p.name}
+                  </motion.span>
+                ))}
+              </div>
+              <p className="text-[11px] text-rone-text-dim mt-3">
+                Yours forever on {account.deviceLimit || 2} computers, updates included.
+              </p>
+            </>
+          ) : (
+            <p className="text-[12px] text-rone-text-dim mt-2">No individual licences.</p>
+          )}
+        </div>
+      )}
 
       {/* Sign in (when no account is signed in and nothing else unlocked it) */}
       {!signedIn && !license.licensed && (

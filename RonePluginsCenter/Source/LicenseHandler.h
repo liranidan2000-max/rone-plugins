@@ -2,6 +2,9 @@
 
 #include <JuceHeader.h>
 
+// This class no longer touches the registry itself (BundleLicenseFile does),
+// but AutoStart.h reaches Win32 through this include via MainComponent.h and
+// has none of its own. Do not remove it without giving that header one.
 #if JUCE_WINDOWS
  #include <windows.h>
 #endif
@@ -13,6 +16,13 @@
 // shared XML file (~/.RonePlugins/BundleLicense.xml).  On Windows it also
 // mirrors the status to HKCU\Software\RONE\License\BundleStatus so that
 // plugins can do a quick registry read.
+//
+// That file is shared with AccountClient, which writes it for the account path
+// as well — including for customers who bought single plugins outright and
+// hold no bundle at all.  Neither class writes the document: both go through
+// BundleLicenseFile, which merges each one's own attributes into what the
+// other has already claimed.  This class only ever adopts a serial claim that
+// carries a real key; see loadLicenseFile().
 // ============================================================================
 class LicenseHandler : public juce::Timer
 {
@@ -61,13 +71,12 @@ private:
     juce::CriticalSection lock;
 
     // --- Persistence --------------------------------------------------------
-    juce::File getLicenseFile() const;
+    // All three go through BundleLicenseFile, which merges this class's
+    // attributes into whatever the account path has already claimed, mirrors
+    // the registry from the merged result, and owns the file's path.
     void saveLicenseFile();
     bool loadLicenseFile();
     void clearLicenseFile();
-
-    // Mirror status to Windows Registry (no-op on other platforms)
-    void updateRegistryStatus (const juce::String& status);
 
     // --- HTTP helper --------------------------------------------------------
     juce::var postToLemonSqueezy (const juce::String& endpoint,

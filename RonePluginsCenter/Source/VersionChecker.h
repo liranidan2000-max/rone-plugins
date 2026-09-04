@@ -38,6 +38,14 @@ struct PluginInfo
     juce::StringArray formats;
     PluginStatus status = PluginStatus::NotInstalled;
     double       downloadProgress = 0.0;
+
+    // Individual LIFETIME pricing, carried straight from the manifest so the
+    // Center never keeps a second price list. Held as vars because only the
+    // plugins sold on their own have them, and absent has to stay absent all
+    // the way to the UI — a defaulted 0 would read as "free".
+    juce::var    price;               // regular USD
+    juce::var    launchPrice;         // what is actually charged during the sale
+    juce::String storeUrl;            // product page to send a locked card to
 };
 
 // ============================================================================

@@ -30,7 +30,10 @@
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
       "sha256": "02e99d026f8cd6ec6facedbe187276f949fd148540334d23d6e2b46e1023a9f2",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "d1d224e9b09cd1f0b3282ae563900840850ef84ba8e7b75dd747b90d7e88b64f"
+      "sha256_mac": "d1d224e9b09cd1f0b3282ae563900840850ef84ba8e7b75dd747b90d7e88b64f",
+      "price": 49,
+      "launch_price": 39,
+      "store_url": "https://roneaudio.com/products/reverse-reverb.html"
     },
     {
       "id": "RoneStutter",
@@ -52,7 +55,10 @@
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
       "sha256": "dc46ad57a38019f123d96a036aa41f78ee92a8afafacbfa8da45a6d957837045",
       "registry_key": "RoneStutter",
-      "sha256_mac": "8dbf0b49b0c251fcda6b3d3c394e9101c609337023e8dd2c10449476aec3a3b9"
+      "sha256_mac": "8dbf0b49b0c251fcda6b3d3c394e9101c609337023e8dd2c10449476aec3a3b9",
+      "price": 49,
+      "launch_price": 39,
+      "store_url": "https://roneaudio.com/products/rone-stutter.html"
     },
     {
       "id": "RoneStucker",
@@ -74,7 +80,32 @@
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
       "sha256": "a4fdee0f77ad0a693f55a8d123b3e3838d3438f8460a8a654e48d6a24fb520a9",
       "registry_key": "RoneStucker",
-      "sha256_mac": "dbe6bb8d83b16db5f0d32cdea90d5444c71040f2634f3f2bf4a6bc640cf634eb"
+      "sha256_mac": "dbe6bb8d83b16db5f0d32cdea90d5444c71040f2634f3f2bf4a6bc640cf634eb",
+      "price": 29,
+      "launch_price": 19,
+      "store_url": "https://roneaudio.com/products/rone-stucker.html"
+    },
+    {
+      "id": "RoneThrow",
+      "name": "RONE Throw",
+      "version": "1.0.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "One knob that throws anything into a tempo-locked atmosphere - a dotted-8th ping-pong delay whose band-limited feedback loop stays clean at near-infinite feedback, so the wash sits behind the mix instead of muddying it",
+      "whats_new": "First release. Open the knob at the end of a build and the source dissolves into the drop: the send, the feedback and the dry all move together on one macro. ADVANCED holds Tone, Feedback trim, Width, Duck and the tap division - and Duck keeps the atmosphere out of the way while the source is still playing.",
+      "standalone_exe": "RONE Throw.exe",
+      "vst3_bundle": "RONE Throw.vst3",
+      "au_bundle": "RONE Throw.component",
+      "manual": "RONE Throw - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneThrow",
+      "sha256_mac": ""
     },
     {
       "id": "RoneFlanger",
@@ -95,7 +126,10 @@
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
       "sha256": "35142ae2644d359b7cc7fa0c06631511a04e14a0248b3b0b03d732a5faba443b",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "9d677ccbab58ffe565014e7e78f21336872dea1613af2530df8f577312811f91"
+      "sha256_mac": "9d677ccbab58ffe565014e7e78f21336872dea1613af2530df8f577312811f91",
+      "price": 39,
+      "launch_price": 29,
+      "store_url": "https://roneaudio.com/products/rone-flanger.html"
     },
     {
       "id": "RoneAfterspace",
@@ -117,7 +151,10 @@
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
       "sha256": "213b469026869e3cb5bdfe8c7cca62a2fec2ee4fa2323e8abaa2c6c11c6986ff",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "984891b44b220b1931bc9d773c947bcdc873c1bcaedc95a0bcb8198c23ba87b0"
+      "sha256_mac": "984891b44b220b1931bc9d773c947bcdc873c1bcaedc95a0bcb8198c23ba87b0",
+      "price": 59,
+      "launch_price": 49,
+      "store_url": "https://roneaudio.com/products/afterspace.html"
     },
     {
       "id": "RONEAnalyzer",
@@ -137,7 +174,10 @@
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
       "sha256": "bcc9b789b1ba6c2d0f3cc9a94c4801946f2b66b8052ee2892146009ba501cf0e",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "6b8f710d3c1dd959ad12fe4d2db1cd1f038932adc81547dc4391a8d62e851af5"
+      "sha256_mac": "6b8f710d3c1dd959ad12fe4d2db1cd1f038932adc81547dc4391a8d62e851af5",
+      "price": 49,
+      "launch_price": 39,
+      "store_url": "https://roneaudio.com/products/rone-analyzer.html"
     }
   ]
 }

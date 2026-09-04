@@ -21,6 +21,42 @@ static bool isEffectivelyLicensed (const LicenseHandler& handler, const AccountC
     return isEffectivelyLicensed (handler) || account.getState().licensed;
 }
 
+// The same question for one plugin. Everything above unlocks the whole
+// catalog; a LIFETIME licence unlocks exactly the plugin it was bought for,
+// so anything that acts on a single card has to ask this one instead — a
+// customer who paid for RONE Stucker must be able to install and open it.
+//
+// THE OWNERSHIP RULE, stated once for everyone who has to implement it: a
+// product is owned when some WHOLE comma-separated token of the owned list,
+// trimmed, equals the wanted id, trimmed, compared case-insensitively.
+//
+// BundleLicenseChecker::ownsProduct() and the web UI's PluginCard both decide
+// it exactly that way. Nothing here may become a substring test: owned
+// "RoneStutter" must not unlock "RoneStut", and a plugin called "RoneStuckerX"
+// must not ride in on "RoneStucker".
+static bool isEffectivelyLicensed (const LicenseHandler& handler,
+                                   const AccountClient& account,
+                                   const juce::String& pluginId)
+{
+    if (isEffectivelyLicensed (handler, account))
+        return true;
+
+    const auto wanted = pluginId.trim();
+
+    if (wanted.isEmpty())
+        return false;
+
+    // The state is copied out first — iterating a temporary's member would
+    // walk a StringArray that has already been destroyed.
+    const auto s = account.getState();
+
+    auto owned = s.ownedProducts;
+    owned.trim();                 // tolerate "a, b , c" whoever wrote the list
+    owned.removeEmptyStrings();
+
+    return owned.contains (wanted, true);   // whole token, ignoring case
+}
+
 #if JUCE_WINDOWS
  #ifndef WIN32_LEAN_AND_MEAN
   #define WIN32_LEAN_AND_MEAN
@@ -62,6 +98,7 @@ MainComponent::getResource (const juce::String& url)
         { "logos/RoneFlanger.png",    { BinaryData::RoneFlanger_icon_png,   BinaryData::RoneFlanger_icon_pngSize } },
         { "logos/RONEAnalyzer.png",   { BinaryData::RONEAnalyzer_icon_png,  BinaryData::RONEAnalyzer_icon_pngSize } },
         { "logos/RoneStucker.png",    { BinaryData::RoneStucker_icon_png,   BinaryData::RoneStucker_icon_pngSize } },
+        { "logos/RoneThrow.png",      { BinaryData::RoneThrow_icon_png,     BinaryData::RoneThrow_icon_pngSize } },
         { "logos/RoneAfterspace.png", { BinaryData::RoneAfterspace_icon_png, BinaryData::RoneAfterspace_icon_pngSize } },
     };
 
@@ -315,6 +352,14 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     obj->setProperty ("standaloneInstalled", standaloneInstalled);
     obj->setProperty ("hasManual",           info.manualPdf.isNotEmpty());
 
+    // Individual LIFETIME price + where to buy it, under the manifest's own
+    // key names. Set only when the manifest actually carries them: a plugin
+    // that isn't sold on its own must arrive with no price at all, so the card
+    // can stay silent instead of offering it for $0.
+    if (! info.price.isVoid())       obj->setProperty ("price",        info.price);
+    if (! info.launchPrice.isVoid()) obj->setProperty ("launch_price", info.launchPrice);
+    if (info.storeUrl.isNotEmpty())  obj->setProperty ("store_url",    info.storeUrl);
+
     return juce::var (obj);
 }
 
@@ -393,13 +438,13 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
         return;
     }
 
-    if (! isEffectivelyLicensed (licenseHandler, accountClient))
+    auto pluginId = args[0].toString();
+
+    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId))
     {
         complete ("{\"started\":false,\"error\":\"License required\"}");
         return;
     }
-
-    auto pluginId = args[0].toString();
 
     {
         juce::ScopedLock sl (pluginDataLock);
@@ -543,13 +588,13 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
         return;
     }
 
-    if (! isEffectivelyLicensed (licenseHandler, accountClient))
+    auto pluginId = args[0].toString();
+
+    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId))
     {
         complete ("{\"success\":false,\"error\":\"License required\"}");
         return;
     }
-
-    auto pluginId = args[0].toString();
 
     juce::ScopedLock sl (pluginDataLock);
     for (auto& p : pluginData)
@@ -712,6 +757,15 @@ juce::var MainComponent::accountStatusVar() const
     obj->setProperty ("plan",        s.plan);
     obj->setProperty ("deviceLimit", s.deviceLimit);
     obj->setProperty ("message",     s.message);
+
+    // The plugins bought outright, as canonical ids. `licensed` stays
+    // ALL-ACCESS-only, so this list is the only way the UI can tell a LIFETIME
+    // card from one that is still for sale.
+    juce::Array<juce::var> owned;
+    for (const auto& id : s.ownedProducts)
+        owned.add (id);
+    obj->setProperty ("owned", owned);
+
     // Dates cross the bridge as milliseconds; 0 means "not applicable".
     obj->setProperty ("expiresAt",   (double) s.expiresAt);
     obj->setProperty ("renewsAt",    (double) s.renewsAt);

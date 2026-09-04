@@ -58,6 +58,11 @@ jobs:
               - 'Shared/**'
               - 'installer/RoneStucker.iss'
               - 'docs/manuals/RONE Stucker - User Manual.pdf'
+            throw:
+              - 'RoneThrow'
+              - 'Shared/**'
+              - 'installer/RoneThrow.iss'
+              - 'docs/manuals/RONE Throw - User Manual.pdf'
             flanger:
               - 'rone-flanger-'
               - 'Shared/**'
@@ -96,12 +101,13 @@ jobs:
 
           # Change flags — tag push forces all
           if [ "$IS_TAG" = "true" ]; then
-            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true; AS=true
+            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true; AS=true; TH=true
           else
             RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
             SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
             ST=${{ steps.filter.outputs.stutter         || 'false' }}
             SK=${{ steps.filter.outputs.stucker         || 'false' }}
+            TH=${{ steps.filter.outputs.throw           || 'false' }}
             FL=${{ steps.filter.outputs.flanger         || 'false' }}
             SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
             PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
@@ -139,6 +145,7 @@ jobs:
           #add "$SF" stems_fixer     RoneStemsFixer     RoneStemsFixer    RoneStemsFixer-latest      RoneStemsFixer             false  ""                                false    RoneStemsFixer.iss
           add "$ST" stutter         RoneStutter        RoneStutter       RoneStutter-latest         RoneStutter               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStutter.iss     "RONE Stutter - User Manual.pdf"        "Rone Stutter"
           add "$SK" stucker         RoneStucker        RoneStucker       RoneStucker-latest         RoneStucker               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStucker.iss     "RONE Stucker - User Manual.pdf"        "Rone Stucker"
+          add "$TH" throw           RoneThrow          RoneThrow         RoneThrow-latest           RoneThrow                 true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneThrow.iss       "RONE Throw - User Manual.pdf"          ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
@@ -658,6 +665,7 @@ jobs:
               stems_fixer)    tag=RoneStemsFixer-latest;    title="RONE Stems Fixer (Latest)" ;;
               stutter)        tag=RoneStutter-latest;       title="RONE Stutter (Latest)" ;;
               stucker)        tag=RoneStucker-latest;       title="RONE Stucker (Latest)" ;;
+              throw)          tag=RoneThrow-latest;         title="RONE Throw (Latest)" ;;
               flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)" ;;
               sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
               afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)" ;;
@@ -749,6 +757,7 @@ jobs:
               stems_fixer)    f=RoneStemsFixer ;;
               stutter)        f=RoneStutter ;;
               stucker)        f=RoneStucker ;;
+              throw)          f=RoneThrow ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;
@@ -770,6 +779,7 @@ jobs:
               stems_fixer)    folder=RoneStemsFixer;     jid=RoneStemsFixer;  tag=RoneStemsFixer-latest;  inst=RoneStemsFixer ;;
               stutter)        folder=RoneStutter;        jid=RoneStutter;     tag=RoneStutter-latest;     inst=RoneStutter ;;
               stucker)        folder=RoneStucker;        jid=RoneStucker;     tag=RoneStucker-latest;     inst=RoneStucker ;;
+              throw)          folder=RoneThrow;          jid=RoneThrow;       tag=RoneThrow-latest;       inst=RoneThrow ;;
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
               sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
               afterspace)     folder="RONE AFTER SPACE"; jid=RoneAfterspace; tag=RoneAfterspace-latest;  inst=RoneAfterspace ;;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormatBadge from './FormatBadge'
 import ProgressBar from './ProgressBar'
+import { callNative } from '../bridge'
 
 // Variants for staggered entrance (driven by PluginGrid container)
 export const cardVariants = {
@@ -41,6 +42,25 @@ function ActionIcon({ type }) {
       return (<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>)
     default: return null
   }
+}
+
+// Pricing rides along on the manifest entry, so the Center never keeps a
+// second price list. A plugin that isn't sold on its own — and any older
+// cached manifest — simply has none, and the card stays as it always was.
+function lifetimePrice(plugin) {
+  const regular = Number(plugin.price)
+  if (!Number.isFinite(regular) || regular <= 0) return null
+  const launch = Number(plugin.launch_price)
+  const live = Number.isFinite(launch) && launch > 0 && launch < regular ? launch : regular
+  return { live, regular, onSale: live < regular }
+}
+
+const usd = (n) => '$' + (Number.isInteger(n) ? n : n.toFixed(2))
+
+// No product page in the manifest yet (RONE Throw) -> the pricing page sells
+// every plugin, so it is the honest fallback rather than a guessed slug.
+function openStore(plugin) {
+  callNative('openExternalUrl', plugin.store_url || 'https://roneaudio.com/pricing.html').catch(() => {})
 }
 
 // Deterministic, stable "downloads" stat from the plugin id
@@ -102,7 +122,13 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
 
   const isInstalled = plugin.status === 'up_to_date' || plugin.status === 'update_available'
   const showProgress = plugin.status === 'downloading'
-  const isLocked = !licensed
+  // ALL ACCESS unlocks everything; a lifetime licence unlocks this one plugin.
+  // The card never compares ids itself — App tags the entry with the single
+  // canonical comparison (trim, ignore case, whole token), and this only reads
+  // that verdict, so the two can never drift apart.
+  const isOwned = plugin.owned === true
+  const isLocked = !licensed && !isOwned
+  const price = isLocked ? lifetimePrice(plugin) : null
   const isBusy = plugin.status === 'downloading' || plugin.status === 'installing'
 
   // Primary button: for up_to_date -> Open, otherwise -> Install/Update
@@ -135,11 +161,30 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
           <motion.div
             key="lock-overlay"
             initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
-            className="absolute inset-0 bg-rone-bg/65 rounded-xl z-10 flex items-center justify-center backdrop-blur-[1px]"
+            className="absolute inset-0 bg-rone-bg/65 rounded-xl z-10 flex flex-col items-center justify-center gap-2.5 backdrop-blur-[1px]"
           >
             <span className="bg-rone-error/10 border border-rone-error/25 text-rone-error text-[10px] font-extrabold tracking-[0.16em] px-3 py-1 rounded-md">
               LOCKED
             </span>
+
+            {/* Sold on its own: the way out of the lock is the one-off licence */}
+            {price && (
+              <>
+                <div className="flex items-baseline gap-2">
+                  {price.onSale && (
+                    <span className="text-[11px] text-rone-text-faint line-through tabular-nums">{usd(price.regular)}</span>
+                  )}
+                  <span className="font-display text-[17px] font-bold text-rone-text-primary tabular-nums">{usd(price.live)}</span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-rone-text-dim">Lifetime</span>
+                </div>
+                <button
+                  onClick={() => openStore(plugin)}
+                  className="btn-gradient px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-[0.18em]"
+                >
+                  Get it &mdash; {usd(price.live)}
+                </button>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -234,6 +279,19 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5M5 19h14" /></svg>
           {downloadsLabel(plugin.id)}
         </span>
+
+        {/* Bought outright — shown whether or not a pass is also active */}
+        {isOwned && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            title="You own this plugin outright"
+            className="px-2 py-0.5 rounded bg-rone-purple/[0.07] border border-rone-purple/35
+                       text-rone-purple text-[9px] font-extrabold uppercase tracking-[0.16em]"
+          >
+            Lifetime
+          </motion.span>
+        )}
 
         <div className="flex-1" />
 
