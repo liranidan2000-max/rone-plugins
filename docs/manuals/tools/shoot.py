@@ -15,7 +15,8 @@ from paths import UI, SHOTS, EDGE, PORT, ensure
 
 # editor sizes (kBaseW x kBaseH from each PluginEditor.h; the Center is its default window)
 SIZES = {"reversereverb": (700, 650), "stutter": (900, 600), "stucker": (440, 520),
-         "flanger": (680, 520), "afterspace": (1150, 780), "choir": (1000, 750), "center": (920, 640)}
+         "flanger": (680, 520), "afterspace": (1150, 780), "choir": (1000, 750), "throw": (440, 560),
+         "center": (920, 640)}
 DPR = 2
 
 def run(args, timeout=120):

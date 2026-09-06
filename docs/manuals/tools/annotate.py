@@ -8,7 +8,10 @@ from PIL import Image, ImageDraw, ImageFont
 from paths import SHOTS, DOCIMG, FONT, ensure
 
 ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "reversereverb": "#2BD9FF",
-          "afterspace": "#FF8A3D", "analyzer": "#22E36B", "center": "#9D6BFF"}
+          "afterspace": "#FF8A3D", "analyzer": "#22E36B", "center": "#9D6BFF",
+          # Throw's on-screen accent is Ice White #D8E4EC, which vanishes on paper; the
+          # manual uses this printable ice-grey for badges and headings instead.
+          "throw": "#9FB3C4"}
 
 def load_rects(name):
     p = SHOTS / f"{name}.rects.json"
@@ -97,6 +100,19 @@ def main():
         ("@smooth", "SMOOTH"), ("@range", "RANGE"), ("@lowcut", "LOW CUT"), ("#lenGroup", "LENGTH")], A,
         crops=[("panel", "#advPanel", 8)])
     plain("stucker_about", "stucker/about.png")
+    # ------------------------------------------------------------ THROW
+    A = ACCENT["throw"]
+    # Order here IS the legend order in content_throw.py - keep the two lists in step.
+    annotate("throw", "throw/tour.png", [
+        ("#pLogo", "Header logo"), ("#bypassBtn", "BYPASS"), ("#presetBar", "Preset bar"), ("#macroStrip", "Macro slots"),
+        ("#gridWrap", "GRID"), ("#delayMs+#bpmLabel", "MS / BPM"), ("#knob", "THROW"), ("#taps", "Tap trail"),
+        ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
+        crops=[("knob", "#stage", 10), ("top", "#presetBar+#macroStrip", 8)])
+    annotate("throw_adv", "throw/adv.png", [
+        ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"),
+        ("#timeGroup", "L / TIME"), ("#dualBtn", "DUAL"), ("#timeGroupR", "R")], A,
+        crops=[("panel", "#advPanel", 8)])
+    plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

@@ -19,3 +19,6 @@
 [submodule "RoneStucker"]
 	path = RoneStucker
 	url = https://github.com/liranidan2000-max/RoneStucker.git
+[submodule "RoneThrow"]
+	path = RoneThrow
+	url = https://github.com/liranidan2000-max/RoneThrow.git

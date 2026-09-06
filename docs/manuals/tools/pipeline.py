@@ -26,6 +26,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "stucker":    ROOT / "RoneStucker" / "Source" / "WebUI.h",
     "afterspace": ROOT / "RONE AFTER SPACE" / "Source" / "WebUI.h",
     "choir":      ROOT / "RoneChoir" / "Source" / "WebUI.h",
+    "throw":      ROOT / "RoneThrow" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -35,6 +36,14 @@ STATES = [
     ("stutter", "", "", None), ("stutter", "_about", "click:pLogo", None),
     ("stutter_m", "_loaded", "js:window.__scn_stutter(false)", None), ("stutter_m", "_result", "js:window.__scn_stutter(true)", None),
     ("stucker", "", "", None), ("stucker", "_adv", "click:advToggle", None), ("stucker", "_about", "click:pLogo", None),
+    # Throw: recall macro 1 (End Of Build) and feed the engine readouts the real plugin would push.
+    # The rects come from a --dump-dom run that never draws a frame, so CSS transitions stay at
+    # their START value there (the drawer's translateY(12px)) while the screenshot run finishes
+    # them - every callout in an animated panel lands 12px low. Disable transitions first.
+    ("throw", "", "js:window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineDelayMsR=211.3;engineBpm=142;renderEngine()", None),
+    ("throw", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineDelayMsR=211.3;engineBpm=142;state.dual=true;renderTime();renderEngine(),click:advToggle", None),
+    ("throw", "_menu", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineBpm=142;renderEngine(),click:preset-name", None),
+    ("throw", "_about", "click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power", None), ("reversereverb_m", "_about", "click:p-logo", None),
@@ -101,6 +110,17 @@ def prepare_ui():
 
 class Server:
     def __enter__(self):
+        # A stale server from an earlier run keeps 8765 and answers 404 for the
+        # rebuilt work/ui - every selector then comes back MISSING. Clear it first.
+        try:
+            with socket.create_connection(("127.0.0.1", PORT), timeout=0.2):
+                log(f"  port {PORT} already in use - stopping the stale server(s) from an earlier run")
+            subprocess.run(["powershell", "-NoProfile", "-Command",
+                            f"Get-NetTCPConnection -LocalPort {PORT} -State Listen | ForEach-Object {{ Stop-Process -Id $_.OwningProcess -Force }}"],
+                           capture_output=True)
+            time.sleep(0.5)
+        except OSError:
+            pass
         self.p = subprocess.Popen([sys.executable, "-m", "http.server", str(PORT), "--bind", "127.0.0.1", "--directory", str(UI)],
                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for _ in range(50):
@@ -109,6 +129,10 @@ class Server:
             except OSError: time.sleep(0.1)
         raise RuntimeError(f"static server did not start on {PORT}")
     def __exit__(self, *a):
+        # terminate() only reaches the launcher on Windows; the real http.server
+        # lived on as an orphan (see __enter__). Kill the whole tree.
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(self.p.pid)], capture_output=True)
         self.p.terminate()
 
 def capture_native():
