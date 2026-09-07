@@ -482,10 +482,15 @@ jobs:
           if [ "${{ matrix.plugin_id }}" = "plugins_center" ] && [ -n "${{ secrets.CRASH_REPORT_TOKEN }}" ]; then
             EXTRA+=("-DRONE_CRASH_TOKEN=${{ secrets.CRASH_REPORT_TOKEN }}")
           fi
-          cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" "${EXTRA[@]}" || {
+          # Deployment target: without it CMake takes the RUNNER's macOS version as the
+          # minimum, so every Mac build demanded whatever macos-latest was that day - the
+          # shipped Center carried minos 26.0 ("requires macOS 26"), and a customer on an
+          # Intel Mac could not install at all. 10.15 reaches every Intel Mac from 2012;
+          # the arm64 slice is 11.0 by definition and the linker applies that on its own.
+          cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 "${EXTRA[@]}" || {
             echo "Configure failed (stale build cache?). Wiping build-ci and retrying clean..."
             rm -rf build-ci
-            cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" "${EXTRA[@]}"
+            cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 "${EXTRA[@]}"
           }
 
       - name: CMake build
