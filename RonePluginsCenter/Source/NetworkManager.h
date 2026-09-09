@@ -90,7 +90,17 @@ private:
     };
 
     // Download a single job (runs on the network thread). Fires listener callbacks.
+    // Retries a few times when the failure looks like a dropped connection.
     void runDownloadJob (const DownloadJob& job);
+
+    // One transfer attempt: fetch, check the HTTP status, verify that every
+    // promised byte arrived, then check size and SHA256. Returns true when
+    // tempFile holds a verified installer; otherwise fills errorMessage and
+    // sets retryable when another attempt could plausibly succeed.
+    bool attemptDownload (const DownloadJob& job,
+                          const juce::File& tempFile,
+                          juce::String& errorMessage,
+                          bool& retryable);
 
     Task               currentTask  { None };
     juce::String       targetUrl;            // used by FetchManifest only

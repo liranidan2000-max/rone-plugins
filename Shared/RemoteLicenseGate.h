@@ -88,7 +88,13 @@ public:
 
         juce::Thread::launch ([]
         {
-            juce::URL url (kManifestUrl);
+            // raw.githubusercontent caches this for five minutes at the CDN edge,
+            // so a plain fetch can hand back the PREVIOUS manifest. That is a
+            // five-minute delay on the kill-switch - the one thing that has to
+            // take effect the moment it is flipped. A unique query string makes
+            // every fetch miss the cache and reach origin.
+            juce::URL url (juce::String (kManifestUrl)
+                             + "?t=" + juce::String (juce::Time::currentTimeMillis()));
             auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
                                .withConnectionTimeoutMs (8000)
                                .withNumRedirectsToFollow (5);

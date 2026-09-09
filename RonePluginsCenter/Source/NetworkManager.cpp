@@ -20,7 +20,18 @@ void NetworkManager::fetchManifest()
 {
     cancelDownload();
     currentTask = FetchManifest;
-    targetUrl   = VERSIONS_JSON_URL;
+
+    // raw.githubusercontent serves this with Cache-Control: max-age=300 through a
+    // CDN, so for up to five minutes after a release a POP can still hand out the
+    // PREVIOUS manifest. The installers, meanwhile, live behind moving "-latest"
+    // release tags and change the instant CI publishes. Stale hash + fresh file =
+    // "file integrity check failed (SHA256 mismatch)" for anyone who presses
+    // Update in that window - which is exactly what RONE Stucker did on
+    // 2026-09-08. A unique query string makes the CDN treat every fetch as a new
+    // object and go to origin, so the manifest and the files can never disagree.
+    targetUrl = juce::String (VERSIONS_JSON_URL)
+              + "?t=" + juce::String (juce::Time::currentTimeMillis());
+
     startThread();
 }
 
@@ -168,9 +179,28 @@ void NetworkManager::run()
 // Single download job (serial worker called from run())
 // ============================================================================
 
+namespace
+{
+    // A real installer is megabytes. Anything under this is an HTML error page
+    // (GitHub serves small 404 pages for missing/private release assets).
+    constexpr juce::int64 MIN_INSTALLER_SIZE = 1024 * 1024; // 1 MB
+
+    // Most failures reported from the field are a dropped connection, not a bad
+    // link, so any attempt that could plausibly succeed next time is retried.
+    constexpr int downloadAttempts = 3;
+    constexpr int retryBackoffMs   = 1500;
+
+    juce::String describeSize (juce::int64 bytes)
+    {
+        if (bytes < 1024 * 1024)
+            return juce::String (bytes / 1024) + " KB";
+
+        return juce::String (bytes / (1024.0 * 1024.0), 1) + " MB";
+    }
+}
+
 void NetworkManager::runDownloadJob (const DownloadJob& job)
 {
-    // --- Download an installer to a temp file --------------------
     auto tempDir  = juce::File::getSpecialLocation (juce::File::tempDirectory)
                        .getChildFile ("RONE_Downloads");
     tempDir.createDirectory();
@@ -183,223 +213,327 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
 #else
     auto tempFile = tempDir.getChildFile (safeId + "_Installer.exe");
 #endif
-            if (tempFile.existsAsFile())
-                tempFile.deleteFile();
 
-        #if JUCE_MAC
-            // On macOS, juce::URL with JUCE_USE_CURL=0 (CFNetwork) does not reliably
-            // follow GitHub's cross-domain 302 redirect from github.com to the signed
-            // release-assets.githubusercontent.com URL. Shell out to /usr/bin/curl
-            // (preinstalled on every macOS) which handles redirects correctly.
-            // HEAD request to learn the final Content-Length for progress reporting.
-            juce::int64 totalBytes = 0;
-            {
-                juce::ChildProcess head;
-                juce::StringArray headArgs { "/usr/bin/curl", "-sIL", job.url };
-                if (head.start (headArgs))
-                {
-                    auto headers = head.readAllProcessOutput();
-                    head.waitForProcessToFinish (5000);
-                    for (auto& line : juce::StringArray::fromLines (headers))
-                    {
-                        auto trimmed = line.trim();
-                        if (trimmed.startsWithIgnoreCase ("content-length:"))
-                            totalBytes = trimmed.fromFirstOccurrenceOf (":", false, true)
-                                                 .trim().getLargeIntValue();
-                    }
-                }
-            }
+    bool         success = false;
+    juce::String errorMsg;
 
-            juce::StringArray dlArgs { "/usr/bin/curl",
-                                       "-L",                  // follow redirects
-                                       "-f",                  // fail on HTTP error
-                                       "--silent",
-                                       "--show-error",
-                                       "-o", tempFile.getFullPathName(),
-                                       job.url };
+    for (int attempt = 1; attempt <= downloadAttempts; ++attempt)
+    {
+        if (threadShouldExit())
+            return;
 
-            juce::ChildProcess curl;
-            if (! curl.start (dlArgs, juce::ChildProcess::wantStdErr))
-            {
-                auto pid = job.pluginId;
-                juce::MessageManager::callAsync ([this, pid]
-                {
-                    listeners.call (&Listener::onDownloadComplete,
-                                    pid, juce::File(), false,
-                                    juce::String ("Failed to start download process."));
-                });
-                return;
-            }
+        bool retryable = false;
+        success = attemptDownload (job, tempFile, errorMsg, retryable);
 
-            auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
-            while (curl.isRunning())
-            {
-                if (threadShouldExit())
-                {
-                    curl.kill();
-                    tempFile.deleteFile();
-                    return;
-                }
+        if (success || ! retryable || attempt == downloadAttempts)
+            break;
 
-                if (totalBytes > 0 && tempFile.existsAsFile())
-                {
-                    auto now = juce::Time::getMillisecondCounterHiRes();
-                    if (now - lastProgressTime >= 100.0)
-                    {
-                        lastProgressTime = now;
-                        double progress = juce::jlimit (0.0, 1.0,
-                                            (double) tempFile.getSize() / (double) totalBytes);
-                        auto pid = job.pluginId;
-                        juce::MessageManager::callAsync ([this, pid, progress]
-                        {
-                            listeners.call (&Listener::onDownloadProgress, pid, progress);
-                        });
-                    }
-                }
-
-                juce::Thread::sleep (50);
-            }
-
-            auto curlStderr = curl.readAllProcessOutput();
-            auto exitCode   = curl.getExitCode();
-
-            if (exitCode != 0)
-            {
-                tempFile.deleteFile();
-                auto pid = job.pluginId;
-                auto err = curlStderr.trim().isNotEmpty()
-                              ? juce::String ("Download failed - ") + curlStderr.trim()
-                              : juce::String ("Download failed (curl exit ") + juce::String (exitCode) + ").";
-                juce::MessageManager::callAsync ([this, pid, err]
-                {
-                    listeners.call (&Listener::onDownloadComplete,
-                                    pid, juce::File(), false, err);
-                });
-                return;
-            }
-        #else
-            juce::URL url (job.url);
-            auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
-                               .withConnectionTimeoutMs (15000)
-                               .withNumRedirectsToFollow (5);
-
-            auto stream = url.createInputStream (options);
-
-            if (stream == nullptr || threadShouldExit())
-            {
-                auto pid = job.pluginId;
-                juce::MessageManager::callAsync ([this, pid]
-                {
-                    listeners.call (&Listener::onDownloadComplete,
-                                    pid, juce::File(), false,
-                                    juce::String ("Failed to connect to download server."));
-                });
-                return;
-            }
-
-            // Try to get content length for progress reporting
-            auto totalBytes = stream->getTotalLength();
-            juce::int64 downloaded = 0;
-
-            juce::FileOutputStream output (tempFile);
-            if (! output.openedOk())
-            {
-                auto pid = job.pluginId;
-                juce::MessageManager::callAsync ([this, pid]
-                {
-                    listeners.call (&Listener::onDownloadComplete,
-                                    pid, juce::File(), false,
-                                    juce::String ("Could not create temp file for download."));
-                });
-                return;
-            }
-
-            constexpr int bufferSize = 32768;
-            juce::HeapBlock<char> buffer (bufferSize);
-            auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
-
-            while (! threadShouldExit())
-            {
-                auto bytesRead = stream->read (buffer, bufferSize);
-                if (bytesRead <= 0)
-                    break;
-
-                output.write (buffer, (size_t) bytesRead);
-                downloaded += bytesRead;
-
-                if (totalBytes > 0)
-                {
-                    auto now = juce::Time::getMillisecondCounterHiRes();
-                    // Throttle progress events to ~10/sec to avoid flooding the message queue
-                    if (now - lastProgressTime >= 100.0 || downloaded >= totalBytes)
-                    {
-                        lastProgressTime = now;
-                        double progress = (double) downloaded / (double) totalBytes;
-                        auto pid = job.pluginId;
-                        juce::MessageManager::callAsync ([this, pid, progress]
-                        {
-                            listeners.call (&Listener::onDownloadProgress, pid, progress);
-                        });
-                    }
-                }
-            }
-
-            output.flush();
-
+        // Back off before trying again, in short slices so a cancel still lands
+        // quickly.
+        for (int waited = 0; waited < retryBackoffMs * attempt; waited += 100)
+        {
             if (threadShouldExit())
-            {
-                tempFile.deleteFile();
                 return;
-            }
-        #endif
 
-            // Verify the downloaded file is a real installer, not an HTML error page.
-            // GitHub returns small HTML 404 pages for missing/private release assets.
-            static constexpr juce::int64 MIN_INSTALLER_SIZE = 1024 * 1024; // 1 MB
+            juce::Thread::sleep (100);
+        }
+    }
 
-            bool fileExists = tempFile.existsAsFile();
-            auto fileSize   = fileExists ? tempFile.getSize() : 0;
-            bool success    = fileExists && fileSize >= MIN_INSTALLER_SIZE;
+    if (threadShouldExit())
+    {
+        tempFile.deleteFile();
+        return;
+    }
 
-            // SHA256 verification — compare downloaded file hash against manifest
-            if (success && job.sha256.isNotEmpty())
+    if (! success)
+        tempFile.deleteFile();
+
+    auto pid  = job.pluginId;
+    auto file = success ? tempFile : juce::File();
+    auto err  = errorMsg;
+
+    juce::MessageManager::callAsync ([this, pid, file, success, err]
+    {
+        listeners.call (&Listener::onDownloadComplete, pid, file, success, err);
+    });
+}
+
+//==============================================================================
+/** One transfer attempt. Returns true when tempFile holds a verified installer.
+    On failure `errorMessage` explains what went wrong and `retryable` says
+    whether trying again could plausibly help (a dropped or throttled connection)
+    as opposed to a genuinely wrong link or a bad asset.
+*/
+bool NetworkManager::attemptDownload (const DownloadJob& job,
+                                      const juce::File& tempFile,
+                                      juce::String& errorMessage,
+                                      bool& retryable)
+{
+    retryable = false;
+    errorMessage.clear();
+
+    if (tempFile.existsAsFile())
+        tempFile.deleteFile();
+
+    juce::int64 totalBytes = 0;   // Content-Length; 0 when the server will not say
+    juce::int64 downloaded = 0;
+
+#if JUCE_MAC
+    // On macOS, juce::URL with JUCE_USE_CURL=0 (CFNetwork) does not reliably
+    // follow GitHub's cross-domain 302 redirect from github.com to the signed
+    // release-assets.githubusercontent.com URL. Shell out to /usr/bin/curl
+    // (preinstalled on every macOS) which handles redirects correctly.
+    // HEAD request to learn the final Content-Length for progress reporting.
+    {
+        juce::ChildProcess head;
+        juce::StringArray headArgs { "/usr/bin/curl", "-sIL", job.url };
+        if (head.start (headArgs))
+        {
+            auto headers = head.readAllProcessOutput();
+            head.waitForProcessToFinish (5000);
+            for (auto& line : juce::StringArray::fromLines (headers))
             {
-                juce::FileInputStream fis (tempFile);
-                if (fis.openedOk())
+                auto trimmed = line.trim();
+                if (trimmed.startsWithIgnoreCase ("content-length:"))
+                    totalBytes = trimmed.fromFirstOccurrenceOf (":", false, true)
+                                         .trim().getLargeIntValue();
+            }
+        }
+    }
+
+    juce::StringArray dlArgs { "/usr/bin/curl",
+                               "-L",                  // follow redirects
+                               "-f",                  // fail on HTTP error
+                               "--silent",
+                               "--show-error",
+                               "-o", tempFile.getFullPathName(),
+                               job.url };
+
+    juce::ChildProcess curl;
+    if (! curl.start (dlArgs, juce::ChildProcess::wantStdErr))
+    {
+        errorMessage = "Failed to start download process.";
+        return false;
+    }
+
+    auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
+    while (curl.isRunning())
+    {
+        if (threadShouldExit())
+        {
+            curl.kill();
+            tempFile.deleteFile();
+            errorMessage = "Download cancelled.";
+            return false;
+        }
+
+        if (totalBytes > 0 && tempFile.existsAsFile())
+        {
+            auto now = juce::Time::getMillisecondCounterHiRes();
+            if (now - lastProgressTime >= 100.0)
+            {
+                lastProgressTime = now;
+                double progress = juce::jlimit (0.0, 1.0,
+                                    (double) tempFile.getSize() / (double) totalBytes);
+                auto pid = job.pluginId;
+                juce::MessageManager::callAsync ([this, pid, progress]
                 {
-                    juce::SHA256 hash (fis);
-                    auto computed = hash.toHexString();
+                    listeners.call (&Listener::onDownloadProgress, pid, progress);
+                });
+            }
+        }
 
-                    if (computed.compareIgnoreCase (job.sha256) != 0)
-                    {
-                        DBG ("[Download] SHA256 mismatch! Expected: " + job.sha256
-                             + " Got: " + computed);
-                        success = false;
-                    }
-                    else
-                    {
-                        DBG ("[Download] SHA256 verified OK: " + computed);
-                    }
-                }
+        juce::Thread::sleep (50);
+    }
+
+    auto curlStderr = curl.readAllProcessOutput();
+    auto exitCode   = curl.getExitCode();
+
+    if (exitCode != 0)
+    {
+        tempFile.deleteFile();
+
+        // curl exit 22 is "-f" firing on an HTTP >= 400: the link itself is
+        // wrong or the asset is gone, and retrying will not change that.
+        // Everything else here is a transport failure worth another go.
+        retryable = (exitCode != 22);
+
+        auto detail = curlStderr.trim();
+        errorMessage = retryable
+                         ? juce::String ("Download interrupted - ")
+                             + (detail.isNotEmpty() ? detail
+                                                    : juce::String ("the connection dropped."))
+                             + " Check your internet connection and try again."
+                         : juce::String ("Download failed - the server rejected the request. "
+                                         "This installer may have been moved or removed.");
+        return false;
+    }
+
+    downloaded = tempFile.existsAsFile() ? tempFile.getSize() : 0;
+#else
+    int statusCode = 0;
+
+    juce::URL url (job.url);
+    auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
+                       .withConnectionTimeoutMs (15000)
+                       .withNumRedirectsToFollow (5)
+                       .withStatusCode (&statusCode);
+
+    auto stream = url.createInputStream (options);
+
+    if (threadShouldExit())
+    {
+        errorMessage = "Download cancelled.";
+        return false;
+    }
+
+    if (stream == nullptr)
+    {
+        // No stream at all: either we never reached the server, or the backend
+        // refused to hand us the body of an error response.
+        if (statusCode >= 400)
+        {
+            errorMessage = "Download failed - the server returned HTTP "
+                         + juce::String (statusCode)
+                         + ". This installer may have been moved or removed.";
+            retryable = (statusCode >= 500);
+        }
+        else
+        {
+            errorMessage = "Could not reach the download server. "
+                           "Check your internet connection and try again.";
+            retryable = true;
+        }
+
+        return false;
+    }
+
+    // An HTTP error still carries a body (GitHub's 404 page), and writing that
+    // to disk is exactly how a "corrupt 0 KB installer" used to be born.
+    if (statusCode != 0 && (statusCode < 200 || statusCode >= 300))
+    {
+        errorMessage = "Download failed - the server returned HTTP "
+                     + juce::String (statusCode)
+                     + ". This installer may have been moved or removed.";
+        retryable = (statusCode >= 500);
+        return false;
+    }
+
+    totalBytes = juce::jmax ((juce::int64) 0, stream->getTotalLength());
+
+    juce::FileOutputStream output (tempFile);
+    if (! output.openedOk())
+    {
+        errorMessage = "Could not create temp file for download.";
+        return false;
+    }
+
+    constexpr int bufferSize = 32768;
+    juce::HeapBlock<char> buffer (bufferSize);
+    auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
+
+    while (! threadShouldExit())
+    {
+        auto bytesRead = stream->read (buffer, bufferSize);
+        if (bytesRead <= 0)
+            break;
+
+        output.write (buffer, (size_t) bytesRead);
+        downloaded += bytesRead;
+
+        if (totalBytes > 0)
+        {
+            auto now = juce::Time::getMillisecondCounterHiRes();
+            // Throttle progress events to ~10/sec to avoid flooding the message queue
+            if (now - lastProgressTime >= 100.0 || downloaded >= totalBytes)
+            {
+                lastProgressTime = now;
+                double progress = juce::jlimit (0.0, 1.0,
+                                    (double) downloaded / (double) totalBytes);
+                auto pid = job.pluginId;
+                juce::MessageManager::callAsync ([this, pid, progress]
+                {
+                    listeners.call (&Listener::onDownloadProgress, pid, progress);
+                });
+            }
+        }
+    }
+
+    output.flush();
+
+    if (threadShouldExit())
+    {
+        tempFile.deleteFile();
+        errorMessage = "Download cancelled.";
+        return false;
+    }
+#endif
+
+    // --- Did we actually receive everything the server promised? ------------
+    // read() returning 0 means "no more bytes", which a dropped connection
+    // looks exactly like. Without this the truncated file sails on to the size
+    // and SHA checks and gets reported as a corrupt or tampered installer.
+    if (totalBytes > 0 && downloaded < totalBytes)
+    {
+        tempFile.deleteFile();
+        retryable    = true;
+        errorMessage = "Download interrupted - only " + describeSize (downloaded)
+                     + " of " + describeSize (totalBytes)
+                     + " arrived. Check your internet connection and try again.";
+        return false;
+    }
+
+    if (! tempFile.existsAsFile())
+    {
+        // The bytes went somewhere and the file is gone: on Windows this is
+        // usually antivirus quarantining an unsigned installer mid-write.
+        retryable    = true;
+        errorMessage = "Download failed - the file was not saved. "
+                       "Check that antivirus is not blocking RONE installers.";
+        return false;
+    }
+
+    const auto fileSize = tempFile.getSize();
+
+    if (fileSize < MIN_INSTALLER_SIZE)
+    {
+        tempFile.deleteFile();
+
+        // A complete-but-tiny response is an error page, not a transfer fault;
+        // only retry when the server never told us how big the file should be.
+        retryable    = (totalBytes <= 0);
+        errorMessage = "Download failed - the server sent " + describeSize (fileSize)
+                     + " instead of an installer. The download link may be invalid.";
+        return false;
+    }
+
+    // SHA256 verification — compare downloaded file hash against manifest
+    if (job.sha256.isNotEmpty())
+    {
+        juce::FileInputStream fis (tempFile);
+        if (fis.openedOk())
+        {
+            juce::SHA256 hash (fis);
+            auto computed = hash.toHexString();
+
+            if (computed.compareIgnoreCase (job.sha256) != 0)
+            {
+                DBG ("[Download] SHA256 mismatch! Expected: " + job.sha256
+                     + " Got: " + computed);
+
+                tempFile.deleteFile();
+                // A silently corrupted transfer hashes differently every time,
+                // so one more attempt is worth it before blaming the release.
+                retryable    = true;
+                errorMessage = "Download failed - file integrity check failed (SHA256 mismatch).";
+                return false;
             }
 
-            auto pid  = job.pluginId;
-            auto file = tempFile;
+            DBG ("[Download] SHA256 verified OK: " + computed);
+        }
+    }
 
-            juce::String errorMsg;
-            if (! fileExists)
-                errorMsg = "Download failed - file was not saved.";
-            else if (fileSize < MIN_INSTALLER_SIZE)
-                errorMsg = "Download failed - corrupt file (" + juce::String (fileSize / 1024)
-                         + " KB). The download link may be invalid.";
-            else if (! success)
-                errorMsg = "Download failed - file integrity check failed (SHA256 mismatch).";
-
-            juce::MessageManager::callAsync ([this, pid, file, success, errorMsg]
-            {
-                listeners.call (&Listener::onDownloadComplete,
-                                pid, file, success, errorMsg);
-            });
+    return true;
 }
 
 // ============================================================================
