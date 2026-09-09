@@ -53,6 +53,14 @@ Source: "..\RONEAnalyzer\build-ci\RONEAnalyzer_artefacts\Release\RONE Analyzer.e
   DestDir: "{app}"; \
   Flags: ignoreversion
 
+; The WebView2 loader has to sit beside the executable: JUCE loads it with
+; LoadLibrary at runtime, and without it the UI silently falls back to the
+; legacy IE control and shows an error page instead of the instrument.
+; CI downloads the NuGet package to <workspace>\webview2 before compiling.
+Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebView2Loader.dll"; \
+  DestDir: "{app}"; \
+  Flags: onlyifdoesntexist uninsneveruninstall
+
 Source: "..\RONEAnalyzer\build-ci\RONEBridge_artefacts\Release\VST3\RONE Analyzer Bridge.vst3\*"; \
   DestDir: "{commoncf64}\VST3\RONE Analyzer Bridge.vst3"; \
   Flags: ignoreversion recursesubdirs createallsubdirs

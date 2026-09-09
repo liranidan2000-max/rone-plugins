@@ -168,7 +168,7 @@
         "Standalone"
       ],
       "description": "Professional measurement suite: 30-band spectrum with reference-track comparison, vectorscope, level meters, EBU R128 loudness and bit statistics",
-      "whats_new": "A full user manual now ships in the install folder and opens from the Center's card menu.",
+      "whats_new": "A new interface. The same three instruments - Totalyser, Level Meters, Vectorscope - redrawn with a proper type scale, readable numerics and a corner resize grip, and running at a fraction of the CPU it used to.",
       "standalone_exe": "RONE Analyzer.exe",
       "vst3_bundle": "",
       "au_bundle": "",
