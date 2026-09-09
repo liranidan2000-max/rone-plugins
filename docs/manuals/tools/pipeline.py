@@ -19,7 +19,7 @@ Needs: Python 3 with Pillow, Microsoft Edge, network access for Google Fonts.
 """
 import sys, shutil, subprocess, json, time, socket, os
 from paths import ROOT, TOOLS, WORK, UI, SHOTS, EDGE, PORT, ensure
-import extract_ui, shoot, annotate, build_manuals
+import extract_ui, shoot, annotate, build_manuals, capture_webview
 
 PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "stutter":    ROOT / "RoneStutter" / "Source" / "WebUI.h",
@@ -136,14 +136,25 @@ class Server:
         self.p.terminate()
 
 def capture_native():
-    exe = os.environ.get("ProgramFiles", r"C:\Program Files") + r"\RONE Plugins\RONE Analyzer.exe"
+    """The analyzer's shot, through the web view's own debugger.
+
+    PrintWindow - what capture_window.ps1 uses, and what this used to call -
+    returns a solid black bitmap for WebView2. The pipeline would have
+    annotated that and reported OK. The same trip measures the DOM, so the
+    callouts in annotate.ANALYZER_CALLOUTS get real boxes."""
+    # RONE_ANALYZER_EXE lets a manual be regenerated straight from a build tree.
+    # Without it the manual can only ever describe the version already installed,
+    # which is a problem the first time the UI changes: the installer carries the
+    # manual, so the new manual would need the new installer to exist first.
+    exe = os.environ.get("RONE_ANALYZER_EXE") or (
+        os.environ.get("ProgramFiles", r"C:\Program Files") + r"\RONE Plugins\RONE Analyzer.exe")
     if not os.path.exists(exe):
         log("  Analyzer not installed - keeping the previous capture if any"); return
-    out = SHOTS / "analyzer_raw.png"
-    r = subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(TOOLS / "capture_window.ps1"),
-                        "-Exe", exe, "-Out", str(out), "-WaitSec", "12", "-Maximize"], capture_output=True, text=True, timeout=120)
-    log("  " + (r.stdout.strip().splitlines() or ["(no output)"])[-1])
-    subprocess.run(["powershell", "-NoProfile", "-Command", "Get-Process | Where-Object { $_.ProcessName -like 'RONE Analyzer*' } | Stop-Process -Force"], capture_output=True)
+    log(f"  capturing {exe}")
+    ok = capture_webview.capture(exe, SHOTS / "analyzer_raw.png",
+                                 selectors=annotate.ANALYZER_CALLOUTS,
+                                 out_rects=SHOTS / "analyzer_rects.json")
+    log("  analyzer captured" if ok else "  analyzer capture FAILED - previous shot kept")
 
 def main(argv):
     pdf_only = "--pdf-only" in argv; native = "--no-native" not in argv

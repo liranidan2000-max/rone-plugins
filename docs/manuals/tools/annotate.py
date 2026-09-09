@@ -13,6 +13,27 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # manual uses this printable ice-grey for badges and headings instead.
           "throw": "#9FB3C4"}
 
+# The analyzer's callouts, by selector. pipeline.capture_native() measures these
+# against the running app and writes the boxes; nothing here is a coordinate, so
+# a control that moves takes its label with it.
+ANALYZER_CALLOUTS = {
+    "#brand":                     "Logo - opens About",
+    ".readbar":                   "Source, channels, sample rate",
+    '.chip[data-act="source"]':   "SOURCE",
+    '.chip[data-act="channels"]': "Channel pair",
+    '.chip[data-act="reset"]':    "RESET",
+    '.chip[data-act="setup"]':    "SETUP",
+    '.chip[data-act="menu"]':     "App menu",
+    "#specCard":                  "Totalyser",
+    "#specCard .meta":            "Resolution, bands, range",
+    "#specAxis":                  "Third-octave frequency axis",
+    "#levCard":                   "Level Meters",
+    "#scopeBox":                  "Vectorscope",
+    "#corrBox":                   "Correlation and balance",
+    "#status":                    "Status bar",
+    "#grip":                      "Resize grip",
+}
+
 def load_rects(name):
     p = SHOTS / f"{name}.rects.json"
     if not p.exists(): return {}, 2
@@ -152,15 +173,37 @@ def main():
         ("#adv-space", "SPACE"), ("#adv-tone", "TONE"), ("#adv-mod", "MOTION & STEREO"), ("#adv-duck", "DUCK"),
         ("#adv-echo", "ECHO")], A, badge_scale=1.1, crops=[("drawer", "#adv-drawer", 6)])
     plain("afterspace_about", "afterspace/about.png")
-    # ------------------------------------------------------------ ANALYZER (native UI, hand-placed boxes; capture is 3458x1398)
+    # ------------------------------------------------------------ ANALYZER
+    # Boxes are measured off the running app (see ANALYZER_CALLOUTS above). The
+    # hand-placed list this replaced was pinned to a 3458x1398 capture of a UI
+    # that no longer exists.
     A = ACCENT["analyzer"]
-    annotate("analyzer_raw", "analyzer/tour.png", [
-        ([26, 52, 216, 48], "Logo"), ([311, 60, 69, 32], "SOURCE"), ([406, 60, 75, 32], "LAYOUT"), ([512, 60, 38, 32], "FILE"),
-        ([581, 60, 97, 32], "REFERENCE"), ([712, 59, 178, 34], "Source chip"), ([3000, 60, 233, 32], "Layout preset"),
-        ([3251, 60, 65, 32], "RESET"), ([3337, 60, 43, 32], "App menu"), ([21, 130, 2005, 1236], "Totalyser"),
-        ([1681, 144, 74, 24], "Band resolution"), ([1767, 144, 156, 24], "PEAK / HOLD / RTA"), ([1936, 144, 35, 24], "Stereo link"),
-        ([1988, 144, 23, 24], "Panel settings"), ([2044, 130, 415, 1236], "Level Meters"), ([2476, 130, 956, 1236], "Vectorscope"),
-        ([3230, 145, 150, 24], "STEREO / SQUARE"), ([2485, 1133, 947, 77], "Correlation meter")], A, scale=1, badge_scale=0.5)
+    rects_file = SHOTS / "analyzer_rects.json"
+    if rects_file.exists():
+        measured = json.loads(rects_file.read_text(encoding="utf-8"))
+        # The badge is drawn on a box's top-left corner, so a control flush
+        # against the window edge gets a badge with half of it outside the
+        # picture. Nudge those few boxes in; a dozen pixels on a 3200-wide
+        # capture is not visible, and a clipped number is.
+        img_w, img_h = Image.open(SHOTS / "analyzer_raw.png").size
+        def _fit(b):
+            x, y, w, h = b
+            nx = min(max(x, 26), img_w - 44)
+            ny = min(max(y, 26), img_h - 44)
+            return [nx, ny, max(8, w - (nx - x)), max(8, h - (ny - y))]
+
+        boxes = [(_fit(measured[sel]), label)
+                 for sel, label in ANALYZER_CALLOUTS.items()
+                 if measured.get(sel)]
+        if boxes:
+            annotate("analyzer_raw", "analyzer/tour.png", boxes, A, scale=1, badge_scale=0.5)
+            missed = [s for s in ANALYZER_CALLOUTS if not measured.get(s)]
+            if missed:
+                print("  analyzer: selectors matched nothing: " + ", ".join(missed))
+        else:
+            print("  analyzer: every selector missed - tour.png left unannotated")
+    else:
+        print("  analyzer: no measured rects - run the capture step first")
     plain("analyzer_raw", "analyzer/main.png")
     # ------------------------------------------------------------ CENTER (1100x1000 render at DPR 2)
     A = ACCENT["center"]
