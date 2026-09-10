@@ -507,32 +507,56 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
         return false;
     }
 
-    // SHA256 verification — compare downloaded file hash against manifest
-    if (job.sha256.isNotEmpty())
+    // SHA256 verification.
+    //
+    // This is the gate that decides whether a file downloaded off the internet
+    // is about to be EXECUTED on a customer's machine, so every way past it has
+    // to be a deliberate pass. It used to have two ways past it by accident:
+    //
+    //   * an empty hash in the manifest skipped the whole check, and
+    //   * a file that could not be opened to hash fell through the inner `if`
+    //
+    // Both ended at `return true` with an unverified installer. An entry
+    // without a hash is exactly the case the manifest writes when a build leg
+    // did not run, which is when an unverified binary is MOST likely to be the
+    // wrong one. Refusing costs a customer one retry; the other way costs them
+    // whatever the file turns out to be.
+    if (job.sha256.isEmpty())
     {
-        juce::FileInputStream fis (tempFile);
-        if (fis.openedOk())
-        {
-            juce::SHA256 hash (fis);
-            auto computed = hash.toHexString();
-
-            if (computed.compareIgnoreCase (job.sha256) != 0)
-            {
-                DBG ("[Download] SHA256 mismatch! Expected: " + job.sha256
-                     + " Got: " + computed);
-
-                tempFile.deleteFile();
-                // A silently corrupted transfer hashes differently every time,
-                // so one more attempt is worth it before blaming the release.
-                retryable    = true;
-                errorMessage = "Download failed - file integrity check failed (SHA256 mismatch).";
-                return false;
-            }
-
-            DBG ("[Download] SHA256 verified OK: " + computed);
-        }
+        tempFile.deleteFile();
+        retryable    = false;      // nothing about retrying produces a hash
+        errorMessage = "Download refused - this release has no integrity hash to check it against. "
+                       "Try again once the release finishes publishing.";
+        return false;
     }
 
+    juce::FileInputStream fis (tempFile);
+    if (! fis.openedOk())
+    {
+        tempFile.deleteFile();
+        // Usually anti-virus holding the fresh file open; the next attempt
+        // often gets it.
+        retryable    = true;
+        errorMessage = "Download failed - the file could not be read back to verify it.";
+        return false;
+    }
+
+    juce::SHA256 hash (fis);
+    const auto computed = hash.toHexString();
+
+    if (computed.compareIgnoreCase (job.sha256) != 0)
+    {
+        DBG ("[Download] SHA256 mismatch! Expected: " + job.sha256 + " Got: " + computed);
+
+        tempFile.deleteFile();
+        // A silently corrupted transfer hashes differently every time, so one
+        // more attempt is worth it before blaming the release.
+        retryable    = true;
+        errorMessage = "Download failed - file integrity check failed (SHA256 mismatch).";
+        return false;
+    }
+
+    DBG ("[Download] SHA256 verified OK: " + computed);
     return true;
 }
 
