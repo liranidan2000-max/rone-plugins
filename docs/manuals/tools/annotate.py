@@ -16,22 +16,61 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
 # a control that moves takes its label with it.
+# Selector -> (badge label, what the manual says about it).
+#
+# pipeline.capture_native() measures these against the running app and writes
+# the boxes, and content_analyzer builds its legend from the same dict. Nothing
+# here is a coordinate and nothing is duplicated: legend() numbers by position,
+# so a second hand-kept list in a different order would silently give every
+# badge somebody else's description. That is what happened to the old
+# eighteen-entry list when the UI changed.
 ANALYZER_CALLOUTS = {
-    "#brand":                     "Logo - opens About",
-    ".readbar":                   "Source, channels, sample rate",
-    '.chip[data-act="source"]':   "SOURCE",
-    '.chip[data-act="channels"]': "Channel pair",
-    '.chip[data-act="reset"]':    "RESET",
-    '.chip[data-act="setup"]':    "SETUP",
-    '.chip[data-act="menu"]':     "App menu",
-    "#specCard":                  "Totalyser",
-    "#specCard .meta":            "Resolution, bands, range",
-    "#specAxis":                  "Third-octave frequency axis",
-    "#levCard":                   "Level Meters",
-    "#scopeBox":                  "Vectorscope",
-    "#corrBox":                   "Correlation and balance",
-    "#status":                    "Status bar",
-    "#grip":                      "Resize grip",
+    "#brand":
+        ("Logo", "the R mark opens About - there is no ABOUT button"),
+    ".readbar":
+        ("Source readout", "current source, channel pair and sample rate; "
+                           "the dot lights while audio is arriving"),
+    '.chip[data-act="source"]':
+        ("SOURCE", "choose the input: ASIO, loopback, live input or DAW master"),
+    '.chip[data-act="channels"]':
+        ("CH", "which pair of a multichannel device to analyse"),
+    '.chip[data-act="reset"]':
+        ("RESET", "clear every accumulating measurement: peak holds, "
+                  "the over counter, integrated loudness"),
+    '.chip[data-act="setup"]':
+        ("SETUP", "range, scale, ballistics, hold times, mono fold, "
+                  "goniometer release and AGC"),
+    "#bare":
+        ("Full screen", "takes the header and status bar off so the instruments "
+                        "have the whole screen. H toggles it; Escape comes back"),
+    '.chip[data-act="menu"]':
+        ("App menu", "Appearance, Totalyser Setup, Bridge bypass (A/B), "
+                     "Start with Windows, About, Quit"),
+    "#specCard":
+        ("Totalyser", "the spectrum analyser: thirty third-octave bands on "
+                      "6th-order Butterworth filters, not an FFT"),
+    "#specCard .meta":
+        ("Resolution, bands, range", "what the analyser is currently set to; "
+                                     "change it in SETUP"),
+    "#specAxis":
+        ("Frequency axis", "ISO 266 third-octave centres, 25 Hz to 20 kHz, "
+                           "staggered over two rows"),
+    "#levCard":
+        ("Level Meters", "RMS L, Peak L, Peak R, RMS R, with the OVR counter "
+                         "above and peak / RMS / crest printed below"),
+    "#scopeBox":
+        ("Vectorscope", "the goniometer, rotated 45 degrees so mono is a "
+                        "vertical line"),
+    "#clipmode":
+        ("LOCKED / FREE", "LOCKED holds the trace inside the graticule, so a "
+                          "full signal reads as a diamond; FREE lets it run to "
+                          "the corners. V toggles it"),
+    "#corrBox":
+        ("Correlation", "-1 to +1 with the minimum held, and the L/R balance"),
+    "#status":
+        ("Status bar", "sample rate, device, over count, dropped frames, CPU"),
+    "#grip":
+        ("Resize grip", "drag to resize the window"),
 }
 
 def load_rects(name):
@@ -192,8 +231,8 @@ def main():
             ny = min(max(y, 26), img_h - 44)
             return [nx, ny, max(8, w - (nx - x)), max(8, h - (ny - y))]
 
-        boxes = [(_fit(measured[sel]), label)
-                 for sel, label in ANALYZER_CALLOUTS.items()
+        boxes = [(_fit(measured[sel]), entry[0])
+                 for sel, entry in ANALYZER_CALLOUTS.items()
                  if measured.get(sel)]
         if boxes:
             annotate("analyzer_raw", "analyzer/tour.png", boxes, A, scale=1, badge_scale=0.5)

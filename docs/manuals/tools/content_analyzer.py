@@ -1,3 +1,10 @@
+# The legend is the callout table, in the callout order - see
+# annotate.ANALYZER_CALLOUTS. Keeping a second list here is what put
+# every badge's description one control out when the UI changed.
+from annotate import ANALYZER_CALLOUTS as _CALLOUTS
+ANALYZER_LEGEND = [(label, desc) for label, desc in _CALLOUTS.values()]
+
+
 def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
@@ -42,40 +49,21 @@ def manual(G):
     S.append(G["install_section"](m))
 
     S.append({"title": "Quick start", "sub": "seeing your mix in the analyser", "html": f"""
-{img("analyzer/main.png", "<b>RONE Analyzer</b> with the default three-panel layout: Totalyser, Level Meters, Vectorscope.")}
+{img("analyzer/main.png", "<b>RONE Analyzer</b>: Totalyser, Level Meters, Vectorscope.")}
 {steps([
- "<strong>Start</strong> RONE Analyzer from the Start menu (Windows) or Applications (macOS). It remembers its source, layout and window position between runs.",
+ "<strong>Start</strong> RONE Analyzer from the Start menu (Windows) or Applications (macOS). It remembers its source, its settings and its window position between runs.",
  "<strong>Choose a source.</strong> Click <span class='pill'>SOURCE</span>. The menu lists every audio endpoint on the machine with a small live meter next to each - the one that moves is the one carrying your mix. Pick an ASIO device to read your interface's inputs (works alongside a running DAW on multiclient drivers such as RME), a loopback endpoint to read whatever Windows is playing (Spotify, YouTube, references), or a live input for a microphone or line signal.",
  "<strong>Or open a file.</strong> <span class='pill'>FILE</span> &rarr; <em>Open and play (real time)</em> to hear and measure it, or <em>Open and scan (fast, whole file)</em> to push the whole file through the meters in seconds. You can also drop a file on the window.",
  "<strong>Measure inside the DAW.</strong> Insert <strong>RONE Analyzer Bridge</strong> on your master bus (last in the chain). Then choose <em>DAW master (RONE Bridge plugin)</em> in the SOURCE menu. The bridge taps the master and sends it to the analyser; band solo and mono fold then act inside the DAW's own signal path.",
- "<strong>Arrange the panels.</strong> <span class='pill'>LAYOUT</span> offers one to four panels in five arrangements. Each panel's &#8942; button swaps the instrument in that panel or opens its settings; drag a panel's top-left grip onto another to reorder; drag the splitters to resize; double-click a splitter to reset.",
- "<strong>Save the workspace.</strong> The layout preset menu at the top right saves, loads and deletes layouts and can set one as default. A <em>*</em> next to the name means the current layout has unsaved changes.",
+ "<strong>Give it the whole screen.</strong> The chevron at the right of the header, or <span class='pill'>H</span>, takes the header and the status bar away and leaves the three instruments edge to edge. It is the way to use the analyser on a second monitor. <span class='pill'>Escape</span>, or the small chevron in the top corner, brings the chrome back.",
+ "<strong>Set it up.</strong> <span class='pill'>SETUP</span> holds everything about how the instruments behave: band resolution and range, rise and release times, hold times, the mono fold, and the goniometer's afterglow and AGC. <span class='pill'>Appearance</span> in the app menu sets the colours, including the colour of the graticule rules.",
 ])}
 {note("Zero output channels", "The analyser opens your device with no output channels so it can sit beside your DAW without fighting for the outputs. Monitoring (band solo by ear) needs an output and therefore reopens the device; it is never on at start-up and is only offered on hardware sources.")}
 """})
 
     S.append({"title": "Interface tour", "sub": "every element on screen", "html": f"""
 {img("analyzer/tour.png", "The application window.")}
-{legend([
- ("Logo", "RONE Analyzer; the header collapses to a thin strip with the chevron at its right end"),
- ("SOURCE", "choose the input: ASIO, loopback, live input, file or DAW master"),
- ("LAYOUT", "1 to 4 panels, five arrangements"),
- ("FILE", "open and play, open and scan, loop, close source"),
- ("REFERENCE", "add reference tracks, show or clear the reference corridor"),
- ("Source chip", "the current source and sample rate; green dot = running"),
- ("Layout preset", "MY LAYOUT (DEFAULT): save, load, delete, set as default"),
- ("RESET", "reset all measurements (peak holds, integrated loudness, overs)"),
- ("App menu", "Appearance, Totalyser Setup, Bridge bypass (A/B), Start with Windows, About, Quit"),
- ("Totalyser", "the spectrum analyser panel"),
- ("Band resolution", "1/1, 1/3 or 1/6 octave"),
- ("PEAK / HOLD / RTA", "trace type"),
- ("Stereo link", "summed, L/R or Mid/Side bars"),
- ("Panel settings", "gear: range, scale, decay, hold, smoothing"),
- ("Level Meters", "RMS L, Peak L, Peak R, RMS R with OVR counter"),
- ("Vectorscope", "goniometer with correlation meter and the RONE wordmark"),
- ("STEREO / SQUARE", "mono fold and display aspect"),
- ("Correlation meter", "-1 to +1 with a low-water mark"),
-])}
+{legend(ANALYZER_LEGEND)}
 """})
 
     S.append({"title": "Instruments reference", "sub": "how to read each one", "html": f"""
@@ -138,7 +126,7 @@ def manual(G):
 <li>Use the RTA trace when comparing tonal balance; PEAK is for transient checks.</li>
 <li>Build the reference corridor from several tracks, not one. One master's accidents are not a target.</li>
 <li>Reset before measuring integrated loudness, and let the whole track play.</li>
-<li>Save a layout per task: tracking, mixing, mastering. Set your most-used one as default.</li>
+<li>Put it on a second monitor and press <code>H</code>. The instruments are then as large as the screen allows, which is the whole point of a meter you keep open all session.</li>
 <li>Keep the bridge last in the master chain, after the limiter, so you measure what leaves the DAW.</li>
 </ul></div>
 <div><h4>Avoid</h4><ul>
@@ -157,10 +145,9 @@ def manual(G):
 
     S.append({"title": "Interface conventions", "sub": "panels, menus, shortcuts", "html": f"""
 {table(["Gesture", "What it does"], [
- ("&#8942; on a panel", "Change the instrument in that panel, or open its settings."),
- ("Drag a panel's top-left grip onto another panel", "Swap the two panels."),
- ("Drag a splitter", "Resize panels. Double-click a splitter to reset the sizes."),
- ("Chevron at the right end of the header", "Collapse the header to a 16 px strip; panel controls remain in each panel's top-right corner."),
+ ("Gear on a panel", "Open Setup."),
+ ("<code>H</code>, or the chevron at the right of the header", "Take the header and status bar away so the instruments fill the screen. <code>Escape</code>, or the small chevron in the top corner, brings them back."),
+ ("<code>V</code>, or LOCKED / FREE on the vectorscope", "Hold the trace inside the graticule diamond, or let it run to the corners of the frame."),
  ("Click a level meter", "Clear peak hold and the over counter."),
  ("Press and hold a Totalyser band", "Solo that band by ear (hardware sources). Drag to sweep; wheel for Q; double-click to latch."),
  ("Drop an audio file on the window", "Scan it."),
@@ -169,7 +156,7 @@ def manual(G):
 ])}
 <div class="two">
 <div><h4>Appearance</h4><p>The app menu's <em>Appearance...</em> switches themes and the accent colour. The graphite theme is the default and matches the RONE plugins.</p></div>
-<div><h4>Settings and layouts</h4><p>Source, layout, channel pair and setup values persist between runs in your user folder. Layout presets live in the same place.</p></div>
+<div><h4>Settings</h4><p>Source, channel pair and every Setup and Appearance value persist between runs in your user folder.</p></div>
 </div>
 """})
 
