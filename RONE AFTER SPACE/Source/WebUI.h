@@ -1380,10 +1380,27 @@ function setKnob(K,norm,send){
   renderKnob(K);
 }
 function renderKnob(K){
-  K.litEl.setAttribute("stroke-dasharray",(K.norm*K.arcLen)+" 999");
-  K.litEl.style.opacity = K.norm>0.004 ? "1" : "0";
-  K.dotEl.style.transform = "rotate("+(-135+K.norm*270)+"deg)";
-  K.valEl.innerHTML = K.cfg.fmt(P[K.cfg.id]);
+  // Write only what actually changed.
+  //
+  // This runs for every knob on every state push from the host, ~30 times a
+  // second, and at idle NONE of these values differ from the last tick: a
+  // parameter that has not moved formats to the same string every time. Writing
+  // them anyway invalidated style and layout for the whole page 30 times a
+  // second, and the innerHTML line additionally ran the HTML parser and built
+  // two fresh nodes per knob per tick - which is where this page's DOM node
+  // count came from. Comparing first costs a string compare and removes all of
+  // it while a knob is still; a moving knob writes exactly as before.
+  var dash = (K.norm*K.arcLen)+" 999";
+  if (dash !== K._dash) { K.litEl.setAttribute("stroke-dasharray", dash); K._dash = dash; }
+
+  var op = K.norm>0.004 ? "1" : "0";
+  if (op !== K._op) { K.litEl.style.opacity = op; K._op = op; }
+
+  var rot = "rotate("+(-135+K.norm*270)+"deg)";
+  if (rot !== K._rot) { K.dotEl.style.transform = rot; K._rot = rot; }
+
+  var val = K.cfg.fmt(P[K.cfg.id]);
+  if (val !== K._val) { K.valEl.innerHTML = val; K._val = val; }
 }
 
 document.addEventListener("mousemove", function(e){
@@ -1867,8 +1884,13 @@ requestAnimationFrame(drawViz);
 // ============================================================================
 var dm=document.getElementById("duck-meter"), dctx=dm.getContext("2d");
 var duckWaveT=0;
-function drawDuckMeter(){
+var lastDuckFrame=0;
+function drawDuckMeter(ts){
   requestAnimationFrame(drawDuckMeter);
+  // Same 30fps cap drawViz already uses. This loop was running at the full
+  // display rate and each pass strokes a shadowBlur polyline, which is a
+  // software blur pass per frame - the most expensive thing on the page.
+  if(ts-lastDuckFrame<33) return; lastDuckFrame=ts;
   var w=dm.clientWidth, h=dm.clientHeight;
   if (w>0 && (dm.width!==w*2 || dm.height!==h*2)){ dm.width=w*2; dm.height=h*2; }
   var W=dm.width,H=dm.height;
@@ -1900,8 +1922,11 @@ requestAnimationFrame(drawDuckMeter);
 // ============================================================================
 var ed=document.getElementById("echo-dots"), ectx=ed.getContext("2d");
 var echoPulse=0;
-function drawEchoDots(){
+var lastEchoFrame=0;
+function drawEchoDots(ts){
   requestAnimationFrame(drawEchoDots);
+  // 30fps, as above.
+  if(ts-lastEchoFrame<33) return; lastEchoFrame=ts;
   var w=ed.clientWidth, h=ed.clientHeight;
   if (w>0 && (ed.width!==w*2 || ed.height!==h*2)){ ed.width=w*2; ed.height=h*2; }
   var W=ed.width,H=ed.height,cy2=H/2;
