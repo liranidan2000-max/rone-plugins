@@ -652,16 +652,43 @@ jobs:
   release:
     name: Release
     needs: [detect-changes, build-windows, build-macos]
+    # Deliberately not gated on the build results.
+    #
+    # It used to require both matrices to have come out 'success', and a matrix
+    # job's result is a failure if any single leg failed. So one plugin failing
+    # to upload an artefact - which is a thing that happens, and did on #184 -
+    # skipped the release for every plugin in the run. Nothing was published,
+    # and a skipped job is grey rather than red, so the run did not look
+    # broken; the only symptom was that the Center never offered the update.
+    #
+    # Publishing per plugin is already safe: the step below skips any plugin
+    # with no artefacts, and uploads with --clobber so the platform that did
+    # build never wipes the one that did not. The 'verdict' job at the end
+    # turns the run red so a partial release is still loud.
     if: >-
       !cancelled() &&
-      needs.detect-changes.outputs.changed != '[]' &&
-      (needs.build-windows.result == 'success' || needs.build-windows.result == 'skipped') &&
-      (needs.build-macos.result   == 'success' || needs.build-macos.result   == 'skipped')
+      needs.detect-changes.outputs.changed != '[]'
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
 
     steps:
+      - name: Note a partial build
+        if: needs.build-windows.result != 'success' || needs.build-macos.result != 'success'
+        run: |
+          {
+            echo "### Partial release"
+            echo ""
+            echo "| leg | result |"
+            echo "|---|---|"
+            echo "| windows | ${{ needs.build-windows.result }} |"
+            echo "| macos   | ${{ needs.build-macos.result }} |"
+            echo ""
+            echo "Only the plugins whose installers were actually produced have been"
+            echo "published. Anything missing kept its previous release asset and its"
+            echo "previous entry in versions.json."
+          } >> $GITHUB_STEP_SUMMARY
+
       - name: Download all installer artifacts
         uses: actions/download-artifact@v4
         with:
@@ -820,6 +847,15 @@ jobs:
             [ -n "$mac_file" ] && sha_mac=$(sha256sum "$mac_file" | awk '{print $1}')
             echo "  $jid: sha_win=${sha_win:0:12}... sha_mac=${sha_mac:0:12}..."
 
+            # Nothing at all was produced for this plugin this run, which
+            # means its build failed. Bumping the version anyway would point
+            # the Center at the *previous* installer under a new number, with
+            # a hash that does not match it - an update that can only fail.
+            if [ -z "$win_file" ] && [ -z "$mac_file" ]; then
+              echo "  $jid: no artefacts this run - manifest left alone"
+              continue
+            fi
+
             # Only touch a platform's url+sha when that platform was actually
             # built this run — a [win-only]/[mac-only] build must never
             # overwrite the other platform's still-valid hash with "".
@@ -880,3 +916,38 @@ jobs:
             git pull --rebase origin main
           done
           git push
+
+  # ================================================================
+  # 6. VERDICT — publish first, then tell the truth about the run
+  #
+  # The release and manifest jobs deliberately tolerate a failed build leg so
+  # that one plugin cannot hold the others hostage. That tolerance must not
+  # make a broken build look fine, so this job carries the run's colour.
+  # ================================================================
+  verdict:
+    name: Verdict
+    needs: [build-windows, build-macos, release, update-manifest]
+    if: '!cancelled()'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if anything did not build
+        run: |
+          win='${{ needs.build-windows.result }}'
+          mac='${{ needs.build-macos.result }}'
+          rel='${{ needs.release.result }}'
+          man='${{ needs.update-manifest.result }}'
+          echo "windows=$win macos=$mac release=$rel manifest=$man"
+
+          bad=0
+          for r in "$win" "$mac" "$rel" "$man"; do
+            case "$r" in
+              success|skipped) ;;
+              *) bad=1 ;;
+            esac
+          done
+
+          if [ "$bad" = "1" ]; then
+            echo "::error::A leg of this run did not succeed. Whatever built was still published - re-run the failed job to finish the rest."
+            exit 1
+          fi
+          echo "all green"
