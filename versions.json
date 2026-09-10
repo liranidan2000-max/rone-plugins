@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "The RONE beta has ended. Sign in with your roneaudio.com account to unlock the plugins - new accounts get a 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-10T00:08:32Z",
+  "last_updated": "2026-09-10T00:57:42Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -162,7 +162,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.0.0.185",
+      "version": "1.1.0.186",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -175,9 +175,9 @@
       "manual": "RONE Analyzer - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "b274c8bce8dfb49686bbe4cf6b5df88e56d5581613488212a904998a1c17f2b3",
+      "sha256": "6a3b8c12d7a3d29fc5cf4ffc0d499cd139ac93dddc28d0b02ef9f8cec7438d35",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "ea9f390ec5d3045b98e3d907aab0fb0a4aed92430d97342a1fa6f306d940333c",
+      "sha256_mac": "157e4c87bbe4573ee8331123f5b088d9c5172804525e37f7189ff14d9fe301d2",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html"
