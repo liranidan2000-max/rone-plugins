@@ -34,6 +34,12 @@ ANALYZER_CALLOUTS = {
         ("SOURCE", "choose the input: ASIO, loopback, live input or DAW master"),
     '.chip[data-act="channels"]':
         ("CH", "which pair of a multichannel device to analyse"),
+    '.chip[data-act="file"]':
+        ("FILE", "open and play in real time, open and scan a whole file in "
+                 "seconds, or loop"),
+    '.chip[data-act="reference"]':
+        ("REF", "add reference tracks and show or clear the reference corridor "
+                "behind the analyser"),
     '.chip[data-act="reset"]':
         ("RESET", "clear every accumulating measurement: peak holds, "
                   "the over counter, integrated loudness"),
