@@ -2,12 +2,12 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "The RONE beta has ended. Sign in with your roneaudio.com account to unlock the plugins - new accounts get a 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-10T14:56:32Z",
+  "last_updated": "2026-09-10T17:23:32Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.3.6.187",
-    "sha256": "41326a9d285ee6b9d9f8fa77c41d9fe02f0320e64be801cc1417642351d3793c"
+    "version": "1.3.6.191",
+    "sha256": "45e97675bd7c405b934657ad1d890da65051793c9b1b002c3aa5f184808e61e2"
   },
   "plugins": [
     {
