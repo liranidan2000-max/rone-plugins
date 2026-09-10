@@ -98,5 +98,12 @@ private:
     juce::Array<PluginInfo>   pluginData;
     juce::CriticalSection     pluginDataLock;  // guards pluginData access across threads
 
+    // The plugin whose download failed its hash check and is waiting on a fresh
+    // manifest to try once more. See onDownloadComplete: the installers live
+    // behind moving "-latest" tags, so a Center left open across a release ends
+    // up checking a NEW file against the hash it read hours ago. Empty when no
+    // retry is pending; only ever one, so a genuinely corrupt file cannot loop.
+    juce::String              staleHashRetryId;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

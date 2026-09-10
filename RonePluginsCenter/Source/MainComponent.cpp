@@ -1031,6 +1031,39 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
     }
 
     emitPluginsUpdated();
+
+    // A download that failed its hash check asked for this manifest. Now that
+    // the hash is current, try that one plugin again - see onDownloadComplete.
+    if (staleHashRetryId.isNotEmpty())
+    {
+        const auto retryId = staleHashRetryId;
+        staleHashRetryId.clear();
+
+        juce::String url, sha;
+        {
+            juce::ScopedLock sl (pluginDataLock);
+            for (auto& p : pluginData)
+                if (p.id == retryId)
+                {
+                   #if JUCE_MAC
+                    url = p.downloadUrlMac; sha = p.sha256Mac;
+                   #else
+                    url = p.downloadUrl;    sha = p.sha256;
+                   #endif
+                    p.status = PluginStatus::Downloading;
+                    p.downloadProgress = 0.0;
+                    break;
+                }
+        }
+
+        if (url.isNotEmpty())
+        {
+            emitPluginsUpdated();
+            networkManager.downloadInstaller (retryId, url, sha);
+            return;
+        }
+    }
+
     checkForCenterUpdate();
 
     int updates = 0;
@@ -1095,6 +1128,29 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
     }
     else
     {
+        // A hash mismatch usually means our manifest is OLD, not that the file
+        // is bad.
+        //
+        // The installers live behind moving "-latest" release tags, so the file
+        // behind a URL changes the moment CI publishes. A Center left open
+        // across a release still holds the hash it read before, and every
+        // retry re-downloads the NEW file and re-compares it against the OLD
+        // hash - failing forever, which is exactly what a user hit on
+        // 2026-09-11 with Stutter showing v1.1.3.187 after .194 had shipped.
+        //
+        // So fetch the manifest again and try once. If it still does not match
+        // with a fresh hash, the file really is wrong and the error stands.
+        // `staleHashRetryId` holds at most one plugin, so a genuinely corrupt
+        // download cannot turn this into a loop.
+        if (errorMessage.contains ("SHA256") && staleHashRetryId.isEmpty())
+        {
+            staleHashRetryId = pluginId;
+            emitStatusMessage ("Checking for a newer version...", "info");
+            networkManager.fetchManifest();
+            return;
+        }
+        staleHashRetryId.clear();
+
         {
             juce::ScopedLock sl (pluginDataLock);
             for (auto& p : pluginData)
