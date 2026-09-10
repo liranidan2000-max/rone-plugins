@@ -192,7 +192,14 @@ MainComponent::MainComponent()
         })
         .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
             if (args.size() > 0)
-                juce::URL (args[0].toString()).launchInDefaultBrowser();
+            {
+                // Only http(s) reaches the OS launcher. Every call from the page passes
+                // https://roneaudio.com; anything else - a file:// path, a shell scheme -
+                // would otherwise be handed straight to the system handler.
+                const auto roneUrl = args[0].toString();
+                if (roneUrl.startsWithIgnoreCase ("https://") || roneUrl.startsWithIgnoreCase ("http://"))
+                    juce::URL (roneUrl).launchInDefaultBrowser();
+            }
             complete (juce::var ("ok"));
         })
 

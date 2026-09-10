@@ -101,7 +101,11 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
           .withEventListener ("openExternalUrl", [] (const juce::var& payload)
           {
               auto url = payload["url"].toString();
-              if (url.isNotEmpty())
+              // Only http(s) reaches the OS launcher. Every call from the page passes
+              // https://roneaudio.com; anything else - a file:// path, a shell scheme -
+              // would otherwise be handed straight to the system handler. The scheme
+              // test subsumes the empty check this used to make.
+              if (url.startsWithIgnoreCase ("https://") || url.startsWithIgnoreCase ("http://"))
                   juce::URL (url).launchInDefaultBrowser();
           }))
 {
