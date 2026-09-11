@@ -1040,6 +1040,13 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
         staleHashRetryId.clear();
 
         juce::String url, sha;
+
+        if (retryId == "__center__")
+        {
+            const auto info = networkManager.getCenterInstallerInfo();
+            url = info.url; sha = info.sha256;
+        }
+        else
         {
             juce::ScopedLock sl (pluginDataLock);
             for (auto& p : pluginData)
@@ -1058,6 +1065,9 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 
         if (url.isNotEmpty())
         {
+            // From here the id means "this download IS the retry": if it fails
+            // the hash again, that is the answer, not another round.
+            staleHashRetryInFlight = retryId;
             emitPluginsUpdated();
             networkManager.downloadInstaller (retryId, url, sha);
             return;
@@ -1082,6 +1092,28 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
 
 void MainComponent::onManifestError (const juce::String& errorMessage)
 {
+    // The fresh manifest a failed download was waiting on did not arrive, so
+    // that download stays failed - and visibly so, not "Downloading" forever.
+    if (staleHashRetryId.isNotEmpty())
+    {
+        const auto id = staleHashRetryId;
+        staleHashRetryId.clear();
+
+        {
+            juce::ScopedLock sl (pluginDataLock);
+            for (auto& p : pluginData)
+                if (p.id == id)
+                {
+                    p.status = PluginStatus::Error;
+                    break;
+                }
+        }
+
+        emitPluginsUpdated();
+        emitStatusMessage ("Download could not be verified - please try again in a few minutes.", "error");
+        return;
+    }
+
     emitStatusMessage ("Offline - " + errorMessage, "error");
 }
 
@@ -1111,6 +1143,22 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
                                          bool success,
                                          const juce::String& errorMessage)
 {
+    // A hash mismatch usually means our manifest is OLD, not that the file is
+    // bad - see below. Decide that first, for the Center's own installer too:
+    // it sits behind the same moving tag and the same cached manifest.
+    const bool isRetry = (staleHashRetryInFlight == pluginId);
+
+    if (isRetry)
+        staleHashRetryInFlight.clear();
+
+    if (! success && errorMessage.contains ("SHA256") && ! isRetry && staleHashRetryId.isEmpty())
+    {
+        staleHashRetryId = pluginId;
+        emitStatusMessage ("Checking for a newer version...", "info");
+        networkManager.fetchManifest (true);
+        return;
+    }
+
     if (pluginId == "__center__")
     {
         if (success)
@@ -1128,9 +1176,6 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
     }
     else
     {
-        // A hash mismatch usually means our manifest is OLD, not that the file
-        // is bad.
-        //
         // The installers live behind moving "-latest" release tags, so the file
         // behind a URL changes the moment CI publishes. A Center left open
         // across a release still holds the hash it read before, and every
@@ -1138,19 +1183,12 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
         // hash - failing forever, which is exactly what a user hit on
         // 2026-09-11 with Stutter showing v1.1.3.187 after .194 had shipped.
         //
-        // So fetch the manifest again and try once. If it still does not match
-        // with a fresh hash, the file really is wrong and the error stands.
-        // `staleHashRetryId` holds at most one plugin, so a genuinely corrupt
-        // download cannot turn this into a loop.
-        if (errorMessage.contains ("SHA256") && staleHashRetryId.isEmpty())
-        {
-            staleHashRetryId = pluginId;
-            emitStatusMessage ("Checking for a newer version...", "info");
-            networkManager.fetchManifest();
-            return;
-        }
-        staleHashRetryId.clear();
-
+        // So the first mismatch (handled above) fetches the manifest again -
+        // from origin, past the CDN's five-minute copy - and tries once. A
+        // mismatch on that retry lands here: the file really is wrong, and the
+        // error stands. The first version of this cleared the retry id before
+        // the retry ran, so every mismatch counted as the first and the
+        // Analyzer update looped for as long as the CDN stayed stale.
         {
             juce::ScopedLock sl (pluginDataLock);
             for (auto& p : pluginData)

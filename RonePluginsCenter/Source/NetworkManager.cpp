@@ -16,7 +16,7 @@ NetworkManager::~NetworkManager()
 // Public API
 // ============================================================================
 
-void NetworkManager::fetchManifest()
+void NetworkManager::fetchManifest (bool freshFromOrigin)
 {
     cancelDownload();
     currentTask = FetchManifest;
@@ -26,11 +26,17 @@ void NetworkManager::fetchManifest()
     // PREVIOUS manifest. The installers, meanwhile, live behind moving "-latest"
     // release tags and change the instant CI publishes. Stale hash + fresh file =
     // "file integrity check failed (SHA256 mismatch)" for anyone who presses
-    // Update in that window - which is exactly what RONE Stucker did on
-    // 2026-09-08. A unique query string makes the CDN treat every fetch as a new
-    // object and go to origin, so the manifest and the files can never disagree.
-    targetUrl = juce::String (VERSIONS_JSON_URL)
-              + "?t=" + juce::String (juce::Time::currentTimeMillis());
+    // Update in that window.
+    //
+    // A "?t=<now>" query string does NOT get past that cache: the CDN keys on
+    // the path alone, and a never-seen query string still came back X-Cache:
+    // HIT (measured 2026-09-11, when the Analyzer update looped on it). The
+    // cached copy is fine for browsing; when a hash has just failed, the file
+    // is read from origin through the API instead, which is never cached but
+    // is rate-limited - so only then.
+    manifestFromOrigin = freshFromOrigin;
+    targetUrl = freshFromOrigin ? juce::String (VERSIONS_JSON_ORIGIN_URL)
+                                : juce::String (VERSIONS_JSON_URL);
 
     startThread();
 }
@@ -89,9 +95,16 @@ void NetworkManager::run()
         {
             // --- Fetch the JSON manifest ---------------------------------
             juce::URL url (targetUrl);
-            auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
-                               .withConnectionTimeoutMs (10000)
-                               .withNumRedirectsToFollow (5);
+
+            // The API hands back the file itself only when asked for it this
+            // way; its default is a JSON envelope with the content in base64.
+            const auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
+                                     .withConnectionTimeoutMs (10000)
+                                     .withNumRedirectsToFollow (5)
+                                     .withExtraHeaders (manifestFromOrigin
+                                                            ? "Accept: application/vnd.github.raw\r\n"
+                                                              "X-GitHub-Api-Version: 2022-11-28\r\n"
+                                                            : "");
 
             auto stream = url.createInputStream (options);
 
@@ -139,8 +152,23 @@ void NetworkManager::run()
 
             // If remote JSON was unparseable (e.g. 404 HTML from private repo),
             // fall back to a hardcoded catalog so the UI always shows plugins.
+            // Not for the origin read: that one exists to verify a download,
+            // and a catalog with no hashes in it verifies nothing. The API
+            // answers a rate limit with a JSON message, which lands here too.
             if (plugins.isEmpty())
+            {
+                if (manifestFromOrigin)
+                {
+                    juce::MessageManager::callAsync ([this]
+                    {
+                        listeners.call (&Listener::onManifestError,
+                                        juce::String ("Could not read a fresh manifest from the update server."));
+                    });
+                    return;
+                }
+
                 plugins = getFallbackManifest();
+            }
 
             juce::MessageManager::callAsync ([this, plugins]
             {

@@ -92,6 +92,10 @@ target_compile_definitions(RonePluginsCenter PRIVATE
     JUCE_DISPLAY_SPLASH_SCREEN=0
     # URL for the remote version manifest — fetched on startup
     VERSIONS_JSON_URL="https://raw.githubusercontent.com/liranidan2000-max/rone-plugins/main/versions.json"
+    # The same file straight from origin, for the one moment raw's CDN copy
+    # cannot be trusted (a hash mismatch right after a release). Rate-limited
+    # to 60/hour per IP unauthenticated, which is why it is not the default.
+    VERSIONS_JSON_ORIGIN_URL="https://api.github.com/repos/liranidan2000-max/rone-plugins/contents/versions.json?ref=main"
     # Accounts API (sign-in, entitlement checks) — Cloudflare Pages Functions
     # served from the website itself, so it moves with the site.
     RONE_API_BASE="https://roneaudio.com/api/v1"

@@ -38,7 +38,10 @@ public:
     void removeListener (Listener* l)  { listeners.remove (l); }
 
     // Fetch versions.json from the remote URL (async — results via listener).
-    void fetchManifest();
+    // freshFromOrigin skips raw.githubusercontent's five-minute CDN copy and
+    // reads the file from GitHub's API instead - only for the retry after a
+    // hash mismatch, see MainComponent::onDownloadComplete.
+    void fetchManifest (bool freshFromOrigin = false);
 
     // Download a file from `url` to a temp folder (async — progress via listener).
     // If `sha256` is non-empty, the downloaded file is verified against it.
@@ -104,6 +107,7 @@ private:
 
     Task               currentTask  { None };
     juce::String       targetUrl;            // used by FetchManifest only
+    bool               manifestFromOrigin { false };
 
     juce::CriticalSection      queueLock;
     juce::Array<DownloadJob>   downloadQueue; // pending downloads (FIFO)

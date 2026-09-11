@@ -102,8 +102,12 @@ private:
     // manifest to try once more. See onDownloadComplete: the installers live
     // behind moving "-latest" tags, so a Center left open across a release ends
     // up checking a NEW file against the hash it read hours ago. Empty when no
-    // retry is pending; only ever one, so a genuinely corrupt file cannot loop.
+    // retry is pending. Once the retry download is running its id moves to
+    // staleHashRetryInFlight, and a second failure of THAT download is final -
+    // the first version cleared the id before the retry ran, so every failure
+    // looked like a first one and the Analyzer update looped on 2026-09-11.
     juce::String              staleHashRetryId;
+    juce::String              staleHashRetryInFlight;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
