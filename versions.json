@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "The RONE beta has ended. Sign in with your roneaudio.com account to unlock the plugins - new accounts get a 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-11T06:41:33Z",
+  "last_updated": "2026-09-13T08:30:50Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -88,7 +88,7 @@
     {
       "id": "RoneThrow",
       "name": "RONE Throw",
-      "version": "1.0.0.194",
+      "version": "1.0.0.198",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -103,9 +103,9 @@
       "manual": "RONE Throw - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.pkg",
-      "sha256": "60f8054eacf55c60c18bd5cb0adbe5b0a944fab314e8bee697ea2b3a84b232f3",
+      "sha256": "08513762b589e775ed1d0087888b1d111a1660482a92f005241121e7b12a63b2",
       "registry_key": "RoneThrow",
-      "sha256_mac": "f3ad33d5ba8a88a4c487d978541fd1b5243f8a89fb855313ee6ffe2623f7f93b",
+      "sha256_mac": "d5d194ab9e770535e4503f8327effa1a7673102d54a7ca1791a53f7ccd447c48",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 29
@@ -113,7 +113,7 @@
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.0.4.192",
+      "version": "2.0.4.198",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -127,9 +127,9 @@
       "manual": "RONE Flanger - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "e89243a77c5facdcb1ea16fa6df4505e47c9da6b3c323335c5472615c43201da",
+      "sha256": "0bff3c8382b2a693c152a1b6ca2849586cf922014c879d7d7fa87e5e5c5de787",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "c1c71c844a3b51c654616067a29edf4371a870c110cacb110d5a2057295828b1",
+      "sha256_mac": "a67f917692512c16bfb07ae53ae39783098598ccd211b74ceb45aabe5bb9abae",
       "price": 39,
       "launch_price": 29,
       "store_url": "https://roneaudio.com/products/rone-flanger.html"
@@ -137,7 +137,7 @@
     {
       "id": "RoneAfterspace",
       "name": "RONE AFTERSPACE",
-      "version": "1.0.0.194",
+      "version": "1.0.0.198",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -152,9 +152,9 @@
       "manual": "RONE AFTERSPACE - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
-      "sha256": "fbef7df6fa1ffa40bab5acce4b1bb68f877e37a330d409d63d8f880e635e4b27",
+      "sha256": "854ae796e164b8fc1f8fc239da1c9e98c2237eaa24fbab5a5c80201bbdf63711",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "9290a26e6c7b8cdbf5cbb254e97b22f1fad35952c5411c6c7d883004828e6e81",
+      "sha256_mac": "16b27d95680a138857ce1b3f8844e1a5b1c7c183e6593694ad981d998cc0cda3",
       "price": 59,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/afterspace.html"
