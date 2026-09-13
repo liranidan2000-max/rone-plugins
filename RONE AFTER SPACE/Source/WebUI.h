@@ -1733,7 +1733,15 @@ function setupBridge(){
   B.addEventListener("hostState",function(d){
     var name=(d.presetName||"").toUpperCase();
     var el=document.getElementById("preset-name");
-    if(name && el.textContent!==name) el.textContent=name;
+    if(name && el.textContent!==name){
+      el.textContent=name;
+      // The page is rebuilt every time the editor opens, so the browser's
+      // position comes back from the processor with the name: prev / next
+      // step from the preset that is showing, not from the top of the list.
+      for(var i=0;i<PRESETS.length;i++){
+        if(PRESETS[i].n.toUpperCase()===name){ currentPreset=i; break; }
+      }
+    }
     document.getElementById("bpm-val").textContent=Math.round(d.effectiveBPM);
     var ms=d.echoTimeMs?Math.round(d.echoTimeMs):0;
     document.getElementById("echo-ms").textContent = ms+" MS";
