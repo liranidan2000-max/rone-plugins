@@ -1,7 +1,8 @@
 // Doc-shot helper (served copy only, never shipped).
 (function () {
   var q = new URLSearchParams(location.search);
-  var state = (q.get('state') || '').split(',').filter(Boolean);
+  // split on the commas BETWEEN items only - a js: item may itself contain commas (function arguments)
+  var state = (q.get('state') || '').split(/,(?=(?:click|show|class|js):)/).filter(Boolean);
   function $(id) { return document.getElementById(id); }
   function click(id) { var el = $(id); if (el) { el.dispatchEvent(new MouseEvent('mousedown', {bubbles:true})); el.dispatchEvent(new MouseEvent('mouseup', {bubbles:true})); el.click(); } }
   function applyState() {

@@ -5,13 +5,20 @@ so the letterboxed #app scaling every RONE plugin uses is at 1:1. The page's
 _shot.js applies an optional state (clicks, JS) and posts the DOM rects of every
 control back, which annotate.py uses to place the numbered callouts.
 
+Edge is driven over DevTools (edge_cdp.py), not with --screenshot / --dump-dom:
+since Edge 153 those flags return an un-stated page and an empty DOM. The
+screenshot is taken only once _shot.js has posted the rects, so the state the
+manual describes is the state in the picture, and the rects come from the very
+same page - no second run, no transition-start offsets.
+
   python shoot.py                      all base states
   python shoot.py stutter flanger      some base states
   python shoot.py "stucker=_adv:click:advToggle" "flanger=_adv:click:adv-btn@680x640"
 """
-import subprocess, json, re, sys, tempfile, shutil
+import json, sys
 from PIL import Image
 from paths import UI, SHOTS, EDGE, PORT, ensure
+from edge_cdp import Edge
 
 # editor sizes (kBaseW x kBaseH from each PluginEditor.h; the Center is its default window)
 SIZES = {"reversereverb": (700, 650), "stutter": (900, 600), "stucker": (440, 520),
@@ -19,27 +26,26 @@ SIZES = {"reversereverb": (700, 650), "stutter": (900, 600), "stucker": (440, 52
          "center": (920, 640)}
 DPR = 2
 
-def run(args, timeout=120):
-    return subprocess.run(args, capture_output=True, text=True, timeout=timeout, encoding="utf-8", errors="replace")
-
 def shoot(name, suffix="", state="", size=None):
     ensure()
     w, h = size or SIZES[name.split("_")[0]]
     out = SHOTS / f"{name}{suffix}.png"
-    prof = tempfile.mkdtemp(prefix="edgeshot_")
     url = f"http://127.0.0.1:{PORT}/harness.html?p={name}&w={w}&h={h}&state={state}"
     W, H = max(w, 600) + 20, max(h, 400) + 20
-    base = [EDGE, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run", "--disable-extensions",
-            "--no-default-browser-check", f"--user-data-dir={prof}", f"--window-size={W},{H}",
-            f"--force-device-scale-factor={DPR}", "--virtual-time-budget=8000", "--run-all-compositor-stages-before-draw"]
-    run(base + [f"--screenshot={out}", url])
-    im = Image.open(out); im = im.crop((0, 0, w * DPR, h * DPR)); im.save(out)
-    r2 = run(base + ["--dump-dom", url])
-    m = re.search(r'<script type="application/json" id="__rects">(.*?)</script>', r2.stdout, re.S)
-    rects = json.loads(m.group(1)) if m else None
+    with Edge(EDGE, W, H, DPR) as edge:
+        edge.goto(url)
+        # _shot.js: fonts ready -> 800 ms -> state applied -> 1200 ms -> rects posted to the harness
+        raw = edge.wait_for("(function(){var s=document.getElementById('__rects');return s?s.textContent:''})()", timeout=40)
+        rects = json.loads(raw)
+        import time; time.sleep(0.4)          # let the last transition frame paint
+        edge.screenshot(out, w, h)
+    im = Image.open(out)
+    if im.size != (w * DPR, h * DPR):
+        im = im.crop((0, 0, min(im.size[0], w * DPR), min(im.size[1], h * DPR)))
+        if im.size != (w * DPR, h * DPR): im = im.resize((w * DPR, h * DPR), Image.LANCZOS)
+        im.save(out)
     (SHOTS / f"{name}{suffix}.rects.json").write_text(json.dumps(rects, indent=1), encoding="utf-8")
-    shutil.rmtree(prof, ignore_errors=True)
-    print(f"  shot {name}{suffix} {im.size} rects={len(rects['rects']) if rects else 0}")
+    print(f"  shot {name}{suffix} {im.size} rects={len(rects['rects']) if rects else 0}", flush=True)
     return out
 
 def parse_spec(arg):

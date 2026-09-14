@@ -96,7 +96,7 @@
         "Standalone"
       ],
       "description": "One knob that throws anything into a tempo-locked atmosphere - a dotted-8th ping-pong delay whose band-limited feedback loop stays clean at near-infinite feedback, so the wash sits behind the mix instead of muddying it",
-      "whats_new": "First release. One knob throws whatever is playing into a tempo-locked atmosphere: the send, the feedback and the reverb open together, and the dry signal is never touched - it only ever adds a layer. DUAL gives the left and right sides their own divisions for 3:2 cross-rhythms, SPACE is the reverb on the wet, and DUCK keeps the atmosphere out of the way while the source is still playing. 26 factory presets in the bar at the top, plus six macro slots: tap to recall, hold to store your own.",
+      "whats_new": "1.1.0 - the macro slots light up for every stored macro. A slot with a macro in it is now lit solid white for as long as the macro is there - in every instance and every project - so lit means stored and dark means empty; the slot you are hearing adds a glow. The six slots start empty (hold to store, tap to recall) and CLEAR ALL MACRO SLOTS in the preset menu empties them. The preset bar also keeps its position after a saved project.",
       "standalone_exe": "RONE Throw.exe",
       "vst3_bundle": "RONE Throw.vst3",
       "au_bundle": "RONE Throw.component",
