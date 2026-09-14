@@ -917,8 +917,9 @@ bool MainComponent::beginNativeWindowDrag()
 juce::String MainComponent::readInstalledCenterVersion()
 {
 #if JUCE_WINDOWS
-    return juce::WindowsRegistry::getValue (
-        "HKEY_CURRENT_USER\\Software\\RONE\\Plugins\\__center__\\InstalledVersion", {});
+    // Same read as the plugins: the bundle installer's Uninstall entry is the
+    // truth, the HKCU stamp the fallback (and it is healed to match).
+    return VersionChecker::getInstalledVersion ("__center__");
 #else
     return {};
 #endif
@@ -1332,8 +1333,20 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
     #else
         if (processFinished)
         {
-            auto installedVer = VersionChecker::getInstalledVersion (regKey);
-            verified = installedVer.isNotEmpty();
+            // Inno Setup exit codes: 0 = installed; 8 = installed, but a file
+            // in use is replaced at the next reboot (/NORESTART); anything
+            // else means the install was cancelled or failed - by far the
+            // most common is 5: a plugin file was open in the DAW, the silent
+            // installer could not replace it and rolled everything back.
+            //
+            // This used to accept any run whose registry stamp was non-empty,
+            // i.e. every re-install of a plugin that had EVER been installed,
+            // so a rolled-back update was announced as "installed
+            // successfully!" and offered again at the next check, forever.
+            verified = (exitCode == 0 || exitCode == 8);
+
+            if (verified)
+                VersionChecker::setInstalledVersion (regKey, remoteVer);
         }
     #endif
 
@@ -1347,13 +1360,14 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                 {
                     if (p.id == pid)
                     {
+                        pluginName = p.name;
+
                         if (verified)
                         {
                             p.installedVersion = VersionChecker::getInstalledVersion (p.registryKey);
                             if (p.installedVersion.isEmpty())
                                 p.installedVersion = remoteVer;
                             p.status = PluginStatus::UpToDate;
-                            pluginName = p.name;
                         }
                         else
                         {
@@ -1367,7 +1381,10 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
 
             if (verified)
             {
-                emitStatusMessage (pluginName + " installed successfully!", "success");
+                if (exitCode == 8)
+                    emitStatusMessage (pluginName + " installed - restart Windows to finish replacing a file that was in use.", "success");
+                else
+                    emitStatusMessage (pluginName + " installed successfully!", "success");
 
                 // Auto-open standalone after install
             #if JUCE_MAC
@@ -1398,7 +1415,17 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                 if (! processFinished)
                     emitStatusMessage ("Install timed out.", "error");
                 else if (exitCode != 0)
+                {
+                #if JUCE_WINDOWS
+                    if (exitCode == 5)
+                        emitStatusMessage ("Install cancelled - a file was in use. Close the DAW or standalone that has "
+                                           + pluginName + " open, then update again.", "error");
+                    else
+                        emitStatusMessage ("Install failed (installer code " + juce::String (exitCode) + ").", "error");
+                #else
                     emitStatusMessage ("Install cancelled or failed (code " + juce::String (exitCode) + "). Enter your password when prompted.", "error");
+                #endif
+                }
                 else
                     emitStatusMessage ("Install verification failed - components not found.", "error");
             }

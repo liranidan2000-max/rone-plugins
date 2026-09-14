@@ -1,4 +1,5 @@
 #include "VersionChecker.h"
+#include <map>
 
 #if JUCE_WINDOWS
  #include <windows.h>
@@ -23,36 +24,86 @@ static juce::File getVersionsXmlFile()
 // Registry / XML helpers — read & write installed version per plugin
 // ============================================================================
 
+#if JUCE_WINDOWS
+// The installers are Inno Setup, and Inno records what it actually finished
+// installing under the machine's Uninstall key (DisplayVersion). That entry
+// is written only when an install completes and removed only by the
+// uninstaller, so it is the truth about what is on disk - unlike our own
+// HKCU stamp, which a silent install that ROLLED BACK (a plugin file open in
+// the DAW, exit code 5) leaves at whatever it said before. On 2026-09-14
+// every stamp on Liran's machine was one to three releases behind the
+// uninstall entries, and the Center offered the same Analyzer update forever.
+static const std::map<juce::String, juce::String>& innoAppIds()
+{
+    static const std::map<juce::String, juce::String> ids {
+        { "ReverseReverb",  "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}" },
+        { "RoneStutter",    "{D4E5F6A7-B8C9-0123-DEFA-234567890123}" },
+        { "RoneStucker",    "{DEDF18E3-6C8E-4090-B461-655FE6048BA6}" },
+        { "RoneThrow",      "{547A9CAA-B46F-414C-BFEE-7699EB212906}" },
+        { "RoneFlanger",    "{E5F6A7B8-C9D0-1234-EFAB-345678901234}" },
+        { "RoneAfterspace", "{A1B2C3D4-E5F6-7890-ABCD-AFTERSPACE01}" },
+        { "RONEAnalyzer",   "{E7F8A9B0-C1D2-3456-EF01-6789ABCDEF01}" },
+        { "RoneStemsFixer", "{C3D4E5F6-A7B8-9012-CDEF-123456789012}" },
+        { "RoneSyncVerb",   "{A1B2C3D4-E5F6-7890-ABCD-SYNCVERB0001}" },
+        { "__center__",     "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}" },
+    };
+    return ids;
+}
+
+static juce::String readRegString (HKEY root, const juce::String& subKey, const wchar_t* valueName, REGSAM extra = 0)
+{
+    HKEY hKey = nullptr;
+    if (RegOpenKeyExW (root, subKey.toWideCharPointer(), 0, KEY_READ | extra, &hKey) != ERROR_SUCCESS)
+        return {};
+
+    juce::String result;
+    DWORD type = REG_SZ, bufSize = 0;
+
+    // Query required buffer size first to avoid overflow
+    if (RegQueryValueExW (hKey, valueName, nullptr, &type, nullptr, &bufSize) == ERROR_SUCCESS && bufSize > 0)
+    {
+        std::vector<wchar_t> buf (bufSize / sizeof (wchar_t) + 1, 0);
+        if (RegQueryValueExW (hKey, valueName, nullptr, &type,
+                              reinterpret_cast<LPBYTE> (buf.data()), &bufSize) == ERROR_SUCCESS)
+            result = juce::String (buf.data());
+    }
+
+    RegCloseKey (hKey);
+    return result;
+}
+
+static juce::String innoInstalledVersion (const juce::String& registryKey)
+{
+    const auto& ids = innoAppIds();
+    const auto it = ids.find (registryKey);
+    if (it == ids.end())
+        return {};
+
+    // The installers run in 64-bit mode, so the entry lives in the native
+    // view; ask for it explicitly in case the Center is ever built 32-bit.
+    return readRegString (HKEY_LOCAL_MACHINE,
+                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + it->second + "_is1",
+                          L"DisplayVersion", KEY_WOW64_64KEY);
+}
+#endif
+
 juce::String VersionChecker::getInstalledVersion (const juce::String& registryKey)
 {
 #if JUCE_WINDOWS
-    juce::String path = RONE_REGISTRY_PATH;
-    path += "\\" + registryKey;
+    const auto stamped = readRegString (HKEY_CURRENT_USER,
+                                        juce::String (RONE_REGISTRY_PATH) + "\\" + registryKey,
+                                        L"InstalledVersion");
 
-    HKEY hKey = nullptr;
-    auto pathWide = path.toWideCharPointer();
+    const auto actual = innoInstalledVersion (registryKey);
 
-    if (RegOpenKeyExW (HKEY_CURRENT_USER, pathWide, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    if (actual.isNotEmpty())
     {
-        DWORD type    = REG_SZ;
-        DWORD bufSize = 0;
-
-        // Query required buffer size first to avoid overflow
-        if (RegQueryValueExW (hKey, L"InstalledVersion", nullptr, &type,
-                              nullptr, &bufSize) == ERROR_SUCCESS && bufSize > 0)
-        {
-            std::vector<wchar_t> buf (bufSize / sizeof (wchar_t) + 1, 0);
-            if (RegQueryValueExW (hKey, L"InstalledVersion", nullptr, &type,
-                                  reinterpret_cast<LPBYTE> (buf.data()), &bufSize) == ERROR_SUCCESS)
-            {
-                RegCloseKey (hKey);
-                return juce::String (buf.data());
-            }
-        }
-        RegCloseKey (hKey);
+        if (actual != stamped)
+            setInstalledVersion (registryKey, actual);   // heal the stamp in passing
+        return actual;
     }
 
-    return {};
+    return stamped;
 
 #else
     // macOS / Linux: read from shared XML file
