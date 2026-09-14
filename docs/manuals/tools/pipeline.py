@@ -40,9 +40,9 @@ STATES = [
     # The rects come from a --dump-dom run that never draws a frame, so CSS transitions stay at
     # their START value there (the drawer's translateY(12px)) while the screenshot run finishes
     # them - every callout in an animated panel lands 12px low. Disable transitions first.
-    ("throw", "", "js:window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineDelayMsR=211.3;engineBpm=142;renderEngine()", None),
-    ("throw", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineDelayMsR=211.3;engineBpm=142;state.dual=true;renderTime();renderEngine(),click:advToggle", None),
-    ("throw", "_menu", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineBpm=142;renderEngine(),click:preset-name", None),
+    ("throw", "", "js:window.seedMacro(0,'End Of Build');window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineDelayMsR=211.3;engineBpm=142;renderEngine()", None),
+    ("throw", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.seedMacro(0,'End Of Build');window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineDelayMsR=211.3;engineBpm=142;state.dual=true;renderTime();renderEngine(),click:advToggle", None),
+    ("throw", "_menu", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.seedMacro(0,'End Of Build');window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineBpm=142;renderEngine(),click:preset-name", None),
     ("throw", "_about", "click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),

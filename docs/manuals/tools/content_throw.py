@@ -41,7 +41,7 @@ def manual(G):
 {img("throw/tour.png", "<b>RONE Throw.</b> The big knob is the whole story; the strip at the top holds the presets and six macro slots.", "w60")}
 {steps([
  "<strong>Insert</strong> Throw on the channel you want to throw - a lead or a vocal is the classic choice. No send bus needed.",
- "<strong>Tap macro slot 1.</strong> The button lights white and the preset bar reads END OF BUILD. Slot 1 is the sound the plugin was built for.",
+ "<strong>Pick END OF BUILD.</strong> Click the preset name and choose it from the list - it is the sound the plugin was built for. Then <strong>hold macro slot 1</strong> for about a second to store it there: the button lights white and stays lit, in every project, until you store over it.",
  "<strong>Play</strong> the track and turn <span class='pill'>THROW</span> up slowly. Repeats appear on the dotted-8th grid, bouncing left and right; past the middle of the knob they open into a reverb wash.",
  "<strong>Keep turning.</strong> Near the top the tail runs for a long time (TAIL shows how long), but the band it settles into is fixed, so it never piles up.",
  "<strong>Turn it back down.</strong> Nothing is cut off - what is already in the loop rings out on its own.",
@@ -52,14 +52,14 @@ def manual(G):
 
     S.append({"title": "Interface tour", "sub": "every element on screen", "html": f"""
 <div class="two">
-{img("throw/tour.png", "Main view, macro slot 1 lit.")}
+{img("throw/tour.png", "Main view, a macro stored in slot 1 (lit).")}
 {img("throw/adv.png", "ADVANCED panel open, DUAL on.")}
 </div>
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
  ("BYPASS", "hard bypass for A/B comparison; the tail keeps ringing"),
  ("Preset bar", "arrows step through the 26 factory presets, click the name for the menu"),
- ("Macro slots", "six quick-recall buttons: tap to recall, hold to store your own"),
+ ("Macro slots", "six quick-recall buttons: hold to store, tap to recall - lit = stored"),
  ("GRID", "the tap division - L and R separately when DUAL is on"),
  ("MS / BPM", "the tap spacing in milliseconds at the host tempo"),
  ("THROW", "the one knob: 0 % = nothing added; higher = longer, denser, more space"),
@@ -78,7 +78,7 @@ def manual(G):
 <h3>Presets and macro slots</h3>
 {img("throw/tour_top.png", "<b>The strip.</b> Preset bar on the left, six macro slots on the right.", "w80")}
 {ctl("Preset bar", "26 factory presets", "<p>The arrows step through the presets; click the name to open the menu, grouped by use: INIT, THROWS, LEADS, DUAL, ATMOSPHERES, VOCALS, DRUMS and CREATIVE. <em>Equinox - The Reference</em> is the measured source material with SPACE at 0 - the delay exactly as the reference does it, with no reverb, for comparison.</p><p><strong>LOCK THROW WHILE BROWSING</strong> (at the bottom of the menu) holds the big knob where you left it while you audition presets, so browsing never yanks the knob mid-performance.</p>")}
-{ctl("Macro slots", "six buttons<br>tap = recall<br>hold = store", "<p>Six one-tap sounds that are always at the top of the window. <strong>Tap</strong> a slot to recall it - it lights white, and the preset bar shows what is in it. <strong>Hold</strong> a slot for about a second - the button fills, then flashes - to store the current settings into it, whatever they came from: a tweaked preset, something you dialled by hand, or a dual-time experiment you want back tomorrow.</p><p>The slots are yours, not the project's: they are saved per user and shared by every instance in every session, so \"macro 6\" is the same sound in every song. Out of the box they hold the six strongest presets. <em>RESET MACRO SLOTS TO FACTORY</em> in the preset menu puts them back.</p>", "Store your six go-to throws once, and every new session starts with them one tap away - no browsing.")}
+{ctl("Macro slots", "six buttons<br>hold = store<br>tap = recall<br>lit = stored", "<p>Six one-tap sounds that are always at the top of the window. The slots start empty and dark. <strong>Hold</strong> a slot for about a second - the button fills, then flashes - to store the current settings into it, whatever they came from: a tweaked preset, something you dialled by hand, or a dual-time experiment you want back tomorrow. From then on that slot is <strong>lit white</strong>, and stays lit for as long as a macro is in it: a lit slot has something stored, a dark slot is empty. <strong>Tap</strong> a lit slot to recall it - it glows, and the preset bar shows what is in it.</p><p>The slots are yours, not the project's: they are saved per user and shared by every instance in every session, so \"macro 6\" is the same sound - and the same light - in every song. To overwrite a slot, hold it again; <em>CLEAR ALL MACRO SLOTS</em> in the preset menu empties all six.</p>", "Store your six go-to throws once, and every new session starts with them one tap away - no browsing.")}
 {ctl("BYPASS", "", "<p>Hard bypass for A/B comparison. The engine keeps running with the knob at zero, so the tail that is already in the loop rings out instead of being cut, and coming back is click-free.</p>")}
 {ctl("MIX", "0 to 100 %<br>default 100 %<br>automatable, smoothed", "<p>How much of the effect is added, in the bottom right corner. Throw is strictly additive, so this is a send level rather than a crossfade: the dry is never reduced. At 100 % you hear the plugin exactly as it was designed; at 0 % nothing is added at all.</p>", "At the top of the knob the output is louder than the input - that is the point of a send. Pull MIX down for gain staging rather than the knob. Double-click to snap back to 100 %.")}
 <h3>Advanced panel</h3>
@@ -100,14 +100,14 @@ def manual(G):
     S.append({"title": "Step-by-step workflows", "sub": "recipes", "html": f"""
 {recipe("The end-of-build throw", "Any drop, any genre",
  steps([
-  "Insert Throw on the lead or the riser. Tap macro slot 1 (END OF BUILD).",
+  "Insert Throw on the lead or the riser. Pick END OF BUILD from the preset menu, or tap the macro slot you stored it in.",
   "Over the last bar of the build, draw THROW automation rising from 0 to 95 %. An exponential curve (slow start, fast end) feels more urgent.",
   "Let it fall back to 0 over the first bar of the drop. Do not cut it - the tail carries the energy across the downbeat.",
   "If the atmosphere fights the drop's lead, lower TONE a little so the tail sits under it.",
  ]))}
 {recipe("The vocal throw", "Last word of a phrase",
  steps([
-  "Tap macro slot 6 (VOCAL THROW) or set DUCK to about 65 %.",
+  "Pick VOCAL THROW from the preset menu, or set DUCK to about 65 %.",
   "Leave THROW at 60-70 % for the whole song. DUCK keeps the atmosphere almost silent while the vocal is singing and lets it bloom in the gaps.",
   "For a bigger throw on one word, automate THROW up to 100 % on that word only.",
  ]))}
@@ -115,7 +115,7 @@ def manual(G):
  steps([
   "Open ADVANCED, switch DUAL on. Leave L at 1/8. and R at 1/8.",
   "THROW around 65-75 %, SPACE down to 30-40 % so the repeats stay rhythmic.",
-  "Store it into a macro slot - hold the button - and it is one tap away in every session.",
+  "Store it into a macro slot - hold the button until it lights - and it is one tap away in every session.",
  ]))}
 {recipe("Freeze into a drop", "Transitions",
  steps([
@@ -159,7 +159,8 @@ def manual(G):
     S.append(G["support_section"](m, [
         ("Nothing is added when I turn the knob", "Check MIX is not at 0 % and BYPASS is off. If the window shows a sign-in screen, the plugin is locked - sign in through the RONE Plugins Center."),
         ("The repeats are out of time", "The divisions follow the host tempo. Make sure the DAW is playing and reports its tempo; in the standalone app the grid runs at 120 BPM."),
-        ("A macro slot is different in another project", "By design: the six slots are saved per user, not per project, so they are the same in every session. Store the sound you want with a hold, or use the preset menu's RESET MACRO SLOTS TO FACTORY."),
+        ("A macro slot is dark and does nothing when tapped", "A dark slot is empty - nothing has been stored in it yet. Hold the button for about a second to store the current settings; it lights white and stays lit in every project until you store over it or use CLEAR ALL MACRO SLOTS in the preset menu."),
+        ("A macro slot is lit in a project where I never stored anything", "By design: the six slots are saved per user, not per project, so a lit slot is the same sound in every session. Hold it to overwrite, or clear all six from the preset menu."),
         ("The tail is too bright or too dark", "TONE moves the band the tail settles into by two octaves either way. The BAND readout shows the centre."),
         ("It gets loud at 100 %", "That is the send adding on top of the untouched dry - the source itself is never reduced. Pull MIX down to taste."),
     ]))
