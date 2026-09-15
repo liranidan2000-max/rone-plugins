@@ -96,7 +96,7 @@
         "Standalone"
       ],
       "description": "One knob that throws anything into a tempo-locked atmosphere - a dotted-8th ping-pong delay whose band-limited feedback loop stays clean at near-infinite feedback, so the wash sits behind the mix instead of muddying it",
-      "whats_new": "1.1.0 - the macro slots light up for every stored macro. A slot with a macro in it is now lit solid white for as long as the macro is there - in every instance and every project - so lit means stored and dark means empty; the slot you are hearing adds a glow. The six slots start empty (hold to store, tap to recall) and CLEAR ALL MACRO SLOTS in the preset menu empties them. The preset bar also keeps its position after a saved project.",
+      "whats_new": "1.2.0 - PITCH. A new knob in the footer next to MIX frequency-shifts the finished delay up or down, -200 to +200 Hz: every partial of the repeats moves by the same number of Hz, so the tail turns metallic and bell-like instead of becoming a second voice. It sits after the delay and before SPACE, the dry is never touched, and at 0 nothing changes. Also from 1.1.0: a macro slot with a macro stored in it stays lit white in every project - lit means stored, dark means empty.",
       "standalone_exe": "RONE Throw.exe",
       "vst3_bundle": "RONE Throw.vst3",
       "au_bundle": "RONE Throw.component",

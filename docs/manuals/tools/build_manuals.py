@@ -7,7 +7,7 @@ Reads the annotated images from work/docimg (see pipeline.py), embeds JPEG copie
 writes work/html/<plugin>.html for proofreading and the PDF next to this folder's
 parent (docs/manuals/<Product> - User Manual.pdf) - the file the installers ship.
 """
-import sys, pathlib, subprocess, tempfile, shutil, importlib, html as H, datetime
+import sys, os, time, pathlib, subprocess, tempfile, shutil, importlib, html as H, datetime
 from PIL import Image
 from paths import TOOLS, DOCIMG, DOCIMG_JPG, HTML, OUT, EDGE, ensure
 
@@ -266,13 +266,28 @@ def make_jpegs():
         im.save(out, "JPEG", quality=88, optimize=True, subsampling=0)
 
 def to_pdf(html_path, pdf_path):
-    prof = tempfile.mkdtemp(prefix="edgepdf_")
-    args = [EDGE, "--headless=new", "--disable-gpu", "--no-first-run", "--disable-extensions", "--no-default-browser-check",
-            f"--user-data-dir={prof}", "--no-pdf-header-footer", "--virtual-time-budget=15000", "--allow-file-access-from-files",
-            f"--print-to-pdf={pdf_path}", html_path.as_uri()]
-    subprocess.run(args, capture_output=True, text=True, timeout=240, encoding="utf-8", errors="replace")
-    shutil.rmtree(prof, ignore_errors=True)
-    return pdf_path.exists() and pdf_path.stat().st_size > 1000
+    # Edge 153 (2026-09) exits 0 from `--print-to-pdf` without writing a byte -
+    # the same regression that took `--dump-dom` and `--screenshot` (see
+    # edge_cdp.py). The old check ("does the PDF exist and is it > 1 KB")
+    # passed on the PREVIOUS build's file, so a run said OK while shipping a
+    # stale manual. Print over DevTools instead, and count the bytes we wrote.
+    from edge_cdp import Edge
+    tmp = pdf_path.with_suffix(".pdf.tmp")
+    try:
+        with Edge(EDGE, 1200, 900, 1) as edge:
+            edge.goto(html_path.as_uri())
+            edge.wait_for("document.readyState === 'complete' && document.fonts.status === 'loaded'", timeout=60)
+            edge.wait_for("Array.from(document.images).every(i => i.complete)", timeout=60)
+            time.sleep(0.5)
+            written = edge.print_pdf(tmp)
+    except Exception as e:
+        print(f"  print failed: {e}")
+        written = 0
+    if written > 1000:
+        os.replace(tmp, pdf_path)
+        return True
+    if tmp.exists(): tmp.unlink()
+    return False
 
 def build(name):
     ensure(); make_jpegs()

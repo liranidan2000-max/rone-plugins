@@ -125,6 +125,15 @@ class Edge:
             time.sleep(interval)
         raise TimeoutError(f"gave up waiting for {expr[:60]}")
 
+    def print_pdf(self, path):
+        """Page.printToPDF of the current page (CSS @page size, backgrounds, no header/footer)."""
+        r = self.ws.call("Page.printToPDF",
+                         {"printBackground": True, "preferCSSPageSize": True,
+                          "displayHeaderFooter": False, "transferMode": "ReturnAsBase64"})
+        data = base64.b64decode(r["data"])
+        with open(path, "wb") as f: f.write(data)
+        return len(data)
+
     def screenshot(self, path, clip_w, clip_h):
         r = self.ws.call("Page.captureScreenshot",
                          {"format": "png", "captureBeyondViewport": False,

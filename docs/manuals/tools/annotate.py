@@ -172,7 +172,7 @@ def main():
     annotate("throw", "throw/tour.png", [
         ("#pLogo", "Header logo"), ("#bypassBtn", "BYPASS"), ("#presetBar", "Preset bar"), ("#macroStrip", "Macro slots"),
         ("#gridWrap", "GRID"), ("#delayMs+#bpmLabel", "MS / BPM"), ("#knob", "THROW"), ("#taps", "Tap trail"),
-        ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
+        ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#pitchKnob", "PITCH"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
         crops=[("knob", "#stage", 10), ("top", "#presetBar+#macroStrip", 8)])
     annotate("throw_adv", "throw/adv.png", [
         ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"),
