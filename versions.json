@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "The RONE beta has ended. Sign in with your roneaudio.com account to unlock the plugins - new accounts get a 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-16T04:20:38Z",
+  "last_updated": "2026-09-16T04:27:44Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -38,7 +38,7 @@
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.1.3.194",
+      "version": "1.1.4.203",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -53,9 +53,9 @@
       "manual": "RONE Stutter - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "7420fb296625afa540eb1ef26b6c2ca4579a3297cab26f9403efee3d494de26c",
+      "sha256": "7f16167b992e8fa7862f1c4d74b954dede3091c8f65dc238fe7d11b97eb07912",
       "registry_key": "RoneStutter",
-      "sha256_mac": "7569ba99237594164909ef7c40b85ab5042d3bf9dc761e83d7b2ba52d90f5229",
+      "sha256_mac": "43de8bbb209bcbb5f775c3a2954d1d3eb55899e2678048894b3335c279d3e909",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-stutter.html"
@@ -63,7 +63,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.0.4.194",
+      "version": "1.0.5.203",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -78,9 +78,9 @@
       "manual": "RONE Stucker - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "3582f2feb11079090d0a2221365a2cfc7ccd8bfe7031a94322492361c803649d",
+      "sha256": "ebbb7a8c35e4a6a79236d443dced8522eca7a701be55113e9ed7e5ba7d3932b0",
       "registry_key": "RoneStucker",
-      "sha256_mac": "745ff6e35d74cf763fe06d1a927505637685f58b437b191984cf904483d77846",
+      "sha256_mac": "f2c3272e628d4f39df0137aa760c4cd613b45486bed268f4d1dd528b23912cc4",
       "price": 29,
       "launch_price": 19,
       "store_url": "https://roneaudio.com/products/rone-stucker.html"
