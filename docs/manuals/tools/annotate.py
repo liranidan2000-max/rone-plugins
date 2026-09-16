@@ -175,7 +175,7 @@ def main():
         ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#pitchKnob", "PITCH"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
         crops=[("knob", "#stage", 10), ("top", "#presetBar+#macroStrip", 8)])
     annotate("throw_adv", "throw/adv.png", [
-        ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"),
+        ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"), ("@gain", "GAIN"),
         ("#timeGroup", "L / TIME"), ("#dualBtn", "DUAL"), ("#timeGroupR", "R")], A,
         crops=[("panel", "#advPanel", 8)])
     plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png")
