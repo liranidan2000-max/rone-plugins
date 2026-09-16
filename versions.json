@@ -46,7 +46,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
+      "whats_new": "1.1.4 - the bottom row of the standalone window no longer hangs below its edge. Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
@@ -71,7 +71,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
+      "whats_new": "1.0.5 - the bottom row of the standalone window no longer hangs below its edge. A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
       "standalone_exe": "RONE Stucker.exe",
       "vst3_bundle": "RONE Stucker.vst3",
       "au_bundle": "RONE Stucker.component",
