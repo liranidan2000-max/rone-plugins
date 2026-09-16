@@ -71,7 +71,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "1.0.6 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.0.5 - the bottom row of the standalone window no longer hangs below its edge. A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
+      "whats_new": "1.0.7 - MIX is a send: below 100 % the source stays at full level and the stutter is added on top at the MIX level (100 % is still the freeze). 1.0.6 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.0.5 - the bottom row of the standalone window no longer hangs below its edge. A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
       "standalone_exe": "RONE Stucker.exe",
       "vst3_bundle": "RONE Stucker.vst3",
       "au_bundle": "RONE Stucker.component",
