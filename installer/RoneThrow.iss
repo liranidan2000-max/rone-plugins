@@ -77,3 +77,9 @@ Source: "..\docs\manuals\RONE Throw - User Manual.pdf"; \
 [Registry]
 Root: HKCU; Subkey: "Software\RONE\Plugins\RoneThrow"; ValueType: string; \
   ValueName: "InstalledVersion"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
+
+; A copy of this plugin at the TOP of Common Files\VST3 (JUCE's default dev-build
+; target, or a hand-copied bundle) shadows the installed one in \RONE\ - a DAW
+; that sees both opens whichever it scanned first, usually the stale one.
+[InstallDelete]
+Type: filesandordirs; Name: "{commoncf}\VST3\RONE Throw.vst3"

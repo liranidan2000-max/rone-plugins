@@ -87,4 +87,8 @@ Root: HKCU; Subkey: "Software\RONE\Plugins\RoneStutter"; ValueType: string; \
 ; ============================================================================
 [InstallDelete]
 Type: filesandordirs; Name: "{commoncf}\VST3\RONE\Rone Stutter.vst3"
+; Top-level shadows (JUCE's default dev-build target, or a hand-copied bundle) hide
+; the installed copy in \RONE\ from the DAW - see RoneThrow.iss.
+Type: filesandordirs; Name: "{commoncf}\VST3\RONE Stutter.vst3"
+Type: filesandordirs; Name: "{commoncf}\VST3\Rone Stutter.vst3"
 Type: files; Name: "{app}\Rone Stutter.exe"
