@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "The RONE beta has ended. Sign in with your roneaudio.com account to unlock the plugins - new accounts get a 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-16T06:58:44Z",
+  "last_updated": "2026-09-16T07:22:13Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -63,7 +63,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.0.7.205",
+      "version": "1.0.8.206",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -78,9 +78,9 @@
       "manual": "RONE Stucker - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "f3873576d4ab9b49214a2ba40e3df9b42c33721a521097f879d8774b9a9a69a2",
+      "sha256": "0cc920ebd761b3725fb6485f7c50429c6ba3102070578ca03517ef89e04afd9d",
       "registry_key": "RoneStucker",
-      "sha256_mac": "d5b40c854d083a06b985fcc32e0b39d619b0516ecf1372f678289c5de5767a13",
+      "sha256_mac": "ac62dcd0722628337c4640700dae64486f88a331be1b171c06ef4337a8e1a162",
       "price": 29,
       "launch_price": 19,
       "store_url": "https://roneaudio.com/products/rone-stucker.html"
@@ -88,7 +88,7 @@
     {
       "id": "RoneThrow",
       "name": "RONE Throw",
-      "version": "1.3.0.204",
+      "version": "1.4.0.206",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -103,9 +103,9 @@
       "manual": "RONE Throw - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.pkg",
-      "sha256": "943ed4579746083f389434a5a7d8386c2c47972c069c95ead1029248fd6e81aa",
+      "sha256": "5869b2da6a6a50fac9e905a6a7726bbde214082bb370065268d18e87314317c4",
       "registry_key": "RoneThrow",
-      "sha256_mac": "635f7e1ef15f7f2b9ed38bf24e86726c95b8ec1d9d1a66780723701b06774b57",
+      "sha256_mac": "928d004e8f101f5024d8b12890922c4200ff678dc2ed34595c5b9068751c2a39",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 29
