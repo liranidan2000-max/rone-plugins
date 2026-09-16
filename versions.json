@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "The playback controls are real host parameters now. Reverse Reverb had none at all - nothing of it appeared in a DAW automation list - and OUTPUT GAIN, the four fade controls and the whole tremolo section (on/off, depth, pan, rate, shape, mode and all three divisions) can now be automated, wrapped in proper automation gestures so Touch and Latch record them, and right-clicked for the host menu. The interface follows an automation clip live. The controls that feed the offline re-render of the tail - reverb size, dry/wet, tail, BPM, width, low cut, transition - stay interface-only on purpose: re-rendering a tail mid-playback is not something automation can do sanely. Fades are also saved with the session now, which they never were.",
+      "whats_new": "1.0.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. The playback controls are real host parameters now. Reverse Reverb had none at all - nothing of it appeared in a DAW automation list - and OUTPUT GAIN, the four fade controls and the whole tremolo section (on/off, depth, pan, rate, shape, mode and all three divisions) can now be automated, wrapped in proper automation gestures so Touch and Latch record them, and right-clicked for the host menu. The interface follows an automation clip live. The controls that feed the offline re-render of the tail - reverb size, dry/wet, tail, BPM, width, low cut, transition - stay interface-only on purpose: re-rendering a tail mid-playback is not something automation can do sanely. Fades are also saved with the session now, which they never were.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
@@ -46,7 +46,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "1.1.4 - the bottom row of the standalone window no longer hangs below its edge. Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
+      "whats_new": "1.1.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.1.4 - the bottom row of the standalone window no longer hangs below its edge. Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
@@ -71,7 +71,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "1.0.5 - the bottom row of the standalone window no longer hangs below its edge. A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
+      "whats_new": "1.0.6 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.0.5 - the bottom row of the standalone window no longer hangs below its edge. A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
       "standalone_exe": "RONE Stucker.exe",
       "vst3_bundle": "RONE Stucker.vst3",
       "au_bundle": "RONE Stucker.component",
@@ -96,7 +96,7 @@
         "Standalone"
       ],
       "description": "One knob that throws anything into a tempo-locked atmosphere - a dotted-8th ping-pong delay whose band-limited feedback loop stays clean at near-infinite feedback, so the wash sits behind the mix instead of muddying it",
-      "whats_new": "1.2.1 - the footer (PITCH, MIX) no longer hangs below the standalone window. 1.2.0 - PITCH. A new knob in the footer next to MIX frequency-shifts the finished delay up or down, -200 to +200 Hz: every partial of the repeats moves by the same number of Hz, so the tail turns metallic and bell-like instead of becoming a second voice. It sits after the delay and before SPACE, the dry is never touched, and at 0 nothing changes. Also from 1.1.0: a macro slot with a macro stored in it stays lit white in every project - lit means stored, dark means empty.",
+      "whats_new": "1.3.0 - a 200 / 20K chip beside PITCH: 20K makes the same knob span 20 kHz each way, far past subtle - fold-over and grit. The mouse wheel now moves every knob (shift = fine). The About panel's texts are readable and its version line is real. 1.2.1 - the footer (PITCH, MIX) no longer hangs below the standalone window. 1.2.0 - PITCH. A new knob in the footer next to MIX frequency-shifts the finished delay up or down, -200 to +200 Hz: every partial of the repeats moves by the same number of Hz, so the tail turns metallic and bell-like instead of becoming a second voice. It sits after the delay and before SPACE, the dry is never touched, and at 0 nothing changes. Also from 1.1.0: a macro slot with a macro stored in it stays lit white in every project - lit means stored, dark means empty.",
       "standalone_exe": "RONE Throw.exe",
       "vst3_bundle": "RONE Throw.vst3",
       "au_bundle": "RONE Throw.component",
@@ -120,7 +120,7 @@
         "Standalone"
       ],
       "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
-      "whats_new": "Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
+      "whats_new": "2.0.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable. Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
       "standalone_exe": "RONE Flanger.exe",
       "vst3_bundle": "RONE Flanger.vst3",
       "au_bundle": "",
@@ -145,7 +145,7 @@
         "Standalone"
       ],
       "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
-      "whats_new": "Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also: the plugin is named RONE AFTERSPACE in your DAW and ships with a PDF manual.",
+      "whats_new": "1.0.1 - the About panel's texts are readable and its version line is real. Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also: the plugin is named RONE AFTERSPACE in your DAW and ships with a PDF manual.",
       "standalone_exe": "RONE AFTERSPACE.exe",
       "vst3_bundle": "RONE AFTERSPACE.vst3",
       "au_bundle": "RONE AFTERSPACE.component",

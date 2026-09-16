@@ -289,6 +289,7 @@ void RoneAfterspaceAudioProcessorEditor::sendAllParametersToJS()
                               ranged->convertFrom0to1 (ranged->getValue()));
     }
 
+    obj->setProperty ("version", JucePlugin_VersionString);   // the About panel's version line
     webView.emitEventIfBrowserIsVisible ("parameterState", obj);
 }
 
