@@ -67,11 +67,10 @@ def manual(G):
  ("ARM bars", "1, 2 or 4: land on the next bar, or the next 2- or 4-bar line"),
  ("Mode", "REVERSE ONLY or TRANSITION"),
  ("LOW CUT", "high-pass filter on the result"),
- ("PRE-DELAY", "a gap between the end of the swell and the hit"),
+ ("HI CUT", "low-pass filter: darkens the swell"),
  ("WIDTH", "stereo width of the swell"),
  ("TAIL LENGTH", "total length of the result in bars or note values"),
  ("ROOM SIZE", "size of the reverb"),
- ("HI CUT", "darkens the swell"),
  ("OUTPUT", "level of the result, up to 200 % with a soft limiter"),
  ("TREMOLO on/off", "opens the tremolo section"),
  ("Resize grip", "drag to resize the window"),
@@ -92,7 +91,6 @@ def manual(G):
 {ctl("ROOM SIZE", "0 to 100 %<br>default 80 %", "<p>The size of the reverb used to create the tail. Larger rooms give denser, smoother swells; small rooms give short, grainy pre-echoes that still stretch to the chosen length.</p>")}
 {ctl("LOW CUT", "20 to 500 Hz<br>default 20 Hz", "<p>A high-pass filter on the result. Reversed tails carry a lot of low-mid rumble; 100-200 Hz keeps the swell out of the way of bass and kick.</p>")}
 {ctl("WIDTH", "0 to 100 %<br>default 50 %", "<p>Stereo width of the result. 0 % is mono, 50 % is the natural reverb width, 100 % is as wide as it goes.</p>", "Check the mix in mono above 80 %.")}
-{ctl("PRE-DELAY", "0 to 500 ms<br>default 0", "<p>A gap between the end of the swell and the hit it leads into. A little pre-delay (20-60 ms) separates the swell from the downbeat so the hit stays clean; long values turn it into a breath before the drop.</p>")}
 {ctl("HI CUT", "1 kHz to OFF<br>default OFF", "<p>A low-pass filter on the result. Reversed tails are bright by nature; 4-8 kHz makes a dark, cinematic swell that sits behind a lead instead of fighting it.</p>")}
 {ctl("OUTPUT", "0 to 200 %<br>default 100 %<br>automatable", "<p>The level of the result. Above 100 % a soft limiter takes over: the loud end of a swell rounds off instead of clipping, so a hot OUTPUT is a colour, not a fault.</p>")}
 <h3>Tremolo</h3>
