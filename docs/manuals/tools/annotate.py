@@ -170,15 +170,16 @@ def main():
     A = ACCENT["throw"]
     # Order here IS the legend order in content_throw.py - keep the two lists in step.
     annotate("throw", "throw/tour.png", [
-        ("#pLogo", "Header logo"), ("#bypassBtn", "BYPASS"), ("#presetBar", "Preset bar"), ("#macroStrip", "Macro slots"),
-        ("#gridWrap", "GRID"), ("#delayMs+#bpmLabel", "MS / BPM"), ("#knob", "THROW"), ("#taps", "Tap trail"),
+        ("#pLogo", "Header logo"), ("#freezeBtn", "FREEZE"), ("#bypassBtn", "BYPASS"), ("#presetBar", "Preset bar"), ("#macroStrip", "Macro slots"),
+        ("#gridWrap", "GRID"), ("#delayMs+#bpmLabel", "MS / BPM"), ("#rideGroup", "RIDE"), ("#rideGo", "GO"), ("#knob", "THROW"), ("#taps", "Tap trail"),
         ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#pitchKnob", "PITCH"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
         crops=[("knob", "#stage", 10), ("top", "#presetBar+#macroStrip", 8)])
     annotate("throw_adv", "throw/adv.png", [
         ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"), ("@gain", "GAIN"),
-        ("#timeGroup", "L / TIME"), ("#dualBtn", "DUAL"), ("#timeGroupR", "R")], A,
+        ("#timeGroup", "L / TIME"), ("#dualBtn", "DUAL"), ("#timeGroupR", "R"),
+        ("#shimmerGroup", "SHIMMER"), ("#duckKeyGroup", "DUCK KEY"), ("#rideCurveGroup", "RIDE CURVE")], A,
         crops=[("panel", "#advPanel", 8)])
-    plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png")
+    plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png"); plain("throw_ride", "throw/ride.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

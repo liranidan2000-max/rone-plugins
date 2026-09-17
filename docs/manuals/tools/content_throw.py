@@ -4,7 +4,7 @@ def manual(G):
     # uses the same printable ice-grey as annotate.py so badges and headings match.
     m = {
         "id": "throw", "product": "RONE Throw", "eyebrow": "ONE-KNOB ATMOSPHERE THROW",
-        "title_html": "RONE <i>Throw</i>", "accent": "#9FB3C4", "version": "1.0",
+        "title_html": "RONE <i>Throw</i>", "accent": "#9FB3C4", "version": "1.5",
         "tagline": "One knob throws whatever is playing into a tempo-locked atmosphere: a dotted-8th ping-pong delay whose feedback loop cleans itself, opening into a wash - and the original sound is never touched.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Throw.vst3", "au": "RONE Throw.component", "exe": "RONE Throw.exe",
         "pdf": "RONE Throw - User Manual.pdf", "cover_img": "throw/tour_knob.png",
@@ -18,7 +18,8 @@ def manual(G):
 <div>
 <h3>Where it shines</h3>
 <ul>
-<li><strong>End of a build</strong> - automate THROW up over the last bar and the riser dissolves into the drop as atmosphere.</li>
+<li><strong>End of a build</strong> - set RIDE to 2 bars and press GO: the knob climbs by itself and lands on the downbeat, no automation lane.</li>
+<li><strong>Breakdowns</strong> - FREEZE holds the last hit as a bed, on the bar, and SHIMMER lets it climb in key.</li>
 <li><strong>Vocal throws</strong> - the last word of a phrase echoes away into space while the next line stays clear (DUCK does that for you).</li>
 <li><strong>Psytrance leads and plucks</strong> - dotted-8th and 3:2 cross-rhythm delays that stay in the pocket at any feedback.</li>
 <li><strong>Instant atmosphere</strong> - park the knob high on a pad or a chord and it becomes a bed.</li>
@@ -45,7 +46,7 @@ def manual(G):
  "<strong>Play</strong> the track and turn <span class='pill'>THROW</span> up slowly. Repeats appear on the dotted-8th grid, bouncing left and right; past the middle of the knob they open into a reverb wash.",
  "<strong>Keep turning.</strong> Near the top the tail runs for a long time (TAIL shows how long), but the band it settles into is fixed, so it never piles up.",
  "<strong>Turn it back down.</strong> Nothing is cut off - what is already in the loop rings out on its own.",
- "<strong>Automate it.</strong> Draw a ramp from 0 to 90-100 % over the last bar of a build, and let it fall back over the first bar of the drop.",
+ "<strong>Or let it ride.</strong> Set <span class='pill'>RIDE</span> to 2 bars and press <span class='pill'>GO</span>: from the next bar the knob climbs to 100 % by itself, lands on the downbeat and eases back - the end-of-build automation without drawing it.",
 ])}
 {note("Bypass vs. 0 %", "At 0 % the plugin is transparent - the dry passes through untouched and nothing is added. You do not need BYPASS in normal use; it is there for A/B checks while the knob is up.")}
 """})
@@ -57,11 +58,14 @@ def manual(G):
 </div>
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
+ ("FREEZE", "the loop closes on itself and the tail becomes a bed; on the bar when RIDE is set (MIDI D2)"),
  ("BYPASS", "hard bypass for A/B comparison; the tail keeps ringing"),
  ("Preset bar", "arrows step through the 26 factory presets, click the name for the menu"),
  ("Macro slots", "six quick-recall buttons: hold to store, tap to recall - lit = stored"),
  ("GRID", "the tap division - L and R separately when DUAL is on"),
  ("MS / BPM", "the tap spacing in milliseconds at the host tempo"),
+ ("RIDE", "OFF / 1 BAR / 2 / 4 / 8: how many bars the knob takes to ride itself to 100 %"),
+ ("GO", "arms the ride - it starts on the next bar (MIDI C2); reads ARMED / RIDING / LANDING"),
  ("THROW", "the one knob: 0 % = nothing added; higher = longer, denser, more space"),
  ("Tap trail", "the repeats as they will sound - left above the line, right below, fading at the feedback rate"),
  ("BAND / TAIL", "the band the tail collapses into, and how long it rings"),
@@ -70,7 +74,7 @@ def manual(G):
  ("MIX", "how much of the effect is added - a send level, the dry is never reduced"),
  ("Resize grip", "drag to resize the window"),
 ])}
-<p>In the ADVANCED panel: <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">1</span> TONE &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">2</span> FEEDBACK &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">3</span> WIDTH &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">4</span> DUCK &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">5</span> SPACE &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">6</span> GAIN &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">7</span> L / TIME &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">8</span> DUAL &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">9</span> R.</p>
+<p>In the ADVANCED panel: <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">1</span> TONE &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">2</span> FEEDBACK &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">3</span> WIDTH &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">4</span> DUCK &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">5</span> SPACE &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">6</span> GAIN &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">7</span> L / TIME &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">8</span> DUAL &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">9</span> R &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">10</span> SHIMMER &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">11</span> DUCK KEY &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#9FB3C4;color:#101216;font-weight:800;font-size:8pt">12</span> RIDE CURVE.</p>
 """})
 
     S.append({"title": "Controls reference", "sub": "what every control does, its range and default", "html": f"""
@@ -81,6 +85,10 @@ def manual(G):
 {ctl("Preset bar", "26 factory presets", "<p>The arrows step through the presets; click the name to open the menu, grouped by use: INIT, THROWS, LEADS, DUAL, ATMOSPHERES, VOCALS, DRUMS and CREATIVE. <em>Equinox - The Reference</em> is the measured source material with SPACE at 0 - the delay exactly as the reference does it, with no reverb, for comparison.</p><p><strong>LOCK THROW WHILE BROWSING</strong> (at the bottom of the menu) holds the big knob where you left it while you audition presets, so browsing never yanks the knob mid-performance.</p>")}
 {ctl("Macro slots", "six buttons<br>hold = store<br>tap = recall<br>lit = stored", "<p>Six one-tap sounds that are always at the top of the window. The slots start empty and dark. <strong>Hold</strong> a slot for about a second - the button fills, then flashes - to store the current settings into it, whatever they came from: a tweaked preset, something you dialled by hand, or a dual-time experiment you want back tomorrow. From then on that slot is <strong>lit white</strong>, and stays lit for as long as a macro is in it: a lit slot has something stored, a dark slot is empty. <strong>Tap</strong> a lit slot to recall it - it glows, and the preset bar shows what is in it.</p><p>The slots are yours, not the project's: they are saved per user and shared by every instance in every session, so \"macro 6\" is the same sound - and the same light - in every song. To overwrite a slot, hold it again; <em>CLEAR ALL MACRO SLOTS</em> in the preset menu empties all six.</p>", "Store your six go-to throws once, and every new session starts with them one tap away - no browsing.")}
 {ctl("BYPASS", "", "<p>Hard bypass for A/B comparison. The engine keeps running with the knob at zero, so the tail that is already in the loop rings out instead of being cut, and coming back is click-free.</p>")}
+<h3>Ride and freeze</h3>
+{img("throw/ride.png", "<b>A ride in progress.</b> RIDE set to 2 bars, GO reads RIDING, and the big knob climbs by itself.", "w60")}
+{ctl("RIDE and GO", "OFF &middot; 1 BAR &middot; 2 &middot; 4 &middot; 8<br>default OFF<br>GO: momentary, automatable, MIDI C2", "<p>The knob rides itself, on the bar. Pick a length and press <strong>GO</strong>: the button reads ARMED, and on the <em>next bar</em> the throw starts climbing from wherever the knob is to 100 %, over that many bars, lands exactly on the downbeat and eases back to the knob over the following bar. The big knob follows on screen. It is the end-of-build automation lane every transition needs, without drawing it - and because it starts on the bar, it always lands on the drop.</p><p>The bar comes from the host's song position, including time signature. In the standalone app, or while the transport is stopped, the clock free-runs at the tempo so a ride still has a next bar to start on. Setting RIDE to OFF cancels a ride in progress.</p>", "GO is also a parameter (Ride Go): automate a single step at the top of the last phrase, or send MIDI C2 from a drum pad. RIDE CURVE in the ADVANCED panel sets the shape.")}
+{ctl("FREEZE", "default off<br>automatable, MIDI D2", "<p>The loop closes on itself: feedback goes to exactly 1.0, the input is shut, and the loop filter steps aside so the bed holds its level instead of dying at the band edges. Whatever was in the tail when you pressed it becomes a bed - for a breakdown, a stop, an intro. With a RIDE length set, FREEZE engages and releases <em>on the bar</em>; with RIDE off it is immediate. The dry keeps playing through untouched.</p>", "Ride to the top, then FREEZE on the downbeat: the whole build hangs as a cloud. Release it a bar before the next drop and it clears itself.")}
 {ctl("PITCH", "-200 to +200 Hz<br>20K chip: -20 to +20 kHz<br>default 0<br>automatable, smoothed", "<p>Shifts the whole delay up or down, in the footer next to MIX. The <strong>200 / 20K</strong> chip beside it sets the reach: 200 is the fine, musical range; 20K makes the same knob span twenty kilohertz each way, which is not subtle - far up, the repeats fold over into grit and noise, which is the point of it.</p><p> It is a <em>frequency</em> shifter, not a pitch shifter: every partial of the repeats moves by the same number of Hz, so the harmonics no longer line up and the tail turns metallic and bell-like - an atmosphere rather than a second voice singing the line a few notes away. It acts on the finished delay, before SPACE, so the reverb smooths the shifted repeats instead of being smeared by them. The dry is never touched, and at 0 the plugin is exactly as it was.</p>", "Small values (10-40 Hz) detune the tail against the source and make it sit behind the mix; large ones (100 Hz and up) turn a vocal throw into a bell. Negative values fold the lowest partials, which is darker and stranger. Double-click to snap back to 0.")}
 {ctl("MIX", "0 to 100 %<br>default 100 %<br>automatable, smoothed", "<p>How much of the effect is added, in the bottom right corner. Throw is strictly additive, so this is a send level rather than a crossfade: the dry is never reduced. At 100 % you hear the plugin exactly as it was designed; at 0 % nothing is added at all.</p>", "At the top of the knob the output is louder than the input - that is the point of a send. Pull MIX down for gain staging rather than the knob. Double-click to snap back to 100 %.")}
 <h3>Advanced panel</h3>
@@ -92,6 +100,9 @@ def manual(G):
 {ctl("WIDTH", "0 to 150 %<br>default 100 %", "<p>How far apart the left and right repeats sit. 0 % folds the repeats to mono in the centre, 100 % is the measured ping-pong, and above that the two sides are pushed wider than they arrived.</p>")}
 {ctl("DUCK", "0 to 100 %<br>default 35 %", "<p>The atmosphere steps aside while the source is playing and blooms back the moment it stops. This is the sidechain compressor on a return bus, built in and keyed from the dry input - a fast attack and a musical release. Raise it on vocals so every word stays clear; lower it on pads that should sit in their own wash.</p>", "Around 60-70 % on a vocal, the delay only really appears at the end of each phrase - the classic vocal throw with no automation at all.")}
 {ctl("SPACE", "0 to 100 %<br>default 65 %", "<p>The reverb on the repeats. It opens with the big knob (there is none at the bottom of the knob, a lot at the top) and SPACE sets how far that goes. At 0 the plugin is the measured delay exactly - discrete repeats, no wash. At 100 the top of the knob is almost pure atmosphere.</p>", "The reverb only ever hears the wet signal, never the dry, and it is ducked together with the repeats.")}
+{ctl("SHIMMER", "OFF &middot; +7 &middot; +12 &middot; +19<br>default OFF", "<p>A pitch shifter <em>inside</em> the feedback path. Every pass through the loop is lifted by a fifth, an octave, or both, so the tail climbs in key instead of drifting: after a few passes a single note has become a chord of its own harmonics, an octave and a twelfth above. +7 and +12 are the two intervals that stay consonant in every Phrygian-family mode a psytrance track lives in, which is why there is no free knob here.</p>", "Long tails and a dark TONE: the climbing partials are filtered as they rise, so the shimmer stays a halo rather than a whistle. Try it with FREEZE for a bed that keeps opening upward.")}
+{ctl("DUCK KEY", "SELF &middot; SIDECHAIN<br>default SELF", "<p>What DUCK listens to. SELF is the plugin's own input - the classic vocal throw. SIDECHAIN keys the duck from the plugin's sidechain bus instead: route the kick there in the DAW and the atmosphere breathes with the kick, even on an FX bus where the input <em>is</em> the send. The row says NO SIDECHAIN ROUTED until the host connects something.</p>", "On a send bus with SIDECHAIN keyed from the kick, DUCK at 60-80 % replaces the sidechain compressor on the return.")}
+{ctl("RIDE CURVE", "LIN &middot; EXP &middot; S<br>default EXP", "<p>The shape of the ride. LIN is a straight line. EXP stays quiet for the first half and does everything at the end - the way a riser is drawn by hand, and the default. S is exponential with an extra push in the last stretch, for a ride that changes gear before it lands.</p>")}
 {ctl("GAIN", "0 to +18 dB<br>default 0<br>automatable, smoothed", "<p>The whole effect louder - the repeats and the reverb together - on top of MIX. The big knob keeps the wet at a roughly constant level by design (the send is normalised against the feedback, so more feedback means a longer tail, not a louder one); when the atmosphere needs to sit in front rather than behind, this is the knob. The dry is never touched.</p>", "Where MIX is the send level and never goes above unity, GAIN is the part above it: +6 dB doubles the effect, +12 dB is a delay that leads the mix. Watch the channel meter at the top of the range.")}
 <h3>Readouts</h3>
 {ctl("GRID and MS / BPM", "", "<p>The division in use (L and R separately with DUAL) and the resulting tap spacing in milliseconds at the current host tempo.</p>")}
@@ -120,11 +131,18 @@ def manual(G):
   "THROW around 65-75 %, SPACE down to 30-40 % so the repeats stay rhythmic.",
   "Store it into a macro slot - hold the button until it lights - and it is one tap away in every session.",
  ]))}
+{recipe("Let it ride", "The end-of-build throw, no automation",
+ steps([
+  "Set RIDE to 2 (or 4) bars. Leave THROW where the verse wants it - even 0.",
+  "Two bars before the drop, press GO. It reads ARMED, and on the next bar the knob starts climbing.",
+  "It lands on 100 % exactly on the downbeat and eases back on its own over the next bar.",
+  "Want it in the arrangement? Automate the Ride Go parameter with one step, or send MIDI C2 from a pad.",
+ ]))}
 {recipe("Freeze into a drop", "Transitions",
  steps([
-  "Tap slot 4 (INFINITE CLOUD), or push FEEDBACK to +100.",
-  "Automate THROW to 100 % on the last hit before a break; the hit hangs as a cloud for as long as you like.",
-  "Bring THROW down over a couple of bars when the next section arrives.",
+  "Set RIDE to 1 bar so FREEZE lands on the grid, and ride or turn THROW up on the last hit before the break.",
+  "Press FREEZE: on the next bar the hit hangs as a bed for as long as you like. SHIMMER +12 makes it climb.",
+  "Press FREEZE again a bar before the next section; it releases on the bar and the tail clears itself.",
  ]))}
 {recipe("Six macros for a live set", "Controllers, DJ-style sets",
  steps([
@@ -142,6 +160,7 @@ def manual(G):
 <li>Let the tail fall on its own when the knob comes down. Cutting it wastes the best part.</li>
 <li>Match TONE to the source: dark under bright leads, bright over dark pads.</li>
 <li>Use LOCK THROW WHILE BROWSING when auditioning presets during a session.</li>
+<li>Use RIDE for every build. It lands on the bar; a hand on the knob usually does not.</li>
 </ul></div>
 <div><h4>Avoid</h4><ul>
 <li>Fighting the level with THROW. The output is meant to be louder at the top; use MIX for gain staging.</li>
@@ -166,6 +185,10 @@ def manual(G):
         ("A macro slot is lit in a project where I never stored anything", "By design: the six slots are saved per user, not per project, so a lit slot is the same sound in every session. Hold it to overwrite, or clear all six from the preset menu."),
         ("The tail is too bright or too dark", "TONE moves the band the tail settles into by two octaves either way. The BAND readout shows the centre."),
         ("It gets loud at 100 %", "That is the send adding on top of the untouched dry - the source itself is never reduced. Pull MIX down to taste."),
+        ("GO is greyed out", "RIDE is OFF. Pick a length (1, 2, 4 or 8 bars) first."),
+        ("The ride does not start", "It starts on the next bar of the host's song position, so the transport has to be rolling - or, in the standalone, the free-running clock has to reach the next bar. The GO button reads ARMED while it waits."),
+        ("DUCK KEY says NO SIDECHAIN ROUTED", "The host has not connected anything to the plugin's sidechain input. Route the kick (or any signal) to Throw's sidechain in the DAW's plugin routing; until then DUCK falls back to the input."),
+        ("MIDI notes do nothing", "Route a MIDI track (or a pad) to the plugin. C1-F1 recall macro slots 1-6, C2 arms the ride, D2 toggles FREEZE."),
     ]))
 
     m["sections"] = S
