@@ -197,9 +197,11 @@ def main():
     # ------------------------------------------------------------ REVERSE REVERB
     A = ACCENT["reversereverb"]
     annotate("reversereverb_m_loaded", "reversereverb/tour.png", [
-        ("#p-logo", "Header logo"), ("#waveform-container", "Waveform"), ("#status-text", "Status"),
-        ("#play-btn", "PLAY"), ("#mode-btn", "Mode"), ("#knob-lowcut", "LOW CUT"), ("#knob-width", "WIDTH"),
-        ("#knob-tailDiv", "TAIL LENGTH"), ("#knob-roomSize", "ROOM SIZE"), ("#knob-gain", "DRY/WET"),
+        ("#p-logo", "Header logo"), ("#presetBar", "Preset bar"), ("#preset-save", "SAVE"),
+        ("#waveform-container", "Waveform"), ("#status-text", "Status"),
+        ("#play-btn", "PLAY"), ("#arm-btn", "ARM"), ("#armBarsSeg", "ARM bars"), ("#mode-btn", "Mode"),
+        ("#knob-lowcut", "LOW CUT"), ("#knob-predelay", "PRE-DELAY"), ("#knob-width", "WIDTH"),
+        ("#knob-tailDiv", "TAIL LENGTH"), ("#knob-roomSize", "ROOM SIZE"), ("#knob-hicut", "HI CUT"), ("#knob-gain", "OUTPUT"),
         ("#tremolo-power", "TREMOLO"), ("#resize-handle", "Resize grip")], A,
         crops=[("knobs", "#knobs", 8), ("buttons", "#button-row", 6)])
     annotate("reversereverb_m_trem", "reversereverb/tremolo.png", [
