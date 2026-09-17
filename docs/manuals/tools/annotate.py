@@ -160,12 +160,14 @@ def main():
     A = ACCENT["stucker"]
     annotate("stucker", "stucker/tour.png", [
         ("#pLogo", "Header logo"), ("#bypassBtn", "BYPASS"), ("#syncSeg", "SYNC / FREE"), ("#gridLabel", "GRID"),
-        ("#knob", "STUCK"), ("#loopMs", "LOOP"), ("#leds", "LEDs"), ("#advToggle", "ADVANCED"),
+        ("#rideGroup", "RIDE"), ("#rideGo", "GO"),
+        ("#knob", "STUCK"), ("#loopMs", "LOOP"), ("#leds", "LEDs"), ("#landChip", "LANDS"), ("#advToggle", "ADVANCED"),
         ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A, crops=[("knob", "#stage", 10), ("header", "#syncSeg+#gridLabel", 10)])
     annotate("stucker_adv", "stucker/adv.png", [
-        ("@smooth", "SMOOTH"), ("@range", "RANGE"), ("@lowcut", "LOW CUT"), ("#lenGroup", "LENGTH")], A,
+        ("@smooth", "SMOOTH"), ("@range", "RANGE"), ("@lowcut", "LOW CUT"), ("#lenGroup", "LENGTH"), ("#revBtn", "REV"),
+        ("#keyRootGroup", "KEY"), ("#keyModeGroup", "SCALE"), ("#dropGroup", "ON THE DROP"), ("#rideCurveGroup", "CURVE")], A,
         crops=[("panel", "#advPanel", 8)])
-    plain("stucker_about", "stucker/about.png")
+    plain("stucker_about", "stucker/about.png"); plain("stucker_ride", "stucker/ride.png")
     # ------------------------------------------------------------ THROW
     A = ACCENT["throw"]
     # Order here IS the legend order in content_throw.py - keep the two lists in step.

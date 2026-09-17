@@ -35,7 +35,10 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
 STATES = [
     ("stutter", "", "", None), ("stutter", "_about", "click:pLogo", None),
     ("stutter_m", "_loaded", "js:window.__scn_stutter(false)", None), ("stutter_m", "_result", "js:window.__scn_stutter(true)", None),
-    ("stucker", "", "", None), ("stucker", "_adv", "click:advToggle", None), ("stucker", "_about", "click:pLogo", None),
+    ("stucker", "", "js:state.keyRoot=10;landMidi=69;renderRide()", None),
+    ("stucker", "_adv", "js:state.keyRoot=10;landMidi=69;renderRide(),click:advToggle", None),
+    ("stucker", "_ride", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.keyRoot=10;landMidi=69;state.rideBars=2;ridePhase=2;rideEff=0.58;engineEngaged=true;engineDepth=0.58;engineLoopMs=19.4;renderRide();renderKnob();renderEngine()", None),
+    ("stucker", "_about", "click:pLogo", None),
     # Throw: recall macro 1 (End Of Build) and feed the engine readouts the real plugin would push.
     # The rects come from a --dump-dom run that never draws a frame, so CSS transitions stay at
     # their START value there (the drawer's translateY(12px)) while the screenshot run finishes
