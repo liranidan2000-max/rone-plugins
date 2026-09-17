@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "stutter", "product": "RONE Stutter", "eyebrow": "TEMPO-LOCKED STUTTER ENGINE",
-        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.1",
+        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.2",
         "tagline": "Load a hit, pick the transient, choose a grid and RONE Stutter renders a perfectly tempo-locked stutter you can drag straight into your arrangement.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Stutter.vst3", "au": "RONE Stutter.component", "exe": "RONE Stutter.exe",
         "pdf": "RONE Stutter - User Manual.pdf", "cover_img": "stutter/tour_grid.png" and "stutter/empty.png",
@@ -65,6 +65,8 @@ def manual(G):
  ("Waveform", "the source or the result; click to set the slice start, scroll to zoom"),
  ("PREV / NEXT", "step through the transients Stutter detected"),
  ("GRID", "note value of one repeat, 1/2 to 1/32"),
+ ("RAMP TO", "OFF, 1/16, 1/32 or 1/64: the roll accelerates from the GRID to this value across the bars"),
+ ("CURVE", "LIN: every stage takes the same time; EXP: each finer stage takes half the time"),
  ("SLICE", "length of one repeat in milliseconds at the current BPM"),
  ("BARS", "length of the rendered clip, 0.5 to 8 bars in half-bar steps"),
  ("BPM", "tempo used for the grid; DAW (read from the host) or MANUAL (typed)"),
@@ -74,7 +76,9 @@ def manual(G):
  ("Play ORIGINAL", "audition the source file from the slice start"),
  ("STUTTER", "render the stutter with the current settings"),
  ("Play RESULT", "audition the rendered clip"),
+ ("ON BAR", "when lit, ORIGINAL and RESULT start on the next bar line so the fill is heard in context"),
  ("EXPORT", "save the rendered clip as a WAV file"),
+ ("ADVANCED", "opens the drawer: MIX, fade curves, global fades, PITCH, PITCH RAMP, KEY and SCALE"),
  ("Status line", "what the plugin is doing and what it expects next"),
  ("Resize grip", "drag to resize the window"),
 ])}
@@ -89,6 +93,7 @@ def manual(G):
 <h3>Rhythm</h3>
 {img("stutter/tour_grid.png", "<b>GRID, SLICE, BARS and BPM.</b>", "w80")}
 {ctl("GRID", "1/2 &middot; 1/4 &middot; 1/6 &middot; 1/8 &middot; 1/12 &middot; 1/16 &middot; 1/32<br>default 1/16", "<p>The note value of one repeat. 1/6 and 1/12 are triplet values. The repeat length is calculated from the BPM: at 120 BPM a 1/16 repeat is 125 ms, at 128 BPM it is 117 ms.</p>", "Automate nothing - render two clips (1/16 and 1/32) and cut between them in the arrangement. It is faster and always in time.")}
+{ctl("RAMP TO and CURVE", "OFF &middot; 1/16 &middot; 1/32 &middot; 1/64<br>LIN &middot; EXP<br>default OFF / LIN", "<p>The accelerating roll in one render. From the GRID value the repeats double in rate, stage by stage, until they reach RAMP TO at the end of the clip: GRID 1/8 with RAMP TO 1/32 renders 8ths, then 16ths, then 32nds - the fill every producer arranges by hand from three separate renders. Every stage holds a whole number of repeats, so each stage change lands on the grid. <strong>LIN</strong> gives every stage the same share of the clip; <strong>EXP</strong> halves the share for each finer stage, so the roll spends most of the clip on the slow repeats and snaps into the fast ones at the end.</p><p>Triplet grids double too (1/6 to 1/12 to 1/24), and a target below the GRID simply renders the GRID.</p>", "GRID 1/8, RAMP TO 1/64, BARS 1, EXP: the last beat is a buzz. Add PITCH RAMP +12 and it rises with it.")}
 {ctl("SLICE", "read-only", "<p>The length of one repeat in milliseconds. It changes when you change GRID or BPM. If the selected slice of audio is shorter than this, the repeat simply contains silence after the hit.</p>")}
 {ctl("BARS", "0.5 to 8 bars, half-bar steps<br>default 2", "<p>The length of the rendered clip. Repeats are placed until the clip is full; if the clip length is not an exact multiple of the grid, the last repeat is cut to fit.</p>")}
 {ctl("BPM", "20 to 300<br>default 120<br>DAW or MANUAL", "<p>When the plugin runs inside a DAW that reports its tempo, the box is locked and shows the host tempo (chip reads <em>DAW</em>). Otherwise type a tempo; the chip reads <em>MANUAL</em>. The grid, the SLICE readout and the clip length all follow this value.</p>", "Rendering at the song's tempo is what makes the clip land on the grid when you drag it in. If you later change the song tempo, render again.")}
@@ -97,20 +102,24 @@ def manual(G):
 {ctl("FADE IN", "0 to 100 % of a repeat<br>default 0 %<br>curve: quadratic", "<p>A fade at the start of every repeat. Small values (5-15 %) remove clicks when the slice does not start at a zero crossing; large values turn hard hits into soft pulses.</p>")}
 {ctl("FADE OUT", "0 to 100 % of a repeat<br>default 0 %<br>curve: quadratic", "<p>A fade at the end of every repeat. Use it to make each repeat decay before the next one, which gives the classic 'gated' roll.</p>", "FADE OUT around 60-80 % with 1/32 GRID sounds like a machine-gun roll; 0 % sounds like a hard loop.")}
 {ctl("STEREO", "0 to 100 %<br>default 0 %", "<p>Ping-pong: even repeats are attenuated in the right channel and odd repeats in the left, by the amount you set. 100 % alternates fully left / right; 30 % gives gentle movement that still sums to mono without holes.</p>", "Check the mix in mono when you push STEREO high - full ping-pong at 1/32 turns into a buzz in mono.")}
+<h3>Pitch and key (ADVANCED)</h3>
+{img("stutter/adv.png", "<b>The ADVANCED drawer.</b> MIX, the two fade curves and the global fades were host-only parameters until 1.2; PITCH, PITCH RAMP, KEY and SCALE are new.")}
+{ctl("PITCH", "-12 to +12 semitones<br>default 0", "<p>Every repeat is re-pitched by this amount - the content moves, the grid does not. The slice is read faster or slower from the transient, so a repeat pitched up contains more of the source and one pitched down contains less.</p>", "+7 (a fifth) on a snare roll is the classic 'psy' fill; -12 on a vocal chop is a different singer.")}
+{ctl("PITCH RAMP", "-24 to +24 semitones<br>default 0", "<p>Added to PITCH across the clip, from nothing at the start to the full amount on the last repeat (following the CURVE). A rising roll that also rises in pitch is the build; a falling one is the drop.</p>")}
+{ctl("KEY and SCALE", "KEY: OFF, C .. B<br>SCALE: Phrygian, Phrygian dominant, harmonic minor, minor, major, root + 5th<br>default OFF / Phrygian", "<p>At 1/64 and beyond, a roll repeats faster than 20 times a second and the ear hears it as a note - the note is the repeat rate, whatever the slice contains. With a KEY chosen, every stage fast enough to be a tone is nudged to the nearest note of the scale, so the buzz at the end of the fill is in key with the bass instead of a random pitch. Slower stages stay exactly on the grid.</p>", "At 128 BPM 1/64 is 34 Hz, between C#1 and D1; KEY D puts it on the root.")}
+{ctl("MIX", "0 to 100 %<br>default 100 % (LOCK)", "<p>The preview level in the channel. At 100 % the result replaces the channel (LOCK); below that the channel stays at full level and the result is added on top - a send, not a crossfade. It never touches the export.</p>")}
+{ctl("IN CURVE / OUT CURVE", "0.1 to 4<br>default 2", "<p>The shape of FADE IN and FADE OUT on every repeat: 1 is linear, 2 a gentle curve, 4 sharp.</p>")}
+{ctl("GLOBAL IN / GLOBAL OUT", "0 to 95 % of the clip<br>default 0", "<p>A fade over the whole clip on top of the per-repeat fades. GLOBAL IN at 90 % is a two-bar swell from silence. They can also be dragged directly on the RESULT waveform.</p>")}
 <h3>Transport and output</h3>
 {img("stutter/tour_transport.png", "<b>ORIGINAL, STUTTER, RESULT and EXPORT.</b>", "w80")}
 {ctl("&#9654; ORIGINAL", "", "<p>Plays the loaded file from the selected slice start. Press again to stop.</p>")}
 {ctl("STUTTER", "render", "<p>Renders the clip with the current settings. Rendering is instant for normal clip lengths. Every change to GRID, BARS, fades or STEREO needs a new render - the status line reminds you.</p>")}
 {ctl("&#9654; RESULT", "", "<p>Plays the rendered clip through the plugin's channel. The playback position is drawn on the waveform.</p>")}
+{ctl("ON BAR", "default on", "<p>When lit, ORIGINAL and RESULT do not start at the click but on the next bar line of the host's song position (in the standalone app, of the BPM clock). The button reads NEXT BAR while it waits. A fill previewed on the bar is heard exactly where it will sit in the arrangement.</p>", "Start the DAW two bars before the drop, press RESULT: the roll plays into the drop, in time, before you have exported anything.")}
 {ctl("EXPORT", "save to the Exports folder", "<p>Saves the rendered clip into <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> as <em>&lt;source&gt;_stutter_&lt;grid&gt;_&lt;bars&gt;_&lt;date&gt;_&lt;time&gt;.wav</em>, at the session's sample rate. The status line shows the file name. Nothing is ever deleted from that folder by the plugin.</p>")}
 {ctl("DRAG TO EXPORT", "strip under the interface", "<p>Drag from the strip directly into your DAW. The clip is first saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> (a permanent folder, never cleaned up), then handed to the DAW as an audio drop - so a project that references the file always finds it again, even if your DAW does not copy dropped files into the project folder.</p>", "Drop it at the bar line where the fill should start. Because the clip is exactly N bars long, its end lands on the next bar line.")}
-<h3>Host parameters without a knob</h3>
-{table(["Parameter", "Range", "What it does"], [
- ("Fade In Curve / Fade Out Curve", "0.1 to 4 (default 2)", "Shape of the fades. 1 is linear, 2 (default) is a gentle quadratic, higher values are sharper."),
- ("Global Fade In / Global Fade Out", "0 to 100 % of the clip", "A fade over the whole rendered clip, on top of the per-repeat fades - a two-bar swell from silence is Global Fade In at 100 %."),
- ("Mix", "0 to 100 %", "Level of the plugin's playback in the channel (audition level)."),
-])}
-<p>These are visible in your DAW's parameter list and can be automated or set from a controller; they are saved with the project like everything else.</p>
+<h3>Host parameters</h3>
+<p>Everything above is a host parameter: visible in the DAW's parameter list, automatable, mappable to a controller and saved with the project. Since 1.2 a project that is reopened also shows its file and selection in the window straight away.</p>
 """})
 
     S.append({"title": "Step-by-step workflows", "sub": "recipes you will use every week", "html": f"""
@@ -118,9 +127,9 @@ def manual(G):
  steps([
   "Bounce or drag the snare hit (or the whole loop) into Stutter.",
   "Select the snare transient with NEXT / PREV.",
-  "GRID 1/16, BARS 1, FADE OUT 50 %. Press STUTTER and listen.",
-  "Render a second clip with GRID 1/32 and BARS 0.5.",
-  "Drag the 1/16 clip to the bar before the drop and the 1/32 clip onto its last two beats. Add a short reverse cymbal on top and you are done.",
+  "GRID 1/8, RAMP TO 1/32, CURVE EXP, BARS 1, FADE OUT 50 %. Press STUTTER: one clip, 8ths into 16ths into 32nds.",
+  "With ON BAR lit, press RESULT while the song plays into the drop to hear it in place.",
+  "Drag the clip to the bar before the drop. Add a short reverse cymbal on top and you are done.",
  ]))}
 {recipe("Vocal stutter build", "Vocal chops, pop / EDM intros",
  steps([

@@ -149,12 +149,17 @@ def main():
     annotate("stutter_m_loaded", "stutter/tour.png", [
         ("#pLogo", "Header logo"), ("#fileName+#fileInfo", "Loaded file"), ("#browseBtn", "BROWSE"),
         ("#timelinePanel", "Waveform"), ("#transientNav", "PREV / NEXT"), ("#divisionBtns", "GRID"),
+        ("#rampToBtns", "RAMP TO"), ("#rampCurveBtns", "CURVE"),
         ("#sliceMs", "SLICE"), ("#barsMinus+#barsPlus", "BARS"), ("#bpmInput+#bpmSource", "BPM"),
         ("#fadeInKnob", "FADE IN"), ("#fadeOutKnob", "FADE OUT"), ("#stereoKnob", "STEREO"),
-        ("#playOrigBtn", "Play ORIGINAL"), ("#applyBtn", "STUTTER"), ("#playProcBtn", "Play RESULT"),
-        ("#exportBtn", "EXPORT"), ("#statusText", "Status line"), ("#resize-handle", "Resize grip")], A,
+        ("#playOrigBtn", "Play ORIGINAL"), ("#applyBtn", "STUTTER"), ("#playProcBtn", "Play RESULT"), ("#onBarBtn", "ON BAR"),
+        ("#exportBtn", "EXPORT"), ("#advToggle", "ADVANCED"), ("#statusText", "Status line"), ("#resize-handle", "Resize grip")], A,
         crops=[("grid", "#divisionBtns+#bpmSource", 14), ("knobs", "#fadeInArc+#stereoVal", 14), ("transport", "#playOrigBtn+#exportBtn", 12)])
     annotate("stutter_m_result", "stutter/result.png", [("#viewToggle", "ORIGINAL / RESULT")], A)
+    annotate("stutter_m_adv", "stutter/adv.png", [
+        ("#mixKnob", "MIX"), ("#fadeInCurveKnob", "IN CURVE"), ("#fadeOutCurveKnob", "OUT CURVE"), ("#globalFadeInKnob", "GLOBAL IN"),
+        ("#globalFadeOutKnob", "GLOBAL OUT"), ("#pitchKnob", "PITCH"), ("#pitchRampKnob", "PITCH RAMP"), ("#keyRootBtns", "KEY"), ("#keyModeBtns", "SCALE")], A,
+        crops=[("panel", "#advPanel", 8)])
     plain("stutter", "stutter/empty.png"); plain("stutter_about", "stutter/about.png")
     # ------------------------------------------------------------ STUCKER
     A = ACCENT["stucker"]

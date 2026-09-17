@@ -46,7 +46,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "1.1.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.1.4 - the bottom row of the standalone window no longer hangs below its edge. Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
+      "whats_new": "1.2.0 - RAMP TO: one render that accelerates from the GRID to 1/16, 1/32 or 1/64, stage by stage (LIN / EXP), the classic fill without arranging three clips. PITCH and PITCH RAMP re-pitch the repeats; KEY + SCALE tune the fast stages so the buzz at the end of a roll is in key. ADVANCED drawer with MIX (LOCK at 100 %), the fade curves and the global fades as knobs. ON BAR: previews start on the next bar line. A reopened project now shows its file and selection immediately. 1.1.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.1.4 - the bottom row of the standalone window no longer hangs below its edge. Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
