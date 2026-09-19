@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-19T20:12:12Z",
+  "last_updated": "2026-09-19T20:47:10Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -13,7 +13,7 @@
     {
       "id": "ReverseReverb",
       "name": "RONE Reverse Reverb",
-      "version": "1.1.3.213",
+      "version": "1.1.4.214",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -28,9 +28,9 @@
       "manual": "RONE Reverse Reverb - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "29e28cdc157825c8590994ba36851dfaa4298c0337600e2765014389a88903fc",
+      "sha256": "f71d8f00332a139da23dc2dce459bf299f5283d0c56e16c506132eff8e1b3788",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "63dc0ee66a24ba074365e4e55692ebc556b819d421f01ae8883ea6e1c9d3ed80",
+      "sha256_mac": "37c00ca8e35ab37e2eaea414dd73df5876dbcb5e29c95e9aa9a897d613c273fb",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/reverse-reverb.html"
