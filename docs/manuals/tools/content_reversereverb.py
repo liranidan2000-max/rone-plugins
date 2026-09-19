@@ -28,7 +28,7 @@ def manual(G):
 {steps([
  "Drop a short sound (up to 8 seconds) on the waveform.",
  "Set TAIL LENGTH to the number of bars the swell should take.",
- "Press PLAY - or press ARM, and it starts by itself so that it lands on the next bar.",
+ "Press PLAY.",
  "Drag the result to your DAW, or leave the plugin on the channel: the file is saved with the project."])}
 </div></div>
 {note("How the render works", "The sample is fed into a reverb whose tail is stretched to the chosen length; the whole result is reversed, filtered (LOW CUT), widened (WIDTH), faded with the handles on the waveform and, if enabled, chopped by the tremolo. Everything is rendered offline at your tempo, so it is sample-accurate whatever your buffer size. The plugin re-renders automatically after every change.")}
@@ -63,8 +63,6 @@ def manual(G):
  ("Waveform", "the rendered result, with fade handles at both ends and curve dots for the fade shapes"),
  ("Status / file name", "what is loaded and the tempo in use (BPM shown on the right)"),
  ("PLAY", "play the result through the plugin's channel; press again to stop"),
- ("ARM", "the swell starts by itself so that the hit lands on the next bar line (MIDI C2 arms too)"),
- ("ARM bars", "1, 2 or 4: land on the next bar, or the next 2- or 4-bar line"),
  ("Mode", "REVERSE ONLY or TRANSITION"),
  ("LOW CUT", "high-pass filter on the result"),
  ("HI CUT", "low-pass filter: darkens the swell"),
@@ -82,7 +80,6 @@ def manual(G):
 <h3>Source and playback</h3>
 {ctl("Waveform", "drop zone &middot; fade handles &middot; curve dots", "<p>Drop files here. Once a sound is loaded it shows the reversed result. Drag the handle at the left edge to set FADE IN and the handle at the right edge to set FADE OUT; drag the small dots to change the fade curve from logarithmic to exponential. The playback cursor moves across the waveform while playing.</p>", "A short fade in (5-10 %) hides the abrupt start that some reversed tails have; a fade out that ends a little before the end keeps the last transient clean.")}
 {ctl("PLAY", "", "<p>Plays the rendered result. In a DAW, MIDI note on also triggers playback and note off stops it, so you can place a MIDI note where the swell should start.</p>")}
-{ctl("ARM and ARM bars", "1 &middot; 2 &middot; 4<br>default 1 (next bar)<br>Arm: momentary, automatable, MIDI C2", "<p>The swell that cannot be late. Press <strong>ARM</strong> and the plugin waits, then starts the result at the one moment that makes its end - the hit - fall exactly on the next bar line. With 2 or 4 the landing is the next 2- or 4-bar line, so a phrase-long swell always lands on the top of the phrase. The button reads ARMED with a countdown in beats; the start is sample-accurate, inside the audio block.</p><p>It replaces counting \"one bar before\" and placing a MIDI note: arm it two bars early, and it lands. The bar comes from the host's song position (in the standalone app, from the BPM slider). ARM is also a parameter, so one automation step at the top of a phrase arms it, and MIDI note C2 arms instead of playing.</p>", "TAIL LENGTH 1 BAR, ARM bars 1: press ARM anywhere in the previous bar and the swell fills the last bar exactly.")}
 {ctl("Drag to export", "drag the waveform into the DAW", "<p>Press on the waveform and drag into your DAW's arrangement (or into Explorer / Finder). The rendered clip is written to <code>Documents\\RONE Plugins\\Exports\\RONE Reverse Reverb\\</code> as <em>&lt;source&gt;_ReverseReverb_&lt;date&gt;_&lt;time&gt;.wav</em> at the session's sample rate, and never deleted by the plugin.</p>", "Drop it so that it ends on the downbeat; the clip is exactly TAIL LENGTH long.")}
 {ctl("REVERSE ONLY / TRANSITION", "default REVERSE ONLY", "<p><strong>REVERSE ONLY</strong>: the output is the reversed reverb tail; the original sound is not included. <strong>TRANSITION</strong>: the reversed tail is followed by the original sound, itself sent through the same reverb forwards - swell, hit and decay in one clip, already glued.</p>")}
 <h3>Main knobs</h3>
@@ -121,13 +118,6 @@ def manual(G):
  steps([
   "Drop the snare sample, or pick the SNARE SWELL preset. TAIL LENGTH 1/2, ROOM SIZE 50 %, LOW CUT 80 Hz.",
   "Trigger it with a MIDI note half a bar before every second snare, or drag the result into the arrangement and repeat it.",
- ]))}
-{recipe("Land it on the bar", "Any swell, no counting",
- steps([
-  "Set TAIL LENGTH to the swell you want (1 BAR for a vocal entry, 2 BAR for a section change) and ARM bars to 1.",
-  "Anywhere in the bar before, press ARM - or send MIDI C2, or automate one step of the Arm parameter.",
-  "The plugin starts the swell by itself at the right moment; the hit lands exactly on the bar line.",
-  "For a phrase-long swell set ARM bars to 4: the landing is the next 4-bar line, wherever you pressed.",
  ]))}
 {recipe("8-bar riser with tremolo", "Builds",
  steps([

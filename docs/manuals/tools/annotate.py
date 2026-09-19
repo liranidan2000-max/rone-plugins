@@ -177,14 +177,14 @@ def main():
     A = ACCENT["throw"]
     # Order here IS the legend order in content_throw.py - keep the two lists in step.
     annotate("throw", "throw/tour.png", [
-        ("#pLogo", "Header logo"), ("#freezeBtn", "FREEZE"), ("#bypassBtn", "BYPASS"), ("#presetBar", "Preset bar"), ("#macroStrip", "Macro slots"),
+        ("#pLogo", "Header logo"), ("#killBtn", "KILL"), ("#bypassBtn", "BYPASS"), ("#presetBar", "Preset bar"), ("#macroStrip", "Macro slots"),
         ("#gridWrap", "GRID"), ("#delayMs+#bpmLabel", "MS / BPM"), ("#rideGroup", "RIDE"), ("#rideGo", "GO"), ("#knob", "THROW"), ("#taps", "Tap trail"),
-        ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#pitchKnob", "PITCH"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
+        ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#pitchKnob", "PITCH"), ("#gainKnob", "GAIN"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
         crops=[("knob", "#stage", 10), ("top", "#presetBar+#macroStrip", 8)])
     annotate("throw_adv", "throw/adv.png", [
-        ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"), ("@gain", "GAIN"),
+        ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"),
         ("#timeGroup", "L / TIME"), ("#dualBtn", "DUAL"), ("#timeGroupR", "R"),
-        ("#shimmerGroup", "SHIMMER"), ("#duckKeyGroup", "DUCK KEY"), ("#rideCurveGroup", "RIDE CURVE")], A,
+        ("#duckKeyGroup", "DUCK KEY"), ("#rideCurveGroup", "RIDE CURVE")], A,
         crops=[("panel", "#advPanel", 8)])
     plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png"); plain("throw_ride", "throw/ride.png")
     # ------------------------------------------------------------ FLANGER
@@ -204,7 +204,7 @@ def main():
     annotate("reversereverb_m_loaded", "reversereverb/tour.png", [
         ("#p-logo", "Header logo"), ("#presetBar", "Preset bar"), ("#preset-save", "SAVE"),
         ("#waveform-container", "Waveform"), ("#status-text", "Status"),
-        ("#play-btn", "PLAY"), ("#arm-btn", "ARM"), ("#armBarsSeg", "ARM bars"), ("#mode-btn", "Mode"),
+        ("#play-btn", "PLAY"), ("#mode-btn", "Mode"),
         ("#knob-lowcut", "LOW CUT"), ("#knob-hicut", "HI CUT"), ("#knob-width", "WIDTH"),
         ("#knob-tailDiv", "TAIL LENGTH"), ("#knob-roomSize", "ROOM SIZE"), ("#knob-gain", "OUTPUT"),
         ("#tremolo-power", "TREMOLO"), ("#resize-handle", "Resize grip")], A,
