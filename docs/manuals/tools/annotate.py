@@ -169,8 +169,8 @@ def main():
         ("#knob", "STUCK"), ("#loopMs", "LOOP"), ("#leds", "LEDs"), ("#landChip", "LANDS"), ("#advToggle", "ADVANCED"),
         ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A, crops=[("knob", "#stage", 10), ("header", "#syncSeg+#gridLabel", 10)])
     annotate("stucker_adv", "stucker/adv.png", [
-        ("@smooth", "SMOOTH"), ("@range", "RANGE"), ("@lowcut", "LOW CUT"), ("#lenGroup", "LENGTH"), ("#revBtn", "REV"),
-        ("#keyRootGroup", "KEY"), ("#keyModeGroup", "SCALE"), ("#dropGroup", "ON THE DROP"), ("#rideCurveGroup", "CURVE")], A,
+        ("@smooth", "SMOOTH"), ("@range", "RANGE"), ("@lowcut", "LOW CUT"), ("#lenGroup", "LENGTH"),
+        ("#keyRootGroup", "KEY"), ("#dropGroup", "ON THE DROP"), ("#rideCurveGroup", "CURVE")], A,
         crops=[("panel", "#advPanel", 8)])
     plain("stucker_about", "stucker/about.png"); plain("stucker_ride", "stucker/ride.png")
     # ------------------------------------------------------------ THROW
@@ -178,15 +178,15 @@ def main():
     # Order here IS the legend order in content_throw.py - keep the two lists in step.
     annotate("throw", "throw/tour.png", [
         ("#pLogo", "Header logo"), ("#killBtn", "KILL"), ("#bypassBtn", "BYPASS"), ("#presetBar", "Preset bar"), ("#macroStrip", "Macro slots"),
-        ("#gridWrap", "GRID"), ("#delayMs+#bpmLabel", "MS / BPM"), ("#rideGroup", "RIDE"), ("#rideGo", "GO"), ("#knob", "THROW"), ("#taps", "Tap trail"),
-        ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#pitchKnob", "PITCH"), ("#gainKnob", "GAIN"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
+        ("#gridWrap", "GRID"), ("#delayMs+#bpmLabel", "MS / BPM"), ("#knob", "THROW"), ("#taps", "Tap trail"),
+        ("#bandHz+#tailInfo", "BAND / TAIL"), ("#advToggle", "ADVANCED"), ("#pitchModeBtn", "HZ / NOTE"), ("#pitchKnob", "PITCH"), ("#gainKnob", "GAIN"), ("#mixKnob", "MIX"), ("#resize-handle", "Resize grip")], A,
         crops=[("knob", "#stage", 10), ("top", "#presetBar+#macroStrip", 8)])
     annotate("throw_adv", "throw/adv.png", [
         ("@tone", "TONE"), ("@feedback", "FEEDBACK"), ("@width", "WIDTH"), ("@duck", "DUCK"), ("@space", "SPACE"),
         ("#timeGroup", "L / TIME"), ("#dualBtn", "DUAL"), ("#timeGroupR", "R"),
-        ("#duckKeyGroup", "DUCK KEY"), ("#rideCurveGroup", "RIDE CURVE")], A,
+        ("#duckKeyGroup", "DUCK KEY")], A,
         crops=[("panel", "#advPanel", 8)])
-    plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png"); plain("throw_ride", "throw/ride.png")
+    plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png"); plain("throw_note", "throw/note.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [
