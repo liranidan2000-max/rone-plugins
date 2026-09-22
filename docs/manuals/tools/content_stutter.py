@@ -2,8 +2,8 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "stutter", "product": "RONE Stutter", "eyebrow": "TEMPO-LOCKED STUTTER ENGINE",
-        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.2",
-        "tagline": "Load a hit, pick the transient, choose a grid and RONE Stutter renders a perfectly tempo-locked stutter you can drag straight into your arrangement.",
+        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.3",
+        "tagline": "Drop a sound in and it is already a stutter - rendered on the first hit, bar-exact, ready to pull straight out of the waveform into your arrangement.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Stutter.vst3", "au": "RONE Stutter.component", "exe": "RONE Stutter.exe",
         "pdf": "RONE Stutter - User Manual.pdf", "cover_img": "stutter/tour_grid.png" and "stutter/empty.png",
         "latency": "None (offline render, playback only)",
@@ -27,11 +27,11 @@ def manual(G):
 <div>
 <h3>The 10-second version</h3>
 {steps([
- "Drop an audio file on the waveform.",
- "Click the hit you want (or use PREV / NEXT).",
- "Pick a GRID value and how many BARS.",
- "Press STUTTER, listen with RESULT.",
- "Drag the result into your DAW or press EXPORT."])}
+ "Drop an audio file on the waveform. It is rendered on the spot.",
+ "Listen with <span class='pill'>&#9654; RESULT</span>.",
+ "Not the right hit? <span class='pill'>NEXT &#9654;</span> re-rolls it from the next one.",
+ "Change GRID or BARS and it re-renders by itself.",
+ "Drag the clip out of the waveform into your DAW."])}
 </div></div>
 {note("How the render works", "Stutter copies the selected slice at every grid position for the chosen number of bars. Each copy gets its own fade in / fade out, odd and even copies can be pushed left and right for stereo motion, and the whole clip can fade globally. Because it is rendered offline the timing is sample-accurate and independent of your buffer size.")}
 """})
@@ -41,48 +41,49 @@ def manual(G):
     S.append({"title": "Quick start", "sub": "first stutter in one minute", "html": f"""
 <div class="two">
 {img("stutter/empty.png", "<b>Fresh instance.</b> Everything waits for a file: drop one on the dashed area, double-click it, or press BROWSE.")}
-{img("stutter/tour.png", "<b>File loaded.</b> Transients are detected automatically and marked with triangles; the first one is selected (yellow line).")}
+{img("stutter/result.png", "<b>One second later.</b> The file was dropped and the fill already exists - no transient to pick, no button to press. This is the minimal page; ADVANCED opens the rest.")}
 </div>
 {steps([
  "<strong>Insert the plugin</strong> on any mixer channel. An empty channel is ideal, because the plugin plays its previews through that channel. In the standalone app just open it.",
  "<strong>Load a file.</strong> Drag a WAV, AIFF, FLAC or MP3 onto the waveform, double-click the waveform to browse, or press <span class='pill'>BROWSE</span>. The header shows the file name, length and sample rate.",
- "<strong>Choose the moment.</strong> Stutter finds the transients for you. Step through them with <span class='pill'>&#9664; PREV</span> / <span class='pill'>NEXT &#9654;</span>, or click anywhere on the waveform to set the slice start by hand. Play <span class='pill'>&#9654; ORIGINAL</span> to hear the source.",
+ "<strong>Choose the moment</strong> - if the automatic one is not the one you wanted. Stutter starts on the first transient that actually sounds; <span class='pill'>&#9664; PREV</span> / <span class='pill'>NEXT &#9654;</span> re-roll the fill from the neighbouring hits, and clicking the ORIGINAL waveform sets the start by hand. Every one of those renders again immediately.",
  "<strong>Set the rhythm.</strong> GRID is the note value of one repeat (1/16 is the classic roll). The SLICE chip tells you how long one repeat is at the current BPM. BARS is the length of the finished clip.",
  "<strong>Check BPM.</strong> Inside a DAW the tempo is read from the host and the chip shows <em>DAW</em>. In the standalone app, or if the host reports no tempo, type the BPM into the box (the chip shows <em>MANUAL</em>).",
  "<strong>Shape it.</strong> FADE IN / FADE OUT soften each repeat; STEREO bounces alternating repeats left and right.",
- "<strong>Render.</strong> Press <span class='pill'>STUTTER</span>. The waveform switches to the RESULT view (yellow). Audition with <span class='pill'>&#9654; RESULT</span>; flip between ORIGINAL and RESULT with the toggle in the top-right corner of the waveform.",
- "<strong>Get it into the song.</strong> Drag from the <strong>DRAG TO EXPORT</strong> strip under the interface straight onto a track in your DAW, or press <span class='pill'>EXPORT</span> to save a WAV.",
+ "<strong>Listen.</strong> One transport button plays whatever the waveform is showing - the toggle in the top-right corner of the waveform chooses. Every change above re-renders on its own; the <span class='pill'>STUTTER</span> button in ADVANCED is only there when you want to force one.",
+ "<strong>Get it into the song.</strong> Press the mouse anywhere on the lower part of the RESULT waveform and pull into your DAW's arrangement, or press <span class='pill'>EXPORT</span> to save a WAV.",
 ])}
-{img("stutter/result.png", "<b>After rendering.</b> The RESULT view shows the finished clip: the selected hit repeated on a 1/16 grid for 2 bars, with the status line confirming STUTTER APPLIED. 1 ORIGINAL / RESULT toggle.", "w80")}
+{img("stutter/tour.png", "<b>ADVANCED.</b> The same instance with everything unfolded: RAMP TO, CURVE, FADE IN and the STUTTER button come back, and EXTRAS appears next to ADVANCED in the footer.", "w80")}
 """})
 
     S.append({"title": "Interface tour", "sub": "every element on screen", "html": f"""
-{img("stutter/tour.png", "RONE Stutter with a drum loop loaded.")}
+<p>The page opens <strong>minimal</strong>: the waveform, GRID, SLICE, BARS, FADE OUT, STEREO, one transport and EXPORT. That is the whole plugin for most fills. <span class='pill'>ADVANCED</span> in the footer brings the rest of the controls bar and the <span class='pill'>STUTTER</span> button back; <span class='pill'>EXTRAS</span>, which appears beside it, opens the drawer. The picture shows everything unfolded.</p>
+{img("stutter/tour.png", "RONE Stutter with a drum loop loaded, ADVANCED on.")}
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
  ("Loaded file", "name, duration and sample rate of the source"),
  ("BROWSE", "open a file dialog (you can also drop files or double-click the waveform)"),
- ("Waveform", "the source or the result; click to set the slice start, scroll to zoom"),
- ("PREV / NEXT", "step through the transients Stutter detected"),
+ ("Waveform", "the source or the result; click to set the slice start, scroll to zoom, and pull the result out of the lower part into your DAW"),
+ ("PREV / NEXT", "re-roll the fill from the previous / next transient"),
+ ("ORIGINAL / RESULT", "which of the two the waveform shows - and therefore what the transport plays"),
  ("GRID", "note value of one repeat, 1/2 to 1/32"),
  ("RAMP TO", "OFF, 1/16, 1/32 or 1/64: the roll accelerates from the GRID to this value across the bars"),
  ("CURVE", "LIN: every stage takes the same time; EXP: each finer stage takes half the time"),
  ("SLICE", "length of one repeat in milliseconds at the current BPM"),
  ("BARS", "length of the rendered clip, 0.5 to 8 bars in half-bar steps"),
- ("BPM", "tempo used for the grid; DAW (read from the host) or MANUAL (typed)"),
+ ("BPM", "tempo used for the grid; DAW (read from the host) or MANUAL (typed). Minimal hides it while the host supplies one"),
  ("FADE IN", "fade at the start of every repeat"),
  ("FADE OUT", "fade at the end of every repeat"),
  ("STEREO", "ping-pong amount: alternate repeats lean left / right"),
- ("Play ORIGINAL", "audition the source file from the slice start"),
- ("STUTTER", "render the stutter with the current settings"),
- ("Play RESULT", "audition the rendered clip"),
- ("ON BAR", "when lit, ORIGINAL and RESULT start on the next bar line so the fill is heard in context"),
+ ("PLAY", "audition whatever the waveform is showing"),
+ ("ON BAR", "when lit, playback starts on the next bar line so the fill is heard in context"),
+ ("STUTTER", "force a render; normally every change renders itself"),
  ("EXPORT", "save the rendered clip as a WAV file"),
- ("ADVANCED", "opens the drawer: MIX, fade curves, global fades, PITCH, PITCH RAMP, KEY and SCALE"),
+ ("ADVANCED", "unfold the rest of the controls bar and the STUTTER button"),
+ ("EXTRAS", "open the drawer: MIX, fade curves, global fades, PITCH, PITCH RAMP, KEY and SCALE"),
  ("Status line", "what the plugin is doing and what it expects next"),
  ("Resize grip", "drag to resize the window"),
 ])}
-<p>Below the interface (not visible in the picture) sits the <strong>DRAG TO EXPORT</strong> strip. Once a result exists, press the mouse on the strip and drag into your DAW's arrangement; the plugin saves a WAV into <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> and hands that file over. It also works into Explorer / Finder.</p>
 """})
 
     S.append({"title": "Controls reference", "sub": "what every control does, its range and default", "html": f"""
@@ -109,15 +110,14 @@ def manual(G):
 {ctl("KEY and SCALE", "KEY: OFF, C .. B<br>SCALE: Phrygian, Phrygian dominant, harmonic minor, minor, major, root + 5th<br>default OFF / Phrygian", "<p>At 1/64 and beyond, a roll repeats faster than 20 times a second and the ear hears it as a note - the note is the repeat rate, whatever the slice contains. With a KEY chosen, every stage fast enough to be a tone is nudged to the nearest note of the scale, so the buzz at the end of the fill is in key with the bass instead of a random pitch. Slower stages stay exactly on the grid.</p>", "At 128 BPM 1/64 is 34 Hz, between C#1 and D1; KEY D puts it on the root.")}
 {ctl("MIX", "0 to 100 %<br>default 100 % (LOCK)", "<p>The preview level in the channel. At 100 % the result replaces the channel (LOCK); below that the channel stays at full level and the result is added on top - a send, not a crossfade. It never touches the export.</p>")}
 {ctl("IN CURVE / OUT CURVE", "0.1 to 4<br>default 2", "<p>The shape of FADE IN and FADE OUT on every repeat: 1 is linear, 2 a gentle curve, 4 sharp.</p>")}
-{ctl("GLOBAL IN / GLOBAL OUT", "0 to 95 % of the clip<br>default 0", "<p>A fade over the whole clip on top of the per-repeat fades. GLOBAL IN at 90 % is a two-bar swell from silence. They can also be dragged directly on the RESULT waveform.</p>")}
+{ctl("GLOBAL IN / GLOBAL OUT", "0 to 95 % of the clip<br>default 0", "<p>A fade over the whole clip on top of the per-repeat fades. GLOBAL IN at 90 % is a two-bar swell from silence.</p><p>They are usually set on the waveform rather than here. In the top band of the RESULT view each fade is a full-height <strong>column</strong> you can grab at any height - hover and it lights up - and dragging it sideways sets the length. The dot on the curve below is the shape: pull it up or down (the cursor turns vertical) to go from a gentle curve to a sharp one. Clicking the bare left or right end of the band starts a fade that does not exist yet.</p>")}
 <h3>Transport and output</h3>
 {img("stutter/tour_transport.png", "<b>ORIGINAL, STUTTER, RESULT and EXPORT.</b>", "w80")}
-{ctl("&#9654; ORIGINAL", "", "<p>Plays the loaded file from the selected slice start. Press again to stop.</p>")}
-{ctl("STUTTER", "render", "<p>Renders the clip with the current settings. Rendering is instant for normal clip lengths. Every change to GRID, BARS, fades or STEREO needs a new render - the status line reminds you.</p>")}
-{ctl("&#9654; RESULT", "", "<p>Plays the rendered clip through the plugin's channel. The playback position is drawn on the waveform.</p>")}
+{ctl("&#9654; PLAY", "one transport", "<p>Plays whatever the waveform is showing, through the plugin's channel: the RESULT clip, or the source from the slice start when the view is on ORIGINAL. The label follows the view, the playback position is drawn on the waveform, and pressing it again stops. Switching the view while it plays stops playback rather than carrying on under the wrong name.</p>")}
+{ctl("STUTTER", "ADVANCED only", "<p>Forces a render with the current settings. You rarely need it: a file that lands is rendered immediately, and every later change - GRID, BARS, the fades, STEREO, a new transient - renders again on its own. The button is there for the times you want to re-roll deliberately, and it is hidden on the minimal page.</p>")}
 {ctl("ON BAR", "default on", "<p>When lit, ORIGINAL and RESULT do not start at the click but on the next bar line of the host's song position (in the standalone app, of the BPM clock). The button reads NEXT BAR while it waits. A fill previewed on the bar is heard exactly where it will sit in the arrangement.</p>", "Start the DAW two bars before the drop, press RESULT: the roll plays into the drop, in time, before you have exported anything.")}
 {ctl("EXPORT", "save to the Exports folder", "<p>Saves the rendered clip into <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> as <em>&lt;source&gt;_stutter_&lt;grid&gt;_&lt;bars&gt;_&lt;date&gt;_&lt;time&gt;.wav</em>, at the session's sample rate. The status line shows the file name. Nothing is ever deleted from that folder by the plugin.</p>")}
-{ctl("DRAG TO EXPORT", "strip under the interface", "<p>Drag from the strip directly into your DAW. The clip is first saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> (a permanent folder, never cleaned up), then handed to the DAW as an audio drop - so a project that references the file always finds it again, even if your DAW does not copy dropped files into the project folder.</p>", "Drop it at the bar line where the fill should start. Because the clip is exactly N bars long, its end lands on the next bar line.")}
+{ctl("Drag out of the waveform", "lower part of the RESULT view", "<p>Press the mouse anywhere on the lower part of the result and pull: the plugin writes the clip and hands it to your DAW as an audio drop. A small <strong>DRAG TO EXPORT</strong> badge marks the area. The file is saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> first - a permanent folder that is never cleaned up - so a project that references it always finds it again, even if your DAW does not copy dropped files into the project folder. It works into Explorer / Finder too.</p><p>The top of the waveform belongs to the fades, so a press there moves a fade instead of starting a drag. Nothing is ambiguous: the two areas do not overlap.</p>", "Drop it at the bar line where the fill should start. Because the clip is exactly N bars long, its end lands on the next bar line.")}
 <h3>Host parameters</h3>
 <p>Everything above is a host parameter: visible in the DAW's parameter list, automatable, mappable to a controller and saved with the project. Since 1.2 a project that is reopened also shows its file and selection in the window straight away.</p>
 """})
@@ -180,9 +180,10 @@ def manual(G):
     S.append(G["conventions_section"](m, note("Standalone tempo", "The standalone app has no host clock; type the tempo into the BPM box before rendering so the clip fits the song you will drag it into.")))
 
     S.append(G["support_section"](m, [
-        ("Nothing happens when I press STUTTER", "A slice must be selected first: click the waveform or use NEXT. The STUTTER button is disabled while there is no selection."),
+        ("I cannot find the STUTTER button", "There is not one on the minimal page, because you do not need it: the file renders when it lands, and again after every change. Press ADVANCED in the footer to bring it back."),
         ("The roll is out of time in my DAW", "Check the BPM chip. If it says MANUAL inside a DAW, the host is not sending tempo (some hosts only do so while playing); type the project tempo and render again."),
-        ("Drag to export does nothing", "Render first - the strip only becomes active after a result exists. Drag from the strip itself, not from the waveform."),
+        ("Dragging out does nothing", "Check you are on the RESULT view - ORIGINAL is not a drag source, so that clicking a transient stays instant - and that the press started on the lower part of the waveform. The top band belongs to the fades."),
+        ("A fade moved when I meant to drag the clip out", "The press started in the top 40 % of the waveform, which is the fades' band. Start lower down - the DRAG TO EXPORT badge sits in the area that drags."),
         ("No transients are found", "The material is too soft or sustained for the detector. Click the waveform to place the selection by hand; everything else works the same."),
         ("The DAW says a dropped clip is missing", "Clips are saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter</code>; point the DAW there. Versions before 1.1.1 wrote to the temp folder, which Windows and macOS clean up - re-export those clips once."),
     ]))
