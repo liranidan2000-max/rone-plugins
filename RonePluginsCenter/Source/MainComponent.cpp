@@ -391,6 +391,17 @@ void MainComponent::emitPluginsUpdated()
     webView.emitEventIfBrowserIsVisible ("pluginsUpdated", allPluginsToVar());
 }
 
+// A status the Center shows that is nobody's bug: nothing to file in the
+// crash tracker. Matched on the fixed prefixes the Center itself emits.
+static bool isEnvironmentalStatus (const juce::String& text)
+{
+    return text.startsWith ("Offline - ")
+        || text.startsWith ("Install cancelled")
+        || text.contains ("a file was in use")
+        || text.contains ("Enter your password when prompted")
+        || text.contains ("installer code 2)");   // Inno: cancelled by the user before installing
+}
+
 void MainComponent::emitStatusMessage (const juce::String& text, const juce::String& type)
 {
     auto* obj = new juce::DynamicObject();
@@ -401,7 +412,13 @@ void MainComponent::emitStatusMessage (const juce::String& text, const juce::Str
     // Every user-visible error is also a queued report (throttled per message,
     // see RoneCrashReporter) — this is the "why didn't it install/open" feed
     // the devs see without the tester having to describe anything.
-    if (type == "error")
+    //
+    // Except the ones that are the tester's own situation, not ours: a machine
+    // without a network at launch, an installer the user cancelled or that
+    // could not replace a file a DAW still had open, the macOS password prompt
+    // dismissed. 33 of the first 49 reports in the tracker were "Offline" -
+    // that is noise that buries a real crash (1.3.8).
+    if (type == "error" && ! isEnvironmentalStatus (text))
     {
         RoneCrashReporter::reportError ("RONE Plugins Center",
                                         JUCE_APPLICATION_VERSION_STRING,
