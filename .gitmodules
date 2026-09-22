@@ -22,3 +22,6 @@
 [submodule "RoneThrow"]
 	path = RoneThrow
 	url = https://github.com/liranidan2000-max/RoneThrow.git
+[submodule "RoneClipper"]
+	path = RoneClipper
+	url = https://github.com/liranidan2000-max/RoneClipper.git

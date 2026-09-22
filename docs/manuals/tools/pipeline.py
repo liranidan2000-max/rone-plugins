@@ -27,6 +27,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "afterspace": ROOT / "RONE AFTER SPACE" / "Source" / "WebUI.h",
     "choir":      ROOT / "RoneChoir" / "Source" / "WebUI.h",
     "throw":      ROOT / "RoneThrow" / "Source" / "WebUI.h",
+    "clipper":    ROOT / "RoneClipper" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -34,8 +35,12 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
 # every screenshot the manuals use: (served name, suffix, state, size)
 STATES = [
     ("stutter", "", "", None), ("stutter", "_about", "click:pLogo", None),
-    ("stutter_m", "_loaded", "js:window.__scn_stutter(false)", None), ("stutter_m", "_result", "js:window.__scn_stutter(true);state.rampTo=2;updateSegUI()", None),
-    ("stutter_m", "_adv", "js:window.__scn_stutter(true);state.keyRoot=5;state.keyMode=0;updateSegUI();document.getElementById('advPanel').classList.add('open');document.getElementById('advToggle').classList.add('open')", None),
+    # tour.png names every control, so it is shot in ADVANCED (minimal hides
+    # half of them) and flipped back to the source, where the transients show.
+    ("stutter_m", "_loaded", "js:window.__scn_stutter(true);setAdvanced(true);document.getElementById('viewOrigBtn').click()", None),
+    # result.png is the page as it opens: minimal, and already a stutter.
+    ("stutter_m", "_result", "js:window.__scn_stutter(true)", None),
+    ("stutter_m", "_adv", "js:window.__scn_stutter(true);setAdvanced(true);state.keyRoot=5;state.keyMode=0;updateSegUI();document.getElementById('advPanel').classList.add('open');document.getElementById('extrasToggle').classList.add('open')", None),
     ("stucker", "", "js:state.keyRoot=10;landMidi=69;renderRide()", None),
     ("stucker", "_adv", "js:state.keyRoot=10;landMidi=69;renderRide(),click:advToggle", None),
     ("stucker", "_ride", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.keyRoot=10;landMidi=69;state.rideBars=2;ridePhase=2;rideEff=0.58;engineEngaged=true;engineDepth=0.58;engineLoopMs=19.4;renderRide();renderKnob();renderEngine()", None),
@@ -49,6 +54,13 @@ STATES = [
     ("throw", "_menu", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.seedMacro(0,'End Of Build');window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineBpm=142;renderEngine(),click:preset-name", None),
     ("throw", "_note", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.seedMacro(0,'End Of Build');window.recallMacro(0);engineFb=0.83;engineBandHz=759;engineDelayMs=316.9;engineBpm=142;state.pitchMode=1;state.pitchSemi=7;inHz=220;renderRide();renderEngine()", None),
     ("throw", "_about", "click:pLogo", None),
+    # Clipper: the page draws from `frame` events the host pushes, so the scenario feeds it a
+    # synthetic drum loop; ADVANCED grows the design to 340x980, hence the explicit size.
+    ("clipper", "", "js:window.__scn_clipper('wave')", None),
+    ("clipper", "_peaks", "js:window.__scn_clipper('peaks')", None),
+    ("clipper", "_detail", "js:window.__scn_clipper('detail')", None),
+    ("clipper", "_adv", "js:window.__scn_clipper('wave');window.__scn_clipper_adv()", (340, 980)),
+    ("clipper", "_about", "click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power", None), ("reversereverb_m", "_about", "click:p-logo", None),
@@ -112,6 +124,9 @@ def prepare_ui():
         shutil.copytree(UI / src, dst)
         f = dst / "index.html"
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
+    # the Clipper only draws what the host pushes as `frame` events, so its manual states feed them through the fake bridge (in place, no copy)
+    f = UI / "clipper" / "index.html"
+    f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
 
 class Server:
     def __enter__(self):

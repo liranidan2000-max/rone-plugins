@@ -22,7 +22,7 @@ from edge_cdp import Edge
 
 # editor sizes (kBaseW x kBaseH from each PluginEditor.h; the Center is its default window)
 SIZES = {"reversereverb": (700, 650), "stutter": (900, 600), "stucker": (440, 520),
-         "flanger": (680, 520), "afterspace": (1150, 780), "choir": (1000, 750), "throw": (440, 560),
+         "flanger": (680, 520), "afterspace": (1150, 780), "choir": (1000, 750), "throw": (440, 560), "clipper": (340, 680),
          "center": (920, 640)}
 DPR = 2
 

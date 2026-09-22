@@ -11,7 +11,7 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           "afterspace": "#FF8A3D", "analyzer": "#22E36B", "center": "#9D6BFF",
           # Throw's on-screen accent is Ice White #D8E4EC, which vanishes on paper; the
           # manual uses this printable ice-grey for badges and headings instead.
-          "throw": "#9FB3C4"}
+          "throw": "#9FB3C4", "clipper": "#3D8BFF"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -148,14 +148,17 @@ def main():
     A = ACCENT["stutter"]
     annotate("stutter_m_loaded", "stutter/tour.png", [
         ("#pLogo", "Header logo"), ("#fileName+#fileInfo", "Loaded file"), ("#browseBtn", "BROWSE"),
-        ("#timelinePanel", "Waveform"), ("#transientNav", "PREV / NEXT"), ("#divisionBtns", "GRID"),
-        ("#rampToBtns", "RAMP TO"), ("#rampCurveBtns", "CURVE"),
+        ("#timelinePanel", "Waveform"), ("#transientNav", "PREV / NEXT"), ("#viewToggle", "ORIGINAL / RESULT"),
+        ("#divisionBtns", "GRID"), ("#rampToBtns", "RAMP TO"), ("#rampCurveBtns", "CURVE"),
         ("#sliceMs", "SLICE"), ("#barsMinus+#barsPlus", "BARS"), ("#bpmInput+#bpmSource", "BPM"),
         ("#fadeInKnob", "FADE IN"), ("#fadeOutKnob", "FADE OUT"), ("#stereoKnob", "STEREO"),
-        ("#playOrigBtn", "Play ORIGINAL"), ("#applyBtn", "STUTTER"), ("#playProcBtn", "Play RESULT"), ("#onBarBtn", "ON BAR"),
-        ("#exportBtn", "EXPORT"), ("#advToggle", "ADVANCED"), ("#statusText", "Status line"), ("#resize-handle", "Resize grip")], A,
-        crops=[("grid", "#divisionBtns+#bpmSource", 14), ("knobs", "#fadeInArc+#stereoVal", 14), ("transport", "#playOrigBtn+#exportBtn", 12)])
-    annotate("stutter_m_result", "stutter/result.png", [("#viewToggle", "ORIGINAL / RESULT")], A)
+        ("#playBtn", "PLAY"), ("#onBarBtn", "ON BAR"), ("#applyBtn", "STUTTER"),
+        ("#exportBtn", "EXPORT"), ("#advToggle", "ADVANCED"), ("#extrasToggle", "EXTRAS"),
+        ("#statusText", "Status line"), ("#resize-handle", "Resize grip")], A,
+        crops=[("grid", "#divisionBtns+#bpmSource", 14), ("knobs", "#fadeInArc+#stereoVal", 14), ("transport", "#playBtn+#exportBtn", 12)])
+    annotate("stutter_m_result", "stutter/result.png", [
+        ("#viewToggle", "ORIGINAL / RESULT"), ("#playBtn", "PLAY"),
+        ("#transientNav", "PREV / NEXT"), ("#advToggle", "ADVANCED")], A)
     annotate("stutter_m_adv", "stutter/adv.png", [
         ("#mixKnob", "MIX"), ("#fadeInCurveKnob", "IN CURVE"), ("#fadeOutCurveKnob", "OUT CURVE"), ("#globalFadeInKnob", "GLOBAL IN"),
         ("#globalFadeOutKnob", "GLOBAL OUT"), ("#pitchKnob", "PITCH"), ("#pitchRampKnob", "PITCH RAMP"), ("#keyRootBtns", "KEY"), ("#keyModeBtns", "SCALE")], A,
@@ -187,6 +190,18 @@ def main():
         ("#duckKeyGroup", "DUCK KEY")], A,
         crops=[("panel", "#advPanel", 8)])
     plain("throw_menu", "throw/menu.png"); plain("throw_about", "throw/about.png"); plain("throw_note", "throw/note.png")
+    # ------------------------------------------------------------ CLIPPER
+    A = ACCENT["clipper"]
+    # Order here IS the legend order in content_clipper.py - keep the two lists in step.
+    annotate("clipper", "clipper/tour.png", [
+        ("#pLogo", "Header logo"), ("#deltaBtn", "DELTA"), ("#bypassBtn", "BYPASS"), ("#viewSeg", "WAVE / PEAKS / DETAIL"),
+        ("#freezeBtn", "FREEZE"), ("#resetBtn", "Reset"), ("#graphWrap", "Graph"), ("#knob", "CLIP"), ("#clipWell", "CLIP value"),
+        ("#lowcutKnob", "LOW CUT"), ("#advToggle", "ADVANCED"), ("#resize-handle", "Resize grip")], A,
+        crops=[("knob", "#knobStage", 10)])
+    annotate("clipper_adv", "clipper/adv.png", [
+        ("#osSeg", "OS"), ("#depthNum", "SAVED"), ("#fIn", "INPUT"), ("#fOut", "OUTPUT"), ("#autoBtn", "AUTO GAIN")], A,
+        crops=[("panel", "#advPanel", 8)])
+    plain("clipper_peaks", "clipper/peaks.png"); plain("clipper_detail", "clipper/detail.png"); plain("clipper_about", "clipper/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

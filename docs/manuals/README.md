@@ -14,6 +14,7 @@ Plugins/Manuals/`) and the Plugins Center opens it from the card menu
 | RONE AFTERSPACE | `RONE AFTERSPACE - User Manual.pdf` |
 | RONE Analyzer | `RONE Analyzer - User Manual.pdf` |
 | RONE Throw | `RONE Throw - User Manual.pdf` |
+| RONE Clipper | `RONE Clipper - User Manual.pdf` |
 
 Changing a PDF triggers that plugin's CI build (see the path filters in
 `.github/workflows/main.yml`), so a manual update ships on its own.
