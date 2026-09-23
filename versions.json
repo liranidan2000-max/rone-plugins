@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-23T21:09:47Z",
+  "last_updated": "2026-09-23T22:36:45Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -38,7 +38,7 @@
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.4.1.223",
+      "version": "1.4.2.224",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -53,9 +53,9 @@
       "manual": "RONE Stutter - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "041735aa81b4f8c73f5101ee1bbb7c952e64276d54c945f6eb4b0fdc33a53406",
+      "sha256": "6a8c0d34a654d813ce7d159ba49d3fd6c6ddc38d03e542a89969465cda0410f8",
       "registry_key": "RoneStutter",
-      "sha256_mac": "795e2faf3883b385665f27134c8a0feae376808730053d16b97530b6e37e4fb4",
+      "sha256_mac": "8d8da6dd68f48495f85e1811dbf569a9ed90cfc73ada750241603580adb06475",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-stutter.html"
