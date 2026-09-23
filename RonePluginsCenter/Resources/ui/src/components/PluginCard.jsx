@@ -16,6 +16,7 @@ const STATUS_LED = {
   update_available: 'led-upd status-dot-pulse',
   downloading: 'led-busy status-dot-pulse',
   installing: 'led-busy status-dot-pulse',
+  waiting: 'led-busy status-dot-pulse',
   error: 'led-err',
   not_installed: 'led-off',
 }
@@ -27,6 +28,7 @@ const ACTION = {
   up_to_date:       { label: 'Open Standalone', kind: 'open', icon: 'open' },
   downloading:      { label: 'Downloading…', kind: 'busy', icon: 'loading' },
   installing:       { label: 'Installing…',  kind: 'busy', icon: 'loading' },
+  waiting:          { label: 'Close it in your DAW', kind: 'busy', icon: 'loading' },
   error:            { label: 'Retry',   kind: 'danger',  icon: 'retry' },
 }
 
@@ -109,7 +111,7 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
   const prevStatus = useRef(plugin.status)
   const [justInstalled, setJustInstalled] = useState(false)
   useEffect(() => {
-    if ((prevStatus.current === 'downloading' || prevStatus.current === 'installing') && plugin.status === 'up_to_date') {
+    if ((prevStatus.current === 'downloading' || prevStatus.current === 'installing' || prevStatus.current === 'waiting') && plugin.status === 'up_to_date') {
       setJustInstalled(true)
       const t = setTimeout(() => setJustInstalled(false), 1200)
       return () => clearTimeout(t)
@@ -118,7 +120,14 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
   }, [plugin.status])
 
   const needsStandaloneInstall = plugin.status === 'up_to_date' && plugin.hasStandalone && !plugin.standaloneInstalled
-  const action = needsStandaloneInstall ? ACTION.not_installed : baseAction
+  // Waiting for the files to be free: name the program that holds them ("Close FL Studio");
+  // none named = the plugin's own window or the app itself
+  const waitingLabel = !plugin.waitingFor ? 'Close to update'
+                     : plugin.waitingFor.length <= 10 ? 'Close ' + plugin.waitingFor   // fits the button: FL Studio, Cubase, REAPER
+                     : 'Close your DAW'
+  const action = needsStandaloneInstall ? ACTION.not_installed
+               : plugin.status === 'waiting' ? { ...baseAction, label: waitingLabel }
+               : baseAction
 
   const isInstalled = plugin.status === 'up_to_date' || plugin.status === 'update_available'
   const showProgress = plugin.status === 'downloading'
@@ -129,7 +138,7 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
   const isOwned = plugin.owned === true
   const isLocked = !licensed && !isOwned
   const price = isLocked ? lifetimePrice(plugin) : null
-  const isBusy = plugin.status === 'downloading' || plugin.status === 'installing'
+  const isBusy = plugin.status === 'downloading' || plugin.status === 'installing' || plugin.status === 'waiting'
 
   // Primary button: for up_to_date -> Open, otherwise -> Install/Update
   const primaryIsOpen = action.icon === 'open'
@@ -269,7 +278,9 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
         ) : plugin.status === 'error' ? (
           <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-rone-error">Failed</span>
         ) : isBusy ? (
-          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rone-text-dim">Downloading</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rone-text-dim">
+            {plugin.status === 'installing' ? 'Installing' : plugin.status === 'waiting' ? 'Ready to install' : 'Downloading'}
+          </span>
         ) : (
           <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rone-text-dim">Not installed</span>
         )}

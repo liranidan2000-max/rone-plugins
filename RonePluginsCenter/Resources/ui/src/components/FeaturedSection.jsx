@@ -78,12 +78,16 @@ export default function FeaturedSection({ plugins, onUpdateAll, onRefresh, licen
   const notInstalled = plugins.filter(p => p.status === 'not_installed')
   const installed = plugins.filter(p => p.status === 'up_to_date' || p.status === 'update_available')
   const pending = updatable.length + notInstalled.length
+  // Downloaded, waiting for a DAW (or the plugin's own window) to let go of the files
+  const waiting = plugins.filter(p => p.status === 'waiting')
 
-  const allUpToDate = plugins.length > 0 && pending === 0
+  const allUpToDate = plugins.length > 0 && pending === 0 && waiting.length === 0
 
   const subtitle = allUpToDate
     ? `${installed.length} plugin${installed.length !== 1 ? 's' : ''} installed and ready to use`
-    : `${updatable.length} to update${notInstalled.length ? ` · ${notInstalled.length} new to install` : ''}`
+    : pending > 0
+      ? `${updatable.length} to update${notInstalled.length ? ` · ${notInstalled.length} new to install` : ''}`
+      : waiting.map(p => `${p.name} installs when ${p.waitingFor || 'its window'} closes`).join(' · ')
 
   return (
     <motion.div
@@ -114,7 +118,9 @@ export default function FeaturedSection({ plugins, onUpdateAll, onRefresh, licen
           <h2 className="font-display text-[19px] font-bold text-rone-text-primary tracking-tight">
             {allUpToDate
               ? 'All plugins are up to date'
-              : (<><b className="font-extrabold text-rone-purple">{pending} {pending === 1 ? 'update' : 'updates'}</b> available</>)}
+              : pending > 0
+                ? (<><b className="font-extrabold text-rone-purple">{pending} {pending === 1 ? 'update' : 'updates'}</b> available</>)
+                : (<><b className="font-extrabold text-rone-purple">{waiting.length} {waiting.length === 1 ? 'update' : 'updates'}</b> ready to install</>)}
           </h2>
           <p className="text-[12px] text-rone-text-secondary mt-0.5">{subtitle}</p>
           <div className="flex gap-2 mt-2.5">
@@ -124,7 +130,7 @@ export default function FeaturedSection({ plugins, onUpdateAll, onRefresh, licen
         </div>
 
         {/* CTA */}
-        {allUpToDate ? (
+        {pending === 0 ? (
           <button
             onClick={onRefresh}
             className="btn-outline flex-shrink-0 flex items-center gap-2 px-5 py-[11px] rounded-lg

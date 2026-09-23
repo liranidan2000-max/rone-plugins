@@ -61,6 +61,9 @@ public:
 
     // === License ===
     std::atomic<bool> licenseValid { false };
+    // Set by the update prompt (Shared/RoneUpdatePrompt.h) when the user presses UPDATE:
+    // until the plugin is reopened on the new version, processBlock passes audio through.
+    std::atomic<bool> roneUpdatePending { false };
     void checkBundleLicense();
     void timerCallback() override { checkBundleLicense(); }
 

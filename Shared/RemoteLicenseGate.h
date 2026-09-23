@@ -30,9 +30,9 @@
 //     bool unlocked = RemoteLicenseGate::isOpenMode()
 //                  || BundleLicenseChecker::isBundleLicensed();
 //
-// NOTE: RoneStutter carries its own copy (RoneStutter/Source/
-// RemoteLicenseGate.h) because its repo builds without Shared/ —
-// keep the two files in sync when editing this one.
+// NOTE: RONEAnalyzer carries its own copy (RONEAnalyzer/Source/Core/) because
+// its repo builds on its own CI without Shared/ - keep the two in sync. Since
+// 2026-09-23 RoneStutter includes this file directly (it already used Shared/).
 // ============================================================================
 
 class RemoteLicenseGate
@@ -113,7 +113,58 @@ public:
 
             writeMode (parsed.getProperty ("license_mode",    "enforced").toString(),
                        parsed.getProperty ("license_message", ""    ).toString());
+            writeLatestVersions (parsed);
         });
+    }
+
+    // ---- Every product's published version, for the update prompt ----------
+    // (RoneUpdatePrompt.h). Written from the same fetch as the licence mode, by
+    // the plugins and by the Plugins Center, into LatestVersions.xml next to
+    // LicenseMode.xml. The manifest's `version` is "<base>.<CI run>"; the prompt
+    // compares only the first three numbers with the running binary's version.
+    static void writeLatestVersions (const juce::var& manifest)
+    {
+        auto* plugins = manifest.getProperty ("plugins", juce::var()).getArray();
+        if (plugins == nullptr)
+            return;
+
+        juce::XmlElement xml ("RoneLatestVersions");
+        xml.setAttribute ("fetchedAt", juce::String (juce::Time::currentTimeMillis()));
+
+        for (const auto& plugin : *plugins)
+        {
+            const auto id      = plugin.getProperty ("id", {}).toString();
+            const auto version = plugin.getProperty ("version", {}).toString();
+            if (id.isEmpty() || version.isEmpty())
+                continue;
+
+            auto* entry = xml.createNewChildElement ("Product");
+            entry->setAttribute ("id", id);
+            entry->setAttribute ("version", version);
+        }
+
+        auto file = getLatestFile();
+        file.getParentDirectory().createDirectory();
+        xml.writeTo (file, {});
+    }
+
+    // "1.4.1.230" for a product id, or "" when nothing is cached yet.
+    static juce::String latestVersionFor (const juce::String& productId)
+    {
+        auto xml = juce::parseXML (getLatestFile());
+        if (xml == nullptr || xml->getTagName() != "RoneLatestVersions")
+            return {};
+
+        for (auto* entry : xml->getChildWithTagNameIterator ("Product"))
+            if (entry->getStringAttribute ("id") == productId)
+                return entry->getStringAttribute ("version");
+
+        return {};
+    }
+
+    static juce::File getLatestFile()
+    {
+        return getModeFile().getSiblingFile ("LatestVersions.xml");
     }
 
     // ---- Cache writer — also called by the Plugins Center, which already ---

@@ -101,10 +101,14 @@ export default function App() {
   useEffect(() => {
     async function init() {
       if (isDevMode()) {
-        setPlugins(mockPlugins)
         // ?signedout=1 previews the sign-in form without a running backend,
-        // ?lifetime=1 the customer who bought single plugins instead of the pass
+        // ?lifetime=1 the customer who bought single plugins instead of the pass,
+        // ?waiting=1 updates waiting for a DAW (Stutter) and for the plugin's own window (Flanger)
         const devQuery = new URLSearchParams(location.search)
+        setPlugins(devQuery.has('waiting')
+          ? mockPlugins.map(p => p.id === 'RoneStutter' ? { ...p, status: 'waiting', waitingFor: 'FL Studio' }
+                               : p.id === 'RoneFlanger' ? { ...p, status: 'waiting', waitingFor: '' } : p)
+          : mockPlugins)
         const devSignedOut = devQuery.has('signedout')
         const devLifetime = devQuery.has('lifetime')
         setLicense({ licensed: !devSignedOut && !devLifetime, customerName: devSignedOut ? '' : 'Liran Kalifa',
@@ -292,7 +296,7 @@ export default function App() {
 
     if (sortBy === 'name') result.sort((a, b) => a.name.localeCompare(b.name))
     else if (sortBy === 'status') {
-      const order = { update_available: 0, not_installed: 1, downloading: 2, installing: 3, error: 4, up_to_date: 5 }
+      const order = { update_available: 0, not_installed: 1, downloading: 2, installing: 3, waiting: 3, error: 4, up_to_date: 5 }
       result.sort((a, b) => (order[a.status] ?? 99) - (order[b.status] ?? 99))
     }
     return result

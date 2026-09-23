@@ -31,6 +31,8 @@ public:
 
         AutoStart::applyDefaultOnce();   // on by default, once; the Settings toggle owns it afterwards
         AutoStart::refreshIfEnabled();   // an update may have moved the executable
+
+        handleUpdateRequest (commandLine);
     }
 
     void shutdown() override
@@ -41,10 +43,29 @@ public:
 
     // A second launch (the OPEN RONE PLUGINS CENTER button on a plugin's lock
     // screen, a Start-menu click) hands its command line to us and quits.
-    void anotherInstanceStarted (const juce::String&) override
+    void anotherInstanceStarted (const juce::String& commandLine) override
     {
         if (mainWindow != nullptr)
             mainWindow->showAndRaise();
+
+        handleUpdateRequest (commandLine);
+    }
+
+    // "--update <product id>": a plugin's UPDATE button (Shared/RoneUpdatePrompt.h).
+    void handleUpdateRequest (const juce::String& commandLine)
+    {
+        auto tokens = juce::StringArray::fromTokens (commandLine, true);
+        const int at = tokens.indexOf ("--update");
+        if (at < 0 || at + 1 >= tokens.size() || mainWindow == nullptr)
+            return;
+
+        const auto productId = tokens[at + 1].unquoted().trim();
+        if (productId.isEmpty() || ! productId.containsOnly ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
+            return;
+
+        mainWindow->showAndRaise();
+        if (auto* page = dynamic_cast<MainComponent*> (mainWindow->getContentComponent()))
+            page->requestUpdate (productId);
     }
 
     void systemRequestedQuit() override

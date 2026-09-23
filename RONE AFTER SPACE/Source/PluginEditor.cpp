@@ -9,7 +9,8 @@
 RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfterspaceAudioProcessor& p)
     : AudioProcessorEditor (&p),
       processorRef (p),
-      webView (juce::WebBrowserComponent::Options{}
+      updatePrompt ("RoneAfterspace", "RONE Afterspace", JucePlugin_VersionString, "#FF8A3D", p.roneUpdatePending),
+      webView (updatePrompt.addTo (juce::WebBrowserComponent::Options{}
           .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
           .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}
               .withUserDataFolder (juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
@@ -107,8 +108,10 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
               // test subsumes the empty check this used to make.
               if (url.startsWithIgnoreCase ("https://") || url.startsWithIgnoreCase ("http://"))
                   juce::URL (url).launchInDefaultBrowser();
-          }))
+          })))
 {
+    updatePrompt.attachBrowser (webView);
+
     isStandalone = (processorRef.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
 
     addAndMakeVisible (webView);

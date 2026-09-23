@@ -146,6 +146,20 @@ double RoneAfterspaceAudioProcessor::getCurrentEchoTimeMs() const
 void RoneAfterspaceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                                  juce::MidiBuffer&)
 {
+    // UPDATE was pressed (Shared/RoneUpdatePrompt.h): until the plugin is reopened on
+    // the new version it is grey and the host hears the input untouched. A mono
+    // input feeds both outputs; with no input the outputs are silent.
+    if (roneUpdatePending.load (std::memory_order_relaxed))
+    {
+        const int ins = getTotalNumInputChannels();
+        for (int ch = ins; ch < getTotalNumOutputChannels(); ++ch)
+        {
+            if (ins > 0) buffer.copyFrom (ch, 0, buffer, 0, 0, buffer.getNumSamples());
+            else         buffer.clear (ch, 0, buffer.getNumSamples());
+        }
+        return;
+    }
+
     juce::ScopedNoDenormals noDenormals;
 
     const int numSamples = buffer.getNumSamples();

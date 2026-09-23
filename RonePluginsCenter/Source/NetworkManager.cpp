@@ -139,9 +139,15 @@ void NetworkManager::run()
                 // Propagate the remote kill-switch (license_mode) to the
                 // shared cache file that every RONE plugin reads.
                 if (root.isObject())
+                {
                     RemoteLicenseGate::writeMode (
                         root.getProperty ("license_mode",    "enforced").toString(),
                         root.getProperty ("license_message", ""    ).toString());
+
+                    // ...and every product's version, for the plugins' own
+                    // "version X is available" bar (Shared/RoneUpdatePrompt.h).
+                    RemoteLicenseGate::writeLatestVersions (root);
+                }
 
                 auto ci   = root.getProperty ("center_installer", {});
                 const juce::ScopedLock sl (centerInfoLock);

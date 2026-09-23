@@ -11,6 +11,7 @@ enum class PluginStatus
     UpdateAvailable,
     Downloading,
     Installing,
+    WaitingForHost,   // downloaded; a DAW or the standalone still holds the files (Windows)
     Error
 };
 
@@ -38,6 +39,7 @@ struct PluginInfo
     juce::StringArray formats;
     PluginStatus status = PluginStatus::NotInstalled;
     double       downloadProgress = 0.0;
+    juce::String waitingFor;          // WaitingForHost: the program to close ("FL Studio"); empty = its own window
 
     // Individual LIFETIME pricing, carried straight from the manifest so the
     // Center never keeps a second price list. Held as vars because only the

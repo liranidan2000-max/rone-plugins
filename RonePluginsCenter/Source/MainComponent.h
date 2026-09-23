@@ -32,6 +32,11 @@ public:
     // left open costs no GPU frames. MainWindow reports the foreground state.
     void setWindowActive (bool isActive);
 
+    // A plugin's UPDATE button launched us with "--update <id>" (or forwarded
+    // it to the running Center): update that one plugin, with a fresh manifest
+    // first unless it already knows the update.
+    void requestUpdate (const juce::String& productId);
+
     // NetworkManager::Listener
     void onManifestReady  (const juce::Array<PluginInfo>& plugins) override;
     void onManifestError  (const juce::String& errorMessage) override;
@@ -68,6 +73,11 @@ private:
     // (the page asks for fresh state when it loads), marshalled to the message
     // thread when a background thread sends it.
     void emitToPage (const juce::Identifier& eventId, const juce::var& payload);
+
+    // Starts the download (then the install) of one plugin; false + error text otherwise.
+    bool startInstall (const juce::String& pluginId, juce::String& error);
+    void servePendingUpdate();
+    bool anyPluginBusy();
 
     void handleGetPlugins      (NativeArgs args, NativeCompletion complete);
     void handleInstallPlugin   (NativeArgs args, NativeCompletion complete);
@@ -123,6 +133,7 @@ private:
     AccountClient             accountClient;
     juce::Array<PluginInfo>   pluginData;
     juce::CriticalSection     pluginDataLock;  // guards pluginData access across threads
+    juce::String              pendingUpdateId;  // from --update, served once the manifest is in
 
     // The plugin whose download failed its hash check and is waiting on a fresh
     // manifest to try once more. See onDownloadComplete: the installers live

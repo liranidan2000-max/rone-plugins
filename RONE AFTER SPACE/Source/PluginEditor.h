@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "../../Shared/RoneUpdatePrompt.h"
 #include "CustomTitleBar.h"
 #include "../../Shared/RoneAboutOverlay.h"
 
@@ -31,6 +32,7 @@ private:
     void sendAllParametersToJS();
 
     RoneAfterspaceAudioProcessor& processorRef;
+    RoneUpdatePrompt updatePrompt;            // before the WebView: its options carry the prompt's script
     juce::WebBrowserComponent webView;
     RoneAboutOverlay aboutOverlay { "AFTERSPACE", JucePlugin_VersionString,
                                     juce::Colour (0xffFF8A3D) };
