@@ -120,7 +120,7 @@
         "AU",
         "Standalone"
       ],
-      "description": "A hard clipper that shows you exactly what it cut: the waveform after the clip stage with the removed peaks in blue, one CLIP knob, LOW CUT that keeps kick and bass out of the clipper, and integer-latency oversampling that nulls against the input at -100 dB",
+      "description": "FREE plugin - sign in to the Center with a free RONE account and it unlocks. A hard clipper that shows you exactly what it cut: the waveform after the clip stage with the removed peaks in blue, one CLIP knob, LOW CUT that keeps kick and bass out of the clipper, and integer-latency oversampling that nulls against the input at -100 dB",
       "whats_new": "1.0.0 - first release. WAVE / PEAKS / DETAIL views of what the clipper removed (drag up and down on the graph to zoom time), a single CLIP threshold knob, LOW CUT (the band below it bypasses the clipper and the clipper's own low products are filtered out, linear phase), DELTA to hear only what was removed, AUTO GAIN make-up for the threshold, 1x-16x oversampling with a fixed latency, and INPUT / OUTPUT faders with meters under ADVANCED.",
       "standalone_exe": "RONE Clipper.exe",
       "vst3_bundle": "RONE Clipper.vst3",
@@ -132,8 +132,9 @@
       "registry_key": "RoneClipper",
       "sha256_mac": "06afaebf9bbd936934171504abf2b13002558f602720d71e0712f930ce536188",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
-      "price": 39,
-      "launch_price": 29
+      "price": 0,
+      "launch_price": 0,
+      "free": true
     },
     {
       "id": "RoneRise",
