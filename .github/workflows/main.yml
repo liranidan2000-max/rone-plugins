@@ -509,9 +509,13 @@ jobs:
             cmake -B build-ci -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 "${EXTRA[@]}"
           }
 
+      # Bounded: macos-latest has 3 cores and 7 GB. A bare --parallel is an
+      # unbounded make -j - on a full Analyzer rebuild (run 222, universal
+      # binary) it started ~40 clang processes at once and crawled for 40+
+      # minutes while every other leg took 2-6.
       - name: CMake build
         working-directory: ${{ matrix.folder }}
-        run: cmake --build build-ci --config Release --parallel
+        run: cmake --build build-ci --config Release --parallel 3
 
       # --- Code signing (Developer ID) - a no-op until the secrets exist ---
       - name: Import signing identity

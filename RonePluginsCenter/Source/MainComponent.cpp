@@ -1471,27 +1471,32 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
             {
                 // "Close FL Studio" - a DAW keeps the plugin loaded until it quits,
                 // so the program is named, not the plugin window.
-                const auto waitingFor = holders.hosts.joinIntoString (", ");
-                juce::MessageManager::callAsync ([this, pid, waitingFor]
+                auto announce = [this, pid] (const juce::String& waitingFor)
                 {
-                    juce::String name = pid;
+                    juce::MessageManager::callAsync ([this, pid, waitingFor]
                     {
-                        juce::ScopedLock sl (pluginDataLock);
-                        for (auto& p : pluginData)
-                            if (p.id == pid)
-                            {
-                                p.status = PluginStatus::WaitingForHost;
-                                p.waitingFor = waitingFor;
-                                name = p.name;
-                                break;
-                            }
-                    }
-                    emitPluginsUpdated();
-                    emitStatusMessage (waitingFor.isEmpty()
-                                           ? name + " is still open. Close it and the update installs by itself."
-                                           : name + " is loaded in " + waitingFor + ". Close " + waitingFor
-                                                  + " and the update installs by itself.", "info");
-                });
+                        juce::String name = pid;
+                        {
+                            juce::ScopedLock sl (pluginDataLock);
+                            for (auto& p : pluginData)
+                                if (p.id == pid)
+                                {
+                                    p.status = PluginStatus::WaitingForHost;
+                                    p.waitingFor = waitingFor;
+                                    name = p.name;
+                                    break;
+                                }
+                        }
+                        emitPluginsUpdated();
+                        emitStatusMessage (waitingFor.isEmpty()
+                                               ? name + " is still open. Close it and the update installs by itself."
+                                               : name + " is loaded in " + waitingFor + ". Close " + waitingFor
+                                                      + " and the update installs by itself.", "info");
+                    });
+                };
+
+                auto waitingFor = holders.hosts.joinIntoString (", ");
+                announce (waitingFor);
 
                 const auto startedWaiting = juce::Time::getMillisecondCounter();
                 while (! holders.isEmpty())
@@ -1501,7 +1506,17 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
                     if (juce::Time::getMillisecondCounter() - startedWaiting > 12u * 3600u * 1000u)
                         break;    // half a day: try anyway, the installer reports the lock
                     juce::Thread::sleep (4000);
-                    holders = PluginInUse::find (bundle, exe);
+
+                    // Cheap: only the processes that held the files. Once they all let
+                    // go, one full scan - another program may have loaded it meanwhile.
+                    const auto known = holders.pids;
+                    holders = PluginInUse::find (bundle, exe, &known);
+                    if (holders.isEmpty())
+                        holders = PluginInUse::find (bundle, exe);
+
+                    const auto nowWaitingFor = holders.hosts.joinIntoString (", ");
+                    if (! holders.isEmpty() && nowWaitingFor != waitingFor)
+                        announce (waitingFor = nowWaitingFor);
                 }
 
                 juce::MessageManager::callAsync ([this, pid]
