@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-23T18:06:35Z",
+  "last_updated": "2026-09-23T18:07:50Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -88,7 +88,7 @@
     {
       "id": "RoneThrow",
       "name": "RONE Throw",
-      "version": "1.7.0.218",
+      "version": "1.7.1.220",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -103,9 +103,9 @@
       "manual": "RONE Throw - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.pkg",
-      "sha256": "7315a0f2dca70cbd71ac0829d56fe0abd43c1787721fc520ea365d616a4a4c60",
+      "sha256": "8d1f5d92900fdeee8fdf89b2d197c2659b5338a36fb5436be6b32f05559ed436",
       "registry_key": "RoneThrow",
-      "sha256_mac": "982227ab7193ff65d380072ed687fbed393c5d7628c69e9b513e3c5f2f17a3fd",
+      "sha256_mac": "bd647b1c5ad69fa85d21a5d47cb2fb0588afb50572071886f529dd801ab13335",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 29
@@ -139,7 +139,7 @@
     {
       "id": "RoneRise",
       "name": "RONE Rise",
-      "version": "1.0.0.218",
+      "version": "1.0.1.220",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -154,9 +154,9 @@
       "manual": "RONE Rise - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer.pkg",
-      "sha256": "71dadaa2dcf9130dfd3a03cfeb7a3137d45f85bdad50b6cebbb9c0a0a34e0cca",
+      "sha256": "f7537e5ad7a37096ed6fe5a129d8b233ce8e280862dce7bdfbc0aeed05337f98",
       "registry_key": "RoneRise",
-      "sha256_mac": "bbfda5b4262207d22dfa02c6cc28a2a8c7204c55af5f62ab2e028a1bd5f25c2e",
+      "sha256_mac": "091df101dc6ca025af3fc559a964e80498200cc99507ae49cfb3663f1b6ed59a",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
       "launch_price": 29
