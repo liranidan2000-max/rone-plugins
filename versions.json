@@ -136,6 +136,31 @@
       "launch_price": 29
     },
     {
+      "id": "RoneRise",
+      "name": "RONE Rise",
+      "version": "1.0.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "One knob, the whole build-up: turn INTENSITY up over the phrase and the mix becomes a rise (a steep high-pass, a big reverb, echoes, noise, a barber-pole climb), snap it to zero and the drop hits with the reverb still spilling into it - or press GO and let it land on the bar by itself",
+      "whats_new": "1.0.0 - first release. One INTENSITY knob and five presets (SUNRISE, HORIZON, UPLIFT, DEEP DIVE, SUPERNOVA). ADVANCED: LAND ON BAR (4 / 8 / 16 / 32 bars, GO runs the rise and lands on the drop, four curves, MIDI C1 = GO), TAIL (1-4 bars of reverb and echo released under the drop, or CUT), and eight macros - RISE (Shepard climb), NOISE, SPACE, KILL LOW, DIVE (low-pass build), GATE (tempo gate that speeds up), SINK and PITCH (up to +200 Hz). A sunrise that follows the knob and pulses on the beat.",
+      "standalone_exe": "RONE Rise.exe",
+      "vst3_bundle": "RONE Rise.vst3",
+      "au_bundle": "RONE Rise.component",
+      "manual": "RONE Rise - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneRise",
+      "sha256_mac": "",
+      "store_url": "https://roneaudio.com/products/rone-rise.html",
+      "price": 39,
+      "launch_price": 29
+    },
+    {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
       "version": "2.0.5.216",

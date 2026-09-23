@@ -74,6 +74,12 @@ jobs:
               - 'installer/RoneClipper.iss'
               - 'docs/manuals/RONE Clipper - User Manual.pdf'
               - '.github/workflows/main.yml'
+            rise:
+              - 'RoneRise'
+              - 'Shared/**'
+              - 'installer/RoneRise.iss'
+              - 'docs/manuals/RONE Rise - User Manual.pdf'
+              - '.github/workflows/main.yml'
             flanger:
               - 'rone-flanger-'
               - 'Shared/**'
@@ -116,7 +122,7 @@ jobs:
 
           # Change flags — tag push forces all
           if [ "$IS_TAG" = "true" ]; then
-            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true; AS=true; TH=true; CL=true
+            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true; AS=true; TH=true; CL=true; RI=true
           else
             RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
             SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
@@ -124,6 +130,7 @@ jobs:
             SK=${{ steps.filter.outputs.stucker         || 'false' }}
             TH=${{ steps.filter.outputs.throw           || 'false' }}
             CL=${{ steps.filter.outputs.clipper         || 'false' }}
+            RI=${{ steps.filter.outputs.rise            || 'false' }}
             FL=${{ steps.filter.outputs.flanger         || 'false' }}
             SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
             PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
@@ -163,6 +170,7 @@ jobs:
           add "$SK" stucker         RoneStucker        RoneStucker       RoneStucker-latest         RoneStucker               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneStucker.iss     "RONE Stucker - User Manual.pdf"        "Rone Stucker"
           add "$TH" throw           RoneThrow          RoneThrow         RoneThrow-latest           RoneThrow                 true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneThrow.iss       "RONE Throw - User Manual.pdf"          ""
           add "$CL" clipper         RoneClipper        RoneClipper       RoneClipper-latest         RoneClipper               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneClipper.iss     "RONE Clipper - User Manual.pdf"        ""
+          add "$RI" rise            RoneRise           RoneRise          RoneRise-latest            RoneRise                  true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneRise.iss        "RONE Rise - User Manual.pdf"           ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
@@ -716,6 +724,7 @@ jobs:
               stucker)        tag=RoneStucker-latest;       title="RONE Stucker (Latest)" ;;
               throw)          tag=RoneThrow-latest;         title="RONE Throw (Latest)" ;;
               clipper)        tag=RoneClipper-latest;       title="RONE Clipper (Latest)" ;;
+              rise)           tag=RoneRise-latest;          title="RONE Rise (Latest)" ;;
               flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)" ;;
               sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
               afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)" ;;
@@ -809,6 +818,7 @@ jobs:
               stucker)        f=RoneStucker ;;
               throw)          f=RoneThrow ;;
               clipper)        f=RoneClipper ;;
+              rise)           f=RoneRise ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;
@@ -832,6 +842,7 @@ jobs:
               stucker)        folder=RoneStucker;        jid=RoneStucker;     tag=RoneStucker-latest;     inst=RoneStucker ;;
               throw)          folder=RoneThrow;          jid=RoneThrow;       tag=RoneThrow-latest;       inst=RoneThrow ;;
               clipper)        folder=RoneClipper;        jid=RoneClipper;     tag=RoneClipper-latest;     inst=RoneClipper ;;
+              rise)           folder=RoneRise;           jid=RoneRise;        tag=RoneRise-latest;        inst=RoneRise ;;
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
               sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
               afterspace)     folder="RONE AFTER SPACE"; jid=RoneAfterspace; tag=RoneAfterspace-latest;  inst=RoneAfterspace ;;

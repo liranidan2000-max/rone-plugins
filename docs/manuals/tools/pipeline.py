@@ -28,6 +28,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "choir":      ROOT / "RoneChoir" / "Source" / "WebUI.h",
     "throw":      ROOT / "RoneThrow" / "Source" / "WebUI.h",
     "clipper":    ROOT / "RoneClipper" / "Source" / "WebUI.h",
+    "rise":       ROOT / "RoneRise" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -61,6 +62,11 @@ STATES = [
     ("clipper", "_detail", "js:window.__scn_clipper('detail')", None),
     ("clipper", "_adv", "js:window.__scn_clipper('wave');window.__scn_clipper_adv()", (340, 980)),
     ("clipper", "_about", "click:pLogo", None),
+    # Rise: the page runs without a host (the knob shows state / frame), so the states pose it
+    # directly: a LAND run at bar 5 of 8, and UPLIFT at 70 % with ADVANCED open.
+    ("rise", "", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.land=2;frame.running=true;frame.t=0.62;frame.bar=4;frame.beat=2;frame.playing=true;frame.phase=0.6;CH.cur=0.62;CH.target=0.62;renderLand();renderKnob()", None),
+    ("rise", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.preset=2;Object.assign(state,PRESETS[2].m);state.land=2;state.intensity=0.7;Object.assign(frame,{hpf:900,lpf:20000,gate:16,pitch:62,rev:0.55,del:0.35,noise:-26,shep:540,drive:0.28});CH.cur=0.7;CH.target=0.7;renderKnob();renderMacros();renderPresets();renderLand();renderTail();renderChain();document.getElementById('drawer').classList.add('open');document.getElementById('advBtn').classList.add('on')", None),
+    ("rise", "_about", "click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power", None), ("reversereverb_m", "_about", "click:p-logo", None),

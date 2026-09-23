@@ -11,7 +11,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           "afterspace": "#FF8A3D", "analyzer": "#22E36B", "center": "#9D6BFF",
           # Throw's on-screen accent is Ice White #D8E4EC, which vanishes on paper; the
           # manual uses this printable ice-grey for badges and headings instead.
-          "throw": "#9FB3C4", "clipper": "#3D8BFF"}
+          "throw": "#9FB3C4", "clipper": "#3D8BFF",
+          # Rise Pink #FF5FB8 is too light for white paper badges; the manual uses a deeper pink
+          "rise": "#E0449A"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -202,6 +204,17 @@ def main():
         ("#osSeg", "OS"), ("#depthNum", "SAVED"), ("#fIn", "INPUT"), ("#fOut", "OUTPUT"), ("#autoBtn", "AUTO GAIN")], A,
         crops=[("panel", "#advPanel", 8)])
     plain("clipper_peaks", "clipper/peaks.png"); plain("clipper_detail", "clipper/detail.png"); plain("clipper_about", "clipper/about.png")
+    # ------------------------------------------------------------ RISE
+    A = ACCENT["rise"]
+    # Order here IS the legend order in content_rise.py - keep the two lists in step.
+    annotate("rise", "rise/tour.png", [
+        ("#pLogo", "Header logo"), ("#bypassBtn", "BYPASS"), ("#knob", "INTENSITY"), ("#goBtn", "GO"), ("#clockTxt", "Bar counter"),
+        ("#mood", "Mood"), ("#presets", "Presets"), ("#advBtn", "ADVANCED"), ("#resize-handle", "Resize grip")], A,
+        crops=[("knob", "#knob", 10)])
+    annotate("rise_adv", "rise/adv.png", [
+        ("#landSeg", "LAND ON BAR"), ("#curveSeg", "CURVE"), ("#tailBar", "TAIL"), ("#macros", "Macros"), ("#chain", "Chain strip")], A,
+        crops=[("panel", "#drawer", 8)])
+    plain("rise_about", "rise/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

@@ -100,6 +100,7 @@ MainComponent::getResource (const juce::String& url)
         { "logos/RoneStucker.png",    { BinaryData::RoneStucker_icon_png,   BinaryData::RoneStucker_icon_pngSize } },
         { "logos/RoneThrow.png",      { BinaryData::RoneThrow_icon_png,     BinaryData::RoneThrow_icon_pngSize } },
         { "logos/RoneClipper.png",    { BinaryData::RoneClipper_icon_png,   BinaryData::RoneClipper_icon_pngSize } },
+        { "logos/RoneRise.png",       { BinaryData::RoneRise_icon_png,      BinaryData::RoneRise_icon_pngSize } },
         { "logos/RoneAfterspace.png", { BinaryData::RoneAfterspace_icon_png, BinaryData::RoneAfterspace_icon_pngSize } },
     };
 

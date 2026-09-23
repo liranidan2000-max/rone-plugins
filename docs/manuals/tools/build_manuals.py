@@ -300,7 +300,7 @@ def build(name):
     print(f"  {pp.name}: {'OK' if ok else 'FAILED'} {round(pp.stat().st_size / 1e6, 2) if ok else ''} MB")
     return ok
 
-ALL = ["stutter", "stucker", "flanger", "reversereverb", "afterspace", "analyzer", "throw", "clipper"]
+ALL = ["stutter", "stucker", "flanger", "reversereverb", "afterspace", "analyzer", "throw", "clipper", "rise"]
 
 if __name__ == "__main__":
     for n in (sys.argv[1:] or ALL): build(n)

@@ -25,3 +25,6 @@
 [submodule "RoneClipper"]
 	path = RoneClipper
 	url = https://github.com/liranidan2000-max/RoneClipper.git
+[submodule "RoneRise"]
+	path = RoneRise
+	url = https://github.com/liranidan2000-max/RoneRise.git
