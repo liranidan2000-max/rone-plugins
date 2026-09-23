@@ -38,9 +38,10 @@ STATES = [
     ("stutter", "", "", None), ("stutter", "_about", "click:pLogo", None),
     # tour.png names every control, so it is shot in ADVANCED (minimal hides
     # half of them) and flipped back to the source, where the transients show.
-    ("stutter_m", "_loaded", "js:window.__scn_stutter(true);setAdvanced(true);document.getElementById('viewOrigBtn').click()", None),
+    ("stutter_m", "_loaded", "js:window.__scn_stutter_auto();setAdvanced(true);document.getElementById('viewOrigBtn').click()", None),
     # result.png is the page as it opens: minimal, and already a stutter.
     ("stutter_m", "_result", "js:window.__scn_stutter(true)", None),
+    ("stutter_m", "_free", "js:window.__scn_stutter_free()", None),
     ("stutter_m", "_adv", "js:window.__scn_stutter(true);setAdvanced(true);state.keyRoot=5;state.keyMode=0;updateSegUI();document.getElementById('advPanel').classList.add('open');document.getElementById('extrasToggle').classList.add('open')", None),
     ("stucker", "", "js:state.keyRoot=10;landMidi=69;renderRide()", None),
     ("stucker", "_adv", "js:state.keyRoot=10;landMidi=69;renderRide(),click:advToggle", None),

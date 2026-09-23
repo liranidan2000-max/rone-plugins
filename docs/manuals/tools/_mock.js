@@ -42,6 +42,35 @@ window.__scn_rr = function () {
 };
 
 // ---- Scenario: Stutter with a drum loop loaded (original view) / processed (result view) ----
+// 1.4.0: the tour shows AUTO at work - STEREO 100 % walking down to the centre,
+// FADE OUT 30 % walking up - so the travel rings are in the picture.
+window.__scn_stutter_auto = function () {
+  window.__scn_stutter(true);
+  state.stereoDelay = 1; state.stereoAuto = 2; state.fadeOut = 0.3; state.fadeOutAuto = 1;
+  if (window.updateStereoSlider) window.updateStereoSlider(1);
+  if (window.updateFadeOutSlider) window.updateFadeOutSlider(0.3);
+  updateSegUI();
+};
+// 1.4.0: FREE + TREMOLO. The result is re-drawn with repeats that glide from
+// 180 ms to 25 ms, so the picture shows what the controls describe.
+window.__scn_stutter_free = function () {
+  window.__scn_stutter(true);
+  setAdvanced(true);
+  state.division = 7; state.freeMs = 180; state.tremolo = 1; state.freeEndMs = 25;
+  state.fadeOut = 0.55; if (window.updateFadeOutSlider) window.updateFadeOutSlider(0.55);
+  updateSegUI(); updateDivisionUI();
+  var rnd = window.__mockRand(7), P = [], M = 2400, clip = 1.875, pos = 0, starts = [];
+  while (pos < clip) { starts.push(pos); pos += (180 + (25 - 180) * (pos / clip)) / 1000; }
+  for (var j = 0; j < M; j++) {
+    var t = j / M * clip, k = 0;
+    while (k + 1 < starts.length && starts[k + 1] <= t) k++;
+    var len = (k + 1 < starts.length ? starts[k + 1] : clip) - starts[k], u = (t - starts[k]) / len;
+    var a = 0.92 * Math.exp(-u * 3.2) * (u < 0.45 ? 1 : Math.max(0, 1 - (u - 0.45) / 0.55)) * (0.55 + 0.45 * rnd());
+    P.push(j % 2 === 0 ? a : -a * 0.7);
+  }
+  window.__mockEmit('waveformData', { type: 'processed', samples: P, lengthSamples: 90000 });
+  window.__mockEmit('renderComplete', { success: true });
+};
 window.__scn_stutter = function (processed) {
   var N = 1800, rnd = window.__mockRand(11), s = [];
   var hits = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];

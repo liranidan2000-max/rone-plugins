@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "stutter", "product": "RONE Stutter", "eyebrow": "TEMPO-LOCKED STUTTER ENGINE",
-        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.3",
+        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.4",
         "tagline": "Drop a sound in and it is already a stutter - rendered on the first hit, bar-exact, ready to pull straight out of the waveform into your arrangement.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Stutter.vst3", "au": "RONE Stutter.component", "exe": "RONE Stutter.exe",
         "pdf": "RONE Stutter - User Manual.pdf", "cover_img": "stutter/tour_grid.png" and "stutter/empty.png",
@@ -66,7 +66,7 @@ def manual(G):
  ("Waveform", "the source or the result; click to set the slice start, scroll to zoom, and pull the result out of the lower part into your DAW"),
  ("PREV / NEXT", "re-roll the fill from the previous / next transient"),
  ("ORIGINAL / RESULT", "which of the two the waveform shows - and therefore what the transport plays"),
- ("GRID", "note value of one repeat, 1/2 to 1/32"),
+ ("GRID", "note value of one repeat, 1/2 to 1/32 - or FREE, a length in milliseconds off the tempo grid"),
  ("RAMP TO", "OFF, 1/16, 1/32 or 1/64: the roll accelerates from the GRID to this value across the bars"),
  ("CURVE", "LIN: every stage takes the same time; EXP: each finer stage takes half the time"),
  ("SLICE", "length of one repeat in milliseconds at the current BPM"),
@@ -75,6 +75,8 @@ def manual(G):
  ("FADE IN", "fade at the start of every repeat"),
  ("FADE OUT", "fade at the end of every repeat"),
  ("STEREO", "ping-pong amount: alternate repeats lean left / right"),
+ ("FADE OUT AUTO", "OFF / up / down: FADE OUT travels from the knob to 100 % or 0 % across the clip; the outer ring shows the road"),
+ ("STEREO AUTO", "the same for STEREO - 100 % and down starts in full ping-pong and lands in the centre"),
  ("PLAY", "audition whatever the waveform is showing"),
  ("ON BAR", "when lit, playback starts on the next bar line so the fill is heard in context"),
  ("STUTTER", "force a render; normally every change renders itself"),
@@ -93,16 +95,20 @@ def manual(G):
 {ctl("BROWSE", "file dialog", "<p>Loads WAV, AIFF, FLAC, MP3 or OGG. Stereo and mono files are both fine; a mono file renders a mono clip.</p>")}
 <h3>Rhythm</h3>
 {img("stutter/tour_grid.png", "<b>GRID, SLICE, BARS and BPM.</b>", "w80")}
-{ctl("GRID", "1/2 &middot; 1/4 &middot; 1/6 &middot; 1/8 &middot; 1/12 &middot; 1/16 &middot; 1/32<br>default 1/16", "<p>The note value of one repeat. 1/6 and 1/12 are triplet values. The repeat length is calculated from the BPM: at 120 BPM a 1/16 repeat is 125 ms, at 128 BPM it is 117 ms.</p>", "Automate nothing - render two clips (1/16 and 1/32) and cut between them in the arrangement. It is faster and always in time.")}
+{ctl("GRID", "1/2 &middot; 1/4 &middot; 1/6 &middot; 1/8 &middot; 1/12 &middot; 1/16 &middot; 1/32 &middot; FREE<br>default 1/16", "<p>The note value of one repeat. 1/6 and 1/12 are triplet values. The repeat length is calculated from the BPM: at 120 BPM a 1/16 repeat is 125 ms, at 128 BPM it is 117 ms.</p>", "Automate nothing - render two clips (1/16 and 1/32) and cut between them in the arrangement. It is faster and always in time.")}
 {ctl("RAMP TO and CURVE", "OFF &middot; 1/16 &middot; 1/32 &middot; 1/64<br>LIN &middot; EXP<br>default OFF / LIN", "<p>The accelerating roll in one render. From the GRID value the repeats double in rate, stage by stage, until they reach RAMP TO at the end of the clip: GRID 1/8 with RAMP TO 1/32 renders 8ths, then 16ths, then 32nds - the fill every producer arranges by hand from three separate renders. Every stage holds a whole number of repeats, so each stage change lands on the grid. <strong>LIN</strong> gives every stage the same share of the clip; <strong>EXP</strong> halves the share for each finer stage, so the roll spends most of the clip on the slow repeats and snaps into the fast ones at the end.</p><p>Triplet grids double too (1/6 to 1/12 to 1/24), and a target below the GRID simply renders the GRID.</p>", "GRID 1/8, RAMP TO 1/64, BARS 1, EXP: the last beat is a buzz. Add PITCH RAMP +12 and it rises with it.")}
+{img("stutter/free.png", "<b>FREE and TREMOLO.</b> GRID on FREE: the SLICE chip is the repeat length and can be dragged; TREMOLO takes RAMP TO's place, with its END length beside it.", "w80")}
+{ctl("FREE", "the last GRID button<br>SLICE: 5 to 2000 ms<br>default 120 ms", "<p>Takes the repeat length off the tempo grid. The SLICE chip turns yellow and becomes the control: drag it up or down, use the wheel, hold shift for fine steps. The scale is logarithmic, so the fast rolls and the slow ones get the same room.</p><p>Only the <em>rate</em> is free - the clip is still BARS long at the song tempo, so it still ends exactly on the next bar line. RAMP TO does not apply in FREE (it doubles grid values); TREMOLO takes its place.</p>", "FREE is for the lengths no grid has: 37 ms on a vocal is a buzz with a pitch the grid would never land on.")}
+{ctl("TREMOLO", "OFF &middot; ON, plus END<br>FREE only<br>END: 5 to 2000 ms, default 30 ms", "<p>Glides the repeat length continuously from SLICE to END across the clip. SLICE longer than END: wide pulses that tighten into a buzz. SLICE shorter than END: a buzz that opens up into slow pulses. CURVE sets the shape of the glide - LIN evenly, EXP holding back and rushing at the end.</p><p>Unlike RAMP TO, which jumps between grid values in stages, TREMOLO has no steps: every repeat is a little shorter (or longer) than the one before.</p>", "SLICE 180 ms, END 25 ms, CURVE EXP, one bar: the classic tape-stop-in-reverse riser into a drop.")}
 {ctl("SLICE", "read-only", "<p>The length of one repeat in milliseconds. It changes when you change GRID or BPM. If the selected slice of audio is shorter than this, the repeat simply contains silence after the hit.</p>")}
 {ctl("BARS", "0.5 to 8 bars, half-bar steps<br>default 2", "<p>The length of the rendered clip. Repeats are placed until the clip is full; if the clip length is not an exact multiple of the grid, the last repeat is cut to fit.</p>")}
 {ctl("BPM", "20 to 300<br>default 120<br>DAW or MANUAL", "<p>When the plugin runs inside a DAW that reports its tempo, the box is locked and shows the host tempo (chip reads <em>DAW</em>). Otherwise type a tempo; the chip reads <em>MANUAL</em>. The grid, the SLICE readout and the clip length all follow this value.</p>", "Rendering at the song's tempo is what makes the clip land on the grid when you drag it in. If you later change the song tempo, render again.")}
 <h3>Shape</h3>
-{img("stutter/tour_knobs.png", "<b>FADE IN, FADE OUT, STEREO.</b>", "w60")}
+{img("stutter/tour_knobs.png", "<b>FADE IN, FADE OUT, STEREO</b> and the AUTO chips under the last two. The thin outer ring is where AUTO walks each knob.", "w60")}
 {ctl("FADE IN", "0 to 100 % of a repeat<br>default 0 %<br>curve: quadratic", "<p>A fade at the start of every repeat. Small values (5-15 %) remove clicks when the slice does not start at a zero crossing; large values turn hard hits into soft pulses.</p>")}
 {ctl("FADE OUT", "0 to 100 % of a repeat<br>default 0 %<br>curve: quadratic", "<p>A fade at the end of every repeat. Use it to make each repeat decay before the next one, which gives the classic 'gated' roll.</p>", "FADE OUT around 60-80 % with 1/32 GRID sounds like a machine-gun roll; 0 % sounds like a hard loop.")}
 {ctl("STEREO", "0 to 100 %<br>default 0 %", "<p>Ping-pong: even repeats are attenuated in the right channel and odd repeats in the left, by the amount you set. 100 % alternates fully left / right; 30 % gives gentle movement that still sums to mono without holes.</p>", "Check the mix in mono when you push STEREO high - full ping-pong at 1/32 turns into a buzz in mono.")}
+{ctl("AUTO", "OFF &middot; up &middot; down<br>under FADE OUT and STEREO<br>default OFF", "<p>Moves the knob by itself across the clip. The knob is where the clip <em>starts</em>; up walks it to 100 % and down to 0 %, repeat by repeat, following CURVE (LIN: a straight line, EXP: slow first, fast at the end). The last repeat always gets the full value.</p><p>Two knobs have it because they are the two that tell a story over a fill. STEREO 100 % with AUTO down opens in full left / right ping-pong and closes in the centre, right into the drop. FADE OUT 0 % with AUTO up starts with repeats that ring into each other and ends with tight, gated hits.</p><p>A thin ring outside the knob's arc shows the stretch it will travel, and while the RESULT plays a dot rides that ring at the value the repeat under the playhead got - the same idea as an LFO display in a synth. On the RESULT waveform the stereo colouring (yellow / white repeats) fades along with it.</p>", "STEREO 100 % down + FADE OUT 20 % up on a 1/16 snare roll: it starts wide and loose, and lands narrow and tight.")}
 <h3>Pitch and key (ADVANCED)</h3>
 {img("stutter/adv.png", "<b>The ADVANCED drawer.</b> MIX, the two fade curves and the global fades were host-only parameters until 1.2; PITCH, PITCH RAMP, KEY and SCALE are new.")}
 {ctl("PITCH", "-12 to +12 semitones<br>default 0", "<p>Every repeat is re-pitched by this amount - the content moves, the grid does not. The slice is read faster or slower from the transient, so a repeat pitched up contains more of the source and one pitched down contains less.</p>", "+7 (a fifth) on a snare roll is the classic 'psy' fill; -12 on a vocal chop is a different singer.")}

@@ -154,13 +154,17 @@ def main():
         ("#divisionBtns", "GRID"), ("#rampToBtns", "RAMP TO"), ("#rampCurveBtns", "CURVE"),
         ("#sliceMs", "SLICE"), ("#barsMinus+#barsPlus", "BARS"), ("#bpmInput+#bpmSource", "BPM"),
         ("#fadeInKnob", "FADE IN"), ("#fadeOutKnob", "FADE OUT"), ("#stereoKnob", "STEREO"),
+        ("#fadeOutAutoBtns", "FADE OUT AUTO"), ("#stereoAutoBtns", "STEREO AUTO"),
         ("#playBtn", "PLAY"), ("#onBarBtn", "ON BAR"), ("#applyBtn", "STUTTER"),
         ("#exportBtn", "EXPORT"), ("#advToggle", "ADVANCED"), ("#extrasToggle", "EXTRAS"),
         ("#statusText", "Status line"), ("#resize-handle", "Resize grip")], A,
-        crops=[("grid", "#divisionBtns+#bpmSource", 14), ("knobs", "#fadeInArc+#stereoVal", 14), ("transport", "#playBtn+#exportBtn", 12)])
+        crops=[("grid", "#divisionBtns+#bpmSource", 14), ("knobs", "#fadeInArc+#stereoAutoBtns", 14), ("transport", "#playBtn+#exportBtn", 12)])
     annotate("stutter_m_result", "stutter/result.png", [
         ("#viewToggle", "ORIGINAL / RESULT"), ("#playBtn", "PLAY"),
         ("#transientNav", "PREV / NEXT"), ("#advToggle", "ADVANCED")], A)
+    annotate("stutter_m_free", "stutter/free.png", [
+        ("#divisionBtns", "GRID = FREE"), ("#sliceChip", "SLICE (start length)"),
+        ("#tremoloBtns", "TREMOLO"), ("#freeEndChip", "END length")], A)
     annotate("stutter_m_adv", "stutter/adv.png", [
         ("#mixKnob", "MIX"), ("#fadeInCurveKnob", "IN CURVE"), ("#fadeOutCurveKnob", "OUT CURVE"), ("#globalFadeInKnob", "GLOBAL IN"),
         ("#globalFadeOutKnob", "GLOBAL OUT"), ("#pitchKnob", "PITCH"), ("#pitchRampKnob", "PITCH RAMP"), ("#keyRootBtns", "KEY"), ("#keyModeBtns", "SCALE")], A,
