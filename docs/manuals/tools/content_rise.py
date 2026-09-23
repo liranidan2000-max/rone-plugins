@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "rise", "product": "RONE Rise", "eyebrow": "ONE KNOB. THE WHOLE BUILD-UP.",
-        "title_html": "RONE <i>Rise</i>", "accent": "#E0449A", "version": "1.0",
+        "title_html": "RONE <i>Rise</i>", "accent": "#E0449A", "version": "1.0.1",
         "tagline": "Turn one knob up over the phrase and the mix becomes a build-up - the lows leave, the reverb opens, the echoes climb. Snap it to zero and the drop hits, with the tail still spilling into it. Or press GO and let it land on the bar by itself.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Rise.vst3", "au": "RONE Rise.component", "exe": "RONE Rise.exe",
         "pdf": "RONE Rise - User Manual.pdf", "cover_img": "rise/tour_knob.png",
@@ -126,6 +126,7 @@ def manual(G):
 <li><strong>Late is better.</strong> Most of the change should happen in the last two or three bars - use CURVE EXP for LAND runs, or draw the automation that way.</li>
 <li><strong>Keep the kick out</strong> of the bus Rise sits on if you want the groove to keep driving through the build.</li>
 <li><strong>SINK 0</strong> turns Rise into a pure add-on: nothing ever gets quieter.</li>
+<li><strong>Stop means quiet.</strong> When the song stops, Rise lets its tail go and rests at zero until you press play or touch the knob, so a build left half-way never colours what you audition next.</li>
 <li><strong>Presets are starting points.</strong> Every macro works in every preset: add DIVE to HORIZON, a GATE to SUNRISE.</li>
 </ul>
 <h3>Troubleshooting</h3>
@@ -135,6 +136,7 @@ def manual(G):
  ["The knob went back to 0 after a GO run", "That is the landing - the plugin stays at zero until the knob moves", "Move the knob to take over again"],
  ["The build gets quieter", "SINK lowers the dry so the drop can jump", "Lower SINK in ADVANCED, 0 = never quieter"],
  ["The tail stops dead on the drop", "TAIL is CUT", "Set TAIL to 1-4 bars"],
+ ["The effect switched off when I stopped the song", "REST ON STOP: when the host stops, Rise fades its tail and rests at zero, whatever the automation left INTENSITY at - it never keeps building or ringing into a stopped project", "Press play again, or touch the knob"],
  ["The lift sounds metallic", "PITCH is a frequency shift, not a transposition", "Lower PITCH in ADVANCED"],
 ])}
 """})
