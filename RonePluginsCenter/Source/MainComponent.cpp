@@ -124,11 +124,15 @@ MainComponent::getResource (const juce::String& url)
 // Construction
 // ============================================================================
 
-MainComponent::MainComponent()
-    : webView (juce::WebBrowserComponent::Options{}
+juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
+{
+    return juce::WebBrowserComponent::Options{}
         .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
         .withWinWebView2Options (
             juce::WebBrowserComponent::Options::WinWebView2{}
+                // The page is rebuilt every time the window opens: paint the
+                // ground graphite so the reload never flashes white.
+                .withBackgroundColour (juce::Colour (0xff14161A))
                 // AppData, not TEMP: anything the UI keeps in browser storage
                 // survives disk cleanups, like every other RONE plugin's data.
                 .withUserDataFolder (
@@ -139,58 +143,58 @@ MainComponent::MainComponent()
 
         // ---- JS → C++ native functions ----
         .withNativeFunction ("getPlugins", [this] (NativeArgs args, NativeCompletion complete) {
-            handleGetPlugins (args, std::move (complete));
+            handleGetPlugins (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("installPlugin", [this] (NativeArgs args, NativeCompletion complete) {
-            handleInstallPlugin (args, std::move (complete));
+            handleInstallPlugin (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("openPlugin", [this] (NativeArgs args, NativeCompletion complete) {
-            handleOpenPlugin (args, std::move (complete));
+            handleOpenPlugin (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("openManual", [this] (NativeArgs args, NativeCompletion complete) {
-            handleOpenManual (args, std::move (complete));
+            handleOpenManual (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("openFolder", [this] (NativeArgs args, NativeCompletion complete) {
-            handleOpenFolder (args, std::move (complete));
+            handleOpenFolder (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("refreshPlugins", [this] (NativeArgs args, NativeCompletion complete) {
-            handleRefreshPlugins (args, std::move (complete));
+            handleRefreshPlugins (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("activateLicense", [this] (NativeArgs args, NativeCompletion complete) {
-            handleActivateLicense (args, std::move (complete));
+            handleActivateLicense (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("deactivateLicense", [this] (NativeArgs args, NativeCompletion complete) {
-            handleDeactivateLicense (args, std::move (complete));
+            handleDeactivateLicense (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("getLicenseStatus", [this] (NativeArgs args, NativeCompletion complete) {
-            handleGetLicenseStatus (args, std::move (complete));
+            handleGetLicenseStatus (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("accountSignIn", [this] (NativeArgs args, NativeCompletion complete) {
-            handleAccountSignIn (args, std::move (complete));
+            handleAccountSignIn (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("accountSignOut", [this] (NativeArgs args, NativeCompletion complete) {
-            handleAccountSignOut (args, std::move (complete));
+            handleAccountSignOut (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("accountGoogleSignIn", [this] (NativeArgs args, NativeCompletion complete) {
-            handleAccountGoogleSignIn (args, std::move (complete));
+            handleAccountGoogleSignIn (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("accountGoogleCancel", [this] (NativeArgs args, NativeCompletion complete) {
-            handleAccountGoogleCancel (args, std::move (complete));
+            handleAccountGoogleCancel (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("getAccountStatus", [this] (NativeArgs args, NativeCompletion complete) {
-            handleGetAccountStatus (args, std::move (complete));
+            handleGetAccountStatus (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("getAppVersion", [this] (NativeArgs args, NativeCompletion complete) {
-            handleGetAppVersion (args, std::move (complete));
+            handleGetAppVersion (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("getAutoStart", [this] (NativeArgs args, NativeCompletion complete) {
-            handleGetAutoStart (args, std::move (complete));
+            handleGetAutoStart (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("setAutoStart", [this] (NativeArgs args, NativeCompletion complete) {
-            handleSetAutoStart (args, std::move (complete));
+            handleSetAutoStart (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("applyCenterUpdate", [this] (NativeArgs args, NativeCompletion complete) {
-            handleApplyCenterUpdate (args, std::move (complete));
+            handleApplyCenterUpdate (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
             if (args.size() > 0)
@@ -213,7 +217,10 @@ MainComponent::MainComponent()
            #if JUCE_DEBUG
             , juce::URL { "http://localhost:3000/" }.getOrigin()
            #endif
-            ))
+            );
+}
+
+MainComponent::MainComponent()
 {
     // Crash & error reporting: the Center owns its process, so it installs the
     // crash handler, and it is the bundle's single uploader — drain whatever
@@ -222,8 +229,6 @@ MainComponent::MainComponent()
                                             JUCE_APPLICATION_VERSION_STRING,
                                             "Center");
     CrashReportUploader::uploadPendingAsync();
-
-    addAndMakeVisible (webView);
 
 #if JUCE_WINDOWS
     titleBar.startNativeDrag = [this] { return beginNativeWindowDrag(); };
@@ -242,7 +247,7 @@ MainComponent::MainComponent()
         obj->setProperty ("licensed",     isEffectivelyLicensed (licenseHandler, accountClient));
         obj->setProperty ("customerName", licenseHandler.getCustomerName());
         obj->setProperty ("message",      licenseHandler.getStatusMessage());
-        webView.emitEventIfBrowserIsVisible ("licenseChanged", juce::var (obj));
+        emitToPage ("licenseChanged", juce::var (obj));
 
         // Also push updated plugin data (license affects card state)
         emitPluginsUpdated();
@@ -259,15 +264,12 @@ MainComponent::MainComponent()
         obj->setProperty ("licensed",     isEffectivelyLicensed (licenseHandler, accountClient));
         obj->setProperty ("customerName", s.name.isNotEmpty() ? s.name : s.email);
         obj->setProperty ("message",      s.message);
-        webView.emitEventIfBrowserIsVisible ("licenseChanged", juce::var (obj));
+        emitToPage ("licenseChanged", juce::var (obj));
 
-        webView.emitEventIfBrowserIsVisible ("accountChanged", accountStatusVar());
+        emitToPage ("accountChanged", accountStatusVar());
         emitPluginsUpdated();
     };
     accountClient.initialize();
-
-    // Navigate to resource provider root (uses JUCE's internal scheme, not actual HTTP)
-    webView.goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
 
     // Fetch manifest after a short delay to let the WebView initialize
     juce::Timer::callAfterDelay (500, [this] { networkManager.fetchManifest(); });
@@ -304,12 +306,78 @@ void MainComponent::resized()
                .withTrimmedBottom (grabStrip);
 #endif
 
-    webView.setBounds (area);
+    if (webView != nullptr)
+        webView->setBounds (area);
 }
 
 void MainComponent::parentHierarchyChanged()
 {
     titleBar.setWindowToDrag (getTopLevelComponent());
+}
+
+void MainComponent::setUiVisible (bool shouldBeLive)
+{
+    JUCE_ASSERT_MESSAGE_THREAD
+    if (shouldBeLive == (webView != nullptr))
+        return;
+
+    ++webGeneration;
+
+    if (shouldBeLive)
+    {
+        // Navigate to the resource provider root (JUCE's internal scheme, not HTTP).
+        webView = std::make_unique<juce::WebBrowserComponent> (makeWebOptions());
+        addAndMakeVisible (*webView);
+        resized();
+        webView->goToURL (juce::WebBrowserComponent::getResourceProviderRoot());
+    }
+    else
+    {
+        removeChildComponent (webView.get());
+        webView.reset();
+    }
+}
+
+void MainComponent::setWindowActive (bool isActive)
+{
+    auto* obj = new juce::DynamicObject();
+    obj->setProperty ("active", isActive);
+    emitToPage ("windowActive", juce::var (obj));
+}
+
+MainComponent::NativeCompletion MainComponent::guarded (NativeCompletion complete)
+{
+    return [safeThis = juce::Component::SafePointer<MainComponent> (this),
+            generation = webGeneration,
+            complete = std::move (complete)] (juce::var result) mutable
+    {
+        auto settle = [safeThis, generation, complete, result]() mutable
+        {
+            if (safeThis != nullptr && safeThis->webView != nullptr && safeThis->webGeneration == generation)
+                complete (result);
+        };
+
+        if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+            settle();
+        else
+            juce::MessageManager::callAsync (std::move (settle));
+    };
+}
+
+void MainComponent::emitToPage (const juce::Identifier& eventId, const juce::var& payload)
+{
+    if (! juce::MessageManager::getInstance()->isThisTheMessageThread())
+    {
+        juce::MessageManager::callAsync ([safeThis = juce::Component::SafePointer<MainComponent> (this), eventId, payload]
+        {
+            if (safeThis != nullptr)
+                safeThis->emitToPage (eventId, payload);
+        });
+        return;
+    }
+
+    if (webView != nullptr)
+        webView->emitEventIfBrowserIsVisible (eventId, payload);
 }
 
 // ============================================================================
@@ -390,7 +458,7 @@ juce::var MainComponent::allPluginsToVar()
 
 void MainComponent::emitPluginsUpdated()
 {
-    webView.emitEventIfBrowserIsVisible ("pluginsUpdated", allPluginsToVar());
+    emitToPage ("pluginsUpdated", allPluginsToVar());
 }
 
 // A status the Center shows that is nobody's bug: nothing to file in the
@@ -409,7 +477,7 @@ void MainComponent::emitStatusMessage (const juce::String& text, const juce::Str
     auto* obj = new juce::DynamicObject();
     obj->setProperty ("text", text);
     obj->setProperty ("type", type);
-    webView.emitEventIfBrowserIsVisible ("statusMessage", juce::var (obj));
+    emitToPage ("statusMessage", juce::var (obj));
 
     // Every user-visible error is also a queued report (throttled per message,
     // see RoneCrashReporter) — this is the "why didn't it install/open" feed
@@ -716,7 +784,7 @@ void MainComponent::handleActivateLicense (NativeArgs args, NativeCompletion com
             if (success)
                 obj->setProperty ("customerName", licenseHandler.getCustomerName());
 
-            webView.emitEventIfBrowserIsVisible ("licenseActivationResult", juce::var (obj));
+            emitToPage ("licenseActivationResult", juce::var (obj));
 
             if (success)
                 emitStatusMessage ("License activated - all plugins unlocked!", "success");
@@ -737,7 +805,7 @@ void MainComponent::handleDeactivateLicense (NativeArgs, NativeCompletion comple
             auto* obj = new juce::DynamicObject();
             obj->setProperty ("success", success);
             obj->setProperty ("message", msg);
-            webView.emitEventIfBrowserIsVisible ("licenseDeactivationResult", juce::var (obj));
+            emitToPage ("licenseDeactivationResult", juce::var (obj));
         });
     });
 }
@@ -971,7 +1039,7 @@ void MainComponent::checkForCenterUpdate()
 
     auto* obj = new juce::DynamicObject();
     obj->setProperty ("version", version);
-    webView.emitEventIfBrowserIsVisible ("centerUpdateAvailable", juce::var (obj));
+    emitToPage ("centerUpdateAvailable", juce::var (obj));
 }
 
 void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion complete)
@@ -1155,7 +1223,7 @@ void MainComponent::onDownloadProgress (const juce::String& pluginId, double pro
     auto* obj = new juce::DynamicObject();
     obj->setProperty ("pluginId", pluginId);
     obj->setProperty ("progress", progress);
-    webView.emitEventIfBrowserIsVisible ("downloadProgress", juce::var (obj));
+    emitToPage ("downloadProgress", juce::var (obj));
 }
 
 void MainComponent::onDownloadComplete (const juce::String& pluginId,
@@ -1310,7 +1378,14 @@ void MainComponent::launchSilentInstaller (const juce::File& installerFile,
             return;
         }
 
-        bool processFinished = process.waitForProcessToFinish (120000);
+        // JUCE's waitForProcessToFinish looks every 2 ms. An installer runs for
+        // tens of seconds (plus a UAC prompt), so ten looks a second is plenty.
+        bool processFinished = false;
+        for (int waited = 0; waited < 120000; waited += 100)
+        {
+            if (! process.isRunning()) { processFinished = true; break; }
+            juce::Thread::sleep (100);
+        }
         auto exitCode = process.getExitCode();
     #endif
         DBG ("[Installer] Process finished=" + juce::String (processFinished ? "YES" : "NO")

@@ -56,7 +56,8 @@ private:
     // ========================================================================
     // Main application window
     // ========================================================================
-    class MainWindow : public juce::DocumentWindow
+    class MainWindow : public juce::DocumentWindow,
+                       private juce::Timer
     {
     public:
         explicit MainWindow (const juce::String& name, bool startHidden = false)
@@ -84,6 +85,22 @@ private:
         void closeButtonPressed() override
         {
             setVisible (false);
+        }
+
+        // The page (WebView2) exists only while the window can be seen: hidden
+        // in the tray or minimised, the Center keeps its backend and lets the
+        // six msedgewebview2 processes go. Started with --tray it never makes
+        // one until the window is first opened.
+        void visibilityChanged() override
+        {
+            DocumentWindow::visibilityChanged();
+            syncPage();
+        }
+
+        void minimisationStateChanged (bool isNowMinimised) override
+        {
+            DocumentWindow::minimisationStateChanged (isNowMinimised);
+            syncPage();
         }
 
         // Show the window and put it in front of whatever the user is in -
@@ -115,6 +132,69 @@ private:
         }
 
     private:
+        void syncPage()
+        {
+            auto* page = dynamic_cast<MainComponent*> (getContentComponent());
+            if (page == nullptr)
+                return;
+
+            if (isVisible() && ! isMinimised())
+            {
+                releasePending = false;
+                page->setUiVisible (true);
+                foregroundKnown = false;
+                startTimer (1000);
+                return;
+            }
+
+            stopTimer();
+
+            // Released a moment later: never from inside a WebView2 callback that
+            // hid the window (the page's own minimise or close button), and not at
+            // all if the window came straight back.
+            if (releasePending)
+                return;
+
+            releasePending = true;
+            juce::Component::SafePointer<MainWindow> safe (this);
+            juce::Timer::callAfterDelay (1500, [safe]
+            {
+                if (safe == nullptr || ! safe->releasePending)
+                    return;
+
+                safe->releasePending = false;
+
+                if (! safe->isVisible() || safe->isMinimised())
+                    if (auto* p = dynamic_cast<MainComponent*> (safe->getContentComponent()))
+                        p->setUiVisible (false);
+            });
+        }
+
+        // Once a second while the page lives: is this window the one in front?
+        // Asked of Windows itself, because keyboard focus inside the WebView2
+        // child makes JUCE's own isActiveWindow() report false while the user
+        // is clicking in the page.
+        void timerCallback() override
+        {
+           #if JUCE_WINDOWS
+            auto* hwnd = (HWND) getWindowHandle();
+            const bool inFront = hwnd != nullptr && GetAncestor (GetForegroundWindow(), GA_ROOT) == hwnd;
+           #else
+            const bool inFront = isActiveWindow();
+           #endif
+            if (foregroundKnown && inFront == wasInFront)
+                return;
+
+            foregroundKnown = true;
+            wasInFront = inFront;
+            if (auto* page = dynamic_cast<MainComponent*> (getContentComponent()))
+                page->setWindowActive (inFront);
+        }
+
+        bool releasePending = false;
+        bool foregroundKnown = false;
+        bool wasInFront = true;
+
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
 

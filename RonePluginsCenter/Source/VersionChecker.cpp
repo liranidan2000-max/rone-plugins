@@ -40,6 +40,8 @@ static const std::map<juce::String, juce::String>& innoAppIds()
         { "RoneStutter",    "{D4E5F6A7-B8C9-0123-DEFA-234567890123}" },
         { "RoneStucker",    "{DEDF18E3-6C8E-4090-B461-655FE6048BA6}" },
         { "RoneThrow",      "{547A9CAA-B46F-414C-BFEE-7699EB212906}" },
+        { "RoneClipper",    "{E02BE7CD-F957-43CC-81A5-950AC7AE62B0}" },   // installer/RoneClipper.iss
+        { "RoneRise",       "{E4F73C6B-63EB-4D37-9E02-0C6E91F7E9CE}" },   // installer/RoneRise.iss
         { "RoneFlanger",    "{E5F6A7B8-C9D0-1234-EFAB-345678901234}" },
         { "RoneAfterspace", "{A1B2C3D4-E5F6-7890-ABCD-AFTERSPACE01}" },
         { "RONEAnalyzer",   "{E7F8A9B0-C1D2-3456-EF01-6789ABCDEF01}" },
@@ -270,10 +272,11 @@ juce::File VersionChecker::getStandaloneInstallDir()
 juce::File VersionChecker::getVst3InstallDir()
 {
 #if JUCE_WINDOWS
-    // C:\Program Files\Common Files\VST3\RONE
+    // C:\Program Files\Common Files\VST3\RONE, where every installer puts it
+    // ({commoncf}\VST3\RONE). The old code took the parent of Program Files (x86),
+    // which is C:\, so the VST3 check and "Open Folder" never matched.
     auto common = juce::File::getSpecialLocation (
-        juce::File::globalApplicationsDirectoryX86)  // gives Common Files parent
-        .getParentDirectory()
+        juce::File::globalApplicationsDirectory)
         .getChildFile ("Common Files")
         .getChildFile ("VST3")
         .getChildFile (RONE_VST3_SUBDIR);

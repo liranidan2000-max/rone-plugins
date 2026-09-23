@@ -171,3 +171,7 @@ input, textarea {
 @media (prefers-reduced-motion: reduce) {
   .eq-bar, .skeleton, .status-dot-pulse, .progress-shimmer { animation: none !important; }
 }
+
+/* The window is behind another app (App.jsx 'windowActive'): every CSS
+   animation holds still until it comes back to the front. */
+.app-idle *, .app-idle *::before, .app-idle *::after { animation-play-state: paused !important; }

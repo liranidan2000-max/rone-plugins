@@ -20,6 +20,18 @@ public:
     void paint (juce::Graphics&) override;
     void parentHierarchyChanged() override;
 
+    // The page lives only while the window can be seen (MainWindow calls this on
+    // show / hide / minimise). Hidden in the tray the Center keeps its backend -
+    // manifest, downloads, installs, licence and account checks - but no
+    // WebView2: releasing it lets its six msedgewebview2 processes (~240 MB
+    // private on 2026-09-23) exit. Showing the window builds a fresh page.
+    void setUiVisible (bool shouldBeLive);
+
+    // Behind another app (typically the DAW) the page pauses its endless CSS
+    // animations - the sidebar equaliser, pulsing dots, shimmer - so a window
+    // left open costs no GPU frames. MainWindow reports the foreground state.
+    void setWindowActive (bool isActive);
+
     // NetworkManager::Listener
     void onManifestReady  (const juce::Array<PluginInfo>& plugins) override;
     void onManifestError  (const juce::String& errorMessage) override;
@@ -43,6 +55,19 @@ private:
     // ---- Native function handlers (JS → C++) ----
     using NativeArgs       = const juce::Array<juce::var>&;
     using NativeCompletion = juce::WebBrowserComponent::NativeFunctionCompletion;
+
+    juce::WebBrowserComponent::Options makeWebOptions();
+
+    // A completion that settles only the page that asked. JUCE's own completion
+    // points into the WebBrowserComponent that made the call; once the window is
+    // hidden that component is gone, and a late answer (a Google sign-in that
+    // finishes after the window closed) would otherwise write into freed memory.
+    NativeCompletion guarded (NativeCompletion complete);
+
+    // Every event to the page goes through here: dropped while there is no page
+    // (the page asks for fresh state when it loads), marshalled to the message
+    // thread when a background thread sends it.
+    void emitToPage (const juce::Identifier& eventId, const juce::var& payload);
 
     void handleGetPlugins      (NativeArgs args, NativeCompletion complete);
     void handleInstallPlugin   (NativeArgs args, NativeCompletion complete);
@@ -91,7 +116,8 @@ private:
 
     // ---- Members ----
     CustomTitleBar            titleBar;
-    juce::WebBrowserComponent webView;
+    std::unique_ptr<juce::WebBrowserComponent> webView;   // only while the window is shown
+    juce::uint32              webGeneration = 0;           // bumped each time a page is made or released
     NetworkManager            networkManager;
     LicenseHandler            licenseHandler;
     AccountClient             accountClient;

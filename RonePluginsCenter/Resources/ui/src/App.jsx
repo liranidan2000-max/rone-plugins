@@ -156,6 +156,9 @@ export default function App() {
     })
     onEvent('statusMessage', (data) => { if (data?.text) addToast(data.text, data.type || 'info') })
     onEvent('centerUpdateAvailable', (data) => { if (data?.version) onCenterUpdate(data.version) })
+    // Behind the DAW (or any other app) nothing animates: MainWindow asks
+    // Windows once a second whether this window is in front (index.css .app-idle).
+    onEvent('windowActive', (data) => { document.documentElement.classList.toggle('app-idle', data?.active === false) })
   }, [addToast])
 
   // ---- Actions ----
