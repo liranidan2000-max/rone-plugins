@@ -2,12 +2,12 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-24T06:18:26Z",
+  "last_updated": "2026-09-24T10:31:10Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.4.1.223",
-    "sha256": "d6b1c560d8f39db0ac07a0df36cb2a6c6f6872c3d8cd6d546caa17fcd5b9f56b"
+    "version": "1.5.0.228",
+    "sha256": "cf86914e54e105cb443b92467e6c5ad40b47f8d110d4b4eed3ab85f8c49deee9"
   },
   "plugins": [
     {
