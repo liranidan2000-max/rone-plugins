@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-23T22:36:45Z",
+  "last_updated": "2026-09-24T05:09:38Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -164,7 +164,7 @@
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.0.6.223",
+      "version": "2.0.7.226",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -178,9 +178,9 @@
       "manual": "RONE Flanger - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "2b8b7d8f597120f927b6e6e3ace3d44bad210144e15cebca61f9e7743f0e419f",
+      "sha256": "be38b555e03d543e92aeb32fc51f163ab88ffdbe46eb6303ff0f11afc601a75e",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "1edd9975cce15d5dd359642c2060e314bff68090f77b1ff8a66371db3de732b1",
+      "sha256_mac": "280aa61aa6522831074a12b4a925c29a5ad594a77ca95da1c99da50b978e44c7",
       "price": 39,
       "launch_price": 29,
       "store_url": "https://roneaudio.com/products/rone-flanger.html"
