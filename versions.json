@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-24T05:09:38Z",
+  "last_updated": "2026-09-24T05:10:30Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -213,7 +213,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.1.1.223",
+      "version": "1.1.2.225",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -226,9 +226,9 @@
       "manual": "RONE Analyzer - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "244c1e2b87f892503512e629c2843a496414a1172a6569df463cbfc6d71bec45",
+      "sha256": "150bd4b54307d5270263eed3261e216fbe6587455d134dbf33978db7994d0a0f",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "dafcedb8e9dc6f3667df60cfcd5e6a94e1546f64c0d9ac8741a268715cae1580",
+      "sha256_mac": "51d4d2ad4beb3389bd427d8b0fb7b9ef58b6ab0e138e608be59a81218c3c4a66",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html"
