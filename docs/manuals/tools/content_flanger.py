@@ -58,7 +58,7 @@ def manual(G):
  ("Comb display", "live frequency response with the notch position"),
  ("COMB +/-", "feedback polarity readout"),
  ("NOTCH", "frequency of the first notch"),
- ("BPM", "host tempo (or the standalone tempo)"),
+ ("BPM", "the host tempo (120 in the standalone app)"),
  ("FEEDBACK", "-100 to +100 %"),
  ("SWEEP", "the delay time, 10 ms to 0.1 ms"),
  ("MIX", "dry / wet balance"),
@@ -89,7 +89,7 @@ def manual(G):
 {ctl("8 BAR / 4 BAR / 2 BAR / 1 BAR / 1/2", "default 4 BAR", "<p>How long one full cycle takes, in bars of the host tempo. Because the cycle is bar-locked, a rise that starts on bar 1 of a 4-bar phrase peaks exactly when the phrase ends. Use 1/2 for a fast, nervous shimmer.</p>", "Match the value to the length of your build: an 8-bar build gets 8 BAR, a 2-bar fill gets 2 BAR.")}
 <h3>GATE - rhythmic bypass</h3>
 {img("flanger/tour_gate.png", "<b>The GATE row.</b>", "w80")}
-{ctl("&#9211; GATE", "on / off", "<p>Switches the effect in and out on a note grid, with a short crossfade so nothing clicks. The dry signal is untouched while the gate is closed, so the result is a rhythmic 'flange pulse' rather than a volume gate.</p>")}
+{ctl("&#9211; GATE", "on / off", "<p>Switches the effect in and out on a note grid, with a 5 ms crossfade on each grid line so nothing clicks. The dry signal is untouched while the gate is closed, so the result is a rhythmic 'flange pulse' rather than a volume gate.</p>")}
 {ctl("1 BAR &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32", "default 1/8", "<p>Gate rate. The LED row shows where you are in the pattern; the gate follows the host transport so it stays aligned to the bar.</p>")}
 <h3>ADVANCED drawer</h3>
 {img("flanger/adv_drawer.png", "<b>STEREO and OUTPUT.</b>", "w60")}
@@ -149,7 +149,7 @@ def manual(G):
 </ul>
 """})
 
-    S.append(G["conventions_section"](m, note("Standalone tempo", "The standalone app cannot read a DAW clock; INFINITE and GATE follow the BPM shown in the display, which you can set from the preset menu's tempo field.")))
+    S.append(G["conventions_section"](m, note("Standalone tempo", "The standalone app has no DAW clock, and RONE Flanger has no tempo setting of its own: INFINITE and GATE run at 120 BPM, the tempo shown on the display. When the effect has to follow a song's tempo, use the plugin inside your DAW.")))
 
     S.append(G["support_section"](m, [
         ("INFINITE does not move", "The sweep follows the host transport - press play in the DAW. In the standalone app it runs continuously at the displayed BPM."),
