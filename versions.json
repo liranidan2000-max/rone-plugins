@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-09-24T10:31:10Z",
+  "last_updated": "2026-09-24T11:15:59Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -88,7 +88,7 @@
     {
       "id": "RoneThrow",
       "name": "RONE Throw",
-      "version": "1.7.3.227",
+      "version": "1.8.0.229",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -103,9 +103,9 @@
       "manual": "RONE Throw - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.pkg",
-      "sha256": "4b80e1efb3bd9f7393b82f773e3658199ea1c85605a4cb678e92d3b1c4208280",
+      "sha256": "76f62833e1e91f932ff62f40a502540a7d08b13cfba321b9c55accddf2d63c3f",
       "registry_key": "RoneThrow",
-      "sha256_mac": "ffcc884a9a6cbcc1fbbbd87f841514dc2b9ce83e631b0ddc7c31f6a48315a979",
+      "sha256_mac": "a0b269e4a7685a30c1664cb7f27dee2f50d81ee66960ad91868c6c1c4d8b9861",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 29
