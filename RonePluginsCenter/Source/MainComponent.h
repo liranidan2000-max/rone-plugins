@@ -98,6 +98,11 @@ private:
     void handleGetAccountStatus (NativeArgs args, NativeCompletion complete);
     juce::var accountStatusVar() const;
     void handleGetAppVersion   (NativeArgs args, NativeCompletion complete);
+
+    // The site's popups (roneaudio.com/api/v1/popup): a new plugin, a free one, a
+    // deal - the same list the website shows, so one place (the admin console)
+    // runs both. Fetched here because the endpoint sends no CORS headers.
+    void handleGetAnnouncements (NativeArgs args, NativeCompletion complete);
     void handleGetAutoStart    (NativeArgs args, NativeCompletion complete);
     void handleSetAutoStart    (NativeArgs args, NativeCompletion complete);
 

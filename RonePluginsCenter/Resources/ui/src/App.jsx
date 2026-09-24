@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { api, onEvent, isDevMode, mockPlugins } from './bridge'
+import { api, callNative, onEvent, isDevMode, mockPlugins, mockAnnouncements, mockAnnouncedPlugins } from './bridge'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import FeaturedSection from './components/FeaturedSection'
@@ -9,6 +9,7 @@ import PluginGrid from './components/PluginGrid'
 import AccountPanel from './components/AccountPanel'
 import SettingsPanel from './components/SettingsPanel'
 import InfoModal from './components/InfoModal'
+import AnnouncementModal from './components/AnnouncementModal'
 import StatusToast from './components/StatusToast'
 
 // ---- The one ownership comparison ----
@@ -37,6 +38,90 @@ function ownedProductIds (owned) {
     }
   }
   return ids
+}
+
+// ---- Announcements: the website's popups, in the Center ----
+// roneaudio.com/api/v1/popup is managed in the admin console, and a plugin added
+// to the catalog gets its popup there by itself - so it reaches the Center too.
+// A popup is shown once (per id), at most one a day, and only when it means
+// something here: its plugin is not installed or has an update. The page lives
+// in AppData (WebView2 user data folder), so this memory survives restarts.
+const SEEN_KEY = 'rone_center_popups_seen'
+const LAST_KEY = 'rone_center_popup_last'
+
+function readSeen () {
+  try {
+    const v = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]')
+    return Array.isArray(v) ? v : []
+  } catch { return [] }
+}
+
+function rememberAnnouncement (id) {
+  try {
+    const seen = readSeen().filter((x) => x !== id)
+    seen.push(id)
+    localStorage.setItem(SEEN_KEY, JSON.stringify(seen.slice(-50)))
+    localStorage.setItem(LAST_KEY, String(Date.now()))
+  } catch {}
+}
+
+// A site link carries where it came from, so the console can count it.
+function siteUrl (path, tag) {
+  try {
+    const u = new URL(path || '/', 'https://roneaudio.com/')
+    if (u.origin !== 'https://roneaudio.com') return 'https://roneaudio.com/'
+    u.searchParams.set('utm_source', 'plugins_center')
+    u.searchParams.set('utm_medium', 'popup')
+    u.searchParams.set('utm_campaign', 'center_' + String(tag || 'popup').toLowerCase())
+    return u.toString()
+  } catch { return 'https://roneaudio.com/' }
+}
+
+// The first popup that applies here, with what its button does. The card's own
+// rule decides "can install": the pass, or the plugin in the account's owned list
+// (which the server fills with the free plugins for every account).
+function pickAnnouncement (popups, { plugins, ownedKeys, licensed, ignoreMemory = false }) {
+  if (!ignoreMemory) {
+    let last = 0
+    try { last = Number(localStorage.getItem(LAST_KEY)) || 0 } catch {}
+    if (Date.now() - last < 20 * 3600 * 1000) return null
+  }
+  const seen = ignoreMemory ? new Set() : new Set(readSeen())
+
+  for (const popup of popups || []) {
+    if (!popup || typeof popup.id !== 'string' || seen.has(popup.id)) continue
+    const productId = popup.id.split(':')[1] || ''
+
+    if ((popup.kind === 'plugin' || popup.kind === 'free') && productId) {
+      const plugin = plugins.find((p) => productKey(p.id) === productKey(productId))
+      if (!plugin) continue                                              // not in this Center's list
+      if (!['not_installed', 'update_available', 'error'].includes(plugin.status)) continue   // has it, or busy
+
+      const canInstall = licensed || ownedKeys.has(productKey(plugin.id))
+      if (canInstall) {
+        return {
+          popup, plugin,
+          primary: { kind: 'install', label: plugin.status === 'update_available' ? 'Update now' : 'Install now' },
+          priceLine: popup.kind === 'free' ? (popup.price || '')
+                   : licensed ? 'Included in your ALL ACCESS pass' : 'In your account',
+        }
+      }
+      return {
+        popup, plugin,
+        primary: { kind: 'url', label: popup.cta?.label || 'See it', url: siteUrl(popup.cta?.url, productId) },
+        priceLine: popup.price || '',
+      }
+    }
+
+    if (popup.cta?.url) {
+      return {
+        popup, plugin: null,
+        primary: { kind: 'url', label: popup.cta.label || 'See it', url: siteUrl(popup.cta.url, productId || popup.kind) },
+        priceLine: popup.price || '',
+      }
+    }
+  }
+  return null
 }
 
 export default function App() {
@@ -103,11 +188,13 @@ export default function App() {
       if (isDevMode()) {
         // ?signedout=1 previews the sign-in form without a running backend,
         // ?lifetime=1 the customer who bought single plugins instead of the pass,
-        // ?waiting=1 updates waiting for a DAW (Stutter) and for the plugin's own window (Flanger)
+        // ?waiting=1 updates waiting for a DAW (Stutter) and for the plugin's own window (Flanger),
+        // ?announce=1 the website's popups (Clipper free, Rise new) over two not-installed cards
         const devQuery = new URLSearchParams(location.search)
         setPlugins(devQuery.has('waiting')
           ? mockPlugins.map(p => p.id === 'RoneStutter' ? { ...p, status: 'waiting', waitingFor: 'FL Studio' }
                                : p.id === 'RoneFlanger' ? { ...p, status: 'waiting', waitingFor: '' } : p)
+          : devQuery.has('announce') ? [...mockPlugins, ...mockAnnouncedPlugins]
           : mockPlugins)
         const devSignedOut = devQuery.has('signedout')
         const devLifetime = devQuery.has('lifetime')
@@ -311,6 +398,48 @@ export default function App() {
 
   const updatesCount = plugins.filter(p => p.status === 'update_available' || p.status === 'not_installed').length
 
+  // ---- Announcements (see pickAnnouncement above) ----
+  // Asked once per page, 1.5 s after the plugins are in and someone is signed in
+  // (or holds a licence key): a new customer from a reel signs in and is offered
+  // the install at once. `latest` hands the timer today's state, not the state of
+  // the render that armed it.
+  const [announcement, setAnnouncement] = useState(null)
+  const announcementAsked = useRef(false)
+  const latest = useRef({})
+  latest.current = { plugins: taggedPlugins, ownedKeys, licensed: license.licensed }
+  useEffect(() => {
+    if (loading || announcementAsked.current || plugins.length === 0) return
+    if (!(account.signedIn || license.licensed)) return
+    announcementAsked.current = true
+    setTimeout(async () => {
+      const dev = isDevMode()
+      let feed = null
+      if (dev) {
+        const q = new URLSearchParams(location.search).get('announce')   // =rise previews the second popup
+        feed = q === null ? null : q === 'rise' ? { ...mockAnnouncements, popups: [...mockAnnouncements.popups].reverse() } : mockAnnouncements
+      }
+      else { try { feed = await api.getAnnouncements() } catch {} }
+      if (!feed?.popups?.length) return
+      const item = pickAnnouncement(feed.popups, { ...latest.current, ignoreMemory: dev })
+      if (!item) return
+      if (!dev) rememberAnnouncement(item.popup.id)
+      setAnnouncement(item)
+    }, 1500)
+  }, [loading, plugins.length, account.signedIn, license.licensed])
+
+  const closeAnnouncement = useCallback(() => setAnnouncement(null), [])
+  const runAnnouncement = () => {
+    const item = announcement
+    setAnnouncement(null)
+    if (!item) return
+    if (item.primary.kind === 'install') {
+      handleNavigate('home')
+      handleInstall(item.plugin.id)
+    } else if (item.primary.url) {
+      callNative('openExternalUrl', item.primary.url).catch(() => {})
+    }
+  }
+
   // ---- Refresh lastSync display every minute ----
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -431,6 +560,13 @@ export default function App() {
       {/* Info Modal */}
       <AnimatePresence>
         {infoPlugin && <InfoModal plugin={infoPlugin} onClose={() => setInfoPlugin(null)} />}
+      </AnimatePresence>
+
+      {/* Announcement (the website's popup: a new plugin, a free one, a deal) */}
+      <AnimatePresence>
+        {announcement && !infoPlugin && (
+          <AnnouncementModal item={announcement} onPrimary={runAnnouncement} onClose={closeAnnouncement} />
+        )}
       </AnimatePresence>
 
       {/* Toasts */}

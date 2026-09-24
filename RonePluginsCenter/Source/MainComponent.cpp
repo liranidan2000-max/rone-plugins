@@ -197,6 +197,9 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         .withNativeFunction ("applyCenterUpdate", [this] (NativeArgs args, NativeCompletion complete) {
             handleApplyCenterUpdate (args, guarded (std::move (complete)));
         })
+        .withNativeFunction ("getAnnouncements", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetAnnouncements (args, guarded (std::move (complete)));
+        })
         .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
             if (args.size() > 0)
             {
@@ -1033,6 +1036,32 @@ void MainComponent::handleSetAutoStart (NativeArgs args, NativeCompletion comple
     obj->setProperty ("supported", AutoStart::isSupported());
     if (! ok) obj->setProperty ("error", "Could not change the login entry");
     complete (juce::JSON::toString (juce::var (obj)));
+}
+
+void MainComponent::handleGetAnnouncements (NativeArgs, NativeCompletion complete)
+{
+    // Off the message thread; `complete` is guarded(), so it lands on the message
+    // thread and is dropped if the window closed meanwhile. Offline or a bad
+    // answer = {"ok": false} and the page simply shows nothing.
+    juce::Thread::launch ([complete = std::move (complete)]() mutable
+    {
+        juce::URL url (juce::String (RONE_API_BASE) + "/popup?surface=center");
+        auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
+                           .withConnectionTimeoutMs (8000)
+                           .withExtraHeaders ("Accept: application/json");
+
+        juce::var result;
+        if (auto stream = url.createInputStream (options))
+            result = juce::JSON::parse (stream->readEntireStreamAsString());
+
+        if (! result.isObject())
+        {
+            auto* none = new juce::DynamicObject();
+            none->setProperty ("ok", false);
+            result = juce::var (none);
+        }
+        complete (result);
+    });
 }
 
 void MainComponent::handleGetAppVersion (NativeArgs, NativeCompletion complete)

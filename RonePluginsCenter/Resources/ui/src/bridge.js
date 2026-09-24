@@ -120,6 +120,7 @@ export const api = {
   getAutoStart:      createNativeFunction('getAutoStart'),
   setAutoStart:      createNativeFunction('setAutoStart'),
   applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
+  getAnnouncements:  createNativeFunction('getAnnouncements'),
 };
 
 // ---- Dev mode mock data (when running outside JUCE) ----
@@ -154,5 +155,40 @@ export const mockPlugins = [
     formats: ['VST3', 'Standalone'], type: 'plugin',
     whatsNew: 'Initial release', logoUrl: '/logos/RoneFlanger.png',
     hasStandalone: true, standaloneInstalled: true,
+  },
+];
+
+// ?announce=1 in dev mode: the website's popup feed as it was on 2026-09-24
+// (roneaudio.com/api/v1/popup), with two not-installed cards to match.
+export const mockAnnouncements = {
+  ok: true,
+  popups: [
+    {
+      id: 'free:RoneClipper:1790188198985', kind: 'free', eyebrow: 'New free plugin', title: 'RONE Clipper',
+      body: 'A hard clipper that shows you exactly what it removed.', price: 'Free · no card needed',
+      cta: { label: 'Get it free', url: '/products/rone-clipper' },
+      image: 'graphics/cutouts/rone-clipper.webp', accent: '#3D8BFF',
+    },
+    {
+      id: 'plugin:RoneRise:1790188200069', kind: 'plugin', eyebrow: 'New plugin', title: 'RONE Rise',
+      body: 'One knob turns your mix into a build-up: the lows leave, the reverb opens, the echoes climb.',
+      price: '$29 lifetime · launch price', cta: { label: 'See RONE Rise', url: '/products/rone-rise' },
+      image: 'graphics/cutouts/rone-rise.webp', accent: '#FF5FB8',
+    },
+  ],
+};
+
+export const mockAnnouncedPlugins = [
+  {
+    id: 'RoneClipper', name: 'RONE Clipper', description: 'Hard clipper that shows what it cut',
+    remoteVersion: '1.0.1', installedVersion: '', status: 'not_installed', downloadProgress: 0,
+    formats: ['VST3', 'AU', 'Standalone'], type: 'plugin', whatsNew: '', logoUrl: '/logos/RoneClipper.png',
+    hasStandalone: true, standaloneInstalled: false,
+  },
+  {
+    id: 'RoneRise', name: 'RONE Rise', description: 'One-knob build-up',
+    remoteVersion: '1.0.2', installedVersion: '', status: 'not_installed', downloadProgress: 0,
+    formats: ['VST3', 'AU', 'Standalone'], type: 'plugin', whatsNew: '', logoUrl: '/logos/RoneRise.png',
+    hasStandalone: true, standaloneInstalled: false,
   },
 ];
