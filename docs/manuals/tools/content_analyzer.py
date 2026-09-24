@@ -151,8 +151,9 @@ def manual(G):
  ("Click a level meter", "Clear peak hold and the over counter."),
  ("Press and hold a Totalyser band", "Solo that band by ear (hardware sources). Drag to sweep; wheel for Q; double-click to latch."),
  ("Drop an audio file on the window", "Scan it."),
- ("Start with Windows (app menu)", "Launch at login, minimised to the tray. The tray icon restores the window."),
- ("Command line", "<code>--file &lt;path&gt;</code>, <code>--scan &lt;path&gt;</code>, <code>--loopback [name]</code>, <code>--asio [device]</code>, <code>--input &lt;device&gt;</code>, <code>--add-references &lt;paths...&gt;</code>. Without arguments it reopens the last source."),
+ ("Close the window", "Quit. The source, the window and the layout come back as they were the next time it opens."),
+ ("Start with Windows (app menu)", "Launch at login."),
+ ("Command line", "<code>--file &lt;path&gt;</code>, <code>--scan &lt;path&gt;</code>, <code>--loopback [name]</code>, <code>--bridge</code>, <code>--asio [device]</code>, <code>--input &lt;device&gt;</code>, <code>--add-references &lt;paths...&gt;</code>. Without arguments it reopens the last source."),
 ])}
 <div class="two">
 <div><h4>Appearance</h4><p>The app menu's <em>Appearance...</em> switches themes and the accent colour. The graphite theme is the default and matches the RONE plugins.</p></div>
