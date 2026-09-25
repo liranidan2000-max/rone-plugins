@@ -11,125 +11,17 @@ import SettingsPanel from './components/SettingsPanel'
 import InfoModal from './components/InfoModal'
 import AnnouncementModal from './components/AnnouncementModal'
 import StatusToast from './components/StatusToast'
-
-// ---- The one ownership comparison ----
-// An owned id travels server -> C++ -> here, and every hop has its own idea of
-// casing and padding. BundleLicenseChecker and MainComponent settled on one
-// rule — trim, ignore case, whole token, never a substring — so the UI has to
-// use exactly that one or a customer who paid still sees a lock.
-const productKey = (id) => (typeof id === 'string' ? id.trim().toLowerCase() : '')
-
-// The server sends an array; the licence file keeps the same ids comma-joined.
-// Accept either shape, drop the blanks, and keep the first spelling of each
-// product. Splitting on commas is what makes the compare a whole-token one:
-// "RoneStut" must never match "RoneStutter".
-function ownedProductIds (owned) {
-  const entries = Array.isArray(owned) ? owned : typeof owned === 'string' ? [owned] : []
-  const seen = new Set()
-  const ids = []
-  for (const entry of entries) {
-    if (typeof entry !== 'string') continue
-    for (const token of entry.split(',')) {
-      const id = token.trim()
-      const key = productKey(id)
-      if (key === '' || seen.has(key)) continue
-      seen.add(key)
-      ids.push(id)
-    }
-  }
-  return ids
-}
-
-// ---- Announcements: the website's popups, in the Center ----
-// roneaudio.com/api/v1/popup is managed in the admin console, and a plugin added
-// to the catalog gets its popup there by itself - so it reaches the Center too.
-// A popup is shown once (per id), at most one a day, and only when it means
-// something here: its plugin is not installed or has an update. The page lives
-// in AppData (WebView2 user data folder), so this memory survives restarts.
-const SEEN_KEY = 'rone_center_popups_seen'
-const LAST_KEY = 'rone_center_popup_last'
-
-function readSeen () {
-  try {
-    const v = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]')
-    return Array.isArray(v) ? v : []
-  } catch { return [] }
-}
-
-function rememberAnnouncement (id) {
-  try {
-    const seen = readSeen().filter((x) => x !== id)
-    seen.push(id)
-    localStorage.setItem(SEEN_KEY, JSON.stringify(seen.slice(-50)))
-    localStorage.setItem(LAST_KEY, String(Date.now()))
-  } catch {}
-}
-
-// A site link carries where it came from, so the console can count it.
-function siteUrl (path, tag) {
-  try {
-    const u = new URL(path || '/', 'https://roneaudio.com/')
-    if (u.origin !== 'https://roneaudio.com') return 'https://roneaudio.com/'
-    u.searchParams.set('utm_source', 'plugins_center')
-    u.searchParams.set('utm_medium', 'popup')
-    u.searchParams.set('utm_campaign', 'center_' + String(tag || 'popup').toLowerCase())
-    return u.toString()
-  } catch { return 'https://roneaudio.com/' }
-}
-
-// The first popup that applies here, with what its button does. The card's own
-// rule decides "can install": the pass, or the plugin in the account's owned list
-// (which the server fills with the free plugins for every account).
-function pickAnnouncement (popups, { plugins, ownedKeys, licensed, ignoreMemory = false }) {
-  if (!ignoreMemory) {
-    let last = 0
-    try { last = Number(localStorage.getItem(LAST_KEY)) || 0 } catch {}
-    if (Date.now() - last < 20 * 3600 * 1000) return null
-  }
-  const seen = ignoreMemory ? new Set() : new Set(readSeen())
-
-  for (const popup of popups || []) {
-    if (!popup || typeof popup.id !== 'string' || seen.has(popup.id)) continue
-    const productId = popup.id.split(':')[1] || ''
-
-    if ((popup.kind === 'plugin' || popup.kind === 'free') && productId) {
-      const plugin = plugins.find((p) => productKey(p.id) === productKey(productId))
-      if (!plugin) continue                                              // not in this Center's list
-      if (!['not_installed', 'update_available', 'error'].includes(plugin.status)) continue   // has it, or busy
-
-      const canInstall = licensed || ownedKeys.has(productKey(plugin.id))
-      if (canInstall) {
-        return {
-          popup, plugin,
-          primary: { kind: 'install', label: plugin.status === 'update_available' ? 'Update now' : 'Install now' },
-          priceLine: popup.kind === 'free' ? (popup.price || '')
-                   : licensed ? 'Included in your ALL ACCESS pass' : 'In your account',
-        }
-      }
-      return {
-        popup, plugin,
-        primary: { kind: 'url', label: popup.cta?.label || 'See it', url: siteUrl(popup.cta?.url, productId) },
-        priceLine: popup.price || '',
-      }
-    }
-
-    if (popup.cta?.url) {
-      return {
-        popup, plugin: null,
-        primary: { kind: 'url', label: popup.cta.label || 'See it', url: siteUrl(popup.cta.url, productId || popup.kind) },
-        priceLine: popup.price || '',
-      }
-    }
-  }
-  return null
-}
+// Plain modules, so node can test them without a JSX step (test/*.test.mjs).
+import { productKey, ownedProductIds } from './ownership'
+import { pickAnnouncement, rememberAnnouncement } from './announcements'
 
 export default function App() {
   const [plugins, setPlugins] = useState([])
   const [license, setLicense] = useState({ licensed: false, customerName: '', licenseKey: '', message: '' })
   // `owned` = canonical ids of plugins bought outright (LIFETIME). The pass is
   // separate: `licensed` still means ALL ACCESS, which unlocks everything.
-  const [account, setAccount] = useState({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], message: '' })
+  // `passSource` = who bills the live pass ('comp' = Liran's gift), '' = none.
+  const [account, setAccount] = useState({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], passSource: '', message: '' })
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('name')
@@ -322,7 +214,7 @@ export default function App() {
   const handleSignOut = async () => {
     try {
       const res = await api.accountSignOut()
-      setAccount({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', owned: [], message: '' })
+      setAccount({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', owned: [], passSource: '', message: '' })
       setLicense(prev => ({ ...prev, licensed: false, customerName: '' }))
       addToast(res?.message || 'Signed out', 'info')
       return res
@@ -398,15 +290,17 @@ export default function App() {
 
   const updatesCount = plugins.filter(p => p.status === 'update_available' || p.status === 'not_installed').length
 
-  // ---- Announcements (see pickAnnouncement above) ----
+  // ---- Announcements (see pickAnnouncement in announcements.js) ----
   // Asked once per page, 1.5 s after the plugins are in and someone is signed in
   // (or holds a licence key): a new customer from a reel signs in and is offered
   // the install at once. `latest` hands the timer today's state, not the state of
-  // the render that armed it.
+  // the render that armed it. `passSource` is who bills the account's live pass
+  // ('comp' = a gift, which never sees a deal popup); the account file caches it,
+  // so it is known on launch, and /app/refresh corrects it via accountChanged.
   const [announcement, setAnnouncement] = useState(null)
   const announcementAsked = useRef(false)
   const latest = useRef({})
-  latest.current = { plugins: taggedPlugins, ownedKeys, licensed: license.licensed }
+  latest.current = { plugins: taggedPlugins, ownedKeys, licensed: license.licensed, passSource: account.passSource }
   useEffect(() => {
     if (loading || announcementAsked.current || plugins.length === 0) return
     if (!(account.signedIn || license.licensed)) return

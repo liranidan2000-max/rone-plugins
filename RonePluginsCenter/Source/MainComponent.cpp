@@ -949,6 +949,11 @@ juce::var MainComponent::accountStatusVar() const
         owned.add (id);
     obj->setProperty ("owned", owned);
 
+    // Who bills the live pass: "comp" is a gift Liran gave by hand, and its
+    // holder is never shown a deal popup (ui/src/announcements.js). Empty =
+    // no live pass, a giveaway trial, or not heard from the server yet.
+    obj->setProperty ("passSource",  s.passSource);
+
     // Dates cross the bridge as milliseconds; 0 means "not applicable".
     obj->setProperty ("expiresAt",   (double) s.expiresAt);
     obj->setProperty ("renewsAt",    (double) s.renewsAt);

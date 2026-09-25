@@ -42,6 +42,11 @@ public:
         // Canonical ids of the plugins bought outright (LIFETIME). Independent
         // of `licensed`: an account can own plugins and hold no pass at all.
         juce::StringArray ownedProducts;
+        // Who bills the LIVE pass, exactly as the server names it: "paddle",
+        // "lemonsqueezy" or "comp" (a pass Liran gave by hand). Empty when there
+        // is no live pass, a giveaway trial, or nothing heard yet (an account
+        // file written before 1.5.1). A gift holder is never sold the pass.
+        juce::String passSource;
         juce::String message;
     };
 

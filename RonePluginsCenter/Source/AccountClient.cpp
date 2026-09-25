@@ -57,6 +57,7 @@ void AccountClient::saveAccountFile()
     xml.setAttribute ("renewsAt",           juce::String (state.renewsAt));
     xml.setAttribute ("deviceLimit",        state.deviceLimit);
     xml.setAttribute ("ownedProducts",      state.ownedProducts.joinIntoString (","));
+    xml.setAttribute ("passSource",         state.passSource);
     xml.setAttribute ("lastValidationTime", juce::String (lastValidationTime));
 
     auto file = getAccountFile();
@@ -86,6 +87,9 @@ bool AccountClient::loadAccountFile()
     state.ownedProducts = juce::StringArray::fromTokens (xml->getStringAttribute ("ownedProducts"), ",", "");
     state.ownedProducts.trim();
     state.ownedProducts.removeEmptyStrings();
+    // Cached so the page knows a gift pass before /app/refresh answers. A file
+    // from before 1.5.1 has no such attribute: empty, until the server says.
+    state.passSource   = xml->getStringAttribute ("passSource").trim();
     lastValidationTime = xml->getStringAttribute ("lastValidationTime", "0").getLargeIntValue();
     state.signedIn     = token.isNotEmpty();
 
@@ -96,6 +100,8 @@ void AccountClient::clearAccountFile()
 {
     getAccountFile().deleteFile();
 
+    // A fresh State drops everything the server told us, passSource included,
+    // so the next account on this machine starts with no gift to inherit.
     const juce::ScopedLock sl (lock);
     token = {};
     state = State{};
@@ -232,6 +238,13 @@ void AccountClient::applyServerState (const juce::var& response)
     state.expiresAt   = (juce::int64) (double) ent.getProperty ("expiresAt", 0.0);
     state.renewsAt    = (juce::int64) (double) ent.getProperty ("renewsAt", 0.0);
     state.deviceLimit = (int) ent.getProperty ("deviceLimit", 2);
+
+    // Read afresh on every answer, like `owned`: the server sends null when
+    // there is no live pass (and for a giveaway trial), and a gift that ended
+    // must stop reading as one. An older worker that sends nothing leaves it
+    // empty, which is the pre-1.5.1 behaviour.
+    const auto source = ent.getProperty ("passSource", juce::var());
+    state.passSource  = source.isString() ? source.toString().trim() : juce::String();
 
     // Rebuilt from scratch every time: a refund that removes a product has to
     // remove it here too, and a server that says nothing about `owned` (an
