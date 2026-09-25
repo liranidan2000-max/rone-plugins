@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "1.1.6 - ROOM SIZE TURNS THE RIGHT WAY: dragging it up now makes the room bigger, and 100 % draws the full arc. The corner grip resizes the window again, and the fade handles follow your pointer at any window size.",
+      "whats_new": "1.1.7 - NOW AN EFFECT: put it on a mixer insert - the audio passing through stays untouched and the swell is added on top (a project that had it in an instrument slot needs it added again, as an effect). REC: the red dot on RATE records your hand into the sample. TRANSITION: the swell runs straight into the original hit and its decay - no gap.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
