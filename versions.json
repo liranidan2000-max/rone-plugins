@@ -21,7 +21,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "1.1.7 - NOW AN EFFECT: put it on a mixer insert - the audio passing through stays untouched and the swell is added on top (a project that had it in an instrument slot needs it added again, as an effect). REC: the red dot on RATE records your hand into the sample. TRANSITION: the swell runs straight into the original hit and its decay - no gap.",
+      "whats_new": "1.1.7 - NOW AN EFFECT: put it on a mixer insert - the audio passing through stays untouched and the swell is added on top (a project that had it in an instrument slot needs it added again, as an effect). REC: the red dot on RATE records your hand into the sample. TRANSITION: the swell runs straight into the original hit and its decay - no gap. This build's installer also removes a leftover file from older versions that made FL Studio keep listing it as a synth.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
