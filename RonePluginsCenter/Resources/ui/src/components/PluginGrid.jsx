@@ -8,7 +8,7 @@ const containerVariants = {
   show: { transition: { staggerChildren: 0.07 } },
 }
 
-export default function PluginGrid({ plugins, licensed, onInstall, onOpen, onOpenFolder, onManual, onInfo, unlockPlaying, loading }) {
+export default function PluginGrid({ plugins, licensed, onInstall, onUninstall, onOpen, onOpenFolder, onManual, onInfo, unlockPlaying, loading }) {
   if (loading) {
     return (
       <div className="h-full overflow-y-auto plugin-grid-scroll px-6 py-5">
@@ -45,6 +45,7 @@ export default function PluginGrid({ plugins, licensed, onInstall, onOpen, onOpe
               plugin={plugin}
               licensed={licensed}
               onInstall={onInstall}
+              onUninstall={onUninstall}
               onOpen={onOpen}
               onOpenFolder={onOpenFolder}
               onManual={onManual}

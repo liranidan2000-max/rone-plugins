@@ -108,6 +108,9 @@ private:
     // Settings > DELETE OLD VERSIONS (OldVersionCleaner.h): list, then delete.
     void handleScanOldVersions   (NativeArgs args, NativeCompletion complete);
     void handleDeleteOldVersions (NativeArgs args, NativeCompletion complete);
+
+    // UNINSTALL in a card's menu (PluginUninstaller.h)
+    void handleUninstallPlugin   (NativeArgs args, NativeCompletion complete);
     void handleSetAutoStart    (NativeArgs args, NativeCompletion complete);
 
     // ---- Window controls ----

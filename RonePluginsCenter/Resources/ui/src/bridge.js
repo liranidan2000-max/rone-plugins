@@ -124,6 +124,8 @@ export const api = {
   scanOldVersions:   createNativeFunction('scanOldVersions'),
   // may wait for the OS permission prompt (an elevated copy of the Center deletes)
   deleteOldVersions: createNativeFunction('deleteOldVersions', 150000),
+  // answers when done: waits for the permission prompt and the plugin's own uninstaller
+  uninstallPlugin:   createNativeFunction('uninstallPlugin', 330000),
 };
 
 // ---- Dev mode mock data (when running outside JUCE) ----

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import FormatBadge from './FormatBadge'
 import ProgressBar from './ProgressBar'
@@ -17,6 +18,7 @@ const STATUS_LED = {
   downloading: 'led-busy status-dot-pulse',
   installing: 'led-busy status-dot-pulse',
   waiting: 'led-busy status-dot-pulse',
+  uninstalling: 'led-busy status-dot-pulse',
   error: 'led-err',
   not_installed: 'led-off',
 }
@@ -29,6 +31,7 @@ const ACTION = {
   downloading:      { label: 'Downloading…', kind: 'busy', icon: 'loading' },
   installing:       { label: 'Installing…',  kind: 'busy', icon: 'loading' },
   waiting:          { label: 'Close it in your DAW', kind: 'busy', icon: 'loading' },
+  uninstalling:     { label: 'Removing…',    kind: 'busy', icon: 'loading' },
   error:            { label: 'Retry',   kind: 'danger',  icon: 'retry' },
 }
 
@@ -104,8 +107,34 @@ function Tile({ plugin }) {
   )
 }
 
-function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManual, onInfo, unlockPlaying = false }) {
+function PluginCard({ plugin, licensed, onInstall, onUninstall, onOpen, onOpenFolder, onManual, onInfo, unlockPlaying = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  // The menu floats over the page (a portal), not inside the card: the card clips
+  // whatever sticks out of it, and with REINSTALL + UNINSTALL the list is taller
+  // than a card. It opens upwards when there is no room below.
+  const kebabRef = useRef(null)
+  const menuRef = useRef(null)
+  const [menuPos, setMenuPos] = useState(null)
+  const toggleMenu = () => {
+    if (menuOpen) { setMenuOpen(false); return }
+    const r = kebabRef.current?.getBoundingClientRect()
+    if (!r) return
+    setMenuPos({ top: r.bottom + 6, right: window.innerWidth - r.right, anchorTop: r.top, up: false })
+    setMenuOpen(true)
+  }
+  useLayoutEffect(() => {
+    if (!menuOpen || !menuPos || menuPos.up || !menuRef.current) return
+    const h = menuRef.current.offsetHeight
+    if (menuPos.top + h > window.innerHeight - 8)
+      setMenuPos(p => ({ ...p, top: Math.max(8, p.anchorTop - 6 - h), up: true }))
+  }, [menuOpen, menuPos])
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = () => setMenuOpen(false)
+    window.addEventListener('resize', close)
+    window.addEventListener('scroll', close, true)   // the grid scrolls; the menu does not follow
+    return () => { window.removeEventListener('resize', close); window.removeEventListener('scroll', close, true) }
+  }, [menuOpen])
   const baseAction = ACTION[plugin.status] || ACTION.not_installed
 
   const prevStatus = useRef(plugin.status)
@@ -139,6 +168,7 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
   const isLocked = !licensed && !isOwned
   const price = isLocked ? lifetimePrice(plugin) : null
   const isBusy = plugin.status === 'downloading' || plugin.status === 'installing' || plugin.status === 'waiting'
+              || plugin.status === 'uninstalling'
 
   // Primary button: for up_to_date -> Open, otherwise -> Install/Update
   const primaryIsOpen = action.icon === 'open'
@@ -210,19 +240,22 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
             {/* kebab menu */}
             <div className="relative flex-shrink-0">
               <button
-                onClick={() => setMenuOpen(o => !o)}
+                ref={kebabRef}
+                onClick={toggleMenu}
                 onBlur={() => setTimeout(() => setMenuOpen(false), 150)}
                 className="p-0.5 text-rone-text-faint hover:text-rone-text-primary transition-colors rounded"
                 aria-label={`${plugin.name} options`}
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" /></svg>
               </button>
-              <AnimatePresence>
-                {menuOpen && (
+              {createPortal(<AnimatePresence>
+                {menuOpen && menuPos && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
+                    ref={menuRef}
+                    initial={{ opacity: 0, scale: 0.9, y: menuPos.up ? 4 : -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-7 z-20 w-36 rounded-lg border border-rone-border bg-rone-drawer shadow-xl shadow-black/40 py-1"
+                    style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, transformOrigin: menuPos.up ? 'bottom right' : 'top right' }}
+                    className="z-[70] w-36 rounded-lg border border-rone-border bg-rone-drawer shadow-xl shadow-black/40 py-1"
                   >
                     <button onMouseDown={() => onInfo(plugin)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Details</button>
                     {isInstalled && onOpenFolder && (
@@ -231,14 +264,27 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
                     {plugin.hasManual && onManual && (
                       <button onMouseDown={() => onManual(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Manual</button>
                     )}
-                    {plugin.status !== 'up_to_date' && (
+                    {!isBusy && plugin.status !== 'up_to_date' && (
                       <button onMouseDown={() => onInstall(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">
                         {plugin.status === 'update_available' ? 'Update' : 'Install'}
                       </button>
                     )}
+                    {/* Same build again, over what is there: repairs a missing or damaged file */}
+                    {!isBusy && plugin.status === 'up_to_date' && (
+                      <button onMouseDown={() => onInstall(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Reinstall</button>
+                    )}
+                    {!isBusy && isInstalled && onUninstall && (
+                      <>
+                        <div className="my-1 border-t border-rone-border/60" />
+                        <button onMouseDown={() => onUninstall(plugin)}
+                                className="w-full text-left px-3 py-1.5 text-[12px] text-rone-error/85 hover:text-rone-error hover:bg-rone-error/[0.07]">
+                          Uninstall
+                        </button>
+                      </>
+                    )}
                   </motion.div>
                 )}
-              </AnimatePresence>
+              </AnimatePresence>, document.body)}
             </div>
           </div>
 
@@ -279,7 +325,8 @@ function PluginCard({ plugin, licensed, onInstall, onOpen, onOpenFolder, onManua
           <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-rone-error">Failed</span>
         ) : isBusy ? (
           <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rone-text-dim">
-            {plugin.status === 'installing' ? 'Installing' : plugin.status === 'waiting' ? 'Ready to install' : 'Downloading'}
+            {plugin.status === 'installing' ? 'Installing' : plugin.status === 'waiting' ? 'Ready to install'
+             : plugin.status === 'uninstalling' ? 'Uninstalling' : 'Downloading'}
           </span>
         ) : (
           <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rone-text-dim">Not installed</span>

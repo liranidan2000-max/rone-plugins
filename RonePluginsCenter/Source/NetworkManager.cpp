@@ -642,23 +642,7 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
                 info.formats.add (f.toString());
 
         // Determine installed status
-        info.installedVersion = VersionChecker::getInstalledVersion (info.registryKey);
-        info.status = VersionChecker::determineStatus (info.installedVersion,
-                                                        info.remoteVersion);
-
-        // Fallback: if registry says not installed but the files exist on disk,
-        // treat as installed (handles manual installs / first run after existing install)
-        if (info.status == PluginStatus::NotInstalled)
-        {
-            bool found = VersionChecker::isStandaloneInstalled (info.standaloneExe)
-                      || VersionChecker::isVst3Installed (info.vst3Bundle)
-                      || VersionChecker::isAUInstalled (info.auBundle);
-            if (found)
-            {
-                info.installedVersion = "?";
-                info.status = PluginStatus::UpdateAvailable;  // can't compare → prompt update
-            }
-        }
+        VersionChecker::refreshInstallState (info);
 
         result.add (std::move (info));
     }

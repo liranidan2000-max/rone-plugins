@@ -12,6 +12,7 @@ enum class PluginStatus
     Downloading,
     Installing,
     WaitingForHost,   // downloaded; a DAW or the standalone still holds the files (Windows)
+    Uninstalling,     // the plugin's own uninstaller is running (the card's UNINSTALL)
     Error
 };
 
@@ -68,6 +69,17 @@ public:
     // Uses simple semantic-version comparison (major.minor.patch).
     static bool isNewerVersion (const juce::String& installed,
                                 const juce::String& remote);
+
+    // installedVersion + status from what is on this machine now: the installer's
+    // record first, then the files themselves (a manual install shows as "?").
+    static void refreshInstallState (PluginInfo& info);
+
+    // Windows: the command line the plugin's Inno uninstaller registered
+    // (UninstallString); empty when there is none, and on macOS.
+    static juce::String getUninstallCommand (const juce::String& registryKey);
+
+    // Forget the version the Center stamped for this plugin (after an uninstall).
+    static void clearInstalledVersion (const juce::String& registryKey);
 
     // Determine the PluginStatus from the two version strings.
     static PluginStatus determineStatus (const juce::String& installed,

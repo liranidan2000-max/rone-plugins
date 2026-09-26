@@ -5,6 +5,7 @@
 #include "AutoStart.h"
 #include "PluginInUse.h"
 #include "OldVersionCleaner.h"
+#include "PluginUninstaller.h"
 
 // Open mode (remote kill-switch OFF) counts as licensed everywhere:
 // the C++ side and the web UI both key off this one predicate.
@@ -207,6 +208,9 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         .withNativeFunction ("deleteOldVersions", [this] (NativeArgs args, NativeCompletion complete) {
             handleDeleteOldVersions (args, guarded (std::move (complete)));
         })
+        .withNativeFunction ("uninstallPlugin", [this] (NativeArgs args, NativeCompletion complete) {
+            handleUninstallPlugin (args, guarded (std::move (complete)));
+        })
         .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
             if (args.size() > 0)
             {
@@ -405,6 +409,7 @@ juce::String MainComponent::statusToString (PluginStatus s)
         case PluginStatus::Downloading:     return "downloading";
         case PluginStatus::Installing:      return "installing";
         case PluginStatus::WaitingForHost:  return "waiting";
+        case PluginStatus::Uninstalling:    return "uninstalling";
         case PluginStatus::Error:           return "error";
     }
     return "unknown";
@@ -599,7 +604,7 @@ bool MainComponent::anyPluginBusy()
     juce::ScopedLock sl (pluginDataLock);
     for (auto& p : pluginData)
         if (p.status == PluginStatus::Downloading || p.status == PluginStatus::Installing
-         || p.status == PluginStatus::WaitingForHost)
+         || p.status == PluginStatus::WaitingForHost || p.status == PluginStatus::Uninstalling)
             return true;
     return false;
 }
@@ -1094,6 +1099,88 @@ void MainComponent::handleDeleteOldVersions (NativeArgs, NativeCompletion comple
     juce::Thread::launch ([complete = std::move (complete)]() mutable
     {
         complete (OldVersionCleaner::cleanNow());
+    });
+}
+
+// ============================================================================
+// UNINSTALL in a card's menu (PluginUninstaller.h). Answers once it is done;
+// the card shows "uninstalling" meanwhile. REINSTALL needs nothing of its own:
+// installPlugin already takes a plugin that is up to date.
+// ============================================================================
+void MainComponent::handleUninstallPlugin (NativeArgs args, NativeCompletion complete)
+{
+    auto answer = [] (bool ok, const juce::String& error)
+    {
+        auto* o = new juce::DynamicObject();
+        o->setProperty ("ok", ok);
+        o->setProperty ("error", error);
+        return juce::JSON::toString (juce::var (o));
+    };
+
+    if (args.isEmpty())
+    {
+        complete (answer (false, "Missing plugin ID"));
+        return;
+    }
+
+    const auto pluginId = args[0].toString();
+    PluginInfo target;
+    bool found = false, busy = false;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+        {
+            if (p.id == pluginId)
+            {
+                found = true;
+                busy = p.status == PluginStatus::Downloading || p.status == PluginStatus::Installing
+                    || p.status == PluginStatus::WaitingForHost || p.status == PluginStatus::Uninstalling;
+                if (! busy)
+                {
+                    target = p;
+                    p.status = PluginStatus::Uninstalling;
+                }
+                break;
+            }
+        }
+    }
+
+    if (! found || busy)
+    {
+        complete (answer (false, found ? "It is busy - try again when it has finished" : "Unknown plugin"));
+        return;
+    }
+    emitPluginsUpdated();
+
+    juce::Thread::launch ([this, target, complete = std::move (complete)]() mutable
+    {
+        const auto r = PluginUninstaller::uninstall (target);
+
+        juce::MessageManager::callAsync ([this, target, r, complete = std::move (complete)]() mutable
+        {
+            {
+                juce::ScopedLock sl (pluginDataLock);
+                for (auto& p : pluginData)
+                    if (p.id == target.id)
+                    {
+                        VersionChecker::refreshInstallState (p);
+                        p.waitingFor = {};
+                        break;
+                    }
+            }
+            emitPluginsUpdated();
+
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("ok", r.ok);
+            o->setProperty ("error", r.error);
+            o->setProperty ("declined", r.declined);
+            o->setProperty ("hosts", r.hosts.joinIntoString (", "));
+            juce::Array<juce::var> left;
+            for (const auto& l : r.leftovers)
+                left.add (l);
+            o->setProperty ("leftovers", left);
+            complete (juce::JSON::toString (juce::var (o)));
+        });
     });
 }
 

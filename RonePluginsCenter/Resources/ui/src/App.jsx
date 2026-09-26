@@ -11,6 +11,7 @@ import SettingsPanel from './components/SettingsPanel'
 import InfoModal from './components/InfoModal'
 import AnnouncementModal from './components/AnnouncementModal'
 import StatusToast from './components/StatusToast'
+import ConfirmDialog from './components/ConfirmDialog'
 // Plain modules, so node can test them without a JSX step (test/*.test.mjs).
 import { productKey, ownedProductIds } from './ownership'
 import { pickAnnouncement, rememberAnnouncement } from './announcements'
@@ -27,6 +28,8 @@ export default function App() {
   const [sortBy, setSortBy] = useState('name')
   const [toasts, setToasts] = useState([])
   const [infoPlugin, setInfoPlugin] = useState(null)
+  // UNINSTALL asks first; `plugin` stays set while the dialog animates out
+  const [uninstallAsk, setUninstallAsk] = useState({ open: false, plugin: null })
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
   const [activeNav, setActiveNav] = useState('home')
@@ -150,6 +153,28 @@ export default function App() {
       const result = await api.installPlugin(pluginId)
       if (result && !result.started && result.error) addToast(result.error, 'error')
     } catch (err) { addToast(err.message || 'Install failed', 'error') }
+  }
+  // The plugin's own uninstaller runs (one permission prompt) and whatever it
+  // left of the plugin's files goes too; the card says "uninstalling" until then.
+  const handleUninstall = (plugin) => setUninstallAsk({ open: true, plugin })
+  const confirmUninstall = async () => {
+    const plugin = uninstallAsk.plugin
+    setUninstallAsk(a => ({ ...a, open: false }))
+    if (!plugin) return
+    const done = `${plugin.name} uninstalled - rescan the plugins in your DAW so it forgets it.`
+    if (isDevMode()) {
+      setPlugins(prev => prev.map(p => p.id === plugin.id ? { ...p, status: 'uninstalling' } : p))
+      setTimeout(() => {
+        setPlugins(prev => prev.map(p => p.id === plugin.id ? { ...p, status: 'not_installed', installedVersion: '' } : p))
+        addToast(done, 'success')
+      }, 1500)
+      return
+    }
+    try {
+      const r = await api.uninstallPlugin(plugin.id)
+      if (r?.ok) addToast(done, 'success')
+      else addToast(r?.error || 'Could not uninstall', 'error')
+    } catch (err) { addToast(err.message || 'Could not uninstall', 'error') }
   }
   const handleOpen = async (pluginId) => {
     try {
@@ -436,6 +461,7 @@ export default function App() {
                   plugins={processedPlugins}
                   licensed={license.licensed}
                   onInstall={handleInstall}
+                  onUninstall={handleUninstall}
                   onOpen={handleOpen}
                   onOpenFolder={handleOpenFolder}
                   onManual={handleManual}
@@ -462,6 +488,15 @@ export default function App() {
           <AnnouncementModal item={announcement} onPrimary={runAnnouncement} onClose={closeAnnouncement} />
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={uninstallAsk.open}
+        title={`Uninstall ${uninstallAsk.plugin?.name || ''}?`}
+        message="Removes it from this computer - the plugin, its standalone app and its manual. Your presets and settings stay, and you can install it again from here any time. Close it in your DAW first."
+        confirmLabel="Uninstall"
+        onConfirm={confirmUninstall}
+        onCancel={() => setUninstallAsk(a => ({ ...a, open: false }))}
+      />
 
       {/* Toasts */}
       <StatusToast toasts={toasts} onRemove={removeToast} />

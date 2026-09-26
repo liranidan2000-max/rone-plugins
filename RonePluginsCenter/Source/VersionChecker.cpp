@@ -74,7 +74,7 @@ static juce::String readRegString (HKEY root, const juce::String& subKey, const 
     return result;
 }
 
-static juce::String innoInstalledVersion (const juce::String& registryKey)
+static juce::String innoUninstallValue (const juce::String& registryKey, const wchar_t* valueName)
 {
     const auto& ids = innoAppIds();
     const auto it = ids.find (registryKey);
@@ -85,9 +85,72 @@ static juce::String innoInstalledVersion (const juce::String& registryKey)
     // view; ask for it explicitly in case the Center is ever built 32-bit.
     return readRegString (HKEY_LOCAL_MACHINE,
                           "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + it->second + "_is1",
-                          L"DisplayVersion", KEY_WOW64_64KEY);
+                          valueName, KEY_WOW64_64KEY);
+}
+
+static juce::String innoInstalledVersion (const juce::String& registryKey)
+{
+    return innoUninstallValue (registryKey, L"DisplayVersion");
 }
 #endif
+
+juce::String VersionChecker::getUninstallCommand (const juce::String& registryKey)
+{
+#if JUCE_WINDOWS
+    return innoUninstallValue (registryKey, L"UninstallString");
+#else
+    juce::ignoreUnused (registryKey);
+    return {};
+#endif
+}
+
+void VersionChecker::clearInstalledVersion (const juce::String& registryKey)
+{
+    if (registryKey.isEmpty())
+        return;
+
+#if JUCE_WINDOWS
+    // The installer's own [Registry] entry (uninsdeletekey) is this same key.
+    const auto path = juce::String (RONE_REGISTRY_PATH) + "\\" + registryKey;
+    RegDeleteKeyValueW (HKEY_CURRENT_USER, path.toWideCharPointer(), L"InstalledVersion");
+#else
+    auto file = getVersionsXmlFile();
+    if (! file.existsAsFile())
+        return;
+
+    auto xml = juce::parseXML (file);
+    if (xml == nullptr)
+        return;
+
+    for (auto* child : xml->getChildIterator())
+        if (child->getStringAttribute ("id") == registryKey)
+        {
+            xml->removeChildElement (child, true);
+            xml->writeTo (file, {});
+            return;
+        }
+#endif
+}
+
+void VersionChecker::refreshInstallState (PluginInfo& info)
+{
+    info.installedVersion = getInstalledVersion (info.registryKey);
+    info.status = determineStatus (info.installedVersion, info.remoteVersion);
+
+    // Fallback: if registry says not installed but the files exist on disk,
+    // treat as installed (handles manual installs / first run after existing install)
+    if (info.status == PluginStatus::NotInstalled)
+    {
+        bool found = isStandaloneInstalled (info.standaloneExe)
+                  || isVst3Installed (info.vst3Bundle)
+                  || isAUInstalled (info.auBundle);
+        if (found)
+        {
+            info.installedVersion = "?";
+            info.status = PluginStatus::UpdateAvailable;  // can't compare -> prompt update
+        }
+    }
+}
 
 juce::String VersionChecker::getInstalledVersion (const juce::String& registryKey)
 {

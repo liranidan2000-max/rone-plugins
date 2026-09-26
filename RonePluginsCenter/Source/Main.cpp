@@ -3,6 +3,7 @@
 #include "RoneTrayIcon.h"
 #include "AutoStart.h"
 #include "OldVersionCleaner.h"
+#include "PluginUninstaller.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -20,12 +21,14 @@ public:
     const juce::String getApplicationName()    override { return JUCE_APPLICATION_NAME_STRING; }
     const juce::String getApplicationVersion() override { return JUCE_APPLICATION_VERSION_STRING; }
     // The elevated DELETE OLD VERSIONS run (and its dry run) must start next to the open Center.
-    bool moreThanOneInstanceAllowed()          override { return OldVersionCleaner::isCommandLineMode (getCommandLineParameters()); }
+    bool moreThanOneInstanceAllowed()          override { return OldVersionCleaner::isCommandLineMode (getCommandLineParameters())
+                                                                  || PluginUninstaller::isCommandLineMode (getCommandLineParameters()); }
 
     void initialise (const juce::String& commandLine) override
     {
         // --delete-old-versions / --list-old-versions: no window, do it, quit.
-        if (OldVersionCleaner::runCommandLine (commandLine))
+        // --uninstall-plugin <key> <files...>: the elevated half of a card's UNINSTALL.
+        if (OldVersionCleaner::runCommandLine (commandLine) || PluginUninstaller::runCommandLine (commandLine))
         {
             quit();
             return;
