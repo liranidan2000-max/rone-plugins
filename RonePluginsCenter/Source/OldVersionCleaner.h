@@ -186,6 +186,8 @@ namespace OldVersionCleaner
                 const auto f = e.getFile();
                 const auto base = f.getFileNameWithoutExtension();
                 if (! isRoneName (f.getFileName())) continue;
+                // RONE Analyzer's installer puts its Bridge HERE, at the top: that copy is the real one
+                if (base.equalsIgnoreCase ("RONE Analyzer Bridge") || base.equalsIgnoreCase ("RONE Bridge")) continue;
 
                 auto current = findEntry (r.roneVst3, f.getFileName());
                 if (current == juce::File() && legacy.containsKey (base))
@@ -203,8 +205,8 @@ namespace OldVersionCleaner
             if (oldBase.equalsIgnoreCase (newBase)) continue;             // same file on disk
 
             struct Place { juce::File dir; juce::String ext; };
-            const Place places[] { { r.roneVst3, ".vst3" }, { r.apps, ".exe" }, { r.apps, ".app" },
-                                   { r.appsAlt, ".app" }, { r.au, ".component" } };
+            const Place places[] { { r.roneVst3, ".vst3" }, { separateTop ? r.topVst3 : juce::File(), ".vst3" },
+                                   { r.apps, ".exe" }, { r.apps, ".app" }, { r.appsAlt, ".app" }, { r.au, ".component" } };
             for (const auto& p : places)
             {
                 if (p.dir == juce::File() || ! p.dir.isDirectory()) continue;

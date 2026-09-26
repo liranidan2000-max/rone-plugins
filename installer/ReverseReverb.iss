@@ -91,4 +91,5 @@ Type: files; Name: "{app}\ReverseReverb.exe"
 ; A moduleinfo.json from an older build (VST3_AUTO_MANIFEST was on until 2026-09) describes
 ; that build, not this one - RONE Reverse Reverb's said "Instrument|Synth", so FL Studio kept
 ; listing 1.1.7, an effect, as a synth. These builds ship no manifest: drop the old one first.
+; (Plugins Center 1.6.0, Settings > DELETE OLD VERSIONS, clears it on existing installs too.)
 Type: files; Name: "{commoncf}\VST3\RONE\RONE Reverse Reverb.vst3\Contents\Resources\moduleinfo.json"
