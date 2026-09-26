@@ -39,6 +39,12 @@ private:
     std::unique_ptr<CustomTitleBar> customTitleBar;
     bool isStandalone = false;
 
+    // Nothing goes to the page until it says it is up ("uiReady", sent once its bridge
+    // listeners are in). JUCE 8.0.4 builds WebView2s one at a time, and a script sent to
+    // a view that does not exist yet can leave it blank for good when another window of
+    // this plugin is being built at that moment (two windows reopened together).
+    bool pageReady = false;
+
     // Content width when a corner-grip drag started (see "beginResize")
     int resizeBaseW = kWidth;
 

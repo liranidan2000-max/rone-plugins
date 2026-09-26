@@ -1760,6 +1760,8 @@ function setupBridge(){
   });
   B.addEventListener("licenseStatus",function(d){ rlSetLicensed(!!(d && d.licensed)); });
   var rlBtn=document.getElementById('rlLaunch'); if(rlBtn) rlBtn.addEventListener('click',function(){ emit('launchCenter',{}); });
+  // The editor sends nothing until the page says it is up (its pageReady)
+  emit("uiReady",{});
 }
 setupBridge();
 

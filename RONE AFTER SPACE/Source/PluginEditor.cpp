@@ -21,6 +21,11 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
           {
               return getResource (url);
           })
+          // JS -> C++: the page is up, so its WebView exists: the timer may push
+          .withEventListener ("uiReady", [this] (const juce::var&)
+          {
+              pageReady = true;
+          })
           // JS -> C++: generic APVTS parameter set (real-world values)
           // JS -> C++: the lock screen's OPEN RONE PLUGINS CENTER button
           .withEventListener ("launchCenter", [] (const juce::var&)
@@ -244,6 +249,9 @@ void RoneAfterspaceAudioProcessorEditor::parentHierarchyChanged()
 // =============================================================================
 void RoneAfterspaceAudioProcessorEditor::timerCallback()
 {
+    if (! pageReady)         // see pageReady: nothing is sent before the page speaks
+        return;
+
     sendAllParametersToJS();
 
     // BPM / echo time state
