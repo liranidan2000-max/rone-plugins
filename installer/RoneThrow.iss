@@ -83,3 +83,7 @@ Root: HKCU; Subkey: "Software\RONE\Plugins\RoneThrow"; ValueType: string; \
 ; that sees both opens whichever it scanned first, usually the stale one.
 [InstallDelete]
 Type: filesandordirs; Name: "{commoncf}\VST3\RONE Throw.vst3"
+; A moduleinfo.json from an older build (VST3_AUTO_MANIFEST was on until 2026-09) describes
+; that build, not this one - RONE Reverse Reverb's said "Instrument|Synth", so FL Studio kept
+; listing 1.1.7, an effect, as a synth. These builds ship no manifest: drop the old one first.
+Type: files; Name: "{commoncf}\VST3\RONE\RONE Throw.vst3\Contents\Resources\moduleinfo.json"

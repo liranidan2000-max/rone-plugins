@@ -635,6 +635,12 @@ jobs:
               echo 'if [ -n "$old" ]; then'
               echo '  rm -rf "/Library/Audio/Plug-Ins/VST3/$old.vst3" "/Library/Audio/Plug-Ins/Components/$old.component" "/Applications/$old.app" "/Applications/RONE Plugins/$old.app"'
               echo 'fi'
+              # A moduleinfo.json from an older build describes that build (RONE Reverse Reverb's
+              # said "Instrument|Synth" after 1.1.7 became an effect); these builds ship none, and a
+              # pkg never removes files it does not install - drop it before the payload lands.
+              for b in staging/Library/Audio/Plug-Ins/VST3/*.vst3; do
+                if [ -d "$b" ]; then echo "rm -f \"/Library/Audio/Plug-Ins/VST3/$(basename "$b")/Contents/Resources/moduleinfo.json\""; fi
+              done
               echo 'exit 0'
             } > pkgscripts/preinstall
             chmod +x pkgscripts/preinstall
