@@ -23,17 +23,17 @@ const promiseHandler = (() => {
   }
 
   return {
-    create() {
+    create(timeoutMs = 30000) {
       const id = lastId++;
       const promise = new Promise((resolve, reject) => {
         promises.set(id, { resolve, reject });
-        // Timeout after 30s to avoid leaked promises
+        // Timeout (30 s by default) to avoid leaked promises
         setTimeout(() => {
           if (promises.has(id)) {
             promises.get(id).reject(new Error('Native call timed out'));
             promises.delete(id);
           }
-        }, 30000);
+        }, timeoutMs);
       });
       return [id, promise];
     }
@@ -41,7 +41,7 @@ const promiseHandler = (() => {
 })();
 
 // Create a callable wrapper for a native function
-function createNativeFunction(name) {
+function createNativeFunction(name, timeoutMs) {
   return function (...args) {
     const backend = getBackend();
     if (!backend) {
@@ -49,7 +49,7 @@ function createNativeFunction(name) {
       return Promise.resolve(null);
     }
 
-    const [promiseId, resultPromise] = promiseHandler.create();
+    const [promiseId, resultPromise] = promiseHandler.create(timeoutMs);
     backend.emitEvent('__juce__invoke', {
       name: name,
       params: args,
@@ -121,6 +121,9 @@ export const api = {
   setAutoStart:      createNativeFunction('setAutoStart'),
   applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
   getAnnouncements:  createNativeFunction('getAnnouncements'),
+  scanOldVersions:   createNativeFunction('scanOldVersions'),
+  // may wait for the OS permission prompt (an elevated copy of the Center deletes)
+  deleteOldVersions: createNativeFunction('deleteOldVersions', 150000),
 };
 
 // ---- Dev mode mock data (when running outside JUCE) ----
@@ -156,6 +159,14 @@ export const mockPlugins = [
     whatsNew: 'Initial release', logoUrl: '/logos/RoneFlanger.png',
     hasStandalone: true, standaloneInstalled: true,
   },
+];
+
+// Settings > DELETE OLD VERSIONS in dev mode: what Liran's PC held on 2026-09-26.
+export const mockOldVersions = [
+  { name: 'RONE Reverse Reverb.vst3 / moduleinfo.json', kind: 'manifest',
+    reason: 'An old description file (version 1.0.2) inside RONE Reverse Reverb.vst3 - your DAW reads it instead of the plugin' },
+  { name: 'RONE Iron.vst3.locked-old01', kind: 'leftover',
+    reason: 'A copy an earlier update set aside because a program was using it' },
 ];
 
 // ?announce=1 in dev mode: the website's popup feed as it was on 2026-09-24

@@ -2,6 +2,7 @@
 #include "MainComponent.h"
 #include "RoneTrayIcon.h"
 #include "AutoStart.h"
+#include "OldVersionCleaner.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -18,10 +19,18 @@ class RonePluginsCenterApp : public juce::JUCEApplication
 public:
     const juce::String getApplicationName()    override { return JUCE_APPLICATION_NAME_STRING; }
     const juce::String getApplicationVersion() override { return JUCE_APPLICATION_VERSION_STRING; }
-    bool moreThanOneInstanceAllowed()          override { return false; }
+    // The elevated DELETE OLD VERSIONS run (and its dry run) must start next to the open Center.
+    bool moreThanOneInstanceAllowed()          override { return OldVersionCleaner::isCommandLineMode (getCommandLineParameters()); }
 
     void initialise (const juce::String& commandLine) override
     {
+        // --delete-old-versions / --list-old-versions: no window, do it, quit.
+        if (OldVersionCleaner::runCommandLine (commandLine))
+        {
+            quit();
+            return;
+        }
+
         // Launched by the OS at login (AutoStart): live in the tray, validate
         // the licence in the background, and only show a window when asked.
         const bool startInTray = commandLine.contains (AutoStart::kTrayFlag);

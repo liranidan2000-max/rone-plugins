@@ -104,6 +104,10 @@ private:
     // runs both. Fetched here because the endpoint sends no CORS headers.
     void handleGetAnnouncements (NativeArgs args, NativeCompletion complete);
     void handleGetAutoStart    (NativeArgs args, NativeCompletion complete);
+
+    // Settings > DELETE OLD VERSIONS (OldVersionCleaner.h): list, then delete.
+    void handleScanOldVersions   (NativeArgs args, NativeCompletion complete);
+    void handleDeleteOldVersions (NativeArgs args, NativeCompletion complete);
     void handleSetAutoStart    (NativeArgs args, NativeCompletion complete);
 
     // ---- Window controls ----

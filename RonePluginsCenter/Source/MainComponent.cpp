@@ -4,6 +4,7 @@
 #include "CrashReportUploader.h"   // also brings in Shared/RoneCrashReporter.h
 #include "AutoStart.h"
 #include "PluginInUse.h"
+#include "OldVersionCleaner.h"
 
 // Open mode (remote kill-switch OFF) counts as licensed everywhere:
 // the C++ side and the web UI both key off this one predicate.
@@ -199,6 +200,12 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         })
         .withNativeFunction ("getAnnouncements", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAnnouncements (args, guarded (std::move (complete)));
+        })
+        .withNativeFunction ("scanOldVersions", [this] (NativeArgs args, NativeCompletion complete) {
+            handleScanOldVersions (args, guarded (std::move (complete)));
+        })
+        .withNativeFunction ("deleteOldVersions", [this] (NativeArgs args, NativeCompletion complete) {
+            handleDeleteOldVersions (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
             if (args.size() > 0)
@@ -1066,6 +1073,27 @@ void MainComponent::handleGetAnnouncements (NativeArgs, NativeCompletion complet
             result = juce::var (none);
         }
         complete (result);
+    });
+}
+
+// ============================================================================
+// Settings > DELETE OLD VERSIONS - see OldVersionCleaner.h for what counts.
+// The scan is a few directory listings (message thread); the delete may wait
+// for an elevated copy of the Center, so it runs off the message thread.
+// ============================================================================
+void MainComponent::handleScanOldVersions (NativeArgs, NativeCompletion complete)
+{
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("success", true);
+    o->setProperty ("items", OldVersionCleaner::toVar (OldVersionCleaner::scan()));
+    complete (juce::var (o));
+}
+
+void MainComponent::handleDeleteOldVersions (NativeArgs, NativeCompletion complete)
+{
+    juce::Thread::launch ([complete = std::move (complete)]() mutable
+    {
+        complete (OldVersionCleaner::cleanNow());
     });
 }
 
