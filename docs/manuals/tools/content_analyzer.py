@@ -56,7 +56,7 @@ def manual(G):
  "<strong>Or open a file.</strong> <span class='pill'>FILE</span> &rarr; <em>Open and play (real time)</em> to hear and measure it, or <em>Open and scan (fast, whole file)</em> to push the whole file through the meters in seconds. You can also drop a file on the window.",
  "<strong>Measure inside the DAW.</strong> Insert <strong>RONE Analyzer Bridge</strong> on your master bus (last in the chain). Then choose <em>DAW master (RONE Bridge plugin)</em> in the SOURCE menu. The bridge taps the master and sends it to the analyser; band solo and mono fold then act inside the DAW's own signal path.",
  "<strong>Give it the whole screen.</strong> The chevron at the right of the header, or <span class='pill'>H</span>, takes the header and the status bar away and leaves the three instruments edge to edge. It is the way to use the analyser on a second monitor. <span class='pill'>Escape</span>, or the small chevron in the top corner, brings the chrome back.",
- "<strong>Set it up.</strong> <span class='pill'>SETUP</span> holds everything about how the instruments behave: band resolution and range, rise and release times, hold times, the mono fold, and the goniometer's afterglow and AGC. <span class='pill'>Appearance</span> in the app menu sets the colours, including the colour of the graticule rules.",
+ "<strong>Set it up.</strong> <span class='pill'>SETUP</span> holds everything about how the instruments behave: band resolution and range, rise and release times, hold times, the mono fold, and the goniometer's afterglow and AGC. <span class='pill'>Appearance</span> in the app menu (or <span class='pill'>F4</span>) picks a theme and every colour in it.",
 ])}
 {note("Zero output channels", "The analyser opens your device with no output channels so it can sit beside your DAW without fighting for the outputs. Monitoring (band solo by ear) needs an output and therefore reopens the device; it is never on at start-up and is only offered on hardware sources.")}
 """})
@@ -163,7 +163,7 @@ def manual(G):
  ("Command line", "<code>--file &lt;path&gt;</code>, <code>--scan &lt;path&gt;</code>, <code>--loopback [name]</code>, <code>--bridge</code>, <code>--asio [device]</code>, <code>--input &lt;device&gt;</code>, <code>--add-references &lt;paths...&gt;</code>. Without arguments it reopens the last source."),
 ])}
 <div class="two">
-<div><h4>Appearance</h4><p>The app menu's <em>Appearance...</em> switches themes and the accent colour. The graphite theme is the default and matches the RONE plugins.</p></div>
+<div><h4>Appearance</h4><p>The app menu's <em>Appearance...</em> (or F4) opens the theme panel. <strong>Themes</strong>: six built-in themes and your own, each shown as it will look, with a live preview - the instrument behind the panel changes too, and nothing is kept until <em>Apply theme</em>. <strong>Meter colour</strong> is the level ramp or the theme's own colour; <strong>Meter style</strong> is LED segments or solid bars. <strong>Customize</strong> sets every colour - surfaces, graticule, meter, RMS, peak hold, accent, text, scope trace and reference - by swatch or hex. <em>Save as new theme</em> keeps your colours under a name, <em>Set as default</em> marks the theme that <em>Reset to default</em> returns to (Graphite until you choose one).</p></div>
 <div><h4>Settings</h4><p>Source, channel pair and every Setup and Appearance value persist between runs in your user folder.</p></div>
 </div>
 """})
