@@ -149,7 +149,8 @@ def main():
     # ------------------------------------------------------------ STUTTER
     A = ACCENT["stutter"]
     annotate("stutter_m_loaded", "stutter/tour.png", [
-        ("#pLogo", "Header logo"), ("#fileName+#fileInfo", "Loaded file"), ("#browseBtn", "BROWSE"),
+        ("#pLogo", "Header logo"), ("#fileName+#fileInfo", "Loaded file"),
+        ("#presetBar", "PRESETS"), ("#macroStrip", "MACRO SLOTS"), ("#browseBtn", "BROWSE"),
         ("#timelinePanel", "Waveform"), ("#transientNav", "PREV / NEXT"), ("#viewToggle", "ORIGINAL / RESULT"),
         ("#divisionBtns", "GRID"), ("#rampToBtns", "RAMP TO"), ("#rampCurveBtns", "CURVE"),
         ("#sliceMs", "SLICE"), ("#barsMinus+#barsPlus", "BARS"), ("#bpmInput+#bpmSource", "BPM"),
@@ -170,6 +171,7 @@ def main():
         ("#globalFadeOutKnob", "GLOBAL OUT"), ("#pitchKnob", "PITCH"), ("#pitchRampKnob", "PITCH RAMP"), ("#keyRootBtns", "KEY"), ("#keyModeBtns", "SCALE")], A,
         crops=[("panel", "#advPanel", 8)])
     plain("stutter", "stutter/empty.png"); plain("stutter_about", "stutter/about.png")
+    plain("stutter_m_menu", "stutter/menu.png")
     # ------------------------------------------------------------ STUCKER
     A = ACCENT["stucker"]
     annotate("stucker", "stucker/tour.png", [

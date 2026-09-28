@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "stutter", "product": "RONE Stutter", "eyebrow": "TEMPO-LOCKED STUTTER ENGINE",
-        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.4",
+        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.5",
         "tagline": "Drop a sound in and it is already a stutter - rendered on the first hit, bar-exact, ready to pull straight out of the waveform into your arrangement.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Stutter.vst3", "au": "RONE Stutter.component", "exe": "RONE Stutter.exe",
         "pdf": "RONE Stutter - User Manual.pdf", "cover_img": "stutter/tour_grid.png" and "stutter/empty.png",
@@ -62,6 +62,8 @@ def manual(G):
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
  ("Loaded file", "name, duration and sample rate of the source"),
+ ("PRESETS", "&#9664; / &#9654; step through the factory presets, the name opens the list (see Presets)"),
+ ("MACRO SLOTS", "six slots of your own: hold one to store the current settings, tap it to recall them"),
  ("BROWSE", "open a file dialog (you can also drop files or double-click the waveform)"),
  ("Waveform", "the source or the result; click to set the slice start, scroll to zoom, and pull the result out of the lower part into your DAW"),
  ("PREV / NEXT", "re-roll the fill from the previous / next transient"),
@@ -86,6 +88,31 @@ def manual(G):
  ("Status line", "what the plugin is doing and what it expects next"),
  ("Resize grip", "drag to resize the window"),
 ])}
+"""})
+
+    S.append({"title": "Presets", "sub": "the builds from the tutorial, one click away", "html": f"""
+<p>The preset bar in the header holds fourteen factory presets - the fills the RONE Stutter tutorial builds, with the exact values heard in it. <span class='pill'>&#9664;</span> and <span class='pill'>&#9654;</span> step through them; clicking the name opens the list, sorted by what the fill is for. A preset changes the stutter and nothing else, and the fill on the waveform re-renders the moment you pick one.</p>
+{img("stutter/menu.png", "<b>The preset list.</b> Categories in yellow; the preset you are on is highlighted.", "w60")}
+{table(["Preset", "What it is", "Settings"], [
+ ["<b>Init</b>", "the plain roll", "GRID 1/16, BARS 2, everything else off"],
+ ["<b>Swell 16</b>", "a 1/16 roll rising from silence", "GLOBAL IN 71 %"],
+ ["<b>Gated Swell</b>", "the same, every hit cut short", "GLOBAL IN 71 %, FADE OUT 40 %"],
+ ["<b>Speed-Up Roll</b>", "8ths into 16ths into 32nds", "GRID 1/8, RAMP TO 1/32 EXP, GLOBAL IN 71 %, FADE OUT 40 %"],
+ ["<b>Octave Riser</b>", "the roll that climbs an octave", "Speed-Up Roll + PITCH RAMP +12"],
+ ["<b>Tuned Riser</b>", "ends on a buzz in the key of the track", "GRID 1/8, RAMP TO 1/64 EXP, PITCH RAMP +12, GLOBAL IN 71 %, FADE OUT 40 %"],
+ ["<b>Fifth Up</b>", "the classic psytrance fill", "PITCH +7, GLOBAL IN 71 %, FADE OUT 25 %"],
+ ["<b>Wide To Centre</b>", "opens wide, lands in the middle", "STEREO 100 % AUTO down, FADE OUT 10 % AUTO up, CURVE EXP, GLOBAL IN 71 %"],
+ ["<b>Auto Tighten</b>", "starts loose, gets tighter and tighter", "FADE OUT 10 % AUTO up, CURVE EXP, GLOBAL IN 71 %"],
+ ["<b>Soft Pulses</b>", "hard hits turned into soft pulses", "GRID 1/8, FADE IN 60 %, FADE OUT 40 %, GLOBAL IN 71 %"],
+ ["<b>Tremolo 1 Bar</b>", "a tape stop in reverse, one bar", "FREE 180 &rarr; 25 ms, TREMOLO, BARS 1, CURVE EXP, GLOBAL IN 71 %, FADE OUT 10 %"],
+ ["<b>Tremolo 2 Bars</b>", "the same glide, slower and longer", "FREE 250 &rarr; 20 ms, TREMOLO, BARS 2, CURVE EXP, GLOBAL IN 71 %, FADE OUT 10 %"],
+ ["<b>Tape Slowdown</b>", "a buzz that slows down and fades - after the drop", "FREE 25 &rarr; 180 ms, TREMOLO, BARS 1, GLOBAL OUT 60 %, FADE OUT 10 %"],
+ ["<b>Downlifter</b>", "two octaves down and out", "PITCH RAMP -24, GLOBAL OUT 60 %, FADE OUT 25 %"],
+])}
+{note("What a preset leaves alone", "KEY and SCALE belong to your track, not to the fill, so no preset changes them - set KEY once in EXTRAS and every tuned preset lands in it. When you pick <b>Tuned Riser</b> with KEY off, the status line reminds you. MIX (the preview level), BPM and the moment of the sound you picked stay as they are too.")}
+<h3>Macro slots - your own presets</h3>
+<p>The six numbered buttons beside the name are yours. <strong>Hold</strong> one for a moment - it fills up - and the current settings are stored in it; <strong>tap</strong> it later to get them back. A slot that holds something is lit, and the one you are hearing glows. The slots are shared by every RONE Stutter in every project, so "my slot 3" is the same fill everywhere. <em>Clear all macro slots</em> at the bottom of the list empties them.</p>
+{note("The name is saved with the project", "The preset (or slot) name is part of the plugin's state: close the window, save the project, reopen it tomorrow - the header still says what you picked. A project saved with a version before 1.5 opens as CUSTOM, with its settings untouched.")}
 """})
 
     S.append({"title": "Controls reference", "sub": "what every control does, its range and default", "html": f"""

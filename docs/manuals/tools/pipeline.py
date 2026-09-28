@@ -42,6 +42,8 @@ STATES = [
     # result.png is the page as it opens: minimal, and already a stutter.
     ("stutter_m", "_result", "js:window.__scn_stutter(true)", None),
     ("stutter_m", "_free", "js:window.__scn_stutter_free()", None),
+    # 1.5.0: the preset list open, on Tremolo 1 Bar (the menu is plain DOM, no transition)
+    ("stutter_m", "_menu", "js:window.__scn_stutter(true);applyPreset(10);renderPresetMenu();document.getElementById('preset-menu').classList.add('open')", None),
     ("stutter_m", "_adv", "js:window.__scn_stutter(true);setAdvanced(true);state.keyRoot=5;state.keyMode=0;updateSegUI();document.getElementById('advPanel').classList.add('open');document.getElementById('extrasToggle').classList.add('open')", None),
     ("stucker", "", "js:state.keyRoot=10;landMidi=69;renderRide()", None),
     ("stucker", "_adv", "js:state.keyRoot=10;landMidi=69;renderRide(),click:advToggle", None),
