@@ -13,7 +13,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # manual uses this printable ice-grey for badges and headings instead.
           "throw": "#9FB3C4", "clipper": "#3D8BFF",
           # Rise Pink #FF5FB8 is too light for white paper badges; the manual uses a deeper pink
-          "rise": "#E0449A"}
+          "rise": "#E0449A",
+          # Iron's UV Orchid #E552FF glows on graphite but is thin on paper; a deeper orchid for badges
+          "iron": "#B530D6"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -221,6 +223,41 @@ def main():
         ("#landSeg", "LAND ON BAR"), ("#curveSeg", "CURVE"), ("#tailBar", "TAIL"), ("#macros", "Macros"), ("#chain", "Chain strip")], A,
         crops=[("panel", "#drawer", 8)])
     plain("rise_about", "rise/about.png")
+    # ------------------------------------------------------------ IRON (1000x684, demo page posed by shoot_iron.py)
+    A = ACCENT["iron"]
+    # #chopCv is one canvas: the waveform, the pan lane and the keys are boxes in image pixels (DPR 2).
+    WAVE, LANE, KEYS = [108, 186, 1834, 236], [60, 426, 1882, 108], [106, 538, 1836, 82]
+    # Order here IS the legend order in content_iron.py - keep the lists in step.
+    annotate("iron", "iron/tour.png", [
+        ("#pLogo", "Header logo"), ("#ipPre", "Preset browser"), ("#macroRow", "Macros"), ("#midiLed+#bpmRead", "MIDI / tempo"),
+        ("#vFile+#vMeta", "Vocal"), ("#sliceSeg", "AUTO SLICE"), ("#vCount", "Chops / keys"), ("#vInfo", "Chop readout"),
+        ("#browseBtn+#ejectBtn", "BROWSE / EJECT"), (WAVE, "Chop map"), (LANE, "Pan lane"), (KEYS, "Chop keys")], A,
+        crops=[("vocal", "#vCard", 6)])
+    annotate("iron", "iron/play.png", [
+        ("#notePill", "NOTE"), ("#octCtl", "OCTAVE"), ("#midiBtn", "MIDI NOTE"), ("#arpBtn", "ARP"), ("#arpRow", "ARP order"),
+        ("#nRead", "Note readout"), ("#kComb", "Comb readout"), ("#ironKnob", "IRON"), ("#kFade", "FADE OUT"), ("#kRing", "RING"),
+        ("#autoPan", "AUTO PAN"), ("#panStyleSeg", "PAN STYLE"), ("#rangeKnob", "RANGE"), ("#panMeter", "Pan meter")], A,
+        crops=[("hero", "#hero", 0)])
+    annotate("iron", "iron/foot.png", [
+        ("#advBtn", "ADVANCED"), ("#grooveBtn", "GROOVE"), ("#gSteps", "Step strip"), ("#dragMidiFoot", "DRAG MIDI"),
+        ("#gRead", "Groove readout"), ("#mixKnob", "MIX"), ("#mixNote", "NOTE"), ("#outKnob", "OUT"), ("#safeLamp", "SAFE"),
+        ("#resize-handle", "Resize grip")], A)
+    annotate("iron_groove", "iron/groove.png", [
+        ("#gpToggle", "GROOVE"), ("#barsSeg", "BARS"), ("#rerollBtn", "REROLL"), ("#histBack+#histPos+#histFwd", "History"),
+        ("#lockAll", "LOCK STEPS"), ("#clearEdits", "CLEAR EDITS"), ("#gpPre", "Pattern"), ("#dragMidi", "DRAG MIDI"),
+        ("#gGrid", "Steps"), ("#gpKnobsA", "Density / chops / variation"), ("#gpKnobsB", "Length / hold / flip / rolls")], A,
+        crops=[("panel", "#gPanel", 0), ("steps", [88, 744, 720, 326], 0)])
+    annotate("iron_adv", "iron/adv.png", [
+        ("#monoSeg", "VOICE"), ("#combSeg", "COMB"), ("#limSeg", "SAFE"), ("#advFlat", "FLATTEN + SLICE"),
+        ("#advSound", "SOUND"), ("#advKeys", "KEYS")], A,
+        crops=[("drawer", "#drawer", 0)])
+    annotate("iron_presets", "iron/presets.png", [
+        ("#ipPre", "Preset browser"), ("#ipList", "Preset list"), ("#ipDetail", "Description"),
+        ([380, 836, 1150, 62], "MY SLOTS"), ("#ipInit", "INIT")], A)
+    annotate("iron_arp", "iron/arp.png", [("#arpBtn", "ARP"), ("#notePill", "Chord notes"), ("#arpOrderSeg", "Order"),
+        ("#arpOctSeg", "Octaves"), ("#nRead", "Note readout"), ("#kComb", "Combs")], A,
+        crops=[("note", "#octCtl+#notePill+#arpRow+#nRead+#kComb", 10)])
+    plain("iron", "iron/main.png"); plain("iron_locks", "iron/locks.png"); plain("iron_empty", "iron/empty.png"); plain("iron_about", "iron/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

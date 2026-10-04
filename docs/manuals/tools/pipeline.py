@@ -19,7 +19,7 @@ Needs: Python 3 with Pillow, Microsoft Edge, network access for Google Fonts.
 """
 import sys, shutil, subprocess, json, time, socket, os
 from paths import ROOT, TOOLS, WORK, UI, SHOTS, EDGE, PORT, ensure
-import extract_ui, shoot, annotate, build_manuals, capture_webview
+import extract_ui, shoot, shoot_iron, annotate, build_manuals, capture_webview
 
 PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "stutter":    ROOT / "RoneStutter" / "Source" / "WebUI.h",
@@ -188,11 +188,12 @@ def capture_native():
 def main(argv):
     pdf_only = "--pdf-only" in argv; native = "--no-native" not in argv
     if not pdf_only:
-        log("1-2. preparing UIs"); prepare_ui()
+        log("1-2. preparing UIs"); prepare_ui(); shoot_iron.prepare()
         log("3-4. screenshots")
         with Server():
             for name, suffix, state, size in STATES:
                 shoot.shoot(name, suffix, state, size)
+            shoot_iron.shoot_all()
         if native:
             log("5. native captures"); capture_native()
         log("6. callouts"); annotate.main()
