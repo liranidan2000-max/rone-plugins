@@ -261,8 +261,8 @@ function PluginCard({ plugin, licensed, onInstall, onUninstall, onOpen, onOpenFo
                     {isInstalled && onOpenFolder && (
                       <button onMouseDown={() => onOpenFolder(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Open Folder</button>
                     )}
-                    {plugin.hasManual && onManual && (
-                      <button onMouseDown={() => onManual(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Manual</button>
+                    {(plugin.hasManual || plugin.videoUrl) && onManual && (
+                      <button onMouseDown={() => onManual(plugin)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Manual</button>
                     )}
                     {!isBusy && plugin.status !== 'up_to_date' && (
                       <button onMouseDown={() => onInstall(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">

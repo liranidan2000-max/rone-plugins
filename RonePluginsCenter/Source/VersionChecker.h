@@ -35,6 +35,7 @@ struct PluginInfo
     juce::String vst3Bundle;
     juce::String auBundle;            // e.g. "RONE Reverse Reverb.component"
     juce::String manualPdf;           // "RONE Stutter - User Manual.pdf" (ships in the install folder)
+    juce::String videoUrl;            // the YouTube guide; empty until the plugin has one
     juce::String registryKey;
     juce::String type;                // "plugin" or "standalone"
     juce::StringArray formats;

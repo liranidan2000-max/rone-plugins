@@ -12,6 +12,7 @@ import InfoModal from './components/InfoModal'
 import AnnouncementModal from './components/AnnouncementModal'
 import StatusToast from './components/StatusToast'
 import ConfirmDialog from './components/ConfirmDialog'
+import ManualDialog from './components/ManualDialog'
 // Plain modules, so node can test them without a JSX step (test/*.test.mjs).
 import { productKey, ownedProductIds } from './ownership'
 import { pickAnnouncement, rememberAnnouncement } from './announcements'
@@ -28,6 +29,8 @@ export default function App() {
   const [sortBy, setSortBy] = useState('name')
   const [toasts, setToasts] = useState([])
   const [infoPlugin, setInfoPlugin] = useState(null)
+  // MANUAL asks which one: the PDF or the YouTube guide
+  const [manualPlugin, setManualPlugin] = useState(null)
   // UNINSTALL asks first; `plugin` stays set while the dialog animates out
   const [uninstallAsk, setUninstallAsk] = useState({ open: false, plugin: null })
   const [loading, setLoading] = useState(true)
@@ -188,12 +191,20 @@ export default function App() {
       if (result && !result.success && result.error) addToast(result.error, 'error')
     } catch (err) { addToast(err.message || 'Could not open the folder', 'error') }
   }
-  const handleManual = async (pluginId) => {
+  const handleManualPdf = async (plugin) => {
+    setManualPlugin(null)
+    if (isDevMode()) { addToast('Opening the PDF manual', 'info'); return }
     try {
-      const result = await api.openManual(pluginId)
+      const result = await api.openManual(plugin.id)
       if (result && !result.success && result.error) addToast(result.error, 'error')
       else if (result?.source === 'online') addToast('Opening the manual from roneaudio.com', 'info')
     } catch (err) { addToast(err.message || 'Could not open the manual', 'error') }
+  }
+  // Only ever called for a plugin whose manifest entry names a video
+  const handleManualVideo = (plugin) => {
+    setManualPlugin(null)
+    addToast('Opening the video guide on YouTube', 'info')
+    callNative('openExternalUrl', plugin.videoUrl).catch(() => {})
   }
   const handleRefresh = async () => {
     try { addToast('Checking for updates…', 'info'); await api.refreshPlugins() }
@@ -464,7 +475,7 @@ export default function App() {
                   onUninstall={handleUninstall}
                   onOpen={handleOpen}
                   onOpenFolder={handleOpenFolder}
-                  onManual={handleManual}
+                  onManual={setManualPlugin}
                   onInfo={setInfoPlugin}
                   unlockPlaying={unlockPlaying}
                   loading={loading}
@@ -488,6 +499,13 @@ export default function App() {
           <AnnouncementModal item={announcement} onPrimary={runAnnouncement} onClose={closeAnnouncement} />
         )}
       </AnimatePresence>
+
+      <ManualDialog
+        plugin={manualPlugin}
+        onPdf={handleManualPdf}
+        onVideo={handleManualVideo}
+        onClose={() => setManualPlugin(null)}
+      />
 
       <ConfirmDialog
         open={uninstallAsk.open}

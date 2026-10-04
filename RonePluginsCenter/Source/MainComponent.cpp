@@ -161,6 +161,9 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         .withNativeFunction ("openFolder", [this] (NativeArgs args, NativeCompletion complete) {
             handleOpenFolder (args, guarded (std::move (complete)));
         })
+        .withNativeFunction ("openInstallFolder", [this] (NativeArgs args, NativeCompletion complete) {
+            handleOpenInstallFolder (args, guarded (std::move (complete)));
+        })
         .withNativeFunction ("refreshPlugins", [this] (NativeArgs args, NativeCompletion complete) {
             handleRefreshPlugins (args, guarded (std::move (complete)));
         })
@@ -464,6 +467,11 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     obj->setProperty ("hasStandalone",       hasStandalone);
     obj->setProperty ("standaloneInstalled", standaloneInstalled);
     obj->setProperty ("hasManual",           info.manualPdf.isNotEmpty());
+
+    // The YouTube guide, for the plugins that have one. Absent stays absent:
+    // the card's Manual chooser then leaves its video side switched off.
+    if (info.videoUrl.startsWithIgnoreCase ("https://"))
+        obj->setProperty ("videoUrl", info.videoUrl);
 
     // Individual LIFETIME price + where to buy it, under the manifest's own
     // key names. Set only when the manifest actually carries them: a plugin
@@ -791,6 +799,40 @@ void MainComponent::handleOpenFolder (NativeArgs args, NativeCompletion complete
     }
 
     complete ("{\"success\":false,\"error\":\"Nothing installed on disk for this plugin yet\"}");
+}
+
+// ============================================================================
+// Settings > OPEN FOLDER: the folders every RONE installer writes to - the
+// VST3 plugins, the standalone apps (with the manuals beside them), and on
+// macOS the Audio Units. Opens the folder itself, not its parent.
+// ============================================================================
+void MainComponent::handleOpenInstallFolder (NativeArgs args, NativeCompletion complete)
+{
+    const auto kind = args.size() > 0 ? args[0].toString() : juce::String ("vst3");
+
+    juce::File dir;
+    if (kind == "standalone")
+    {
+       #if JUCE_MAC
+        dir = juce::File ("/Applications/RONE Plugins");
+        if (! dir.isDirectory()) dir = juce::File ("/Applications");
+       #else
+        dir = VersionChecker::getStandaloneInstallDir();
+       #endif
+    }
+    else if (kind == "au")
+        dir = VersionChecker::getAUInstallDir();
+    else
+        dir = VersionChecker::getVst3InstallDir();
+
+    if (dir == juce::File() || ! dir.isDirectory())
+    {
+        complete ("{\"success\":false,\"error\":\"That folder does not exist yet - install a plugin first\"}");
+        return;
+    }
+
+    dir.startAsProcess();
+    complete ("{\"success\":true}");
 }
 
 void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete)

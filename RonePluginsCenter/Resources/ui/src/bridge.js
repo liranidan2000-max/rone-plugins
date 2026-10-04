@@ -107,6 +107,7 @@ export const api = {
   openPlugin:        createNativeFunction('openPlugin'),
   openManual:        createNativeFunction('openManual'),
   openFolder:        createNativeFunction('openFolder'),
+  openInstallFolder: createNativeFunction('openInstallFolder'),
   refreshPlugins:    createNativeFunction('refreshPlugins'),
   activateLicense:   createNativeFunction('activateLicense'),
   deactivateLicense: createNativeFunction('deactivateLicense'),
@@ -142,6 +143,7 @@ export const mockPlugins = [
     formats: ['VST3', 'AU', 'Standalone'], type: 'plugin',
     whatsNew: 'Initial release', logoUrl: '/logos/ReverseReverb.png',
     hasStandalone: true, standaloneInstalled: true, hasManual: true,
+    videoUrl: 'https://www.youtube.com/watch?v=gNoltmk77DM',
   },
   {
     id: 'RoneStutter', name: 'RONE Stutter',
@@ -159,7 +161,7 @@ export const mockPlugins = [
     status: 'up_to_date', downloadProgress: 0,
     formats: ['VST3', 'Standalone'], type: 'plugin',
     whatsNew: 'Initial release', logoUrl: '/logos/RoneFlanger.png',
-    hasStandalone: true, standaloneInstalled: true,
+    hasStandalone: true, standaloneInstalled: true, hasManual: true,   // a manual, no video yet
   },
 ];
 

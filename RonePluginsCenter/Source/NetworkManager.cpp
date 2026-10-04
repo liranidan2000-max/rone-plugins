@@ -626,6 +626,7 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.vst3Bundle     = entry.getProperty ("vst3_bundle",      {}).toString();
         info.auBundle       = entry.getProperty ("au_bundle",        {}).toString();
         info.manualPdf      = entry.getProperty ("manual",           {}).toString();
+        info.videoUrl       = entry.getProperty ("video",            {}).toString();
         info.registryKey    = entry.getProperty ("registry_key",     {}).toString();
         info.type          = entry.getProperty ("type",         {}).toString();
 

@@ -131,6 +131,18 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
     } catch (e) { setAutoStartMsg(e.message || 'Could not change the login entry') }
   }
 
+  // OPEN FOLDER: where the installers put the plugins on this computer
+  const [folderMsg, setFolderMsg] = useState('')
+  const openInstallFolder = async (kind) => {
+    setFolderMsg('')
+    if (isDevMode()) return
+    try { await api.openInstallFolder(kind) }
+    catch (e) { setFolderMsg(e.message || 'Could not open the folder') }
+  }
+  const folderKinds = autoStart.platform === 'mac'
+    ? [['vst3', 'VST3'], ['au', 'AU'], ['standalone', 'Standalone']]
+    : [['vst3', 'VST3'], ['standalone', 'Standalone']]
+
   // DELETE OLD VERSIONS: idle -> scanning -> confirm -> deleting -> done
   const [cleanPhase, setCleanPhase] = useState('idle')
   const [cleanItems, setCleanItems] = useState([])
@@ -191,6 +203,17 @@ export default function SettingsPanel({ onRefresh, lastSync }) {
           <button onClick={onRefresh} className="px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] rounded-lg btn-gradient">
             Check now
           </button>
+        </Row>
+        <Row title="Open folder"
+             desc={'Opens the folder on this computer where your RONE plugins are installed' + (folderMsg ? ' - ' + folderMsg : '')}>
+          <div className="flex gap-2">
+            {folderKinds.map(([kind, label]) => (
+              <button key={kind} onClick={() => openInstallFolder(kind)}
+                      className="px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] rounded-lg btn-outline whitespace-nowrap">
+                {label}
+              </button>
+            ))}
+          </div>
         </Row>
         <Row title="Delete old versions"
              desc={'Finds what earlier RONE versions left behind - duplicate copies, old names, stale plugin files - that can make your DAW open the wrong version, and deletes it. You see the list first' + (cleanMsg ? ' - ' + cleanMsg : '')}>
