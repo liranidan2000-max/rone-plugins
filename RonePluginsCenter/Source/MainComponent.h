@@ -143,6 +143,7 @@ private:
     NetworkManager            networkManager;
     LicenseHandler            licenseHandler;
     AccountClient             accountClient;
+    juce::int64               lastAccountCheckMs = 0;   // setWindowActive's own throttle on /app/refresh
     juce::Array<PluginInfo>   pluginData;
     juce::CriticalSection     pluginDataLock;  // guards pluginData access across threads
     juce::String              pendingUpdateId;  // from --update, served once the manifest is in

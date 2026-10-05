@@ -558,6 +558,15 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         return;
     }
 
+    // A check is already on its way: its answer is this call's answer too.
+    bool idle = false;
+    if (! validating.compare_exchange_strong (idle, true))
+    {
+        if (done)
+            juce::MessageManager::callAsync ([done, licensed = getState().licensed] { done (licensed); });
+        return;
+    }
+
     juce::Thread::launch ([this, current, done]
     {
         int status = 0;
@@ -607,6 +616,7 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
             }
         }
 
+        validating = false;
         notifyChanged();
 
         if (done)

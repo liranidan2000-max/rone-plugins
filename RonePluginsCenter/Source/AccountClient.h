@@ -126,6 +126,11 @@ private:
 
     // Guards against two overlapping network calls stomping on each other.
     std::atomic<bool> busy { false };
+
+    // One /app/refresh at a time: the window coming to the front, the start-up
+    // check and the daily timer can all ask, and each run rewrites the account
+    // file and BundleLicense.xml.
+    std::atomic<bool> validating { false };
     std::atomic<bool> googleCancel { false };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AccountClient)

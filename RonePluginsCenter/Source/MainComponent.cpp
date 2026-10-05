@@ -286,6 +286,7 @@ MainComponent::MainComponent()
         emitPluginsUpdated();
     };
     accountClient.initialize();
+    lastAccountCheckMs = juce::Time::currentTimeMillis();   // initialize() just asked the server
 
     // Fetch manifest after a short delay to let the WebView initialize
     juce::Timer::callAfterDelay (500, [this] { networkManager.fetchManifest(); });
@@ -359,6 +360,22 @@ void MainComponent::setWindowActive (bool isActive)
     auto* obj = new juce::DynamicObject();
     obj->setProperty ("active", isActive);
     emitToPage ("windowActive", juce::var (obj));
+
+    // Coming back to the Center - from the browser where a plugin was just
+    // bought, from the tray or the taskbar - asks the server again what this
+    // account owns. Without it a purchase made while the Center runs stayed
+    // invisible until the once-a-day check, and closing the window only hides
+    // it in the tray, so "close it and open it again" changed nothing (an Iron
+    // buyer on 2026-10-05). At most once a minute.
+    if (isActive)
+    {
+        const auto now = juce::Time::currentTimeMillis();
+        if (now - lastAccountCheckMs >= 60 * 1000)
+        {
+            lastAccountCheckMs = now;
+            accountClient.validateAsync();
+        }
+    }
 }
 
 MainComponent::NativeCompletion MainComponent::guarded (NativeCompletion complete)
