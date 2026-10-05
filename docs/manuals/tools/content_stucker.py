@@ -10,7 +10,7 @@ def manual(G):
     S = []
 
     S.append({"title": "Welcome to RONE Stucker", "sub": "one knob, one job", "html": f"""
-<p><strong>RONE Stucker</strong> is a live buffer-retrigger effect built around a single gesture: turn the big knob up and whatever was just playing gets <em>stuck</em>. The captured slice loops in place of the live signal, and as you keep turning, the loop gets shorter and shorter. Past a certain point the repeats are so fast they become a pitch, and that pitch climbs. Turn the knob back to zero and the live signal returns exactly where it should be.</p>
+<p><strong>RONE Stucker</strong> is a live buffer-retrigger effect built around a single gesture: turn the big knob up and whatever plays from that moment gets <em>stuck</em>. The captured slice loops in place of the live signal, and as you keep turning, the loop gets shorter and shorter. Past a certain point the repeats are so fast they become a pitch, and that pitch climbs. Turn the knob back to zero and the live signal returns exactly where it should be.</p>
 <p>Producers call this a "stutter riser", "roll-up" or "buffer freeze build". Stucker makes it a one-knob move so you can perform it, automate it with a single line, or map it to a controller.</p>
 <div class="two">
 <div>
@@ -31,7 +31,7 @@ def manual(G):
  "Turn STUCK up - the beat freezes and rolls up.",
  "Turn it back to OFF on the next downbeat."])}
 </div></div>
-{note("What is being captured", "The input is recorded continuously into a circular buffer. When STUCK leaves zero, the most recent slice of one grid unit (LENGTH) is frozen. In SYNC mode that slice is aligned to the host's grid, so the loop always starts on a beat even if you grabbed the knob a little late. Returning to OFF releases the buffer with a short crossfade (SMOOTH) - no clicks, no gap.")}
+{note("What is being captured", "The input is recorded continuously into a circular buffer. When STUCK leaves zero, a slice of one grid unit (LENGTH) is caught starting at that point: the first pass is the live sound itself, then it repeats. In SYNC mode the slice starts exactly on the grid line, so the loop always starts on a beat - even if you grabbed the knob a little late, or the automation reaches the plugin a few milliseconds early. To stutter a hit, draw the automation up where the hit starts. Returning to OFF releases the buffer with a short crossfade (SMOOTH) - no clicks, no gap.")}
 """})
 
     S.append(G["install_section"](m))
@@ -74,8 +74,8 @@ def manual(G):
 
     S.append({"title": "Controls reference", "sub": "what every control does, its range and default", "html": f"""
 {img("stucker/tour_knob.png", "<b>STUCK.</b> The white dot shows the position, the violet arc shows how far the roll-up has gone.", "w60")}
-{ctl("STUCK", "0 to 100 %<br>default OFF (0 %)<br>automatable, smoothed", "<p>The amount of roll-up. At 0 % the effect is off and the input passes through. The moment the knob leaves zero the last grid slice is frozen and looped. As the value increases the loop length shrinks exponentially over the number of octaves set by RANGE; at the top the loop is only a few dozen samples long and reads as a rising pitch.</p><p>The knob is heavily smoothed, so fast automation and MIDI controllers never click.</p>", "Double-click the knob to snap back to OFF - the fastest way to release on the downbeat when performing by hand.")}
-{ctl("SYNC / FREE", "default SYNC", "<p><strong>SYNC</strong> aligns the captured slice to the host's beat grid: the loop starts on the last grid line of the LENGTH division, so a slightly late grab still loops a full beat in time. <strong>FREE</strong> captures the most recent slice from the exact moment you engage, which is what you want on material without a fixed tempo, or in the standalone app.</p>")}
+{ctl("STUCK", "0 to 100 %<br>default OFF (0 %)<br>automatable, smoothed", "<p>The amount of roll-up. At 0 % the effect is off and the input passes through. The moment the knob leaves zero a grid slice is caught from that point and looped (the first pass is the live sound). As the value increases the loop length shrinks exponentially over the number of octaves set by RANGE; at the top the loop is only a few dozen samples long and reads as a rising pitch.</p><p>The knob is heavily smoothed, so fast automation and MIDI controllers never click.</p>", "Double-click the knob to snap back to OFF - the fastest way to release on the downbeat when performing by hand.")}
+{ctl("SYNC / FREE", "default SYNC", "<p><strong>SYNC</strong> aligns the captured slice to the host's beat grid: the loop starts on the grid line of the LENGTH division the knob comes up in, so a slightly late grab still loops a full beat in time, and a knob (or automation) that arrives up to 50 ms before a line waits for the line. Automation drawn up on a beat therefore catches that beat every time, whatever the host's buffer size. <strong>FREE</strong> catches from the moment the plugin sees the knob move, which is what you want on material without a fixed tempo, or in the standalone app; with automation it can land up to one audio buffer early, so use SYNC for automation drawn on the grid.</p>")}
 {ctl("BYPASS", "", "<p>Hard bypass. Use it to compare with and without the effect while STUCK is engaged.</p>")}
 <h3>Ride</h3>
 {img("stucker/ride.png", "<b>A ride in progress.</b> RIDE set to 2 bars, GO reads RIDING, the knob climbs by itself and LANDS shows the note it is heading for.", "w60")}
@@ -157,6 +157,7 @@ def manual(G):
 
     S.append(G["support_section"](m, [
         ("The loop does not start on the beat", "Switch to SYNC and make sure the DAW is playing (the grid comes from the host transport). In FREE mode the loop starts exactly when you engage."),
+        ("Automation on a hit catches silence, or only sometimes catches", "Since 1.3.0 the slice starts where the knob comes up, so draw the rise where the hit starts (not after it), and use SYNC: the slice then starts exactly on the grid line every time. Versions before 1.3.0 caught the slice that had played before the knob came up - update through the RONE Plugins Center."),
         ("I hear a click when releasing", "Raise SMOOTH. Also check that the automation actually reaches 0 % - a value of 1-2 % keeps the loop engaged."),
         ("The top of the knob is a low buzz instead of a scream", "Raise RANGE towards 10 and raise LOW CUT to remove the low-frequency component of the very short loop."),
         ("GO is greyed out", "RIDE is OFF. Pick a length (1, 2, 4 or 8 bars) first."),
