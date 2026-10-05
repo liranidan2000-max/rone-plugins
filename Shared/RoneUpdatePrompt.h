@@ -43,6 +43,7 @@
  #include <juce_audio_processors/juce_audio_processors.h>   // PluginHostType: which DAW we are in
 #endif
 #include "RemoteLicenseGate.h"
+#include "RoneWebCompat.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -187,9 +188,12 @@ public:
     {}
 
     // Adds the script and the event listener to the editor's WebView options.
+    // RoneWebCompat rides along: every plugin's page lays out on an old macOS
+    // WebKit too (no inset / flex gap before Safari 14.1 - Zanon, 2026-10-05).
     juce::WebBrowserComponent::Options addTo (juce::WebBrowserComponent::Options options)
     {
         return options
+            .withUserScript (RoneWebCompat::script())
             .withUserScript (script())
             .withEventListener ("roneUpdateAction", [this] (const juce::var& payload) { onAction (payload); });
     }
@@ -291,7 +295,7 @@ private:
     + '#rone-upd-bar button,#rone-upd-lock button{cursor:pointer;border-radius:5px;font:800 clamp(8px,2vw,11px) Manrope,"Segoe UI",sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:8px 11px;white-space:nowrap}'
     + '#rone-upd-bar .ru-go{background:' + ACC + ';color:#0B0C0E;border:0}'
     + '#rone-upd-bar .ru-later{background:transparent;color:#9aa0a8;border:1px solid #30343b}'
-    + '#rone-upd-lock{position:fixed;inset:0;z-index:2147483001;display:none;align-items:center;justify-content:center;padding:6%;'
+    + '#rone-upd-lock{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483001;display:none;align-items:center;justify-content:center;padding:6%;'
     + 'background:rgba(10,11,13,.45);-webkit-backdrop-filter:grayscale(1) brightness(.5);backdrop-filter:grayscale(1) brightness(.5);box-sizing:border-box}'
     + '#rone-upd-lock .ru-card{max-width:440px;width:100%;text-align:center;background:rgba(16,17,21,.96);border:1px solid #30343b;border-radius:12px;'
     + 'padding:clamp(14px,4vw,26px);font-family:Manrope,"Segoe UI",system-ui,sans-serif;color:#E8EAED;box-sizing:border-box}'
