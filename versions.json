@@ -2,18 +2,18 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-05T21:03:39Z",
+  "last_updated": "2026-10-05T22:09:46Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.6.1.244",
-    "sha256": "afa1e6ee97401cf28a5dab40f0bb97cb8ce762c79317bb473eaf6632d468ba17"
+    "version": "1.6.2.249",
+    "sha256": "ddce860d06ecd422841b456d2e2b900fe1f2f5d40332fb7452a49daa6c8d5985"
   },
   "plugins": [
     {
       "id": "ReverseReverb",
       "name": "RONE Reverse Reverb",
-      "version": "1.1.8.243",
+      "version": "1.1.10.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -29,9 +29,9 @@
       "video": "https://www.youtube.com/watch?v=gNoltmk77DM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "b46e015232f5ad0226476be5452d4587cf7abe9acf45c9a27660fc61a88dd465",
+      "sha256": "b7eb957fa4cc47485247c7153679b53fe2564da528bb8c10124986190de0d450",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "0f0e737a5048410f8ee283dfdb869b3ec9b8bd9ff11c2edd1e689215e641b5ce",
+      "sha256_mac": "62e284f52a718617e23b83da861af7b79d4ac6639a60c667ea1c254a894a360a",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/reverse-reverb.html"
@@ -39,7 +39,7 @@
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.5.2.245",
+      "version": "1.5.4.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -55,9 +55,9 @@
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "fc6b3d03b50597feb33625a2d0ae0382a9acde36005acf64a92488019310b374",
+      "sha256": "99c1e3839107c01da7ad2bd2ed0a713c30feb0e355ec9d74c326e702cdd7a1dc",
       "registry_key": "RoneStutter",
-      "sha256_mac": "560588873154fc2e91ec47c634c62250ecd2c0b98a7432a471a3a6ef2beeb4cd",
+      "sha256_mac": "9f5fe04af75fba78fbd319bbaeebaa2c6293f7909259aeef4abe64d49fa2afcd",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-stutter.html"
@@ -65,7 +65,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.3.0.244",
+      "version": "1.3.1.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -81,9 +81,9 @@
       "video": "https://www.youtube.com/watch?v=l6_cvuOajI4",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "2264e88de168c79fb198308aada692f14db73e26e1b016236e2db15b56e0c3ba",
+      "sha256": "7a738c02807afb445ea22a976f3a6242db7856830e762956edc8d0978cf57d18",
       "registry_key": "RoneStucker",
-      "sha256_mac": "939585459eb48b6bdfca29c773a5da19d2d9834853a95cba08c0927b036e4468",
+      "sha256_mac": "a3098ad2293b58422b29d3f1dde0e654f702a24fab413f36bb7bbd828cf68e41",
       "price": 29,
       "launch_price": 19,
       "store_url": "https://roneaudio.com/products/rone-stucker.html"
@@ -91,7 +91,7 @@
     {
       "id": "RoneThrow",
       "name": "RONE Throw",
-      "version": "1.8.0.243",
+      "version": "1.8.1.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -107,9 +107,9 @@
       "video": "https://www.youtube.com/watch?v=htrhBnLIBtQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer.pkg",
-      "sha256": "3f2e48febd9e313add72c61e838167458cb367dc607a94386507bd486b0c8d65",
+      "sha256": "781de61b57cb3a9e1d9659fc7eb695a1c8030e83735e54becc6db272ea2bb567",
       "registry_key": "RoneThrow",
-      "sha256_mac": "79741086bc6f43596af1518548e5a546ee5bf614d91bdecaf5e9505c61837f42",
+      "sha256_mac": "6e0871ccd7bc1af3df8281a0d812b3923ec66fdd10ec1bf6cddabe780b0543b4",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 29
@@ -117,7 +117,7 @@
     {
       "id": "RoneClipper",
       "name": "RONE Clipper",
-      "version": "1.0.2.248",
+      "version": "1.0.2.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -133,9 +133,9 @@
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer.pkg",
-      "sha256": "9d2819abb8f9892115a486f866d2da149c43f40b16099a4436024d36b8e68c0d",
+      "sha256": "f938e1102dd9799579ee97381826a40ef467098d45c67b9bed3cc9968481c953",
       "registry_key": "RoneClipper",
-      "sha256_mac": "206813ae06c9f1310c6b443e891056edced4fe7e5b83af732ebb3e264a91ec8d",
+      "sha256_mac": "b6ed4410bc912c418cd08f1d9ef38df248bc4bfc377a342477452108db126a80",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
       "price": 0,
       "launch_price": 0,
@@ -144,7 +144,7 @@
     {
       "id": "RoneRise",
       "name": "RONE Rise",
-      "version": "1.0.3.248",
+      "version": "1.0.3.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -160,9 +160,9 @@
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer.pkg",
-      "sha256": "0f5f2dbc531dd5bddb3c1b06b3253b54997750880846f38cc25c955e8fd85bf7",
+      "sha256": "f9daeb827430ecdf9e40949cc844d84d2a03615f20f7715507c60a4441882569",
       "registry_key": "RoneRise",
-      "sha256_mac": "3b193dffae1cd61472b79195ebbd088c76a1bb70ea225cc35cad591dac85d2d2",
+      "sha256_mac": "0300029ce4cc2c0f5ec414b1213cbde09b5ce50d8b74e36e367a966d55192173",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
       "launch_price": 29
@@ -170,7 +170,7 @@
     {
       "id": "RoneIron",
       "name": "RONE Iron",
-      "version": "1.0.1.246",
+      "version": "1.0.3.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -185,9 +185,9 @@
       "manual": "RONE Iron - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer.pkg",
-      "sha256": "aadda18ff09df7927ae65d35d8e7e084ea92e1fa3e0edf9c27a3bbde7f8fe198",
+      "sha256": "45dcade195169b82c6356fe0c4b7d36f9c69227e20d03989a17dada05d19cf5e",
       "registry_key": "RoneIron",
-      "sha256_mac": "6d96cee4643d27e41768843964b0cc98563fd9e0d2699f6813c3b81e8a80289f",
+      "sha256_mac": "d0dad7c7007be0af0f092c613993c52cc003c677e4dd728e65b889512caf7510",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
       "launch_price": 29
@@ -195,7 +195,7 @@
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.0.8.243",
+      "version": "2.0.9.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -210,9 +210,9 @@
       "video": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "0f1debac4ecee0d48edfc5d2b3baf66d3f84a209b9765be4dfca05784eacc35a",
+      "sha256": "db8b1690c800d83f2d1996d015a15c4a9d75d43e983cd531520d0f7d7629c33a",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "5c3a4ab96f00ad0b4677339dbe2763c3ff0249cc40914ebd7c9eff6f2fd5d865",
+      "sha256_mac": "943e0fa696b5a89fc4b1438da490683cdbc291efaff04661dff3bf1ead144492",
       "price": 39,
       "launch_price": 29,
       "store_url": "https://roneaudio.com/products/rone-flanger.html"
@@ -220,7 +220,7 @@
     {
       "id": "RoneAfterspace",
       "name": "RONE AFTERSPACE",
-      "version": "1.0.2.243",
+      "version": "1.0.3.249",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -236,9 +236,9 @@
       "video": "https://www.youtube.com/watch?v=lbKXq6iuctM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer.pkg",
-      "sha256": "079a8ed17a99e786c7e3213770233d374be97048adf6eaa374d1ad806aba4251",
+      "sha256": "7ba6f7c6f16ebd45e520cbaccea4994b5f71d254842f79f6dabcff0b3f2fe2a3",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "db484ea76d9c136da21f82487d3693ecc410fceda63face6e68f0b0033a955ce",
+      "sha256_mac": "cd80dc34e959fa9f4728d34dc4432ada066737c73922d66d44d7549fa5e92907",
       "price": 59,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/afterspace.html"
