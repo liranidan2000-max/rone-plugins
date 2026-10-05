@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-05T16:53:23Z",
+  "last_updated": "2026-10-05T18:04:50Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -164,7 +164,7 @@
     {
       "id": "RoneIron",
       "name": "RONE Iron",
-      "version": "1.0.0.243",
+      "version": "1.0.1.246",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -179,9 +179,9 @@
       "manual": "RONE Iron - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer.pkg",
-      "sha256": "de3b3ff7a190fff2d523f1e91ef032d2eab668bf4bef6009171ccf2d55d5e696",
+      "sha256": "aadda18ff09df7927ae65d35d8e7e084ea92e1fa3e0edf9c27a3bbde7f8fe198",
       "registry_key": "RoneIron",
-      "sha256_mac": "ae3c1bc0b484d2ab0530e8933cbff4a07f22a533a5c64bff6097a2295f87ed84",
+      "sha256_mac": "e7ba8eb94625c1f68ab111dca0ca4e7c93a4013c2a77b9a59b563e7f22e3af68",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
       "launch_price": 29
