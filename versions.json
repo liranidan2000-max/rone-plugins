@@ -2,12 +2,12 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-04T11:01:22Z",
+  "last_updated": "2026-10-05T12:52:06Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "1.6.1.243",
-    "sha256": "07e974ff2e96b7df6f76c4772094e8d889bffe638f48ac58a1944b0f3b624d91"
+    "version": "1.6.1.244",
+    "sha256": "afa1e6ee97401cf28a5dab40f0bb97cb8ce762c79317bb473eaf6632d468ba17"
   },
   "plugins": [
     {
@@ -63,7 +63,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.2.1.243",
+      "version": "1.3.0.244",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -78,9 +78,9 @@
       "manual": "RONE Stucker - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer.pkg",
-      "sha256": "6116c262522521d99104adf6613d4eba67efac6e578c42d714ac3aacd18e4d7b",
+      "sha256": "16f660a457b8bd3f3c5eeed1c9116836d8a1731dd4d4fb5460c93e1a8393ccaf",
       "registry_key": "RoneStucker",
-      "sha256_mac": "e1d1ca01952120bf7ef7484e96fa4e8865418d22113576bfba313c733d529f33",
+      "sha256_mac": "939585459eb48b6bdfca29c773a5da19d2d9834853a95cba08c0927b036e4468",
       "price": 29,
       "launch_price": 19,
       "store_url": "https://roneaudio.com/products/rone-stucker.html"
