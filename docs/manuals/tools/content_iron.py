@@ -36,10 +36,10 @@ def manual(G):
     S.append(G["install_section"](m))
 
     S.append({"title": "Quick start", "sub": "your first metal vocal", "html": f"""
-{img("iron/empty.png", "<b>A fresh RONE Iron.</b> Drop a vocal anywhere on the card, or press the folder button.", "w80")}
+{img("iron/empty.png", "<b>A fresh RONE Iron.</b> Drop a vocal or any sample anywhere on the card, or press the folder button.", "w80")}
 {steps([
  "<strong>Insert Iron</strong> on an instrument (MIDI) track. In FL Studio: Channel rack, + , RONE Iron.",
- "<strong>Drop a vocal</strong> onto the card - WAV, AIFF, FLAC, MP3 or OGG, from your DAW's browser or from Explorer / Finder. The first 60 seconds are used. A few seconds later the chops are on the keys.",
+ "<strong>Drop a vocal - or any sample</strong> onto the card - WAV, AIFF, FLAC, MP3 or OGG, from your DAW's browser or from Explorer / Finder. The first 60 seconds are used. A few seconds later the chops are on the keys.",
  "<strong>Pick the note</strong> of your track on the piano (<span class='pill'>A</span> by default). The whole vocal is flattened to the octave of that note nearest the voice, and the comb follows it.",
  "<strong>Play.</strong> Every chop has a key, starting at C5 (FL Studio's naming; middle C = C5). Click a chop on the screen to hear it.",
  "<strong>Or let it play itself:</strong> press <span class='pill'>GROOVE</span> and start your song. Iron plays a 16th-note pattern of chops on the host tempo. <span class='pill'>DRAG MIDI</span> drops that pattern into your piano roll as notes.",
@@ -128,7 +128,7 @@ def manual(G):
     S.append({"title": "GROOVE", "sub": "the automatic pattern", "html": f"""
 {img("iron/groove.png", "<b>The GROOVE panel</b> (EDIT in the footer). Each card is a 16th note: the chop it plays, its length bar and its marks.")}
 {legend([
- ("GROOVE", "on / off - it plays when your DAW plays"),
+ ("GROOVE", "on / off - it plays the moment it is on, and follows your song while the DAW plays"),
  ("BARS", "a 1-bar or 2-bar pattern"),
  ("REROLL", "a new pattern; locked steps keep theirs"),
  ("History", "back to an earlier roll and forward again (32 kept)"),
@@ -148,7 +148,7 @@ def manual(G):
 {ctl("LENGTH, HOLD", "LENGTH in 16ths<br>HOLD 0 to 100 %", "<p>LENGTH is how long each hit lasts, in 16th notes. HOLD lets a share of the hits ring on to the next one.</p>")}
 {ctl("FLIP, ROLLS", "0 to 100 %", "<p>FLIP sends some hits to the other side, on top of the chop's own pan. ROLLS turns some hits into quick 1/32 repeats (2 to 4 hits, each a little quieter).</p>")}
 <p><b>DRAG MIDI</b> (in the panel and in the footer) writes the pattern exactly as it plays, edits and rolls included, as a MIDI clip you drag into your piano roll. Turn GROOVE off and edit the notes like any other clip - Iron's keys play the same chops, so the clip sounds the same.</p>
-{note("GROOVE follows the host", "The pattern runs on your DAW's tempo and position and plays only while the song plays. In the standalone app it runs on its own clock. While the DAW is stopped the footer says so.")}
+{note("GROOVE plays at once, then follows the host", "Switch GROOVE on and the pattern plays straight away at your project's tempo, even with the DAW stopped. Press play and it locks to your song's bars; press stop and it stops with the song. The footer then reads STOPPED &middot; RUN: click it to run the pattern on its own again. A project saved with GROOVE on stays quiet until you play or click. In the standalone app GROOVE is play / stop on its own clock.")}
 """})
 
     S.append({"title": "Presets, macros, locks and slots", "sub": "the whole sound at once", "html": f"""
@@ -163,7 +163,7 @@ def manual(G):
 <p>A preset sets the whole IRON sound: the metal, the fades, the pans, the ARP notes, the groove and what the four macros do. It never changes your vocal, your NOTE, OCTAVE or ROOT, or the pans you set by hand. <b>SIGNATURE</b>: IRON (the signature sound for the main drop) and FORGE (peak-time full-on). <b>STABS</b>: RAZOR, ANVIL, PISTON. <b>ARP</b>: TRIAD, ASCEND, MELODY, PHRYGIAN. <b>SOFT</b>: HUMAN, HALO. <b>SPACE</b>: MOLTEN, CATHEDRAL. <b>FX</b>: SHRAPNEL, IGNITION.</p>
 {ctl("Macros", "METAL, CHOP, SPACE, MOTION<br>0 to 100 %<br>automatable", "<p>Each macro moves several controls at once, in the way the current preset defines: METAL adds metal and ring, CHOP tightens the hits, SPACE opens the rings and the stereo, MOTION adds pan movement, density and rolls. The macros never move the knobs themselves - the knobs show where a macro has taken them - so turning a macro back to 0 always returns exactly to the preset. Automate them into a drop.</p>", "Hover a macro to light the controls it moves.")}
 {img("iron/locks.png", "<b>Locks.</b> The small locks next to IRON, RING and MIX: those controls keep their values when you switch presets.", "w80")}
-{ctl("Locks", "12 lockable controls", "<p>Hover a control and a small lock appears next to it; click it to lock. A locked control stays where it is when you switch presets, so you can audition presets around a metal amount or a groove you like. Lockable: IRON, RING, FADE OUT, MIX, LIFE, the pans, the ARP notes, the GROOVE and each of the four macros.</p>")}
+{ctl("Locks", "12 lockable controls", "<p>Every lockable control has a small lock next to it, grey while it is open; click it to lock and it lights up. A locked control stays where it is when you switch presets, so you can audition presets around a metal amount or a groove you like. Lockable: IRON, RING, FADE OUT, MIX, LIFE, the pans, the ARP notes, the GROOVE and each of the four macros.</p>")}
 {ctl("MY SLOTS", "6 slots", "<p>Hold a slot button to store the current sound in it, tap it to recall. Slots are kept on your computer, so they are there in every project and every instance.</p>")}
 """})
 
@@ -229,7 +229,7 @@ def manual(G):
 {table(["Symptom", "Cause", "Fix"], [
  ["No sound from the keys", "No vocal loaded, or you play below the first chop key", "Drop a vocal; play from the ROOT key (C5 by default) upward"],
  ["Some low keys change the note instead of playing", "MIDI NOTE is on: the octave under the chops chooses the note", "Turn MIDI NOTE off, or play the chops from the ROOT key up"],
- ["The GROOVE is silent", "The DAW is stopped, or GROOVE is off", "Press play in your DAW; the GROOVE plays with the song"],
+ ["The GROOVE is silent", "GROOVE is off, or the DAW's stop ended it", "Switch GROOVE on, press play in your DAW, or click STOPPED &middot; RUN in the footer"],
  ["Only the first part of my file is used", "Iron loads up to 60 seconds", "Trim the vocal to the part you want before dropping it"],
  ["The file is refused", "Not an audio file Iron can read, or no audio in it", "Use WAV, AIFF, FLAC, MP3 or OGG"],
  ["A short wait after changing NOTE, LIFE or the slicing", "The vocal is re-rendered for the new setting", "The old chops play until the new ones are ready"],
