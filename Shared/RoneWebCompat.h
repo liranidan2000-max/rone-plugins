@@ -2,6 +2,8 @@
 
 // ============================================================================
 // RoneWebCompat - makes every RONE WebView page lay out on an OLD macOS WebKit.
+// (Shipped in every plugin by the full rebuild that followed the GitHub Actions
+// outage of 2026-10-05, which cancelled half of the first run.)
 //
 // Found 2026-10-05 in Zanon's videos (Logic, Mac): every plugin worked but its
 // parts sat in the wrong places - Stucker's "OFF / STUCK" in the top-left
