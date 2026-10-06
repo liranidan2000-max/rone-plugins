@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-06T23:35:01Z",
+  "last_updated": "2026-10-06T23:59:32Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -14,7 +14,7 @@
     {
       "id": "ReverseReverb",
       "name": "RONE Reverse Reverb",
-      "version": "1.1.10.250",
+      "version": "1.1.11.257",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -30,9 +30,9 @@
       "video": "https://www.youtube.com/watch?v=gNoltmk77DM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "b6aadd96ccbee7ef86b8a1a7f5be295cb27233f9621a917651a0ff152e45fa5a",
+      "sha256": "8c0e16a2c65b9e6799d54abf609795b10afc37f7a04cfd71e31178ad7862ec07",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "6c790519ce41f553ae63bcfc79e6704dec9a39483f1a256bd652f4ed57367b50",
+      "sha256_mac": "f22d9eacc843ebadaced9ab448af5cceb5f9dabcd1420beff6084a79ff589bb5",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/reverse-reverb.html",
@@ -57,13 +57,13 @@
           "description": "Reverb inverso sincronizado al tempo para risers, swells de voz y transiciones sin cortes - colas de 1/32 a 8 compases, moldeadas con fades, filtros y anchura estéreo"
         }
       },
-      "size": 5566214,
-      "size_mac": 16402034
+      "size": 5565723,
+      "size_mac": 16402736
     },
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.5.5.255",
+      "version": "1.5.6.257",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -79,9 +79,9 @@
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "bc6f28ea1b666e6930a3a3440adc8733352b9999a021824670bb9abace906858",
+      "sha256": "642be4adab4cb628fa115ef57522fccec784d85ae9e59d56d59009aa31d676dc",
       "registry_key": "RoneStutter",
-      "sha256_mac": "22a246c6f8fc5ebe82082ef53c4f5c84efeeff65247a45acc270933804fc0885",
+      "sha256_mac": "8050c12a629000cf03914361ff6b441095f4ec1c9a08d3fa0cb393503c0a1f26",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
@@ -105,8 +105,8 @@
           "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
         }
       },
-      "size": 6447362,
-      "size_mac": 17867068
+      "size": 6447424,
+      "size_mac": 17867295
     },
     {
       "id": "RoneStucker",
@@ -306,7 +306,7 @@
     {
       "id": "RoneIron",
       "name": "RONE Iron",
-      "version": "1.0.3.250",
+      "version": "1.0.4.257",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -321,9 +321,9 @@
       "manual": "RONE Iron - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer.pkg",
-      "sha256": "8f1c104f092fd496562a99fc771090b4afc3e6c10fb3c466b3aa9c8e36bf2be1",
+      "sha256": "1ed653eab98e475d6de5ac6dedf054d42c8aca73c2f4fa8235e63a5d2bf9d384",
       "registry_key": "RoneIron",
-      "sha256_mac": "183d111d85748f686a19219fe2d93b415335ccddfc7e202ad1cb8938152f4385",
+      "sha256_mac": "cdaa3ecbcb4f368092ed775a864c8a357902bf8a5d3debfd1045943db88687fe",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
       "launch_price": 29,
@@ -348,8 +348,8 @@
           "description": "Suelta una voz y se convierte en un instrumento de chops metálicos: Iron la afina a la nota que elijas, la corta en chops en tus teclas MIDI, hace sonar cada chop en un comb afinado y lo lanza a izquierda y derecha - tócalo desde el piano roll o deja que GROOVE escriba el patrón"
         }
       },
-      "size": 7589540,
-      "size_mac": 20257637
+      "size": 7588707,
+      "size_mac": 20257572
     },
     {
       "id": "RoneFlanger",
