@@ -150,6 +150,14 @@ target_link_libraries(RonePluginsCenter PRIVATE
     juce::juce_recommended_warning_flags
 )
 
+# ControlPort.h (2.0.3): on Windows it opens its MIDI port through the system
+# API, on the Mac through juce::MidiInput / MidiOutput - which live in
+# juce_audio_devices. Without the module the Mac build of 2.0.3 failed
+# (run #253: "no member named 'MidiOutput' in namespace 'juce'").
+if (APPLE)
+    target_link_libraries(RonePluginsCenter PRIVATE juce::juce_audio_basics juce::juce_audio_devices)
+endif()
+
 # Generate JuceHeader.h — aggregates all linked JUCE modules into a single
 # include. Without this call the header is never written to the build tree,
 # causing C1083 "Cannot open include file: 'JuceHeader.h'" on every TU.
