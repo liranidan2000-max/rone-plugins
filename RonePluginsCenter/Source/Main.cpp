@@ -4,6 +4,7 @@
 #include "AutoStart.h"
 #include "OldVersionCleaner.h"
 #include "PluginUninstaller.h"
+#include "ControlPort.h"
 #include "InstallBatcher.h"
 #include "CenterLinks.h"
 
@@ -67,12 +68,16 @@ public:
         AutoStart::applyDefaultOnce();   // on by default, once; the Settings toggle owns it afterwards
         AutoStart::refreshIfEnabled();   // an update may have moved the executable
 
+        // RONE Control's MIDI port, open from login so FL meets it as it starts (ControlPort.h)
+        controlPort = std::make_unique<ControlPort>();
+
         handleUpdateRequest (commandLine);
         handleLink (link);
     }
 
     void shutdown() override
     {
+        controlPort.reset();
         trayIcon.reset();
         mainWindow.reset();
 
@@ -276,6 +281,7 @@ private:
 
     std::unique_ptr<MainWindow> mainWindow;
     std::unique_ptr<RoneTrayIcon> trayIcon;
+    std::unique_ptr<ControlPort> controlPort;
    #if JUCE_WINDOWS
     HANDLE runningMutex = nullptr;
    #endif
