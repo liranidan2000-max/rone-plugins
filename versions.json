@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-06T19:51:41Z",
+  "last_updated": "2026-10-06T20:53:57Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -63,7 +63,7 @@
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.5.4.250",
+      "version": "1.5.5.255",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -79,9 +79,9 @@
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "2baabb534721c9b1c09375798080622d412adb1f44b5a15a65d2f3bebe236b1d",
+      "sha256": "bc6f28ea1b666e6930a3a3440adc8733352b9999a021824670bb9abace906858",
       "registry_key": "RoneStutter",
-      "sha256_mac": "ab578d146dae347f108ed043bf90dec809f1efc30855f19c2beadcd336b0a196",
+      "sha256_mac": "22a246c6f8fc5ebe82082ef53c4f5c84efeeff65247a45acc270933804fc0885",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
@@ -105,8 +105,8 @@
           "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
         }
       },
-      "size": 6447951,
-      "size_mac": 17865297
+      "size": 6447362,
+      "size_mac": 17867068
     },
     {
       "id": "RoneStucker",
@@ -449,7 +449,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.3.5.251",
+      "version": "1.3.6.255",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -462,9 +462,9 @@
       "manual": "RONE Analyzer - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "25b2b0fff1b10d8c97c0ce3116fe318a2e51ef707226a64eab13b8aa4d6b5dae",
+      "sha256": "d4d992b57eedc8ddfcb6dcf0a3cd0ad1fbbae87d5644637aa1f4ed9678d51ea4",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "dd7131f2a1c50b6173331acd66ba478e640f82b22962fc3944e5279ee7facea1",
+      "sha256_mac": "94a7833c2799e8e13e51750ba6265da2f36c0f12c9c77c6e084a955d14b05dc2",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html",
@@ -488,8 +488,8 @@
           "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
         }
       },
-      "size": 5780926,
-      "size_mac": 27738833
+      "size": 5780779,
+      "size_mac": 27738837
     }
   ],
   "tips": [
