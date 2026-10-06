@@ -74,6 +74,13 @@ struct Contents
     bool         accountLicensed = false;   // the ALL ACCESS pass is active
     juce::String products;                  // comma-separated canonical ids
 
+    // The same account claim, signed by roneaudio.com (Center 2.0): base64 JSON
+    // + base64 Ed25519 signature. Plugins built with Shared/RoneEntitlement.h
+    // trust this copy and not the plain attributes above, which a text editor
+    // can change. Empty until the server signs (ENTITLEMENT_SIGNING_KEY).
+    juce::String entitlement;
+    juce::String entitlementSig;
+
     // ---- Derived, owned by neither ----------------------------------------
     // The newest moment either server said yes. Every plugin's offline grace
     // is measured from it (8 days for the pass, 90 for a plugin bought
@@ -168,6 +175,8 @@ namespace detail
         c.customerName       = xml->getStringAttribute ("customerName", "");
         c.products           = xml->getStringAttribute ("products",     "");
         c.lastValidationTime = xml->getStringAttribute ("lastValidationTime", "0").getLargeIntValue();
+        c.entitlement        = xml->getStringAttribute ("ent", "");
+        c.entitlementSig     = xml->getStringAttribute ("sig", "");
 
         if (xml->hasAttribute ("serialLicensed") || xml->hasAttribute ("accountLicensed"))
         {
@@ -233,6 +242,12 @@ namespace detail
         xml.setAttribute ("serialLicensed",     c.serialLicensed  ? 1 : 0);
         xml.setAttribute ("accountLicensed",    c.accountLicensed ? 1 : 0);
 
+        if (c.entitlement.isNotEmpty() && c.entitlementSig.isNotEmpty())
+        {
+            xml.setAttribute ("ent", c.entitlement);
+            xml.setAttribute ("sig", c.entitlementSig);
+        }
+
         file.getParentDirectory().createDirectory();
         xml.writeTo (file, {});
 
@@ -288,7 +303,9 @@ inline void clearSerial()
     every plugin's grace clock and a refund could never be enforced. */
 inline void writeAccount (bool licensed,
                           const juce::String& products,
-                          juce::int64 validatedAt)
+                          juce::int64 validatedAt,
+                          const juce::String& entitlement = {},
+                          const juce::String& entitlementSig = {})
 {
     const juce::ScopedLock sl (detail::fileLock());
 
@@ -296,6 +313,10 @@ inline void writeAccount (bool licensed,
     c.accountLicensed    = licensed;
     c.products           = products;
     c.lastValidationTime = juce::jmax (c.lastValidationTime, validatedAt);
+    // Kept exactly as the server signed it: the plugins measure their grace from
+    // the time inside it, so an offline Center rewriting the file changes nothing.
+    c.entitlement        = entitlement;
+    c.entitlementSig     = entitlementSig;
 
     detail::commitLocked (c);
 }
@@ -309,6 +330,8 @@ inline void clearAccount()
     auto c = detail::readLocked();
     c.accountLicensed = false;
     c.products        = {};
+    c.entitlement     = {};
+    c.entitlementSig  = {};
 
     detail::commitLocked (c);
 }

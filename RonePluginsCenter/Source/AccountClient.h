@@ -135,6 +135,10 @@ private:
     juce::String token;
     juce::int64 lastValidationTime = 0;
 
+    // The server's signed copy of the entitlements (Center 2.0), written into
+    // BundleLicense.xml untouched. Empty from a server that does not sign.
+    juce::String signedEntitlement, signedEntitlementSig;
+
     // Guards against two overlapping network calls stomping on each other.
     std::atomic<bool> busy { false };
 

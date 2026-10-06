@@ -51,6 +51,54 @@ bool AccountClient::hasStoredToken() const
 }
 
 // ============================================================================
+// The device token at rest (Center 2.0)
+//
+// Before 2.0 Account.xml held the token in plain text: copied to another
+// machine it signed that machine in as this account. Windows: the token is
+// sealed with DPAPI for this Windows user (CryptProtectData), so a copy of the
+// file is useless elsewhere - and refresh now also sends the machine id, which
+// the server checks. macOS: the file is readable by this user only (0600); the
+// Keychain waits for code signing, since an unsigned app's Keychain entry asks
+// the user for permission again after every update.
+// ============================================================================
+#if JUCE_WINDOWS
+ #include <wincrypt.h>
+ #pragma comment (lib, "crypt32.lib")
+
+static const char* const kTokenEntropy = "RONE Plugins Center device token";
+
+static juce::String sealToken (const juce::String& token)
+{
+    if (token.isEmpty())
+        return {};
+    const auto utf8 = token.toStdString();
+    DATA_BLOB in { (DWORD) utf8.size(), (BYTE*) utf8.data() };
+    DATA_BLOB entropy { (DWORD) std::strlen (kTokenEntropy), (BYTE*) kTokenEntropy };
+    DATA_BLOB out {};
+    if (! CryptProtectData (&in, L"RONE", &entropy, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &out))
+        return {};
+    const auto sealed = juce::Base64::toBase64 (out.pbData, out.cbData);
+    LocalFree (out.pbData);
+    return sealed;
+}
+
+static juce::String openToken (const juce::String& sealed)
+{
+    juce::MemoryOutputStream raw;
+    if (sealed.isEmpty() || ! juce::Base64::convertFromBase64 (raw, sealed))
+        return {};
+    DATA_BLOB in { (DWORD) raw.getDataSize(), (BYTE*) raw.getData() };
+    DATA_BLOB entropy { (DWORD) std::strlen (kTokenEntropy), (BYTE*) kTokenEntropy };
+    DATA_BLOB out {};
+    if (! CryptUnprotectData (&in, nullptr, &entropy, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &out))
+        return {};
+    const auto token = juce::String::fromUTF8 ((const char*) out.pbData, (int) out.cbData);
+    LocalFree (out.pbData);
+    return token;
+}
+#endif
+
+// ============================================================================
 // Files
 // ============================================================================
 
@@ -66,7 +114,16 @@ void AccountClient::saveAccountFile()
     const juce::ScopedLock sl (lock);
 
     juce::XmlElement xml ("RoneAccount");
+   #if JUCE_WINDOWS
+    // Sealed for this Windows user. If sealing fails (it should not), the token
+    // is kept in the clear rather than lost - losing it signs the user out.
+    if (const auto sealed = sealToken (token); sealed.isNotEmpty())
+        xml.setAttribute ("tokenSealed", sealed);
+    else
+        xml.setAttribute ("token", token);
+   #else
     xml.setAttribute ("token",              token);
+   #endif
     xml.setAttribute ("email",              state.email);
     xml.setAttribute ("name",               state.name);
     xml.setAttribute ("plan",               state.plan);
@@ -77,10 +134,15 @@ void AccountClient::saveAccountFile()
     xml.setAttribute ("ownedProducts",      state.ownedProducts.joinIntoString (","));
     xml.setAttribute ("passSource",         state.passSource);
     xml.setAttribute ("lastValidationTime", juce::String (lastValidationTime));
+    xml.setAttribute ("ent",                signedEntitlement);
+    xml.setAttribute ("sig",                signedEntitlementSig);
 
     auto file = getAccountFile();
     file.getParentDirectory().createDirectory();
     xml.writeTo (file, {});
+   #if JUCE_MAC || JUCE_LINUX
+    std::system (("/bin/chmod 600 " + file.getFullPathName().quoted ('\'')).toRawUTF8());
+   #endif
 }
 
 bool AccountClient::loadAccountFile()
@@ -94,7 +156,14 @@ bool AccountClient::loadAccountFile()
         return false;
 
     const juce::ScopedLock sl (lock);
+   #if JUCE_WINDOWS
+    // A file from before 2.0 has the token in the clear: read it, and the next
+    // save (the refresh right after start-up) seals it.
+    token              = xml->hasAttribute ("tokenSealed") ? openToken (xml->getStringAttribute ("tokenSealed"))
+                                                           : xml->getStringAttribute ("token");
+   #else
     token              = xml->getStringAttribute ("token");
+   #endif
     state.email        = xml->getStringAttribute ("email");
     state.name         = xml->getStringAttribute ("name");
     state.plan         = xml->getStringAttribute ("plan", "none");
@@ -109,6 +178,8 @@ bool AccountClient::loadAccountFile()
     // from before 1.5.1 has no such attribute: empty, until the server says.
     state.passSource   = xml->getStringAttribute ("passSource").trim();
     lastValidationTime = xml->getStringAttribute ("lastValidationTime", "0").getLargeIntValue();
+    signedEntitlement    = xml->getStringAttribute ("ent");
+    signedEntitlementSig = xml->getStringAttribute ("sig");
     state.signedIn     = token.isNotEmpty();
 
     return state.signedIn;
@@ -123,6 +194,8 @@ void AccountClient::clearAccountFile()
     const juce::ScopedLock sl (lock);
     token = {};
     state = State{};
+    signedEntitlement = {};
+    signedEntitlementSig = {};
 }
 
 // ============================================================================
@@ -145,13 +218,15 @@ void AccountClient::clearLicenseFile()
 void AccountClient::writeLicenseFile()
 {
     bool licensed = false;
-    juce::String products;
+    juce::String products, ent, sig;
     juce::int64 validatedAt = 0;
     {
         const juce::ScopedLock sl (lock);
         licensed    = state.licensed;
         products    = state.ownedProducts.joinIntoString (",");
         validatedAt = lastValidationTime;
+        ent         = signedEntitlement;
+        sig         = signedEntitlementSig;
     }
 
     // `licensed` here is the ALL ACCESS pass and nothing else. Widening it to
@@ -167,7 +242,7 @@ void AccountClient::writeLicenseFile()
     //
     // Nothing held? writeAccount() still runs, and BundleLicenseFile deletes
     // the file if the serial path has nothing in it either.
-    BundleLicenseFile::writeAccount (licensed, products, validatedAt);
+    BundleLicenseFile::writeAccount (licensed, products, validatedAt, ent, sig);
 }
 
 // ============================================================================
@@ -274,6 +349,12 @@ void AccountClient::applyServerState (const juce::var& response)
     state.ownedProducts.removeEmptyStrings();
 
     lastValidationTime = juce::Time::currentTimeMillis();
+
+    // Replaced on every answer, like `owned`: a server that stopped signing must
+    // not leave an old signed copy behind (its time would outlive a refund).
+    const auto signedEnt = response.getProperty ("signedEntitlement", juce::var());
+    signedEntitlement    = signedEnt.getProperty ("payload", "").toString();
+    signedEntitlementSig = signedEnt.getProperty ("sig", "").toString();
 }
 
 void AccountClient::notifyChanged()
@@ -592,7 +673,11 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
     {
         const InFlight scope (inFlight);
         int status = 0;
-        auto response = post ("/app/refresh", juce::var (new juce::DynamicObject()), current, status);
+        // The machine travels with the token: a token copied to another computer
+        // is signed out there (worker/api/v1/app/refresh.js).
+        auto* body = new juce::DynamicObject();
+        body->setProperty ("machineId", getMachineId());
+        auto response = post ("/app/refresh", juce::var (body), current, status);
 
         bool licensed = false;
 

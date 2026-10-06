@@ -3,6 +3,8 @@
 // juce_core only — so this header also compiles in plugins that include
 // JUCE modules directly instead of a generated JuceHeader.h (e.g. Flanger).
 #include <juce_core/juce_core.h>
+#include "RoneEntitlement.h"
+#include "RemoteLicenseGate.h"
 
 #if JUCE_WINDOWS
  // windows.h must not leak min/max macros into JUCE headers included after
@@ -155,11 +157,43 @@ private:
         juce::int64  lastValidation = 0;      // ms since epoch, 0 when absent
     };
 
+    // ---- Signed entitlements (Center 2.0) ----------------------------------
+    // The Center writes the server's signed copy (ent= / sig=) beside the plain
+    // attributes. When it is there it is the ONLY truth: a signature that does
+    // not verify means the file was edited, and the file then claims nothing.
+    // Without it the plain attributes still count - until signed licences are
+    // required (RemoteLicenseGate::signedLicencesRequired), after which a file
+    // without a valid signature claims nothing either. The verdict is cached
+    // per file version (size + modification time): verifying costs ~2 ms.
     static LicenseState readLicenseState()
     {
-        LicenseState state;
+        const auto file = getLicenseFile();
+        const bool required = RemoteLicenseGate::signedLicencesRequired();
+        const auto stamp = file.existsAsFile()
+                             ? juce::String (file.getLastModificationTime().toMilliseconds()) + ":" + juce::String (file.getSize())
+                                 + (required ? ":req" : "")
+                             : juce::String();
 
-        auto file = getLicenseFile();
+        static juce::CriticalSection cacheLock;
+        static juce::String cachedStamp;
+        static LicenseState cached;
+        {
+            const juce::ScopedLock sl (cacheLock);
+            if (stamp.isNotEmpty() && stamp == cachedStamp)
+                return cached;
+        }
+
+        auto state = parseLicenseFile (file, required);
+
+        const juce::ScopedLock sl (cacheLock);
+        cachedStamp = stamp;
+        cached = state;
+        return state;
+    }
+
+    static LicenseState parseLicenseFile (const juce::File& file, bool signedRequired)
+    {
+        LicenseState state;
 
         DBG ("BundleLicenseChecker: checking file -> " + file.getFullPathName());
 
@@ -201,6 +235,48 @@ private:
             DBG ("BundleLicenseChecker: licensed raw string = '" + licensedStr + "'");
             if (licensedStr == "1" || licensedStr.equalsIgnoreCase ("true") || licensedStr.equalsIgnoreCase ("yes"))
                 licensed = true;
+        }
+
+        const auto ent = xml->getStringAttribute ("ent");
+        const auto sig = xml->getStringAttribute ("sig");
+
+        if (ent.isNotEmpty() || sig.isNotEmpty())
+        {
+            const auto signedState = RoneEntitlement::read (ent, sig);
+            if (! signedState)
+            {
+                DBG ("BundleLicenseChecker: signed entitlement does NOT verify — NOT licensed");
+                return state;   // edited: claims nothing
+            }
+
+            state.valid          = true;
+            state.bundle         = signedState->pass;
+            state.products       = signedState->owned.joinIntoString (",");
+            state.lastValidation = signedState->issuedAt;   // signed: no endless grace by editing a number
+
+            // A Lemon Squeezy serial is not part of the account and is never
+            // signed; until signed licences are required it still counts.
+            if (! signedRequired && ! state.bundle && xml->getBoolAttribute ("serialLicensed", false))
+            {
+                const auto serialStamp = xml->getStringAttribute ("lastValidationTime", "0").getLargeIntValue();
+                LicenseState serial;
+                serial.valid = true;
+                serial.lastValidation = serialStamp;
+                if (withinGrace (serial, BUNDLE_GRACE_MS))
+                {
+                    state.bundle = true;
+                    state.lastValidation = juce::jmax (state.lastValidation, serialStamp);
+                }
+            }
+
+            DBG ("BundleLicenseChecker: signed entitlement OK, products = '" + state.products + "'");
+            return state;
+        }
+
+        if (signedRequired)
+        {
+            DBG ("BundleLicenseChecker: no signed entitlement and one is required — NOT licensed");
+            return state;
         }
 
         state.valid          = true;

@@ -131,7 +131,8 @@ void NetworkManager::fetchOnce (bool fromOrigin)
         // file every RONE plugin reads, and every product's version for the
         // plugins' own "version X is available" bar (Shared/RoneUpdatePrompt.h).
         RemoteLicenseGate::writeMode (root.getProperty ("license_mode", "enforced").toString(),
-                                      root.getProperty ("license_message", "").toString());
+                                      root.getProperty ("license_message", "").toString(),
+                                      root.getProperty ("signed_licences", "").toString());
         RemoteLicenseGate::writeLatestVersions (root);
         captureManifestWide (root);
 

@@ -44,6 +44,12 @@ public:
     // True = the bundle is in open mode and no license is needed right now.
     static bool isOpenMode()
     {
+        // LicenseMode.xml is a plain file: mode="open" typed into it unlocked
+        // everything. Once signed licences are required, only a signed
+        // entitlement unlocks a plugin - the open mode is no longer honoured.
+        if (signedLicencesRequired())
+            return false;
+
         auto xml = juce::parseXML (getModeFile());
         if (xml == nullptr || xml->getTagName() != "RoneLicenseMode")
             return false; // no data yet -> enforced (fail closed; the Center writes the cache on its first run)
@@ -53,6 +59,22 @@ public:
     }
 
     // Optional operator message shown when the bundle is locked ("" if none).
+    // ---- Signed licences (Center 2.0, Shared/RoneEntitlement.h) ----------
+    // From this date every plugin built with this header trusts only the
+    // server-signed entitlement in BundleLicense.xml, whatever any local file
+    // says. Before it, versions.json can turn the requirement on early
+    // ("signed_licences": "required"); nothing local can turn it off. Lemon
+    // Squeezy serials carry no signature: their holders need an account by then.
+    static constexpr juce::int64 kSignedRequiredFromMs = 1803859200000LL;   // 2027-03-01 00:00 UTC
+
+    static bool signedLicencesRequired()
+    {
+        if (juce::Time::currentTimeMillis() >= kSignedRequiredFromMs)
+            return true;
+        auto xml = juce::parseXML (getModeFile());
+        return xml != nullptr && xml->getStringAttribute ("signed").equalsIgnoreCase ("required");
+    }
+
     static juce::String getLockMessage()
     {
         auto xml = juce::parseXML (getModeFile());
@@ -108,11 +130,12 @@ public:
                 return;
 
             auto parsed = juce::JSON::parse (body);
-            if (! parsed.isObject())
-                return; // garbage (captive portal etc.) — keep cache
+            if (! parsed.isObject() || ! parsed.getProperty ("plugins", {}).isArray())
+                return; // garbage (captive portal, an API rate-limit message) — keep cache
 
             writeMode (parsed.getProperty ("license_mode",    "enforced").toString(),
-                       parsed.getProperty ("license_message", ""    ).toString());
+                       parsed.getProperty ("license_message", ""    ).toString(),
+                       parsed.getProperty ("signed_licences", ""    ).toString());
             writeLatestVersions (parsed);
         });
     }
@@ -169,7 +192,8 @@ public:
 
     // ---- Cache writer — also called by the Plugins Center, which already ---
     // fetches the manifest on every launch/refresh.
-    static void writeMode (const juce::String& mode, const juce::String& message)
+    static void writeMode (const juce::String& mode, const juce::String& message,
+                           const juce::String& signedLicences = {})
     {
         auto file = getModeFile();
         file.getParentDirectory().createDirectory();
@@ -177,6 +201,8 @@ public:
         juce::XmlElement xml ("RoneLicenseMode");
         xml.setAttribute ("mode", mode.isNotEmpty() ? mode : "enforced");
         xml.setAttribute ("message", message);
+        if (signedLicences.isNotEmpty())
+            xml.setAttribute ("signed", signedLicences);
         xml.setAttribute ("fetchedAt", juce::String (juce::Time::currentTimeMillis()));
         xml.writeTo (file, {});
     }
@@ -207,14 +233,15 @@ private:
     // Rewrite the cache with the same mode but a fresh timestamp.
     static void touchFetchStamp()
     {
-        juce::String mode = "enforced", msg;
+        juce::String mode = "enforced", msg, signedLicences;
         if (auto xml = juce::parseXML (getModeFile());
             xml != nullptr && xml->getTagName() == "RoneLicenseMode")
         {
             mode = xml->getStringAttribute ("mode", "enforced");
             msg  = xml->getStringAttribute ("message", juce::String());
+            signedLicences = xml->getStringAttribute ("signed", juce::String());
         }
-        writeMode (mode, msg);
+        writeMode (mode, msg, signedLicences);
     }
 
     RemoteLicenseGate() = delete; // static-only
