@@ -84,9 +84,9 @@ def manual(G):
 {ctl("AUTO GAIN", "on / off<br>default off", "<p>Compensates the level changes caused by FEEDBACK and MIX so that sweeping does not also mean pumping. Leave it on while designing, decide at the end whether you prefer the raw version.</p>")}
 <h3>INFINITE - barberpole sweep</h3>
 {img("flanger/tour_infinite.png", "<b>The INFINITE row.</b>", "w80")}
-{ctl("&infin; INFINITE", "on / off", "<p>Turns on the endless sweep. Two comb voices are cross-faded so that when one reaches the end of its travel the other has already taken over at the start - the ear hears a sweep that never stops rising (or falling), like a barberpole. SWEEP is driven automatically while INFINITE is on.</p>")}
+{ctl("&infin; INFINITE", "on / off", "<p>Turns on the endless sweep. Two comb voices are cross-faded so that when one reaches the end of its travel the other has already taken over at the start - the ear hears a sweep that never stops rising (or falling), like a barberpole. SWEEP is driven automatically while INFINITE is on.</p><p>Every switch-on starts the sweep from the same point - by hand, by automation, or when you press play with INFINITE already on. Automate it on the bar where the riser should begin and it climbs the same way every time; the start lands on the nearest 1/16, so automation drawn on the bar line starts exactly there.</p>")}
 {ctl("RISE / FALL", "default RISE", "<p>Direction of the endless sweep. RISE for builds, FALL for post-drop releases and comedowns.</p>")}
-{ctl("8 BAR / 4 BAR / 2 BAR / 1 BAR / 1/2", "default 4 BAR", "<p>How long one full cycle takes, in bars of the host tempo. Because the cycle is bar-locked, a rise that starts on bar 1 of a 4-bar phrase peaks exactly when the phrase ends. Use 1/2 for a fast, nervous shimmer.</p>", "Match the value to the length of your build: an 8-bar build gets 8 BAR, a 2-bar fill gets 2 BAR.")}
+{ctl("32 BAR / 16 BAR / 8 BAR / 4 BAR / 2 BAR / 1 BAR / 1/2 / 1/4", "default 4 BAR", "<p>How long one full cycle takes, in bars of the host tempo. The cycle counts from the moment INFINITE goes on, so a 4 BAR rise switched on at the start of a 4-bar phrase peaks exactly when the phrase ends. Use 1/2 or 1/4 (one beat) for a fast, nervous shimmer.</p>", "Match the value to the length of your build: a 16-bar build gets 16 BAR, an 8-bar build 8 BAR, a 2-bar fill 2 BAR.")}
 <h3>GATE - rhythmic bypass</h3>
 {img("flanger/tour_gate.png", "<b>The GATE row.</b>", "w80")}
 {ctl("&#9211; GATE", "on / off", "<p>Switches the effect in and out on a note grid, with a 5 ms crossfade on each grid line so nothing clicks. The dry signal is untouched while the gate is closed, so the result is a rhythmic 'flange pulse' rather than a volume gate.</p>")}
@@ -110,7 +110,7 @@ def manual(G):
 {recipe("Drop fall that lands on the one", "Post-drop release",
  steps([
   "Insert on the lead or the drum bus. INFINITE on, FALL, 2 BAR.",
-  "Turn INFINITE on exactly two bars before the section change; turn it off on the downbeat. Because the cycle is bar-locked, the fall completes exactly on the one.",
+  "Turn INFINITE on exactly two bars before the section change; turn it off on the downbeat. The cycle starts where you switch it on, so the fall completes exactly on the one.",
  ]))}
 {recipe("Hand-played jet flange on drums", "Rock, breakbeat, drum edits",
  steps([
