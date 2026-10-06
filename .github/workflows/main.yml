@@ -321,12 +321,8 @@ jobs:
             $wv2Include = "${{ github.workspace }}\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\include"
             $flags += "-DCMAKE_CXX_FLAGS=/I`"$wv2Include`""
           }
-          # Crash-report upload token — Center only (plugins queue to disk and
-          # never hold the token). Empty secret => uploads disabled, still builds.
-          if ("${{ matrix.plugin_id }}" -eq "plugins_center") {
-            $tok = "${{ secrets.CRASH_REPORT_TOKEN }}"
-            if ($tok -ne "") { $flags += "-DRONE_CRASH_TOKEN=$tok" }
-          }
+          # Crash reports go through roneaudio.com/api/v1/crash since Center 2.0;
+          # no token is compiled into any binary.
           cmake @flags
           if ($LASTEXITCODE -ne 0) {
             # A restored build cache can pin a Visual Studio instance that no longer
@@ -500,12 +496,9 @@ jobs:
       - name: CMake configure
         working-directory: ${{ matrix.folder }}
         run: |
-          # Crash-report upload token — Center only (plugins queue to disk and
-          # never hold the token). Empty secret => uploads disabled, still builds.
+          # Crash reports go through roneaudio.com/api/v1/crash since Center 2.0;
+          # no token is compiled into any binary.
           EXTRA=()
-          if [ "${{ matrix.plugin_id }}" = "plugins_center" ] && [ -n "${{ secrets.CRASH_REPORT_TOKEN }}" ]; then
-            EXTRA+=("-DRONE_CRASH_TOKEN=${{ secrets.CRASH_REPORT_TOKEN }}")
-          fi
           # Deployment target: without it CMake takes the RUNNER's macOS version as the
           # minimum, so every Mac build demanded whatever macos-latest was that day - the
           # shipped Center carried minos 26.0 ("requires macOS 26"), and a customer on an
@@ -888,6 +881,9 @@ jobs:
             fi
             [ -n "$win_file" ] && sha_win=$(sha256sum "$win_file" | awk '{print $1}')
             [ -n "$mac_file" ] && sha_mac=$(sha256sum "$mac_file" | awk '{print $1}')
+            size_win=0; size_mac=0
+            [ -n "$win_file" ] && size_win=$(stat -c%s "$win_file")
+            [ -n "$mac_file" ] && size_mac=$(stat -c%s "$mac_file")
             echo "  $jid: sha_win=${sha_win:0:12}... sha_mac=${sha_mac:0:12}..."
 
             # Nothing at all was produced for this plugin this run, which
@@ -914,6 +910,12 @@ jobs:
                     | .center_installer.sha256   = $sw' \
                    versions.json > tmp && mv tmp versions.json
               fi
+              # The Center's macOS self-update downloads the .dmg and checks it
+              # against this (MainComponent::applyCenterUpdate).
+              if [ -n "$sha_mac" ]; then
+                jq --arg sm "$sha_mac" '.center_installer.sha256_mac = $sm' \
+                   versions.json > tmp && mv tmp versions.json
+              fi
             else
               jq --arg id "$jid" --arg v "$ver" \
                  '(.plugins[]|select(.id==$id)).version = $v' \
@@ -925,6 +927,9 @@ jobs:
                    '(.plugins[]|select(.id==$id)).download_url = $u
                     | (.plugins[]|select(.id==$id)).sha256       = $sw' \
                    versions.json > tmp && mv tmp versions.json
+                jq --arg id "$jid" --argjson sz "$size_win" \
+                   '(.plugins[]|select(.id==$id)).size = $sz' \
+                   versions.json > tmp && mv tmp versions.json
               fi
               if [ -n "$sha_mac" ]; then
                 jq --arg id "$jid" \
@@ -932,6 +937,9 @@ jobs:
                    --arg sm "$sha_mac" \
                    '(.plugins[]|select(.id==$id)).download_url_mac = $um
                     | (.plugins[]|select(.id==$id)).sha256_mac       = $sm' \
+                   versions.json > tmp && mv tmp versions.json
+                jq --arg id "$jid" --argjson sz "$size_mac" \
+                   '(.plugins[]|select(.id==$id)).size_mac = $sz' \
                    versions.json > tmp && mv tmp versions.json
               fi
             fi

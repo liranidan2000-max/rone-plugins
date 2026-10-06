@@ -1,523 +1,479 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { api, callNative, onEvent, isDevMode, mockPlugins, mockAnnouncements, mockAnnouncedPlugins } from './bridge'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { api, callNative, onEvent, openExternal, isDevMode, devScenario, mockPlugins, mockAccount, mockDaws, mockTips, mockAnnouncements } from './bridge'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
-import FeaturedSection from './components/FeaturedSection'
-import FilterBar from './components/FilterBar'
-import PluginGrid from './components/PluginGrid'
-import AccountPanel from './components/AccountPanel'
-import SettingsPanel from './components/SettingsPanel'
-import InfoModal from './components/InfoModal'
-import AnnouncementModal from './components/AnnouncementModal'
-import StatusToast from './components/StatusToast'
-import ConfirmDialog from './components/ConfirmDialog'
+import InstallDock from './components/InstallDock'
+import Toasts from './components/Toasts'
+import Onboarding from './components/Onboarding'
 import ManualDialog from './components/ManualDialog'
-// Plain modules, so node can test them without a JSX step (test/*.test.mjs).
+import AnnouncementModal from './components/AnnouncementModal'
+import { Dialog } from './components/ui'
+import LibraryView from './views/LibraryView'
+import UpdatesView from './views/UpdatesView'
+import DetailView, { stepsFor } from './views/DetailView'
+import RackView from './views/RackView'
+import LearnView from './views/LearnView'
+import SettingsView from './views/SettingsView'
+import AccountView from './views/AccountView'
+import { makeT, LOCALES } from './i18n'
+import { usePrefs, prefersReducedMotion } from './prefs'
+import { usePreview } from './usePreview'
+import { playPowerOn } from './sounds'
 import { productKey, ownedProductIds } from './ownership'
 import { pickAnnouncement, rememberAnnouncement } from './announcements'
+import { isBusy, isInstalled, shortName, updatable, accentOf } from './catalog'
 
-export default function App() {
+const DEV = isDevMode()
+
+export default function App () {
+  const [prefs, setPrefs] = usePrefs()
+  const t = useMemo(() => makeT(prefs.lang), [prefs.lang])
+  const locale = LOCALES[prefs.lang] || 'en-US'
+  const reduced = prefersReducedMotion(prefs)
+  const preview = usePreview()
+
   const [plugins, setPlugins] = useState([])
-  const [license, setLicense] = useState({ licensed: false, customerName: '', licenseKey: '', message: '' })
-  // `owned` = canonical ids of plugins bought outright (LIFETIME). The pass is
-  // separate: `licensed` still means ALL ACCESS, which unlocks everything.
-  // `passSource` = who bills the live pass ('comp' = Liran's gift), '' = none.
-  const [account, setAccount] = useState({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], passSource: '', message: '' })
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [sortBy, setSortBy] = useState('name')
-  const [toasts, setToasts] = useState([])
-  const [infoPlugin, setInfoPlugin] = useState(null)
-  // MANUAL asks which one: the PDF or the YouTube guide
-  const [manualPlugin, setManualPlugin] = useState(null)
-  // UNINSTALL asks first; `plugin` stays set while the dialog animates out
-  const [uninstallAsk, setUninstallAsk] = useState({ open: false, plugin: null })
   const [loading, setLoading] = useState(true)
-  const [lastSync, setLastSync] = useState(null)
-  const [activeNav, setActiveNav] = useState('home')
-  const [centerUpdate, setCenterUpdate] = useState(null)   // version string, or null
+  const [license, setLicense] = useState({ licensed: false, customerName: '', licenseKey: '', message: '' })
+  const [account, setAccount] = useState({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], passSource: '', message: '' })
+  const [manifest, setManifest] = useState({ offline: false, loaded: false, syncedAt: 0 })
+  const [tips, setTips] = useState([])
+  const [daws, setDaws] = useState([])
+  const [platform, setPlatform] = useState('windows')
+  const [centerUpdate, setCenterUpdate] = useState(null)
 
-  // ---- Center self-update ----
-  // Auto-applies once per version: download -> verify -> silent install ->
-  // relaunch (one UAC prompt). If that attempt didn't stick (UAC declined,
-  // download failed), the banner stays and updating becomes a manual click -
-  // never an every-launch UAC loop.
-  const centerUpdateSeen = useRef(null)
-  const addToastRef = useRef(null)
-  const onCenterUpdate = useCallback((version) => {
-    if (!version || centerUpdateSeen.current === version) return
-    centerUpdateSeen.current = version
-    setCenterUpdate(version)
+  const [view, setView] = useState('library')
+  const [detailId, setDetailId] = useState(null)
+  const [returnView, setReturnView] = useState('library')
+  const [query, setQuery] = useState('')
+  const [cat, setCat] = useState('all')
+  const [sort, setSort] = useState('yours')
 
-    const triedKey = 'centerAutoTried:' + version
-    let alreadyTried = false
-    try { alreadyTried = localStorage.getItem(triedKey) === '1' } catch {}
-    if (alreadyTried) return
+  const [toasts, setToasts] = useState([])
+  const [manualPlugin, setManualPlugin] = useState(null)
+  const [uninstallAsk, setUninstallAsk] = useState(null)
+  const [announcement, setAnnouncement] = useState(null)
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
 
-    try { localStorage.setItem(triedKey, '1') } catch {}
-    addToastRef.current?.(`Center v${version} is available - updating…`, 'info')
-    setTimeout(() => api.applyCenterUpdate(), 2200)
-  }, [])
+  const catLabel = useCallback((c) => t('cat.' + c), [t])
+  const scroller = useRef(null)
 
-  // ---- Unlock animation orchestration ----
-  const [unlockPlaying, setUnlockPlaying] = useState(false)
-  const prevLicensed = useRef(license.licensed)
-  useEffect(() => {
-    if (!prevLicensed.current && license.licensed) {
-      setUnlockPlaying(true)
-      const timer = setTimeout(() => setUnlockPlaying(false), 1500)
-      return () => clearTimeout(timer)
-    }
-    prevLicensed.current = license.licensed
-  }, [license.licensed])
-
-  const addToast = useCallback((text, type = 'info') => {
+  // ---- toasts ----
+  const addToast = useCallback((toast) => {
     const id = Date.now() + Math.random()
-    setToasts(prev => [...prev, { id, text, type }])
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000)
+    const x = typeof toast === 'string' ? { text: toast, type: 'info' } : toast
+    // The same words twice in a row (a message repeated by the backend) show once.
+    setToasts(prev => prev.some(y => y.text === x.text && y.title === x.title) ? prev : [...prev.slice(-3), { id, ...x }])
+    setTimeout(() => setToasts(prev => prev.filter(y => y.id !== id)), x.steps ? 12000 : x.type === 'error' ? 9000 : 5000)
   }, [])
-  addToastRef.current = addToast
-  const removeToast = useCallback((id) => setToasts(prev => prev.filter(t => t.id !== id)), [])
+  const removeToast = useCallback((id) => setToasts(prev => prev.filter(x => x.id !== id)), [])
 
-  // ---- Load initial data ----
+  // ---- ownership (LIFETIME licences travel on the plugin object) ----
+  const ownedIds = useMemo(() => ownedProductIds(account.owned), [account.owned])
+  const ownedKeys = useMemo(() => new Set(ownedIds.map(productKey)), [ownedIds])
+  // Each plugin as this page shows it: owned or not, and described in the user's language.
+  const tagged = useMemo(() => plugins.map(p => {
+    const d = p.i18n?.[prefs.lang]?.description
+    const q = d ? { ...p, description: d } : p
+    return ownedKeys.has(productKey(p.id)) ? { ...q, owned: true } : q
+  }), [plugins, ownedKeys, prefs.lang])
+  const localTips = useMemo(() => tips.map(x => ({ ...x, text: (typeof x.i18n?.[prefs.lang] === 'string' && x.i18n[prefs.lang]) || x.text })), [tips, prefs.lang])
+  const ownedPlugins = useMemo(() => tagged.filter(p => p.owned), [tagged])
+  const access = useMemo(() => ({ licensed: !!license.licensed, signedIn: !!account.signedIn }), [license.licensed, account.signedIn])
+  const ups = updatable(tagged, access)
+  const dawId = prefs.daw || daws[0]?.id || null
+  const dawName = (daws.find(d => d.id === dawId) || {}).name || t('daw.generic')
+
+  // ---- navigation ----
+  const navigate = useCallback((v) => {
+    setView(v)
+    if (v !== 'detail') setReturnView(v)
+    if (v === 'library') setCat('all')
+    requestAnimationFrame(() => scroller.current?.scrollTo?.({ top: 0 }))
+  }, [])
+  const openDetail = useCallback((id) => {
+    setDetailId(id)
+    setView(cur => { if (cur !== 'detail') setReturnView(cur); return 'detail' })
+    requestAnimationFrame(() => scroller.current?.scrollTo?.({ top: 0 }))
+  }, [])
+
+  // ---- what an install that just finished says ----
+  const announceInstalled = useCallback((plugin, version) => {
+    if (prefs.sounds) playPowerOn()
+    addToast({
+      type: 'success', accent: plugin ? accentOf(plugin) : undefined,
+      title: t('msg.installedTitle', { name: 'RONE ' + (plugin ? shortName(plugin) : '') + (version ? ' ' + version : '') }),
+      text: t('msg.installedIn', { daw: dawName }),
+      steps: stepsFor(t, dawId, plugin ? shortName(plugin) : ''),
+    })
+  }, [prefs.sounds, addToast, t, dawId, dawName])
+
+  // ---- load ----
   useEffect(() => {
-    async function init() {
-      if (isDevMode()) {
-        // ?signedout=1 previews the sign-in form without a running backend,
-        // ?lifetime=1 the customer who bought single plugins instead of the pass,
-        // ?waiting=1 updates waiting for a DAW (Stutter) and for the plugin's own window (Flanger),
-        // ?announce=1 the website's popups (Clipper free, Rise new) over two not-installed cards
-        const devQuery = new URLSearchParams(location.search)
-        setPlugins(devQuery.has('waiting')
-          ? mockPlugins.map(p => p.id === 'RoneStutter' ? { ...p, status: 'waiting', waitingFor: 'FL Studio' }
-                               : p.id === 'RoneFlanger' ? { ...p, status: 'waiting', waitingFor: '' } : p)
-          : devQuery.has('announce') ? [...mockPlugins, ...mockAnnouncedPlugins]
-          : mockPlugins)
-        const devSignedOut = devQuery.has('signedout')
-        const devLifetime = devQuery.has('lifetime')
-        setLicense({ licensed: !devSignedOut && !devLifetime, customerName: devSignedOut ? '' : 'Liran Kalifa',
-                     licenseKey: devSignedOut ? '' : 'dev-key', message: '' })
-        setAccount(devSignedOut
-          ? { signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], message: '' }
-          : devLifetime
-          ? { signedIn: true, licensed: false, email: 'liran@roneaudio.com',
-              name: 'Liran Kalifa', plan: 'none', deviceLimit: 2,
-              owned: ['RoneStutter', 'RoneFlanger'], message: '' }
-          : { signedIn: true, licensed: true, email: 'liran@roneaudio.com',
-              name: 'Liran Kalifa', plan: 'all-access', deviceLimit: 2,
-              renewsAt: Date.now() + 21 * 86400000, expiresAt: 0, owned: [], message: '' })
-        setLoading(false); setLastSync(new Date()); return
+    async function init () {
+      if (DEV) {
+        const sc = devScenario()
+        setPlugins(mockPlugins(sc))
+        const acct = mockAccount(sc)
+        setAccount(acct)
+        setLicense({ licensed: acct.licensed, customerName: acct.name, licenseKey: '', message: '' })
+        setManifest({ offline: new URLSearchParams(location.search).has('offline'), loaded: true, syncedAt: Date.now() - 60000 })
+        setTips(mockTips); setDaws(mockDaws)
+        if (new URLSearchParams(location.search).has('centerupdate')) setCenterUpdate('2.0.1.250')
+        setLoading(false)
+        return
       }
-      const licStatus = await api.getLicenseStatus()
-      if (licStatus) setLicense(licStatus)
-      const acct = await api.getAccountStatus()
-      if (acct) setAccount(acct)
-      const result = await api.getPlugins()
-      if (result?.plugins) { setPlugins(result.plugins); setLastSync(new Date()) }
-      if (result?.centerUpdate?.version) onCenterUpdate(result.centerUpdate.version)
+      try { const lic = await api.getLicenseStatus(); if (lic) setLicense(lic) } catch {}
+      try { const acct = await api.getAccountStatus(); if (acct) setAccount(acct) } catch {}
+      try { const v = await api.getAppVersion(); if (v?.platform) setPlatform(v.platform) } catch {}
+      try {
+        const r = await api.getPlugins()
+        if (r?.plugins) setPlugins(r.plugins)
+        if (r?.manifest) setManifest(r.manifest)
+        if (Array.isArray(r?.tips)) setTips(r.tips)
+        if (r?.centerUpdate?.version) setCenterUpdate(r.centerUpdate.version)
+        if (r?.navigate) handleNavigateTo(r.navigate)
+      } catch {}
       setLoading(false)
+      try { const d = await api.getDaws(); if (Array.isArray(d)) setDaws(d) } catch {}
     }
     init()
   }, [])
 
-  // ---- Subscribe to C++ events ----
+  // ---- first launch ----
   useEffect(() => {
-    if (isDevMode()) return
-    onEvent('pluginsUpdated', (data) => {
-      if (data?.plugins) { setPlugins(data.plugins); setLastSync(new Date()) }
-    })
-    onEvent('downloadProgress', (data) => {
-      if (!data?.pluginId) return
-      setPlugins(prev => prev.map(p => p.id === data.pluginId ? { ...p, downloadProgress: data.progress, status: 'downloading' } : p))
-    })
-    onEvent('downloadComplete', () => {})
-    onEvent('licenseChanged', (data) => { if (data) setLicense(prev => ({ ...prev, ...data })) })
-    onEvent('accountChanged', (data) => { if (data) setAccount(data) })
-    onEvent('licenseActivationResult', (data) => {
-      if (data) {
-        setLicense(prev => ({ ...prev, licensed: data.success || false, customerName: data.customerName || prev.customerName, message: data.message || '' }))
-        if (!data.success) addToast(data.message || 'Activation failed', 'error')
-      }
-    })
-    onEvent('licenseDeactivationResult', (data) => {
-      if (data?.success) setLicense({ licensed: false, customerName: '', licenseKey: '', message: data.message || '' })
-    })
-    onEvent('statusMessage', (data) => { if (data?.text) addToast(data.text, data.type || 'info') })
-    onEvent('centerUpdateAvailable', (data) => { if (data?.version) onCenterUpdate(data.version) })
-    // Behind the DAW (or any other app) nothing animates: MainWindow asks
-    // Windows once a second whether this window is in front (index.css .app-idle).
-    onEvent('windowActive', (data) => { document.documentElement.classList.toggle('app-idle', data?.active === false) })
-  }, [addToast])
+    if (loading) return
+    if (!prefs.onboarded && (!DEV || new URLSearchParams(location.search).has('onboarding'))) setOnboardingOpen(true)
+  }, [loading])
 
-  // ---- Actions ----
-  const handleInstall = async (pluginId) => {
-    try {
-      const result = await api.installPlugin(pluginId)
-      if (result && !result.started && result.error) addToast(result.error, 'error')
-    } catch (err) { addToast(err.message || 'Install failed', 'error') }
+  // ---- events from the Center ----
+  const handleNavigateTo = useCallback((to) => {
+    if (typeof to !== 'string') return
+    if (to.startsWith('plugin:')) openDetail(to.slice(7))
+    else if (to === 'updates') navigate('updates')
+  }, [openDetail, navigate])
+
+  const pluginsRef = useRef(plugins)
+  pluginsRef.current = tagged
+
+  const translateMessage = useCallback((m) => {
+    if (!m?.code) return { text: m.text, type: m.type || 'info' }
+    const params = m.params || {}
+    const nameRaw = params.name ? String(params.name) : ''
+    const p = { ...params, name: nameRaw || params.id || '' }
+    if (m.code === 'installed') {
+      const plugin = pluginsRef.current.find(x => x.id === params.id)
+      announceInstalled(plugin, (params.version || '').split('.').slice(0, 3).join('.'))
+      return null
+    }
+    if (m.code === 'download_failed' || !t('msg.' + m.code) || t('msg.' + m.code) === 'msg.' + m.code) {
+      return { text: m.text, type: m.type || 'info' }
+    }
+    if (m.code === 'declined' || m.code === 'center_update_declined') {
+      return { text: t('msg.' + m.code, p), type: 'info' }
+    }
+    return { text: t('msg.' + m.code, p), type: m.type || 'info' }
+  }, [t, announceInstalled])
+
+  const translateRef = useRef(translateMessage)
+  translateRef.current = translateMessage
+
+  useEffect(() => {
+    if (DEV) return
+    onEvent('pluginsUpdated', (d) => { if (d?.plugins) setPlugins(d.plugins) })
+    onEvent('downloadProgress', (d) => {
+      if (!d?.pluginId) return
+      setPlugins(prev => prev.map(p => p.id === d.pluginId ? { ...p, downloadProgress: d.progress, status: 'downloading' } : p))
+    })
+    onEvent('manifestState', (d) => { if (d) setManifest(d) })
+    onEvent('licenseChanged', (d) => { if (d) setLicense(prev => ({ ...prev, ...d })) })
+    onEvent('accountChanged', (d) => { if (d) setAccount(d) })
+    onEvent('licenseActivationResult', (d) => {
+      if (!d) return
+      setLicense(prev => ({ ...prev, licensed: d.success || false, customerName: d.customerName || prev.customerName, message: d.message || '' }))
+      if (!d.success) addToast({ text: d.message || 'Activation failed', type: 'error' })
+    })
+    onEvent('licenseDeactivationResult', (d) => { if (d?.success) setLicense({ licensed: false, customerName: '', licenseKey: '', message: d.message || '' }) })
+    onEvent('statusMessage', (d) => {
+      if (!d?.text) return
+      const x = translateRef.current(d)
+      if (x) addToast(x)
+    })
+    onEvent('centerUpdateAvailable', (d) => { if (d?.version) setCenterUpdate(d.version) })
+    onEvent('navigate', (d) => handleNavigateTo(d?.to))
+    // Behind the DAW nothing animates (index.css .app-idle).
+    onEvent('windowActive', (d) => document.documentElement.classList.toggle('app-idle', d?.active === false))
+  }, [])
+
+  // ---- the Center updates itself, once per version, and never mid-install (the backend waits) ----
+  const centerTried = useRef(null)
+  useEffect(() => {
+    if (!centerUpdate || DEV || centerTried.current === centerUpdate) return
+    centerTried.current = centerUpdate
+    const key = 'centerAutoTried:' + centerUpdate
+    let tried = false
+    try { tried = localStorage.getItem(key) === '1' } catch {}
+    if (tried) return
+    try { localStorage.setItem(key, '1') } catch {}
+    setTimeout(() => api.applyCenterUpdate().catch(() => {}), 2200)
+  }, [centerUpdate])
+
+  // ---- keyboard: Ctrl+R / F5 check for updates (the page itself never reloads) ----
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey && e.key.toLowerCase() === 'r') || e.key === 'F5') { e.preventDefault(); refresh() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  // ---- dev preview: installs that run (so the queue, the dock and the power-on can be seen) ----
+  const devTimer = useRef(null)
+  const devInstall = (ids) => {
+    setPlugins(prev => prev.map(p => ids.includes(p.id) && !isBusy(p) ? { ...p, status: 'queued', downloadProgress: 0 } : p))
+    if (devTimer.current) return
+    devTimer.current = setInterval(() => {
+      setPlugins(prev => {
+        const cur = prev.find(p => p.status === 'downloading') || prev.find(p => p.status === 'queued')
+        const inst = prev.find(p => p.status === 'installing')
+        if (!cur && !inst) { clearInterval(devTimer.current); devTimer.current = null; return prev }
+        return prev.map(p => {
+          if (inst && p.id === inst.id) {
+            if ((p._ticks || 0) > 8) {
+              setTimeout(() => announceInstalled(p, (p.remoteVersion || '').split('.').slice(0, 3).join('.')), 0)
+              return { ...p, status: 'up_to_date', installedVersion: p.remoteVersion, _ticks: 0 }
+            }
+            return { ...p, _ticks: (p._ticks || 0) + 1 }
+          }
+          if (cur && p.id === cur.id) {
+            const prog = Math.min(1, (p.downloadProgress || 0) + 0.07)
+            return prog >= 1 && !inst ? { ...p, status: 'installing', downloadProgress: 1 } : { ...p, status: prog >= 1 ? 'ready' : 'downloading', downloadProgress: prog }
+          }
+          if (!inst && p.status === 'ready' && !cur) return { ...p, status: 'installing' }
+          return p
+        })
+      })
+    }, 140)
   }
-  // The plugin's own uninstaller runs (one permission prompt) and whatever it
-  // left of the plugin's files goes too; the card says "uninstalling" until then.
-  const handleUninstall = (plugin) => setUninstallAsk({ open: true, plugin })
+
+  // ---- actions ----
+  const install = async (id) => {
+    if (DEV) { devInstall([id]); return }
+    try {
+      const r = await api.installPlugin(id)
+      if (r && !r.started && r.error) {
+        const plugin = pluginsRef.current.find(p => p.id === id)
+        addToast(r.error === 'License required'
+          ? { text: t('msg.license_required', { name: 'RONE ' + (plugin ? shortName(plugin) : id) }), type: 'error' }
+          : { text: r.error, type: 'error' })
+      }
+    } catch (e) { addToast({ text: e.message || 'Install failed', type: 'error' }) }
+  }
+  const updateAll = async () => {
+    const ids = updatable(pluginsRef.current, access).map(p => p.id)
+    if (!ids.length) return
+    if (DEV) { devInstall(ids); return }
+    for (const id of ids) await install(id)
+  }
+  const cancel = async (id) => {
+    if (DEV) { setPlugins(prev => prev.map(p => p.id === id ? { ...p, status: p.installedVersion ? 'update_available' : 'not_installed', downloadProgress: 0 } : p)); return }
+    try { await api.cancelInstall(id) } catch {}
+  }
+  const cancelAll = async () => {
+    if (DEV) { setPlugins(prev => prev.map(p => isBusy(p) && p.status !== 'installing' ? { ...p, status: p.installedVersion ? 'update_available' : 'not_installed', downloadProgress: 0 } : p)); return }
+    try { await api.cancelInstall('') } catch {}
+  }
+  const open = async (id) => {
+    if (DEV) { addToast({ text: 'Opens the standalone app.', type: 'info' }); return }
+    try { const r = await api.openPlugin(id); if (r && !r.success && r.error) addToast({ text: r.error, type: 'error' }) }
+    catch (e) { addToast({ text: e.message, type: 'error' }) }
+  }
+  const openFolder = async (id) => {
+    if (DEV) return
+    try { const r = await api.openFolder(id); if (r && !r.success && r.error) addToast({ text: r.error, type: 'error' }) } catch (e) { addToast({ text: e.message, type: 'error' }) }
+  }
+  const buy = (plugin) => {
+    const url = (plugin.store_url || 'https://roneaudio.com/pricing.html')
+    openExternal(url + (url.includes('?') ? '&' : '?') + 'utm_source=plugins_center&utm_medium=card')
+  }
+  const manualPdf = async (plugin) => {
+    setManualPlugin(null)
+    if (DEV) { addToast(t('msg.openingPdf')); return }
+    try {
+      const r = await api.openManual(plugin.id)
+      if (r && !r.success && r.error) addToast({ text: r.error, type: 'error' })
+      else if (r?.source === 'online') addToast(t('msg.openingPdfOnline'))
+    } catch (e) { addToast({ text: e.message, type: 'error' }) }
+  }
+  const manualVideo = (plugin) => { setManualPlugin(null); addToast(t('msg.openingVideo')); openExternal(plugin.videoUrl) }
+  const refresh = async () => {
+    if (DEV) { setManifest(m => ({ ...m, syncedAt: Date.now(), offline: false })); addToast(t('msg.checking')); return }
+    try { await api.refreshPlugins() } catch (e) { addToast({ text: e.message, type: 'error' }) }
+  }
   const confirmUninstall = async () => {
-    const plugin = uninstallAsk.plugin
-    setUninstallAsk(a => ({ ...a, open: false }))
+    const plugin = uninstallAsk
+    setUninstallAsk(null)
     if (!plugin) return
-    const done = `${plugin.name} uninstalled - rescan the plugins in your DAW so it forgets it.`
-    if (isDevMode()) {
+    const done = t('msg.uninstalled', { name: 'RONE ' + shortName(plugin) })
+    if (DEV) {
       setPlugins(prev => prev.map(p => p.id === plugin.id ? { ...p, status: 'uninstalling' } : p))
-      setTimeout(() => {
-        setPlugins(prev => prev.map(p => p.id === plugin.id ? { ...p, status: 'not_installed', installedVersion: '' } : p))
-        addToast(done, 'success')
-      }, 1500)
+      setTimeout(() => { setPlugins(prev => prev.map(p => p.id === plugin.id ? { ...p, status: 'not_installed', installedVersion: '' } : p)); addToast({ text: done, type: 'success' }) }, 1200)
       return
     }
     try {
       const r = await api.uninstallPlugin(plugin.id)
-      if (r?.ok) addToast(done, 'success')
-      else addToast(r?.error || 'Could not uninstall', 'error')
-    } catch (err) { addToast(err.message || 'Could not uninstall', 'error') }
+      addToast(r?.ok ? { text: done, type: 'success' } : { text: r?.error || 'Could not uninstall', type: 'error' })
+    } catch (e) { addToast({ text: e.message, type: 'error' }) }
   }
-  const handleOpen = async (pluginId) => {
-    try {
-      const result = await api.openPlugin(pluginId)
-      if (result && !result.success && result.error) addToast(result.error, 'error')
-    } catch (err) { addToast(err.message || 'Could not open plugin', 'error') }
-  }
-  const handleOpenFolder = async (pluginId) => {
-    try {
-      const result = await api.openFolder(pluginId)
-      if (result && !result.success && result.error) addToast(result.error, 'error')
-    } catch (err) { addToast(err.message || 'Could not open the folder', 'error') }
-  }
-  const handleManualPdf = async (plugin) => {
-    setManualPlugin(null)
-    if (isDevMode()) { addToast('Opening the PDF manual', 'info'); return }
-    try {
-      const result = await api.openManual(plugin.id)
-      if (result && !result.success && result.error) addToast(result.error, 'error')
-      else if (result?.source === 'online') addToast('Opening the manual from roneaudio.com', 'info')
-    } catch (err) { addToast(err.message || 'Could not open the manual', 'error') }
-  }
-  // Only ever called for a plugin whose manifest entry names a video
-  const handleManualVideo = (plugin) => {
-    setManualPlugin(null)
-    addToast('Opening the video guide on YouTube', 'info')
-    callNative('openExternalUrl', plugin.videoUrl).catch(() => {})
-  }
-  const handleRefresh = async () => {
-    try { addToast('Checking for updates…', 'info'); await api.refreshPlugins() }
-    catch (err) { addToast(err.message || 'Refresh failed', 'error') }
-  }
-  const handleUpdateAll = async () => {
-    const updatable = plugins.filter(p => p.status === 'update_available' || p.status === 'not_installed')
-    if (updatable.length === 0) return
-    addToast(`Updating ${updatable.length} plugin${updatable.length !== 1 ? 's' : ''}…`, 'info')
-    for (const plugin of updatable) await handleInstall(plugin.id)
-  }
-  // Google: the native side opens the browser and resolves when it comes back (or fails / is cancelled)
-  const handleGoogleSignIn = async () => {
-    try {
-      const res = await api.accountGoogleSignIn()
-      if (res?.account) setAccount(res.account)
-      if (res?.ok) {
-        setLicense(prev => ({ ...prev, licensed: !!res.account?.licensed,
-                              customerName: res.account?.name || res.account?.email || prev.customerName }))
-        addToast(res.message || 'Signed in with Google', 'success')
-      }
-      return res
-    } catch (err) {
-      return { ok: false, message: err.message || 'Google sign-in failed' }
+
+  // ---- account ----
+  const afterSignIn = (res, fallback) => {
+    if (res?.account) setAccount(res.account)
+    if (res?.ok) {
+      setLicense(prev => ({ ...prev, licensed: !!res.account?.licensed, customerName: res.account?.name || res.account?.email || prev.customerName }))
+      addToast({ text: res.message || fallback, type: 'success' })
     }
+    return res
   }
-  const handleGoogleCancel = () => api.accountGoogleCancel().catch(() => {})
-  const handleSignIn = async (email, password) => {
-    try {
-      const res = await api.accountSignIn(email, password)
-      if (res?.account) setAccount(res.account)
-      if (res?.ok) {
-        setLicense(prev => ({ ...prev, licensed: !!res.account?.licensed,
-                              customerName: res.account?.name || res.account?.email || prev.customerName }))
-        addToast(res.message || 'Signed in', 'success')
-      }
-      return res
-    } catch (err) {
-      addToast(err.message || 'Sign-in failed', 'error')
-      return { ok: false, message: err.message }
-    }
+  const signIn = async (email, password) => {
+    try { return afterSignIn(await api.accountSignIn(email, password), t('msg.signedIn')) }
+    catch (e) { addToast({ text: e.message, type: 'error' }); return { ok: false, message: e.message } }
   }
-  const handleSignOut = async () => {
+  const googleSignIn = async () => {
+    try { return afterSignIn(await api.accountGoogleSignIn(), t('msg.signedIn')) }
+    catch (e) { return { ok: false, message: e.message } }
+  }
+  const signOut = async () => {
     try {
-      const res = await api.accountSignOut()
+      const r = await api.accountSignOut()
       setAccount({ signedIn: false, licensed: false, email: '', name: '', plan: 'none', owned: [], passSource: '', message: '' })
       setLicense(prev => ({ ...prev, licensed: false, customerName: '' }))
-      addToast(res?.message || 'Signed out', 'info')
-      return res
-    } catch (err) {
-      addToast(err.message || 'Sign-out failed', 'error')
-      return { ok: false }
-    }
+      addToast({ text: r?.message || t('msg.signedOut'), type: 'info' })
+    } catch (e) { addToast({ text: e.message, type: 'error' }) }
   }
-  const handleActivate = async (key) => {
-    try { return await api.activateLicense(key) }
-    catch (err) { addToast(err.message || 'Activation failed', 'error'); return { success: false, message: err.message } }
-  }
-  const handleDeactivate = async () => {
-    try { return await api.deactivateLicense() }
-    catch (err) { addToast(err.message || 'Deactivation failed', 'error'); return { success: false, message: err.message } }
+  const activate = async (key) => { try { return await api.activateLicense(key) } catch (e) { return { success: false, message: e.message } } }
+  const deactivate = async () => { try { return await api.deactivateLicense() } catch (e) { return { success: false, message: e.message } } }
+  const goAccount = (to) => {
+    if (to === 'signup') openExternal('https://roneaudio.com/account/signup.html?utm_source=plugins_center&utm_medium=onboarding')
+    navigate('account')
   }
 
-  const handleNavigate = (key) => {
-    setActiveNav(key)
-    if (key === 'updates') setStatusFilter('updates')
-    else if (key === 'plugins' || key === 'home') setStatusFilter('all')
-  }
-
-  // ---- Individually-owned (LIFETIME) plugins ----
-  // An older Center build has no `owned` field at all — that reads as "owns
-  // nothing", which is the safe answer.
-  const ownedIds = React.useMemo(() => ownedProductIds(account.owned), [account.owned])
-  const ownedKeys = React.useMemo(() => new Set(ownedIds.map(productKey)), [ownedIds])
-
-  // Names come from the manifest so there is no second product table in the UI.
-  // Matching on the key means a differently-cased id still finds its entry, and
-  // once it does the manifest's own spelling is the one shown.
-  const ownedPlugins = React.useMemo(() => {
-    const byKey = new Map(plugins.map(p => [productKey(p.id), p]))
-    return ownedIds.map(id => {
-      const match = byKey.get(productKey(id))
-      return { id: match?.id || id, name: match?.name || id }
-    })
-  }, [ownedIds, plugins])
-
-  // Ownership travels on the plugin object: the grid hands the entry straight
-  // to the card. Tagged here rather than in the filter below so the entries
-  // keep their identity while the user types and React.memo still holds.
-  const taggedPlugins = React.useMemo(
-    () => plugins.map(p => (ownedKeys.has(productKey(p.id)) ? { ...p, owned: true } : p)),
-    [plugins, ownedKeys])
-
-  // ---- Filtered & sorted plugins ----
-  const processedPlugins = React.useMemo(() => {
-    let result = [...taggedPlugins]
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase()
-      result = result.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q))
-    }
-    if (statusFilter === 'installed') result = result.filter(p => p.status === 'up_to_date' || p.status === 'update_available')
-    else if (statusFilter === 'updates') result = result.filter(p => p.status === 'update_available' || p.status === 'not_installed')
-    else if (statusFilter === 'not_installed') result = result.filter(p => p.status === 'not_installed')
-
-    if (sortBy === 'name') result.sort((a, b) => a.name.localeCompare(b.name))
-    else if (sortBy === 'status') {
-      const order = { update_available: 0, not_installed: 1, downloading: 2, installing: 3, waiting: 3, error: 4, up_to_date: 5 }
-      result.sort((a, b) => (order[a.status] ?? 99) - (order[b.status] ?? 99))
-    }
-    return result
-  }, [taggedPlugins, searchQuery, statusFilter, sortBy])
-
-  const filterCounts = React.useMemo(() => ({
-    all: plugins.length,
-    installed: plugins.filter(p => p.status === 'up_to_date' || p.status === 'update_available').length,
-    updates: plugins.filter(p => p.status === 'update_available').length,
-    not_installed: plugins.filter(p => p.status === 'not_installed').length,
-  }), [plugins])
-
-  const updatesCount = plugins.filter(p => p.status === 'update_available' || p.status === 'not_installed').length
-
-  // ---- Announcements (see pickAnnouncement in announcements.js) ----
-  // Asked once per page, 1.5 s after the plugins are in and someone is signed in
-  // (or holds a licence key): a new customer from a reel signs in and is offered
-  // the install at once. `latest` hands the timer today's state, not the state of
-  // the render that armed it. `passSource` is who bills the account's live pass
-  // ('comp' = a gift, which never sees a deal popup); the account file caches it,
-  // so it is known on launch, and /app/refresh corrects it via accountChanged.
-  const [announcement, setAnnouncement] = useState(null)
-  const announcementAsked = useRef(false)
+  // ---- announcements (the website's popups), once per page after the catalog is in ----
+  const announceAsked = useRef(false)
   const latest = useRef({})
-  latest.current = { plugins: taggedPlugins, ownedKeys, licensed: license.licensed, passSource: account.passSource }
+  latest.current = { plugins: tagged, ownedKeys, licensed: license.licensed, passSource: account.passSource }
   useEffect(() => {
-    if (loading || announcementAsked.current || plugins.length === 0) return
+    if (loading || announceAsked.current || !plugins.length || onboardingOpen) return
     if (!(account.signedIn || license.licensed)) return
-    announcementAsked.current = true
+    announceAsked.current = true
     setTimeout(async () => {
-      const dev = isDevMode()
       let feed = null
-      if (dev) {
-        const q = new URLSearchParams(location.search).get('announce')   // =rise previews the second popup
-        feed = q === null ? null : q === 'rise' ? { ...mockAnnouncements, popups: [...mockAnnouncements.popups].reverse() } : mockAnnouncements
-      }
+      if (DEV) feed = new URLSearchParams(location.search).has('announce') ? mockAnnouncements : null
       else { try { feed = await api.getAnnouncements() } catch {} }
       if (!feed?.popups?.length) return
-      const item = pickAnnouncement(feed.popups, { ...latest.current, ignoreMemory: dev })
+      const item = pickAnnouncement(feed.popups, { ...latest.current, ignoreMemory: DEV })
       if (!item) return
-      if (!dev) rememberAnnouncement(item.popup.id)
+      if (!DEV) rememberAnnouncement(item.popup.id)
       setAnnouncement(item)
-    }, 1500)
-  }, [loading, plugins.length, account.signedIn, license.licensed])
-
-  const closeAnnouncement = useCallback(() => setAnnouncement(null), [])
+    }, 1800)
+  }, [loading, plugins.length, account.signedIn, license.licensed, onboardingOpen])
   const runAnnouncement = () => {
     const item = announcement
     setAnnouncement(null)
     if (!item) return
-    if (item.primary.kind === 'install') {
-      handleNavigate('home')
-      handleInstall(item.plugin.id)
-    } else if (item.primary.url) {
-      callNative('openExternalUrl', item.primary.url).catch(() => {})
-    }
+    if (item.primary.kind === 'install') install(item.plugin.id)
+    else if (item.primary.url) callNative('openExternalUrl', item.primary.url).catch(() => {})
   }
 
-  // ---- Refresh lastSync display every minute ----
-  const [, setTick] = useState(0)
-  useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 60000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const showHomeView = activeNav === 'home' || activeNav === 'plugins' || activeNav === 'updates'
+  const handlers = {
+    onInstall: install, onCancel: cancel, onOpen: open, onDetail: openDetail, onBuy: buy,
+    onSignIn: () => navigate('account'), onManual: setManualPlugin, onOpenFolder: openFolder, onUninstall: setUninstallAsk,
+  }
+  const detailPlugin = tagged.find(p => p.id === detailId)
+  const playingPlugin = preview.id ? tagged.find(p => p.id === preview.id) : null
+  const installedCount = tagged.filter(isInstalled).length
 
   return (
-    <motion.div
-      className="h-screen flex flex-col bg-rone-bg overflow-hidden"
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: 'easeOut' }}
-    >
-      {/* Unlock shimmer */}
-      <AnimatePresence>
-        {unlockPlaying && (
-          <motion.div key="shimmer" className="fixed inset-0 z-50 pointer-events-none"
-            initial={{ x: '-100%' }} animate={{ x: '100%' }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: 'easeInOut' }}
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(157,107,255,0.14), rgba(157,107,255,0.08), transparent)', width: '100%' }} />
-        )}
-      </AnimatePresence>
-
-      {/* Center self-update strip (kept when the auto attempt didn't stick) */}
+    <div className="h-screen flex flex-col bg-rone-bg overflow-hidden">
       {centerUpdate && (
-        <div className="flex-shrink-0 flex items-center gap-3 px-6 py-2 bg-rone-purple/[0.07] border-b border-rone-purple/25">
-          <span className="w-[7px] h-[7px] rounded-full led-upd status-dot-pulse" />
-          <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-rone-text-secondary">
-            Center v{centerUpdate} is ready
-          </span>
-          <div className="flex-1" />
-          <button
-            onClick={() => api.applyCenterUpdate()}
-            className="btn-gradient px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-[0.18em]"
-          >
-            Restart &amp; Update
-          </button>
+        <div className="flex-shrink-0 flex items-center gap-3 px-6 py-2 bg-rone-purple/[0.08] border-b border-rone-purple/25">
+          <span className="led led-upd" />
+          <span className="text-[12px] font-bold text-rone-text-secondary">{t('cu.ready', { version: centerUpdate.split('.').slice(0, 3).join('.') })}</span>
+          <span className="flex-1" />
+          <button className="btn btn-pri btn-sm" onClick={() => api.applyCenterUpdate().catch(() => {})}>{t('cu.restart')}</button>
         </div>
       )}
 
       <div className="flex-1 min-h-0 flex">
+        <Sidebar t={t} view={view} onNavigate={navigate} updatesCount={ups.length} account={account} license={license}
+                 ownedPlugins={ownedPlugins} preview={preview} playingPlugin={playingPlugin} reduced={reduced} locale={locale} />
 
-      {/* Sidebar */}
-      <Sidebar active={activeNav} onNavigate={handleNavigate} updatesCount={updatesCount} license={license}
-               ownedPlugins={ownedPlugins} />
+        <main className="flex-1 min-w-0 flex flex-col relative">
+          <TopBar t={t} searchQuery={query} onSearchChange={(q) => { setQuery(q); if (q && view !== 'library') navigate('library') }}
+                  onRefresh={refresh} manifest={manifest} account={account} license={license} daws={daws} dawId={dawId}
+                  onPickDaw={() => navigate('settings')} onAccount={() => navigate('account')} />
 
-      {/* Main column */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <TopBar
-          license={license}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onRefresh={handleRefresh}
-          lastSync={lastSync}
-          onSettings={() => setActiveNav('settings')}
-        />
-
-        <div className="flex-1 flex flex-col min-h-0">
-          {activeNav === 'account' && (
-            <div className="flex-1 overflow-y-auto plugin-grid-scroll">
-              <AccountPanel license={license} account={account} onSignIn={handleSignIn} onSignOut={handleSignOut}
-                            onGoogleSignIn={handleGoogleSignIn} onGoogleCancel={handleGoogleCancel}
-                            onActivate={handleActivate} onDeactivate={handleDeactivate} pluginCount={filterCounts.installed}
-                            ownedPlugins={ownedPlugins} />
+          {manifest.offline && (
+            <div className="flex-shrink-0 flex items-center gap-3 px-6 py-2 border-b border-rone-amber/25 bg-rone-amber/[0.05] text-[12.5px] text-rone-text-secondary" role="status">
+              <span className="led led-upd" />{t('offline.banner')}
+              <span className="flex-1" />
+              <button className="btn btn-ghost btn-sm" onClick={refresh}>{t('offline.retry')}</button>
             </div>
           )}
 
-          {activeNav === 'settings' && (
-            <div className="flex-1 overflow-y-auto plugin-grid-scroll">
-              <SettingsPanel onRefresh={handleRefresh} lastSync={lastSync} />
-            </div>
-          )}
+          <div ref={scroller} className="flex-1 min-h-0 overflow-y-auto scroll-y px-6 pt-5 pb-24">
+            {view === 'library' && (
+              <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} preview={preview}
+                           tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
+                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} />
+            )}
+            {view === 'updates' && (
+              <UpdatesView t={t} plugins={tagged} access={access} onInstall={install} onUpdateAll={updateAll} onCancel={cancel} onRefresh={refresh} onDetail={openDetail} />
+            )}
+            {view === 'detail' && detailPlugin && (
+              <DetailView t={t} plugin={detailPlugin} access={access} preview={preview} reduced={reduced} daws={daws} dawId={dawId}
+                          onDaw={(id) => setPrefs({ daw: id })} catLabel={catLabel} onBack={() => navigate(returnView)}
+                          onInstall={install} onCancel={cancel} onOpen={open} onBuy={buy} onSignIn={() => navigate('account')}
+                          onManualPdf={manualPdf} onOpenFolder={openFolder} onUninstall={setUninstallAsk} />
+            )}
+            {view === 'rack' && <RackView t={t} plugins={tagged} access={access} onDetail={openDetail} />}
+            {view === 'learn' && <LearnView t={t} plugins={tagged} tips={localTips} onManualPdf={manualPdf} onDetail={openDetail} />}
+            {view === 'settings' && (
+              <SettingsView t={t} prefs={prefs} setPrefs={setPrefs} daws={daws} platform={platform} manifest={manifest}
+                            onRefresh={refresh} onShowOnboarding={() => setOnboardingOpen(true)} />
+            )}
+            {view === 'account' && (
+              <AccountView t={t} locale={locale} license={license} account={account} onSignIn={signIn} onSignOut={signOut}
+                           onGoogleSignIn={googleSignIn} onGoogleCancel={() => api.accountGoogleCancel().catch(() => {})}
+                           onActivate={activate} onDeactivate={deactivate} installedCount={installedCount} ownedPlugins={ownedPlugins} />
+            )}
+          </div>
 
-          {showHomeView && (
-            <>
-              {(activeNav === 'home' || activeNav === 'updates') && !loading && (
-                <FeaturedSection
-                  plugins={plugins}
-                  onUpdateAll={handleUpdateAll}
-                  onRefresh={handleRefresh}
-                  licensed={license.licensed}
-                  signedIn={!!account.signedIn}
-                  onSignIn={() => setActiveNav('account')}
-                />
-              )}
-
-              {!loading && plugins.length > 0 && activeNav !== 'updates' && (
-                <FilterBar
-                  statusFilter={statusFilter}
-                  onStatusFilterChange={setStatusFilter}
-                  sortBy={sortBy}
-                  onSortChange={setSortBy}
-                  counts={filterCounts}
-                />
-              )}
-
-              <div className="flex-1 min-h-0">
-                <PluginGrid
-                  plugins={processedPlugins}
-                  licensed={license.licensed}
-                  onInstall={handleInstall}
-                  onUninstall={handleUninstall}
-                  onOpen={handleOpen}
-                  onOpenFolder={handleOpenFolder}
-                  onManual={setManualPlugin}
-                  onInfo={setInfoPlugin}
-                  unlockPlaying={unlockPlaying}
-                  loading={loading}
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </main>
-
+          <InstallDock t={t} plugins={tagged} platform={platform} onCancelAll={cancelAll} />
+        </main>
       </div>
 
-      {/* Info Modal */}
-      <AnimatePresence>
-        {infoPlugin && <InfoModal plugin={infoPlugin} onClose={() => setInfoPlugin(null)} />}
-      </AnimatePresence>
+      <ManualDialog t={t} plugin={manualPlugin} onPdf={manualPdf} onVideo={manualVideo} onClose={() => setManualPlugin(null)} />
 
-      {/* Announcement (the website's popup: a new plugin, a free one, a deal) */}
-      <AnimatePresence>
-        {announcement && !infoPlugin && (
-          <AnnouncementModal item={announcement} onPrimary={runAnnouncement} onClose={closeAnnouncement} />
-        )}
-      </AnimatePresence>
+      <Dialog open={!!uninstallAsk} onClose={() => setUninstallAsk(null)} label={t('dlg.uninstall')} width={400}>
+        <h3 className="m-0 mb-2 text-[15px] font-extrabold text-rone-text-primary">{t('dlg.uninstallTitle', { name: uninstallAsk ? 'RONE ' + shortName(uninstallAsk) : '' })}</h3>
+        <p className="m-0 mb-5 text-[12.5px] text-rone-text-secondary leading-relaxed">{t('dlg.uninstallBody')}</p>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-out" onClick={() => setUninstallAsk(null)} data-autofocus>{t('dlg.cancel')}</button>
+          <button className="btn btn-danger" onClick={confirmUninstall}>{t('dlg.uninstall')}</button>
+        </div>
+      </Dialog>
 
-      <ManualDialog
-        plugin={manualPlugin}
-        onPdf={handleManualPdf}
-        onVideo={handleManualVideo}
-        onClose={() => setManualPlugin(null)}
-      />
+      {announcement && !onboardingOpen && (
+        <AnnouncementModal item={announcement} onPrimary={runAnnouncement} onClose={() => setAnnouncement(null)} />
+      )}
 
-      <ConfirmDialog
-        open={uninstallAsk.open}
-        title={`Uninstall ${uninstallAsk.plugin?.name || ''}?`}
-        message="Removes it from this computer - the plugin, its standalone app and its manual. Your presets and settings stay, and you can install it again from here any time. Close it in your DAW first."
-        confirmLabel="Uninstall"
-        onConfirm={confirmUninstall}
-        onCancel={() => setUninstallAsk(a => ({ ...a, open: false }))}
-      />
+      <Onboarding t={t} open={onboardingOpen} prefs={prefs} setPrefs={setPrefs} daws={daws}
+                  freePlugin={tagged.find(p => p.free)} signedIn={!!account.signedIn}
+                  onInstallFree={() => { const f = tagged.find(p => p.free); if (f) install(f.id) }}
+                  onAccount={goAccount} onClose={() => setOnboardingOpen(false)} />
 
-      {/* Toasts */}
-      <StatusToast toasts={toasts} onRemove={removeToast} />
-    </motion.div>
+      <Toasts toasts={toasts} onRemove={removeToast} />
+    </div>
   )
 }

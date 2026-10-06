@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RonePluginsCenter VERSION 1.6.2 LANGUAGES C CXX)
+project(RonePluginsCenter VERSION 2.0.0 LANGUAGES C CXX)
 
 # Build nonce 2026-09-02-a. The v1.3.0 release push never produced a run: its
 # commit body quoted the CI skip token while explaining an earlier commit, and
@@ -55,9 +55,18 @@ FetchContent_MakeAvailable(JUCE)
 juce_add_gui_app(RonePluginsCenter
     PRODUCT_NAME  "RONE Plugins Center"
     COMPANY_NAME  "RONE Plugins"
-    VERSION       "1.6.2"
+    VERSION       "2.0.0"
     ICON_BIG      "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
     ICON_SMALL    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
+    # ronecenter:// links from the website (Source/CenterLinks.h); JUCE hands
+    # the URL to anotherInstanceStarted().
+    PLIST_TO_MERGE [[<plist><dict>
+      <key>CFBundleURLTypes</key>
+      <array><dict>
+        <key>CFBundleURLName</key><string>com.roneplugins.center</string>
+        <key>CFBundleURLSchemes</key><array><string>ronecenter</string></array>
+      </dict></array>
+    </dict></plist>]]
 )
 
 target_sources(RonePluginsCenter PRIVATE
@@ -69,16 +78,15 @@ target_sources(RonePluginsCenter PRIVATE
     Source/AccountClient.cpp
     Source/RoneTrayIcon.h
     Source/CustomTitleBar.h
+    Source/InstallBatcher.h
+    Source/DawDetector.h
+    Source/CenterLinks.h
 )
 
-# Fine-grained GitHub token for crash-report uploads (Issues read/write on the
-# private rone-crash-reports repo ONLY). Injected by CI from the
-# CRASH_REPORT_TOKEN secret; empty (the default) disables uploading and
-# reports simply stay queued on disk.
-set(RONE_CRASH_TOKEN "" CACHE STRING "Crash-report upload token (Issues RW on rone-crash-reports only)")
+# Crash reports go to roneaudio.com/api/v1/crash, which holds the GitHub token
+# on the server (Source/CrashReportUploader.h). Nothing secret is compiled in.
 
 target_compile_definitions(RonePluginsCenter PRIVATE
-    RONE_CRASH_TOKEN="${RONE_CRASH_TOKEN}"
     JUCE_WEB_BROWSER=1
     JUCE_USE_WIN_WEBVIEW2=1
     # Static WebView2 loader: without this the app LoadLibrary()s
@@ -109,21 +117,23 @@ target_compile_definitions(RonePluginsCenter PRIVATE
     RONE_LICENSE_REGISTRY_PATH="Software\\\\RONE\\\\License"
 )
 
-# --- Embed React UI + plugin logos as binary data ---
+# --- Embed the React UI (page, script, styles, fonts), every plugin icon and
+# every 3D unit as binary data. The page finds them by file name
+# (MainComponent::getResource), so a new plugin's artwork is a file here and
+# no code: Resources/<id>_icon.png and Resources/units/unit_<id>.webp.
+# Only what the page uses: its html, script, styles and the woff2 fonts (the
+# .woff copies @fontsource also emits are never fetched by WebView2/WebKit).
+file(GLOB _ui_files   CONFIGURE_DEPENDS
+     "${CMAKE_CURRENT_SOURCE_DIR}/Resources/ui/dist/*.html"
+     "${CMAKE_CURRENT_SOURCE_DIR}/Resources/ui/dist/*.js"
+     "${CMAKE_CURRENT_SOURCE_DIR}/Resources/ui/dist/*.css"
+     "${CMAKE_CURRENT_SOURCE_DIR}/Resources/ui/dist/*.woff2")
+file(GLOB _icon_files CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Resources/*_icon.png")
+file(GLOB _unit_files CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Resources/units/*.webp")
 juce_add_binary_data(PluginsCenterUI SOURCES
-    Resources/ui/dist/index.html
-    Resources/ui/dist/bundle.js
-    Resources/ui/dist/styles.css
-    Resources/ReverseReverb_icon.png
-    Resources/RoneStutter_icon.png
-    Resources/RoneFlanger_icon.png
-    Resources/RONEAnalyzer_icon.png
-    Resources/RoneStucker_icon.png
-    Resources/RoneThrow_icon.png
-    Resources/RoneClipper_icon.png
-    Resources/RoneRise_icon.png
-    Resources/RoneIron_icon.png
-    Resources/RoneAfterspace_icon.png
+    ${_ui_files}
+    ${_icon_files}
+    ${_unit_files}
     Resources/AppIcon.png
 )
 

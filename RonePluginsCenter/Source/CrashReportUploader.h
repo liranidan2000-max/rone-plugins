@@ -3,86 +3,56 @@
 // ============================================================================
 // CrashReportUploader — the Center is the bundle's single crash-report
 // uploader. It drains the shared queue that every RONE product writes into
-// (see Shared/RoneCrashReporter.h) and files each report as an issue in the
-// private tracker  github.com/liranidan2000-max/rone-crash-reports.
+// (see Shared/RoneCrashReporter.h) and hands each report to roneaudio.com,
+// which files it as an issue in the private tracker
+// github.com/liranidan2000-max/rone-crash-reports.
 //
-// The upload token comes in at build time (CMake option RONE_CRASH_TOKEN,
-// injected by CI from the CRASH_REPORT_TOKEN secret). It is a fine-grained
-// token that can ONLY read/write issues on that one private repo — if it is
-// empty (local builds, secret not configured) uploading is silently disabled
-// and reports simply stay queued on disk until a token-carrying Center runs.
+// Until Center 2.0 the GitHub token itself was compiled into the exe (CMake
+// RONE_CRASH_TOKEN), and anything compiled in can be pulled out: whoever did
+// could read every report - machine ids, file paths, stack traces - and flood
+// the tracker. Now the token lives only on the server (the website Worker's
+// CRASH_REPORT_TOKEN secret, worker/api/v1/crash.js), which also checks and
+// rate-limits what it files. Reports wait on disk until the server takes them.
 // ============================================================================
 
 #include <juce_core/juce_core.h>
 #include "../../Shared/RoneCrashReporter.h"
 
-#ifndef RONE_CRASH_TOKEN
- #define RONE_CRASH_TOKEN ""
+#ifndef RONE_API_BASE
+ #define RONE_API_BASE "https://roneaudio.com/api/v1"
 #endif
 
 namespace CrashReportUploader
 {
 
-inline constexpr const char* kIssuesApiUrl =
-    "https://api.github.com/repos/liranidan2000-max/rone-crash-reports/issues";
+enum class Outcome { sent, drop, stop };
 
-inline bool uploadOne (const juce::File& reportFile)
+inline Outcome uploadOne (const juce::File& reportFile)
 {
     auto parsed = juce::JSON::parse (reportFile.loadFileAsString());
     if (! parsed.isObject())
-        return true;    // unreadable/corrupt file — drop it
+        return Outcome::drop;    // unreadable/corrupt file — drop it
 
-    auto s = [&parsed] (const char* k) { return parsed.getProperty (k, "?").toString(); };
-
-    auto title = "[" + s ("product") + " " + s ("version") + "] "
-                 + s ("code") + " - " + s ("message").substring (0, 80);
-
-    juce::String body;
-    body << "**" << s ("type") << "** in **" << s ("product") << " " << s ("version")
-         << "** (" << s ("wrapper") << ")\n\n"
-         << "- OS: " << s ("os") << " (" << s ("arch") << ", " << s ("locale") << ")\n"
-         << "- Machine: `" << s ("install_id") << "`\n"
-         << "- Time: " << s ("time") << "\n\n"
-         << "**Message:** " << s ("message") << "\n\n";
-    if (s ("details").isNotEmpty() && s ("details") != "?")
-        body << "**Details:**\n```\n" << s ("details") << "\n```\n\n";
-    if (s ("stack").isNotEmpty() && s ("stack") != "?")
-        body << "**Stack:**\n```\n" << s ("stack") << "\n```\n";
-
-    auto* payload = new juce::DynamicObject();
-    payload->setProperty ("title", title);
-    payload->setProperty ("body",  body);
-
-    juce::URL url { kIssuesApiUrl };
-    juce::WebInputStream stream (url.withPOSTData (juce::JSON::toString (juce::var (payload))), true);
-    stream.withExtraHeaders ("Authorization: Bearer " + juce::String (RONE_CRASH_TOKEN)
-                             + "\r\nAccept: application/vnd.github+json"
-                             + "\r\nContent-Type: application/json"
-                             + "\r\nUser-Agent: RonePluginsCenter");
+    juce::URL url { juce::String (RONE_API_BASE) + "/crash" };
+    juce::WebInputStream stream (url.withPOSTData (juce::JSON::toString (parsed)), true);
+    stream.withExtraHeaders ("Content-Type: application/json\r\nAccept: application/json\r\nUser-Agent: RonePluginsCenter");
     stream.withConnectionTimeout (10000);
 
     if (! stream.connect (nullptr))
-        return false;                          // offline — keep the file, retry later
+        return Outcome::stop;                  // offline — keep the file, retry later
 
-    auto status = stream.getStatusCode();
-    if (status == 201)
-        return true;                           // filed — delete the file
-    if (status == 401 || status == 403 || status == 404 || status == 410 || status == 422)
-    {
-        // Token revoked/misconfigured or repo missing — don't burn the queue,
-        // but don't retry this session either.
-        return false;
-    }
-    return false;
+    const auto status = stream.getStatusCode();
+    if (status == 200 || status == 201)
+        return Outcome::sent;                  // filed — delete the file
+    if (status == 400 || status == 413 || status == 422)
+        return Outcome::drop;                  // the server will never take this one
+    return Outcome::stop;                      // 429 / 5xx / not deployed yet: keep everything, try next pass
 }
 
 // Drains the queue on a background thread. Throttled: at most one pass per
 // minute, at most 20 reports per pass (the rest go next pass).
 inline void uploadPendingAsync()
 {
-    if (juce::String (RONE_CRASH_TOKEN).isEmpty())
-        return;
-
     static std::atomic<bool> running { false };
     static std::atomic<juce::int64> lastRunMs { 0 };
 
@@ -105,13 +75,12 @@ inline void uploadPendingAsync()
         {
             if (sent >= 20)
                 break;
-            if (uploadOne (f))
-            {
-                f.deleteFile();
+            const auto outcome = uploadOne (f);
+            if (outcome == Outcome::stop)
+                break;                          // network/server trouble — stop the pass
+            f.deleteFile();
+            if (outcome == Outcome::sent)
                 ++sent;
-            }
-            else
-                break;                          // network/token trouble — stop the pass
         }
         running = false;
     });

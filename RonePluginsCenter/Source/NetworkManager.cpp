@@ -2,25 +2,91 @@
 #include "../../Shared/RemoteLicenseGate.h"
 
 NetworkManager::NetworkManager()
-    : Thread ("RONE-Network")
 {
+    manifestWorker.startThread();
+    downloadWorker.startThread();
 }
 
 NetworkManager::~NetworkManager()
 {
-    cancelDownload();
-    stopThread (5000);
+    alive->store (false);
+
+    cancelCurrent = true;
+    manifestWorker.signalThreadShouldExit();
+    downloadWorker.signalThreadShouldExit();
+    manifestWorker.wake.signal();
+    downloadWorker.wake.signal();
+    manifestWorker.stopThread (5000);
+    downloadWorker.stopThread (5000);
+}
+
+void NetworkManager::post (std::function<void()> fn)
+{
+    juce::MessageManager::callAsync ([flag = alive, fn = std::move (fn)]
+    {
+        if (flag->load())
+            fn();
+    });
+}
+
+juce::File NetworkManager::getDownloadDir()
+{
+    return juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("RONE_Downloads");
+}
+
+juce::File NetworkManager::installerFileFor (const juce::String& pluginId)
+{
+    // pluginId comes from the remote manifest — never let it shape a path
+    const auto safeId = juce::File::createLegalFileName (pluginId);
+   #if JUCE_MAC
+    return getDownloadDir().getChildFile (safeId + (pluginId == "__center__" ? "_Installer.dmg" : "_Installer.pkg"));
+   #else
+    return getDownloadDir().getChildFile (safeId + "_Installer.exe");
+   #endif
+}
+
+juce::File NetworkManager::getManifestCacheFile()
+{
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+               .getChildFile ("RonePluginsCenter").getChildFile ("manifest-cache.json");
 }
 
 // ============================================================================
-// Public API
+// Manifest
 // ============================================================================
 
 void NetworkManager::fetchManifest (bool freshFromOrigin)
 {
-    cancelDownload();
-    currentTask = FetchManifest;
+    {
+        const juce::ScopedLock sl (requestLock);
+        manifestRequested = true;
+        manifestFromOrigin = manifestFromOrigin || freshFromOrigin;
+    }
+    manifestWorker.wake.signal();
+}
 
+void NetworkManager::ManifestWorker::run()
+{
+    while (! threadShouldExit())
+    {
+        bool origin = false, requested = false;
+        {
+            const juce::ScopedLock sl (owner.requestLock);
+            requested = owner.manifestRequested;
+            origin = owner.manifestFromOrigin;
+            owner.manifestRequested = false;
+            owner.manifestFromOrigin = false;
+        }
+
+        if (requested)
+            owner.fetchOnce (origin);
+        else
+            wake.wait (-1);
+    }
+}
+
+void NetworkManager::fetchOnce (bool fromOrigin)
+{
     // raw.githubusercontent serves this with Cache-Control: max-age=300 through a
     // CDN, so for up to five minutes after a release a POP can still hand out the
     // PREVIOUS manifest. The installers, meanwhile, live behind moving "-latest"
@@ -34,183 +100,236 @@ void NetworkManager::fetchManifest (bool freshFromOrigin)
     // cached copy is fine for browsing; when a hash has just failed, the file
     // is read from origin through the API instead, which is never cached but
     // is rate-limited - so only then.
-    manifestFromOrigin = freshFromOrigin;
-    targetUrl = freshFromOrigin ? juce::String (VERSIONS_JSON_ORIGIN_URL)
-                                : juce::String (VERSIONS_JSON_URL);
+    juce::URL url (fromOrigin ? juce::String (VERSIONS_JSON_ORIGIN_URL) : juce::String (VERSIONS_JSON_URL));
 
-    startThread();
+    // The API hands back the file itself only when asked for it this way; its
+    // default is a JSON envelope with the content in base64.
+    const auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
+                             .withConnectionTimeoutMs (10000)
+                             .withNumRedirectsToFollow (5)
+                             .withExtraHeaders (fromOrigin ? "Accept: application/vnd.github.raw\r\n"
+                                                             "X-GitHub-Api-Version: 2022-11-28\r\n"
+                                                           : "");
+
+    juce::String body;
+    if (auto stream = url.createInputStream (options))
+        body = stream->readEntireStreamAsString();
+
+    if (manifestWorker.threadShouldExit())
+        return;
+
+    // A real manifest has a "plugins" array. A captive portal's HTML page, an
+    // API rate-limit message (valid JSON!) and an empty body all do not - and
+    // none of them may reach the licence mode or the cache.
+    const auto root = juce::JSON::parse (body);
+    const bool isManifest = root.isObject() && root.getProperty ("plugins", {}).isArray();
+    auto plugins = isManifest ? parseManifest (body) : juce::Array<PluginInfo>();
+
+    if (! plugins.isEmpty())
+    {
+        // Propagate the remote kill-switch (license_mode) to the shared cache
+        // file every RONE plugin reads, and every product's version for the
+        // plugins' own "version X is available" bar (Shared/RoneUpdatePrompt.h).
+        RemoteLicenseGate::writeMode (root.getProperty ("license_mode", "enforced").toString(),
+                                      root.getProperty ("license_message", "").toString());
+        RemoteLicenseGate::writeLatestVersions (root);
+        captureManifestWide (root);
+
+        auto cache = getManifestCacheFile();
+        cache.getParentDirectory().createDirectory();
+        cache.replaceWithText (body);
+
+        lastSuccessMs = juce::Time::currentTimeMillis();
+        post ([this, plugins] { listeners.call (&Listener::onManifestReady, plugins, false); });
+        return;
+    }
+
+    // The origin read exists to verify a download: a cached catalog proves nothing there.
+    if (fromOrigin)
+    {
+        post ([this] { listeners.call (&Listener::onManifestError,
+                                       juce::String ("Could not read a fresh manifest from the update server.")); });
+        return;
+    }
+
+    // Offline (or a portal in the way): the last manifest that did arrive.
+    const auto cache = getManifestCacheFile();
+    if (cache.existsAsFile())
+    {
+        const auto cachedBody = cache.loadFileAsString();
+        auto cached = parseManifest (cachedBody);
+        if (! cached.isEmpty())
+        {
+            captureManifestWide (juce::JSON::parse (cachedBody));
+            post ([this, cached] { listeners.call (&Listener::onManifestReady, cached, true); });
+            return;
+        }
+    }
+
+    post ([this] { listeners.call (&Listener::onManifestError,
+                                   juce::String ("Could not reach the update server.")); });
 }
+
+void NetworkManager::captureManifestWide (const juce::var& root)
+{
+    const auto ci = root.getProperty ("center_installer", {});
+
+    auto* x = new juce::DynamicObject();
+    x->setProperty ("tips", root.getProperty ("tips", juce::var (juce::Array<juce::var>())));
+
+    const juce::ScopedLock sl (centerInfoLock);
+    centerInfo.version   = ci.getProperty ("version",    {}).toString();
+    centerInfo.url       = ci.getProperty ("url",        {}).toString();
+    centerInfo.sha256    = ci.getProperty ("sha256",     {}).toString();
+    centerInfo.urlMac    = ci.getProperty ("url_mac",    {}).toString();
+    centerInfo.sha256Mac = ci.getProperty ("sha256_mac", {}).toString();
+    extras = juce::var (x);
+}
+
+// ============================================================================
+// Downloads
+// ============================================================================
 
 void NetworkManager::downloadInstaller (const juce::String& pluginId,
                                          const juce::String& url,
-                                         const juce::String& sha256)
+                                         const juce::String& sha256,
+                                         bool prefetch)
 {
-    // Queue the job. The network thread processes downloads one at a time, so
-    // "Update All" (which fires this rapidly for every plugin) no longer has each
-    // call cancel the previous one and leave it stuck at 0%.
     {
         const juce::ScopedLock sl (queueLock);
 
-        // Skip duplicates already queued for this plugin.
+        if (currentJobId == pluginId)
+        {
+            if (! prefetch) currentIsPrefetch = false;   // the user wants it now: it installs when done
+            return;
+        }
+
         for (auto& j : downloadQueue)
             if (j.pluginId == pluginId)
+            {
+                if (! prefetch) j.prefetch = false;
                 return;
+            }
 
-        downloadQueue.add ({ pluginId, url, sha256 });
-    }
+        DownloadJob job { pluginId, url, sha256, prefetch };
 
-    // If the thread is busy fetching the manifest, let it finish; otherwise start
-    // the download worker.
-    if (! isThreadRunning())
-    {
-        currentTask = DownloadFile;
-        startThread();
-    }
-}
-
-void NetworkManager::cancelDownload()
-{
-    {
-        const juce::ScopedLock sl (queueLock);
-        downloadQueue.clear();
-    }
-
-    if (isThreadRunning())
-    {
-        signalThreadShouldExit();
-        stopThread (3000);
-    }
-    currentTask = None;
-}
-
-// ============================================================================
-// Background thread
-// ============================================================================
-
-void NetworkManager::run()
-{
-    switch (currentTask)
-    {
-        case FetchManifest:
+        // What the user asked for goes before what the Center fetches on its own.
+        if (prefetch)
+            downloadQueue.add (job);
+        else
         {
-            // --- Fetch the JSON manifest ---------------------------------
-            juce::URL url (targetUrl);
+            int at = 0;
+            while (at < downloadQueue.size() && ! downloadQueue.getReference (at).prefetch)
+                ++at;
+            downloadQueue.insert (at, job);
+        }
+    }
 
-            // The API hands back the file itself only when asked for it this
-            // way; its default is a JSON envelope with the content in base64.
-            const auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
-                                     .withConnectionTimeoutMs (10000)
-                                     .withNumRedirectsToFollow (5)
-                                     .withExtraHeaders (manifestFromOrigin
-                                                            ? "Accept: application/vnd.github.raw\r\n"
-                                                              "X-GitHub-Api-Version: 2022-11-28\r\n"
-                                                            : "");
+    downloadWorker.wake.signal();
+}
 
-            auto stream = url.createInputStream (options);
+void NetworkManager::cancelDownload (const juce::String& pluginId)
+{
+    const juce::ScopedLock sl (queueLock);
+    for (int i = downloadQueue.size(); --i >= 0;)
+        if (downloadQueue.getReference (i).pluginId == pluginId)
+            downloadQueue.remove (i);
 
-            if (stream == nullptr || threadShouldExit())
+    if (currentJobId == pluginId)
+        cancelCurrent = true;
+}
+
+void NetworkManager::cancelAllDownloads()
+{
+    const juce::ScopedLock sl (queueLock);
+    downloadQueue.clear();
+    if (currentJobId.isNotEmpty())
+        cancelCurrent = true;
+}
+
+bool NetworkManager::isDownloadQueued (const juce::String& pluginId) const
+{
+    const juce::ScopedLock sl (queueLock);
+    if (currentJobId == pluginId)
+        return true;
+    for (auto& j : downloadQueue)
+        if (j.pluginId == pluginId)
+            return true;
+    return false;
+}
+
+bool NetworkManager::isPrefetch (const juce::String& pluginId) const
+{
+    const juce::ScopedLock sl (queueLock);
+    if (currentJobId == pluginId)
+        return currentIsPrefetch;
+    for (auto& j : downloadQueue)
+        if (j.pluginId == pluginId)
+            return j.prefetch;
+    return false;
+}
+
+void NetworkManager::promoteToInstall (const juce::String& pluginId)
+{
+    const juce::ScopedLock sl (queueLock);
+    if (currentJobId == pluginId)
+        currentIsPrefetch = false;
+    for (auto& j : downloadQueue)
+        if (j.pluginId == pluginId)
+            j.prefetch = false;
+}
+
+bool NetworkManager::hasPendingDownloads() const
+{
+    const juce::ScopedLock sl (queueLock);
+    // A background pre-download alone does not hold a batch back.
+    if (currentJobId.isNotEmpty() && ! currentIsPrefetch)
+        return true;
+    for (auto& j : downloadQueue)
+        if (! j.prefetch)
+            return true;
+    return false;
+}
+
+bool NetworkManager::shouldAbortDownload() const
+{
+    return downloadWorker.threadShouldExit() || cancelCurrent.load();
+}
+
+void NetworkManager::DownloadWorker::run()
+{
+    while (! threadShouldExit())
+    {
+        DownloadJob job;
+        bool haveJob = false;
+        {
+            const juce::ScopedLock sl (owner.queueLock);
+            if (! owner.downloadQueue.isEmpty())
             {
-                juce::MessageManager::callAsync ([this]
-                {
-                    listeners.call (&Listener::onManifestError,
-                                    juce::String ("Network error: could not reach the update server."));
-                });
-                return;
+                job = owner.downloadQueue.removeAndReturn (0);
+                owner.currentJobId = job.pluginId;
+                owner.currentIsPrefetch = job.prefetch;
+                owner.cancelCurrent = false;
+                haveJob = true;
             }
-
-            auto body = stream->readEntireStreamAsString();
-
-            if (body.isEmpty() || threadShouldExit())
-            {
-                juce::MessageManager::callAsync ([this]
-                {
-                    listeners.call (&Listener::onManifestError,
-                                    juce::String ("Empty response from update server."));
-                });
-                return;
-            }
-
-            auto plugins = parseManifest (body);
-
-            // Capture the manifest's own-update block for the Center
-            {
-                auto root = juce::JSON::parse (body);
-
-                // Propagate the remote kill-switch (license_mode) to the
-                // shared cache file that every RONE plugin reads.
-                if (root.isObject())
-                {
-                    RemoteLicenseGate::writeMode (
-                        root.getProperty ("license_mode",    "enforced").toString(),
-                        root.getProperty ("license_message", ""    ).toString());
-
-                    // ...and every product's version, for the plugins' own
-                    // "version X is available" bar (Shared/RoneUpdatePrompt.h).
-                    RemoteLicenseGate::writeLatestVersions (root);
-                }
-
-                auto ci   = root.getProperty ("center_installer", {});
-                const juce::ScopedLock sl (centerInfoLock);
-                centerInfo.version = ci.getProperty ("version", {}).toString();
-                centerInfo.url     = ci.getProperty ("url",     {}).toString();
-                centerInfo.sha256  = ci.getProperty ("sha256",  {}).toString();
-            }
-
-            // If remote JSON was unparseable (e.g. 404 HTML from private repo),
-            // fall back to a hardcoded catalog so the UI always shows plugins.
-            // Not for the origin read: that one exists to verify a download,
-            // and a catalog with no hashes in it verifies nothing. The API
-            // answers a rate limit with a JSON message, which lands here too.
-            if (plugins.isEmpty())
-            {
-                if (manifestFromOrigin)
-                {
-                    juce::MessageManager::callAsync ([this]
-                    {
-                        listeners.call (&Listener::onManifestError,
-                                        juce::String ("Could not read a fresh manifest from the update server."));
-                    });
-                    return;
-                }
-
-                plugins = getFallbackManifest();
-            }
-
-            juce::MessageManager::callAsync ([this, plugins]
-            {
-                listeners.call (&Listener::onManifestReady, plugins);
-            });
-            break;
         }
 
-        case DownloadFile:
+        if (! haveJob)
         {
-            // Drain the download queue one job at a time.
-            for (;;)
-            {
-                if (threadShouldExit())
-                    break;
-
-                DownloadJob job;
-                {
-                    const juce::ScopedLock sl (queueLock);
-                    if (downloadQueue.isEmpty())
-                        break;
-                    job = downloadQueue.removeAndReturn (0);
-                }
-
-                runDownloadJob (job);
-            }
-            break;
+            wake.wait (-1);
+            continue;
         }
 
-        default:
-            break;
+        owner.runDownloadJob (job);
+
+        const juce::ScopedLock sl (owner.queueLock);
+        owner.currentJobId.clear();
+        owner.currentIsPrefetch = false;
     }
 }
 
 // ============================================================================
-// Single download job (serial worker called from run())
+// Single download job (the download thread)
 // ============================================================================
 
 namespace
@@ -231,64 +350,81 @@ namespace
 
         return juce::String (bytes / (1024.0 * 1024.0), 1) + " MB";
     }
+
+    // A verified file is kept for its version (background pre-downloads): its
+    // hash is remembered beside it so the next run knows whether it is still good.
+    juce::File hashStampFor (const juce::File& f) { return f.withFileExtension (f.getFileExtension() + ".sha256"); }
 }
 
 void NetworkManager::runDownloadJob (const DownloadJob& job)
 {
-    auto tempDir  = juce::File::getSpecialLocation (juce::File::tempDirectory)
-                       .getChildFile ("RONE_Downloads");
-    tempDir.createDirectory();
+    getDownloadDir().createDirectory();
+    const auto tempFile = installerFileFor (job.pluginId);
+    const auto partFile = tempFile.withFileExtension (tempFile.getFileExtension() + ".part");
 
-    // pluginId comes from the remote manifest — never let it shape a path
-    const auto safeId = juce::File::createLegalFileName (job.pluginId);
-
-#if JUCE_MAC
-    auto tempFile = tempDir.getChildFile (safeId + "_Installer.pkg");
-#else
-    auto tempFile = tempDir.getChildFile (safeId + "_Installer.exe");
-#endif
+    post ([this, id = job.pluginId] { listeners.call (&Listener::onDownloadStarted, id); });
 
     bool         success = false;
+    bool         cancelled = false;
     juce::String errorMsg;
 
-    for (int attempt = 1; attempt <= downloadAttempts; ++attempt)
+    // Already here and already verified (a background pre-download, or the same
+    // file a cancelled install left): no second transfer.
+    if (tempFile.existsAsFile() && hashStampFor (tempFile).loadFileAsString().trim().equalsIgnoreCase (job.sha256)
+        && job.sha256.isNotEmpty())
     {
-        if (threadShouldExit())
-            return;
+        juce::FileInputStream fis (tempFile);
+        success = fis.openedOk() && juce::SHA256 (fis).toHexString().equalsIgnoreCase (job.sha256);
+    }
+
+    for (int attempt = 1; ! success && attempt <= downloadAttempts; ++attempt)
+    {
+        if (shouldAbortDownload())
+            break;
 
         bool retryable = false;
-        success = attemptDownload (job, tempFile, errorMsg, retryable);
+        success = attemptDownload (job, partFile, errorMsg, retryable);
 
         if (success || ! retryable || attempt == downloadAttempts)
             break;
 
-        // Back off before trying again, in short slices so a cancel still lands
-        // quickly.
-        for (int waited = 0; waited < retryBackoffMs * attempt; waited += 100)
-        {
-            if (threadShouldExit())
-                return;
-
+        // Back off before trying again, in short slices so a cancel still lands quickly.
+        for (int waited = 0; waited < retryBackoffMs * attempt && ! shouldAbortDownload(); waited += 100)
             juce::Thread::sleep (100);
+    }
+
+    if (! success && shouldAbortDownload())
+    {
+        cancelled = true;
+        errorMsg = "Download cancelled.";
+    }
+
+    if (success && partFile.existsAsFile())
+    {
+        tempFile.deleteFile();
+        hashStampFor (tempFile).deleteFile();
+        if (partFile.moveFileTo (tempFile))
+            hashStampFor (tempFile).replaceWithText (job.sha256.toLowerCase());
+        else
+        {
+            success = false;
+            errorMsg = "Download failed - the file could not be saved. Check that antivirus is not blocking RONE installers.";
         }
     }
 
-    if (threadShouldExit())
+    partFile.deleteFile();
+    if (! success)
     {
         tempFile.deleteFile();
-        return;
+        hashStampFor (tempFile).deleteFile();
     }
 
-    if (! success)
-        tempFile.deleteFile();
+    if (downloadWorker.threadShouldExit())
+        return;
 
-    auto pid  = job.pluginId;
-    auto file = success ? tempFile : juce::File();
-    auto err  = errorMsg;
-
-    juce::MessageManager::callAsync ([this, pid, file, success, err]
+    post ([this, pid = job.pluginId, file = success ? tempFile : juce::File(), success, cancelled, err = errorMsg]
     {
-        listeners.call (&Listener::onDownloadComplete, pid, file, success, err);
+        listeners.call (&Listener::onDownloadComplete, pid, file, success, cancelled, err);
     });
 }
 
@@ -309,6 +445,13 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
     if (tempFile.existsAsFile())
         tempFile.deleteFile();
 
+    // Only https: the manifest is fetched over TLS, and so is everything it points at.
+    if (! job.url.startsWithIgnoreCase ("https://"))
+    {
+        errorMessage = "Download refused - the download link is not a secure (https) address.";
+        return false;
+    }
+
     juce::int64 totalBytes = 0;   // Content-Length; 0 when the server will not say
     juce::int64 downloaded = 0;
 
@@ -320,7 +463,7 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
     // HEAD request to learn the final Content-Length for progress reporting.
     {
         juce::ChildProcess head;
-        juce::StringArray headArgs { "/usr/bin/curl", "-sIL", job.url };
+        juce::StringArray headArgs { "/usr/bin/curl", "-sIL", "--proto", "=https", job.url };
         if (head.start (headArgs))
         {
             auto headers = head.readAllProcessOutput();
@@ -338,6 +481,7 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
     juce::StringArray dlArgs { "/usr/bin/curl",
                                "-L",                  // follow redirects
                                "-f",                  // fail on HTTP error
+                               "--proto", "=https",   // never anything but https, redirects included
                                "--silent",
                                "--show-error",
                                "-o", tempFile.getFullPathName(),
@@ -353,7 +497,7 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
     auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
     while (curl.isRunning())
     {
-        if (threadShouldExit())
+        if (shouldAbortDownload())
         {
             curl.kill();
             tempFile.deleteFile();
@@ -369,8 +513,7 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
                 lastProgressTime = now;
                 double progress = juce::jlimit (0.0, 1.0,
                                     (double) tempFile.getSize() / (double) totalBytes);
-                auto pid = job.pluginId;
-                juce::MessageManager::callAsync ([this, pid, progress]
+                post ([this, pid = job.pluginId, progress]
                 {
                     listeners.call (&Listener::onDownloadProgress, pid, progress);
                 });
@@ -415,7 +558,7 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
 
     auto stream = url.createInputStream (options);
 
-    if (threadShouldExit())
+    if (shouldAbortDownload())
     {
         errorMessage = "Download cancelled.";
         return false;
@@ -455,47 +598,47 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
 
     totalBytes = juce::jmax ((juce::int64) 0, stream->getTotalLength());
 
-    juce::FileOutputStream output (tempFile);
-    if (! output.openedOk())
     {
-        errorMessage = "Could not create temp file for download.";
-        return false;
-    }
-
-    constexpr int bufferSize = 32768;
-    juce::HeapBlock<char> buffer (bufferSize);
-    auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
-
-    while (! threadShouldExit())
-    {
-        auto bytesRead = stream->read (buffer, bufferSize);
-        if (bytesRead <= 0)
-            break;
-
-        output.write (buffer, (size_t) bytesRead);
-        downloaded += bytesRead;
-
-        if (totalBytes > 0)
+        juce::FileOutputStream output (tempFile);
+        if (! output.openedOk())
         {
-            auto now = juce::Time::getMillisecondCounterHiRes();
-            // Throttle progress events to ~10/sec to avoid flooding the message queue
-            if (now - lastProgressTime >= 100.0 || downloaded >= totalBytes)
+            errorMessage = "Could not create temp file for download.";
+            return false;
+        }
+
+        constexpr int bufferSize = 32768;
+        juce::HeapBlock<char> buffer (bufferSize);
+        auto lastProgressTime = juce::Time::getMillisecondCounterHiRes();
+
+        while (! shouldAbortDownload())
+        {
+            auto bytesRead = stream->read (buffer, bufferSize);
+            if (bytesRead <= 0)
+                break;
+
+            output.write (buffer, (size_t) bytesRead);
+            downloaded += bytesRead;
+
+            if (totalBytes > 0)
             {
-                lastProgressTime = now;
-                double progress = juce::jlimit (0.0, 1.0,
-                                    (double) downloaded / (double) totalBytes);
-                auto pid = job.pluginId;
-                juce::MessageManager::callAsync ([this, pid, progress]
+                auto now = juce::Time::getMillisecondCounterHiRes();
+                // Throttle progress events to ~10/sec to avoid flooding the message queue
+                if (now - lastProgressTime >= 100.0 || downloaded >= totalBytes)
                 {
-                    listeners.call (&Listener::onDownloadProgress, pid, progress);
-                });
+                    lastProgressTime = now;
+                    double progress = juce::jlimit (0.0, 1.0, (double) downloaded / (double) totalBytes);
+                    post ([this, pid = job.pluginId, progress]
+                    {
+                        listeners.call (&Listener::onDownloadProgress, pid, progress);
+                    });
+                }
             }
         }
+
+        output.flush();
     }
 
-    output.flush();
-
-    if (threadShouldExit())
+    if (shouldAbortDownload())
     {
         tempFile.deleteFile();
         errorMessage = "Download cancelled.";
@@ -545,16 +688,11 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
     //
     // This is the gate that decides whether a file downloaded off the internet
     // is about to be EXECUTED on a customer's machine, so every way past it has
-    // to be a deliberate pass. It used to have two ways past it by accident:
-    //
-    //   * an empty hash in the manifest skipped the whole check, and
-    //   * a file that could not be opened to hash fell through the inner `if`
-    //
-    // Both ended at `return true` with an unverified installer. An entry
-    // without a hash is exactly the case the manifest writes when a build leg
-    // did not run, which is when an unverified binary is MOST likely to be the
-    // wrong one. Refusing costs a customer one retry; the other way costs them
-    // whatever the file turns out to be.
+    // to be a deliberate pass. An entry without a hash is exactly the case the
+    // manifest writes when a build leg did not run, which is when an unverified
+    // binary is MOST likely to be the wrong one. Refusing costs a customer one
+    // retry; the other way costs them whatever the file turns out to be. (The
+    // file is hashed once more right before it runs - InstallBatcher.)
     if (job.sha256.isEmpty())
     {
         tempFile.deleteFile();
@@ -598,6 +736,16 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
 // JSON parsing
 // ============================================================================
 
+static juce::StringArray stringList (const juce::var& v)
+{
+    juce::StringArray out;
+    if (auto* arr = v.getArray())
+        for (auto& x : *arr)
+            if (x.toString().trim().isNotEmpty())
+                out.add (x.toString().trim());
+    return out;
+}
+
 juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonBody)
 {
     juce::Array<PluginInfo> result;
@@ -630,12 +778,35 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.registryKey    = entry.getProperty ("registry_key",     {}).toString();
         info.type          = entry.getProperty ("type",         {}).toString();
 
+        if (info.id.isEmpty())
+            continue;
+
         // Only the plugins sold on their own carry these. Left as raw vars so a
         // manifest without them (an ALL-ACCESS-only plugin, or a cached older
         // catalog) stays distinguishable from one priced at nothing.
         info.price       = entry.getProperty ("price",        {});
         info.launchPrice = entry.getProperty ("launch_price", {});
         info.storeUrl    = entry.getProperty ("store_url",    {}).toString();
+
+        // Center 2.0 catalog fields
+        info.free       = (bool) entry.getProperty ("free", false);
+        info.categories = stringList (entry.getProperty ("category", {}));
+        info.tags       = stringList (entry.getProperty ("tags", {}));
+        info.accent     = entry.getProperty ("accent",   {}).toString().trim();
+        info.released   = entry.getProperty ("released", {}).toString().trim();
+        const auto preview = entry.getProperty ("preview", {});
+        info.previewDry = preview.getProperty ("dry", {}).toString().trim();
+        info.previewWet = preview.getProperty ("wet", {}).toString().trim();
+        info.innoAppId  = entry.getProperty ("inno_app_id", {}).toString().trim();
+        info.i18n       = entry.getProperty ("i18n", {});
+       #if JUCE_MAC
+        info.sizeBytes  = (juce::int64) (double) entry.getProperty ("size_mac", 0.0);
+       #else
+        info.sizeBytes  = (juce::int64) (double) entry.getProperty ("size", 0.0);
+       #endif
+
+        if (info.innoAppId.isNotEmpty())
+            VersionChecker::registerInnoAppId (info.registryKey, info.innoAppId);
 
         auto* fmts = entry.getProperty ("formats", {}).getArray();
         if (fmts != nullptr)
@@ -649,115 +820,4 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
     }
 
     return result;
-}
-
-// ============================================================================
-// Hardcoded fallback — always shows the plugin catalog even if the remote
-// versions.json is unreachable (private repo, no internet, etc.)
-// ============================================================================
-
-juce::Array<PluginInfo> NetworkManager::getFallbackManifest()
-{
-    juce::String json = R"({
-  "plugins": [
-    {
-      "id": "ReverseReverb",
-      "name": "RONE Reverse Reverb",
-      "version": "1.0.0",
-      "type": "plugin",
-      "formats": ["VST3", "AU", "Standalone"],
-      "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "First public release",
-      "standalone_exe": "RONE Reverse Reverb.exe",
-      "vst3_bundle": "RONE Reverse Reverb.vst3",
-      "au_bundle": "RONE Reverse Reverb.component",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer.pkg",
-      "sha256": "",
-      "registry_key": "ReverseReverb"
-    },
-    {
-      "id": "RoneStemsFixer",
-      "name": "RONE Stems Fixer",
-      "version": "1.0.0",
-      "type": "standalone",
-      "formats": ["Standalone"],
-      "description": "Drop in a folder of stems and it listens: identifies kick, bass, vocals, drums, atmos and FX, then renames the whole batch into a clean, consistent session",
-      "whats_new": "First public release",
-      "standalone_exe": "RONE Stems Fixer.exe",
-      "vst3_bundle": "",
-      "au_bundle": "",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStemsFixer-latest/RoneStemsFixer_Installer.pkg",
-      "sha256": "",
-      "registry_key": "RoneStemsFixer"
-    },
-    {
-      "id": "RoneStutter",
-      "name": "RONE Stutter",
-      "version": "1.0.0",
-      "type": "plugin",
-      "formats": ["VST3", "AU", "Standalone"],
-      "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "First public release",
-      "standalone_exe": "RONE Stutter.exe",
-      "vst3_bundle": "RONE Stutter.vst3",
-      "au_bundle": "RONE Stutter.component",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer.pkg",
-      "sha256": "",
-      "registry_key": "RoneStutter"
-    },
-    {
-      "id": "RoneFlanger",
-      "name": "RONE Flanger",
-      "version": "1.0.0",
-      "type": "plugin",
-      "formats": ["VST3", "Standalone"],
-      "description": "A hands-on flanger you play like an instrument - manual delay control, stereo offset and a rhythmic gate, from subtle metallic motion to full jet sweeps",
-      "whats_new": "First public release",
-      "standalone_exe": "RONE Flanger.exe",
-      "vst3_bundle": "RONE Flanger.vst3",
-      "au_bundle": "",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer.pkg",
-      "sha256": "",
-      "registry_key": "RoneFlanger"
-    },
-    {
-      "id": "RoneSyncVerb",
-      "name": "RONE Sync Verb",
-      "version": "1.0.0",
-      "type": "plugin",
-      "formats": ["VST3", "AU", "Standalone"],
-      "description": "Reverb that lives on the grid - tail lengths in note values that cut exactly on time, with built-in ducking so the space never swallows the mix",
-      "whats_new": "First public release",
-      "standalone_exe": "RONE Sync Verb.exe",
-      "vst3_bundle": "RONE Sync Verb.vst3",
-      "au_bundle": "RONE Sync Verb.component",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSyncVerb-latest/RoneSyncVerb_Installer.pkg",
-      "sha256": "",
-      "registry_key": "RoneSyncVerb"
-    },
-    {
-      "id": "RONEAnalyzer",
-      "name": "RONE Analyzer",
-      "version": "1.0.0",
-      "type": "standalone",
-      "formats": ["Standalone"],
-      "description": "Professional measurement suite: 30-band spectrum with reference-track comparison, vectorscope, level meters, EBU R128 loudness and bit statistics",
-      "whats_new": "First public release",
-      "standalone_exe": "RONE Analyzer.exe",
-      "vst3_bundle": "",
-      "au_bundle": "",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "",
-      "registry_key": "RONEAnalyzer"
-    }
-  ]
-})";
-
-    return parseManifest (json);
 }

@@ -4,6 +4,8 @@
 #include "AutoStart.h"
 #include "OldVersionCleaner.h"
 #include "PluginUninstaller.h"
+#include "InstallBatcher.h"
+#include "CenterLinks.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -20,47 +22,87 @@ class RonePluginsCenterApp : public juce::JUCEApplication
 public:
     const juce::String getApplicationName()    override { return JUCE_APPLICATION_NAME_STRING; }
     const juce::String getApplicationVersion() override { return JUCE_APPLICATION_VERSION_STRING; }
-    // The elevated DELETE OLD VERSIONS run (and its dry run) must start next to the open Center.
+    // The elevated DELETE OLD VERSIONS run (and its dry run), UNINSTALL and the
+    // install batch must start next to the open Center.
     bool moreThanOneInstanceAllowed()          override { return OldVersionCleaner::isCommandLineMode (getCommandLineParameters())
-                                                                  || PluginUninstaller::isCommandLineMode (getCommandLineParameters()); }
+                                                                  || PluginUninstaller::isCommandLineMode (getCommandLineParameters())
+                                                                  || InstallBatcher::isCommandLineMode (getCommandLineParameters()); }
 
     void initialise (const juce::String& commandLine) override
     {
         // --delete-old-versions / --list-old-versions: no window, do it, quit.
         // --uninstall-plugin <key> <files...>: the elevated half of a card's UNINSTALL.
-        if (OldVersionCleaner::runCommandLine (commandLine) || PluginUninstaller::runCommandLine (commandLine))
+        // --install-batch <job>: the elevated half of every install (InstallBatcher.h).
+        if (OldVersionCleaner::runCommandLine (commandLine) || PluginUninstaller::runCommandLine (commandLine)
+            || InstallBatcher::runCommandLine (commandLine))
         {
             quit();
             return;
         }
 
+       #if JUCE_WINDOWS
+        // The Center's own installer waits for this to go before it replaces the
+        // exe (installer/RONE_Plugins.iss, self-update). Held until the process exits.
+        runningMutex = CreateMutexW (nullptr, FALSE, L"RonePluginsCenterRunning");
+       #endif
+
+        // ronecenter:// links from the website open (or wake) this Center.
+        CenterLinks::registerScheme();
+
         // Launched by the OS at login (AutoStart): live in the tray, validate
         // the licence in the background, and only show a window when asked.
-        const bool startInTray = commandLine.contains (AutoStart::kTrayFlag);
+        const auto link = CenterLinks::parse (commandLine);
+        const bool startInTray = commandLine.contains (AutoStart::kTrayFlag) && ! link.isValid();
 
         mainWindow = std::make_unique<MainWindow> (getApplicationName(), startInTray);
         trayIcon = std::make_unique<RoneTrayIcon> (*mainWindow);
+
+        if (auto* page = dynamic_cast<MainComponent*> (mainWindow->getContentComponent()))
+            page->onUpdateCountChanged = [this] (int n)
+            {
+                if (trayIcon != nullptr)
+                    trayIcon->setUpdateCount (n);
+            };
 
         AutoStart::applyDefaultOnce();   // on by default, once; the Settings toggle owns it afterwards
         AutoStart::refreshIfEnabled();   // an update may have moved the executable
 
         handleUpdateRequest (commandLine);
+        handleLink (link);
     }
 
     void shutdown() override
     {
         trayIcon.reset();
         mainWindow.reset();
+
+       #if JUCE_WINDOWS
+        if (runningMutex != nullptr)
+            CloseHandle (runningMutex);
+        runningMutex = nullptr;
+       #endif
     }
 
     // A second launch (the OPEN RONE PLUGINS CENTER button on a plugin's lock
-    // screen, a Start-menu click) hands its command line to us and quits.
+    // screen, a Start-menu click, a ronecenter:// link) hands its command line
+    // to us and quits. macOS delivers a ronecenter:// URL here too.
     void anotherInstanceStarted (const juce::String& commandLine) override
     {
         if (mainWindow != nullptr)
             mainWindow->showAndRaise();
 
         handleUpdateRequest (commandLine);
+        handleLink (CenterLinks::parse (commandLine));
+    }
+
+    void handleLink (const CenterLinks::Link& link)
+    {
+        if (! link.isValid() || mainWindow == nullptr)
+            return;
+
+        mainWindow->showAndRaise();
+        if (auto* page = dynamic_cast<MainComponent*> (mainWindow->getContentComponent()))
+            page->handleLink (link);
     }
 
     // "--update <product id>": a plugin's UPDATE button (Shared/RoneUpdatePrompt.h).
@@ -110,7 +152,8 @@ private:
             setContentOwned (new MainComponent(), true);
             setResizable (true, true);
            #endif
-            setResizeLimits (980, 600, 1700, 1100);
+            // The grid flows from three to five cards a row, so a big screen is welcome.
+            setResizeLimits (980, 620, 3840, 2400);
             centreWithSize (getWidth(), getHeight());
             setVisible (! startHidden);
         }
@@ -233,6 +276,9 @@ private:
 
     std::unique_ptr<MainWindow> mainWindow;
     std::unique_ptr<RoneTrayIcon> trayIcon;
+   #if JUCE_WINDOWS
+    HANDLE runningMutex = nullptr;
+   #endif
 };
 
 // Launch the app

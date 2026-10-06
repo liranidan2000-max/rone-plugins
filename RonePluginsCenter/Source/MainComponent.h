@@ -1,16 +1,20 @@
 #pragma once
 #include <JuceHeader.h>
+#include <map>
 #include "NetworkManager.h"
 #include "VersionChecker.h"
 #include "LicenseHandler.h"
 #include "AccountClient.h"
 #include "CustomTitleBar.h"
+#include "InstallBatcher.h"
+#include "CenterLinks.h"
 
 // ============================================================================
 // MainComponent — WebView host for the React UI
 // ============================================================================
 class MainComponent : public juce::Component,
-                      public NetworkManager::Listener
+                      public NetworkManager::Listener,
+                      private juce::Timer
 {
 public:
     MainComponent();
@@ -37,13 +41,24 @@ public:
     // first unless it already knows the update.
     void requestUpdate (const juce::String& productId);
 
+    // A ronecenter:// link (CenterLinks.h): install / open a plugin's page / Updates.
+    void handleLink (const CenterLinks::Link& link);
+
+    // Downloads, installs or uninstalls in progress - the tray's Quit asks first.
+    bool isWorking();
+
+    // The tray icon shows how many updates wait (Main.cpp wires this up).
+    std::function<void (int updates)> onUpdateCountChanged;
+
     // NetworkManager::Listener
-    void onManifestReady  (const juce::Array<PluginInfo>& plugins) override;
+    void onManifestReady  (const juce::Array<PluginInfo>& plugins, bool fromCache) override;
     void onManifestError  (const juce::String& errorMessage) override;
     void onDownloadProgress (const juce::String& pluginId, double progress) override;
+    void onDownloadStarted (const juce::String& pluginId) override;
     void onDownloadComplete (const juce::String& pluginId,
                              const juce::File& localFile,
                              bool success,
+                             bool cancelled,
                              const juce::String& errorMessage) override;
 
 private:
@@ -114,6 +129,12 @@ private:
     void handleUninstallPlugin   (NativeArgs args, NativeCompletion complete);
     void handleSetAutoStart    (NativeArgs args, NativeCompletion complete);
 
+    // Center 2.0
+    void handleCancelInstall     (NativeArgs args, NativeCompletion complete);   // one plugin, or all with no id
+    void handleGetDaws           (NativeArgs args, NativeCompletion complete);
+    void handleGetCenterSettings (NativeArgs args, NativeCompletion complete);
+    void handleSetCenterSetting  (NativeArgs args, NativeCompletion complete);
+
     // ---- Window controls ----
     bool beginNativeWindowDrag();
 
@@ -128,14 +149,30 @@ private:
     void checkForCenterUpdate();                       // call after each manifest fetch
     void handleApplyCenterUpdate (NativeArgs args, NativeCompletion complete);
     void applyCenterUpdate (const juce::File& installerFile);
+    void applyCenterUpdateWhenIdle();                  // never in the middle of an install
+    void reportCenterUpdateOutcome();                  // after a restart: did the update land?
 
-    // ---- Backend logic (carried over) ----
-    void launchSilentInstaller (const juce::File& installer,
-                                 const juce::String& pluginId);
+    // ---- Installs ----
+    void handBatcher (const juce::String& pluginId, const juce::File& installer);
+    void onBatchStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor);
+    void onBatchResult (const InstallBatcher::Result& result);
+    void setStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor = {});
+    void restoreIdleState (const juce::String& id);    // after a cancel: whatever is on disk now
+    void startBackgroundDownloads();                   // pre-download the updates the user owns
+    int  countUpdates();
+    void publishUpdateCount();
+
+    // ---- Periodic checks (juce::Timer, once a minute) ----
+    void timerCallback() override;
+    void fetchManifestNow();
 
     // ---- Emit helper ----
     void emitPluginsUpdated();
-    void emitStatusMessage (const juce::String& text, const juce::String& type);
+    // `code` + `params` let the page say it in the user's language; `text` is the
+    // English it falls back to (and what an error report carries).
+    void emitStatusMessage (const juce::String& text, const juce::String& type,
+                            const juce::String& code = {}, const juce::var& params = {});
+    juce::var manifestStateVar() const;
 
     // ---- Members ----
     CustomTitleBar            titleBar;
@@ -159,6 +196,26 @@ private:
     // looked like a first one and the Analyzer update looped on 2026-09-11.
     juce::String              staleHashRetryId;
     juce::String              staleHashRetryInFlight;
+
+    // ---- Center 2.0 state (message thread only) ----
+    InstallBatcher            batcher;
+
+    // Background pre-downloads that finished: the verified installer, kept for
+    // the version it was fetched for, so Update goes straight to installing.
+    struct Prefetched { juce::String version; juce::File file; };
+    std::map<juce::String, Prefetched> prefetched;
+
+    bool                      manifestFromCache = false;   // offline: showing the last manifest that arrived
+    bool                      manifestEverLoaded = false;
+    juce::int64               lastManifestAttemptMs = 0;
+    int                       offlineRetries = 0;
+    int                       lastPublishedUpdates = -1;
+    bool                      centerUpdateWanted = false;  // asked for while something was installing
+    CenterLinks::Link         pendingLink;                 // waits for the manifest / the account check
+    juce::String              pendingNavigation;           // "plugin:RoneIron" / "updates" for the page
+    bool                      pageReady = false;           // the live page has pulled getPlugins
+    bool                      offlineSeen = false;         // "offline" was said; "back online" is owed
+    juce::Array<juce::var>    pendingMessages;             // said before the page was up (start-up)
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

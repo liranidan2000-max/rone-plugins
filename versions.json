@@ -34,7 +34,28 @@
       "sha256_mac": "20d641255a48635dfcda72f3de50cc28d0b19994b2d8c061ec4f002aefaac339",
       "price": 49,
       "launch_price": 39,
-      "store_url": "https://roneaudio.com/products/reverse-reverb.html"
+      "store_url": "https://roneaudio.com/products/reverse-reverb.html",
+      "category": [
+        "transitions",
+        "space"
+      ],
+      "tags": [
+        "riser",
+        "reverse",
+        "swell",
+        "reverb",
+        "transition"
+      ],
+      "accent": "#2BD9FF",
+      "inno_app_id": "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}",
+      "i18n": {
+        "pt": {
+          "description": "Reverb reverso sincronizado ao tempo para risers, swells de voz e transições sem emenda - caudas de 1/32 a 8 compassos, moldadas com fades, filtros e largura estéreo"
+        },
+        "es": {
+          "description": "Reverb inverso sincronizado al tempo para risers, swells de voz y transiciones sin cortes - colas de 1/32 a 8 compases, moldeadas con fades, filtros y anchura estéreo"
+        }
+      }
     },
     {
       "id": "RoneStutter",
@@ -60,7 +81,27 @@
       "sha256_mac": "af7243771bed80fa28f7d418fbb28855ab4950ef1a15e817e90e1cc91dbed24c",
       "price": 49,
       "launch_price": 39,
-      "store_url": "https://roneaudio.com/products/rone-stutter.html"
+      "store_url": "https://roneaudio.com/products/rone-stutter.html",
+      "category": [
+        "rhythm"
+      ],
+      "tags": [
+        "stutter",
+        "gate",
+        "glitch",
+        "fill",
+        "edit"
+      ],
+      "accent": "#FFD02B",
+      "inno_app_id": "{D4E5F6A7-B8C9-0123-DEFA-234567890123}",
+      "i18n": {
+        "pt": {
+          "description": "Motor de stutter travado no tempo - divisões de batida, curvas de fade esculpidas e movimento estéreo para fills, edits e builds glitch na hora"
+        },
+        "es": {
+          "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
+        }
+      }
     },
     {
       "id": "RoneStucker",
@@ -86,7 +127,28 @@
       "sha256_mac": "be1cf3ea9fa87643f0f7034960134331b8e5ac253fbcdb5ed5b5ff119a84dc29",
       "price": 29,
       "launch_price": 19,
-      "store_url": "https://roneaudio.com/products/rone-stucker.html"
+      "store_url": "https://roneaudio.com/products/rone-stucker.html",
+      "category": [
+        "rhythm",
+        "transitions"
+      ],
+      "tags": [
+        "loop roll",
+        "buffer",
+        "repeat",
+        "fill",
+        "stutter"
+      ],
+      "accent": "#9D6BFF",
+      "inno_app_id": "{DEDF18E3-6C8E-4090-B461-655FE6048BA6}",
+      "i18n": {
+        "pt": {
+          "description": "Um knob que agarra o loop e o enrola - a fatia capturada encolhe cada vez mais até gritar, e então solta de volta no beat"
+        },
+        "es": {
+          "description": "Un knob que atrapa el loop y lo enrolla - la porción capturada se encoge cada vez más hasta gritar, y luego suelta de vuelta al beat"
+        }
+      }
     },
     {
       "id": "RoneThrow",
@@ -112,7 +174,27 @@
       "sha256_mac": "1f5df932282ca847962a1e35cfe090093eb666737b13be197fa9a89bc754b885",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
-      "launch_price": 29
+      "launch_price": 29,
+      "category": [
+        "space"
+      ],
+      "tags": [
+        "delay",
+        "throw",
+        "dub",
+        "echo",
+        "ping-pong"
+      ],
+      "accent": "#D8E4EC",
+      "inno_app_id": "{547A9CAA-B46F-414C-BFEE-7699EB212906}",
+      "i18n": {
+        "pt": {
+          "description": "Um knob que joga qualquer som numa atmosfera travada no tempo - um delay ping-pong de colcheia pontuada cujo feedback limitado em banda fica limpo mesmo quase infinito, então a cauda fica atrás da mix sem embolar"
+        },
+        "es": {
+          "description": "Un knob que lanza cualquier sonido a una atmósfera fijada al tempo - un delay ping-pong de corchea con puntillo cuyo feedback limitado en banda sigue limpio casi infinito, así la cola queda detrás de la mezcla sin embarrarla"
+        }
+      }
     },
     {
       "id": "RoneClipper",
@@ -139,7 +221,27 @@
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
       "price": 0,
       "launch_price": 0,
-      "free": true
+      "free": true,
+      "category": [
+        "mix"
+      ],
+      "tags": [
+        "clipper",
+        "loudness",
+        "master",
+        "limiter"
+      ],
+      "accent": "#3D8BFF",
+      "inno_app_id": "{E02BE7CD-F957-43CC-81A5-950AC7AE62B0}",
+      "released": "2026-09-22",
+      "i18n": {
+        "pt": {
+          "description": "Um hard clipper que mostra exatamente o que cortou: a forma de onda depois do clip com os picos removidos em azul, um knob CLIP, LOW CUT que mantém kick e baixo fora do clipper, e oversampling que zera contra a entrada a -100 dB"
+        },
+        "es": {
+          "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que deja el kick y el bajo fuera del clipper, y oversampling que se anula contra la entrada a -100 dB"
+        }
+      }
     },
     {
       "id": "RoneRise",
@@ -165,7 +267,28 @@
       "sha256_mac": "52d696a1fb143919aecd283c8958ea873e8a68d25757c1ac96e6339530ca0e2d",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
-      "launch_price": 29
+      "launch_price": 29,
+      "category": [
+        "transitions"
+      ],
+      "tags": [
+        "build-up",
+        "riser",
+        "transition",
+        "sweep",
+        "drop"
+      ],
+      "accent": "#FF5FB8",
+      "inno_app_id": "{E4F73C6B-63EB-4D37-9E02-0C6E91F7E9CE}",
+      "released": "2026-09-23",
+      "i18n": {
+        "pt": {
+          "description": "Um knob, o build-up inteiro: suba o INTENSITY ao longo da frase e a mix vira um rise (high-pass íngreme, reverb grande, ecos, ruído, uma subida infinita), zere no drop e o reverb ainda transborda nele - ou aperte GO e deixe pousar no compasso sozinho"
+        },
+        "es": {
+          "description": "Un knob, todo el build-up: sube INTENSITY a lo largo de la frase y la mezcla se vuelve un rise (high-pass pronunciado, gran reverb, ecos, ruido, una subida infinita), llévalo a cero en el drop y la reverb aún se derrama en él - o pulsa GO y deja que aterrice en el compás solo"
+        }
+      }
     },
     {
       "id": "RoneIron",
@@ -190,7 +313,28 @@
       "sha256_mac": "a3dc7d9cd127d81ba0d0322ed2b00e145fec440f39ed8e24a8ca779c361960de",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
-      "launch_price": 29
+      "launch_price": 29,
+      "category": [
+        "vocal"
+      ],
+      "tags": [
+        "vocal chop",
+        "slicer",
+        "metallic",
+        "vocal",
+        "instrument"
+      ],
+      "accent": "#E552FF",
+      "inno_app_id": "{DAFDABED-2E84-4166-86BB-EC4810E01F1F}",
+      "released": "2026-10-04",
+      "i18n": {
+        "pt": {
+          "description": "Solte um vocal e ele vira um instrumento de chops metálicos: o Iron afina na nota que você escolhe, fatia em chops nas suas teclas MIDI, faz cada chop ressoar num comb afinado e o joga para os lados - toque no piano roll ou deixe o GROOVE escrever o padrão"
+        },
+        "es": {
+          "description": "Suelta una voz y se convierte en un instrumento de chops metálicos: Iron la afina a la nota que elijas, la corta en chops en tus teclas MIDI, hace sonar cada chop en un comb afinado y lo lanza a izquierda y derecha - tócalo desde el piano roll o deja que GROOVE escriba el patrón"
+        }
+      }
     },
     {
       "id": "RoneFlanger",
@@ -215,7 +359,27 @@
       "sha256_mac": "32f8329a85eabf6410d20cfa5c79ecff93e9e807ca95349cbe5d6f87a7b74557",
       "price": 39,
       "launch_price": 29,
-      "store_url": "https://roneaudio.com/products/rone-flanger.html"
+      "store_url": "https://roneaudio.com/products/rone-flanger.html",
+      "category": [
+        "transitions"
+      ],
+      "tags": [
+        "flanger",
+        "sweep",
+        "jet",
+        "riser",
+        "barberpole"
+      ],
+      "accent": "#FF3E6C",
+      "inno_app_id": "{E5F6A7B8-C9D0-1234-EFAB-345678901234}",
+      "i18n": {
+        "pt": {
+          "description": "Um flanger de transição - varra na mão ou ligue o modo INFINITE para subidas e descidas sem fim travadas no compasso, com feedback, offset estéreo e um gate rítmico"
+        },
+        "es": {
+          "description": "Un flanger de transición - barre a mano o activa el modo INFINITE para subidas y bajadas sin fin fijadas al compás, con feedback, offset estéreo y un gate rítmico"
+        }
+      }
     },
     {
       "id": "RoneAfterspace",
@@ -241,7 +405,27 @@
       "sha256_mac": "0c4459afe63509c6c7fa2746512ab0a4fcd3e1dd11b73fd2b9e18e7769a393f1",
       "price": 59,
       "launch_price": 49,
-      "store_url": "https://roneaudio.com/products/afterspace.html"
+      "store_url": "https://roneaudio.com/products/afterspace.html",
+      "category": [
+        "space"
+      ],
+      "tags": [
+        "reverb",
+        "delay",
+        "atmosphere",
+        "ambient",
+        "cinematic"
+      ],
+      "accent": "#FF8A3D",
+      "inno_app_id": "{A1B2C3D4-E5F6-7890-ABCD-AFTERSPACE01}",
+      "i18n": {
+        "pt": {
+          "description": "Designer criativo de reverb, delay e atmosfera - espaços cinematográficos enormes que ficam limpos com ducking embutido, de-esser na cauda (SILK), auto-gain e eco sincronizado, tudo num plugin só"
+        },
+        "es": {
+          "description": "Diseñador creativo de reverb, delay y atmósfera - espacios cinematográficos enormes que se mantienen limpios con ducking integrado, de-esser en la cola (SILK), auto-gain y eco sincronizado, todo en un solo plugin"
+        }
+      }
     },
     {
       "id": "RONEAnalyzer",
@@ -264,7 +448,77 @@
       "sha256_mac": "560ae9a7aabc6d73cab400c11fe0c4fe0b72878a7ac70c604802e499b2e0399f",
       "price": 49,
       "launch_price": 39,
-      "store_url": "https://roneaudio.com/products/rone-analyzer.html"
+      "store_url": "https://roneaudio.com/products/rone-analyzer.html",
+      "category": [
+        "mix"
+      ],
+      "tags": [
+        "spectrum",
+        "loudness",
+        "lufs",
+        "reference",
+        "meter"
+      ],
+      "accent": "#2DD4BF",
+      "inno_app_id": "{E7F8A9B0-C1D2-3456-EF01-6789ABCDEF01}",
+      "i18n": {
+        "pt": {
+          "description": "Suíte de medição profissional: espectro de 30 bandas com comparação a uma faixa de referência, vectorscope, medidores de nível, loudness EBU R128 e estatísticas de bits"
+        },
+        "es": {
+          "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
+        }
+      }
+    }
+  ],
+  "tips": [
+    {
+      "plugin": "RoneThrow",
+      "text": "End the bar with a Throw: automate THROW up on the last beat only, on a dry sound, and let the tail carry the transition.",
+      "i18n": {
+        "pt": "Termine o compasso com um Throw: automatize o THROW só no último tempo, num som seco, e deixe a cauda levar a transição.",
+        "es": "Cierra el compás con un Throw: automatiza THROW solo en el último tiempo, sobre un sonido seco, y deja que la cola lleve la transición."
+      }
+    },
+    {
+      "plugin": "RoneStucker",
+      "text": "Draw the Stucker knob up exactly on the hit you want caught: it grabs what starts where the knob comes up, every time.",
+      "i18n": {
+        "pt": "Desenhe o knob do Stucker subindo exatamente no hit que você quer capturar: ele pega o que começa onde o knob sobe, sempre.",
+        "es": "Dibuja el knob de Stucker subiendo justo en el golpe que quieres atrapar: atrapa lo que empieza donde sube el knob, siempre."
+      }
+    },
+    {
+      "plugin": "RoneRise",
+      "text": "Turn Rise up over the last 8 bars and snap it to zero on the drop: the reverb still spills into the first hit.",
+      "i18n": {
+        "pt": "Suba o Rise nos últimos 8 compassos e zere no drop: o reverb ainda transborda no primeiro hit.",
+        "es": "Sube Rise en los últimos 8 compases y llévalo a cero en el drop: la reverb aún se derrama en el primer golpe."
+      }
+    },
+    {
+      "plugin": "RoneClipper",
+      "text": "Turn LOW CUT up so the kick and bass stay out of the clipper, then push CLIP until the blue only touches the transients.",
+      "i18n": {
+        "pt": "Suba o LOW CUT para o kick e o baixo ficarem fora do clipper, depois empurre o CLIP até o azul só tocar os transientes.",
+        "es": "Sube LOW CUT para que el kick y el bajo queden fuera del clipper, luego empuja CLIP hasta que el azul solo toque los transitorios."
+      }
+    },
+    {
+      "plugin": "ReverseReverb",
+      "text": "Put Reverse Reverb on the last word before the drop: the swell runs straight into the hit, with no gap.",
+      "i18n": {
+        "pt": "Coloque o Reverse Reverb na última palavra antes do drop: o swell entra direto no hit, sem buraco.",
+        "es": "Pon Reverse Reverb en la última palabra antes del drop: el swell entra directo en el golpe, sin hueco."
+      }
+    },
+    {
+      "plugin": "RoneFlanger",
+      "text": "INFINITE at 32 BAR gives a rise that never stops climbing: automate MIX up over the build.",
+      "i18n": {
+        "pt": "O INFINITE em 32 BAR dá um rise que nunca para de subir: automatize o MIX ao longo do build.",
+        "es": "INFINITE en 32 BAR da un rise que nunca deja de subir: automatiza MIX a lo largo del build."
+      }
     }
   ]
 }

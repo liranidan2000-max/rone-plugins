@@ -1,383 +1,181 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import FormatBadge from './FormatBadge'
-import ProgressBar from './ProgressBar'
-import { callNative } from '../bridge'
+import React, { useEffect, useRef, useState } from 'react'
+import { Icon, FloatingMenu, useFloatingMenu } from './ui'
+import { accentOf, categoriesOf, descriptionOf, isBusy, isInstalled, isNew, isUnlocked, priceOf, shortName, usd } from '../catalog'
 
-// Variants for staggered entrance (driven by PluginGrid container)
-export const cardVariants = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+const LED = {
+  up_to_date: 'led-ok', update_available: 'led-upd', error: 'led-err',
+  queued: 'led-busy', downloading: 'led-busy', ready: 'led-busy', installing: 'led-busy', waiting: 'led-busy', uninstalling: 'led-busy',
 }
 
-// Status LEDs (semantic colors, separate from the purple accent)
-const STATUS_LED = {
-  up_to_date: 'led-ok',
-  update_available: 'led-upd status-dot-pulse',
-  downloading: 'led-busy status-dot-pulse',
-  installing: 'led-busy status-dot-pulse',
-  waiting: 'led-busy status-dot-pulse',
-  uninstalling: 'led-busy status-dot-pulse',
-  error: 'led-err',
-  not_installed: 'led-off',
-}
-
-// Primary action button config per status
-const ACTION = {
-  not_installed:    { label: 'Install', kind: 'primary', icon: 'download' },
-  update_available: { label: 'Update',  kind: 'primary', icon: 'download' },
-  up_to_date:       { label: 'Open Standalone', kind: 'open', icon: 'open' },
-  downloading:      { label: 'Downloading…', kind: 'busy', icon: 'loading' },
-  installing:       { label: 'Installing…',  kind: 'busy', icon: 'loading' },
-  waiting:          { label: 'Close it in your DAW', kind: 'busy', icon: 'loading' },
-  uninstalling:     { label: 'Removing…',    kind: 'busy', icon: 'loading' },
-  error:            { label: 'Retry',   kind: 'danger',  icon: 'retry' },
-}
-
-function ActionIcon({ type }) {
-  switch (type) {
-    case 'download':
-      return (<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5M5 19h14" /></svg>)
-    case 'open':
-      return (<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M9 7h8v8" /></svg>)
-    case 'loading':
-      return (<svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>)
-    case 'retry':
-      return (<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>)
-    default: return null
+function Tile ({ plugin, size = 56 }) {
+  const [broken, setBroken] = useState(false)
+  if (!broken && plugin.logoUrl) {
+    return <img className="card-icon flex-none rounded-[14px]" src={plugin.logoUrl} alt="" width={size} height={size}
+                style={{ width: size, height: size, boxShadow: '0 8px 18px rgba(0,0,0,.45)' }} onError={() => setBroken(true)} />
   }
-}
-
-// Pricing rides along on the manifest entry, so the Center never keeps a
-// second price list. A plugin that isn't sold on its own — and any older
-// cached manifest — simply has none, and the card stays as it always was.
-function lifetimePrice(plugin) {
-  const regular = Number(plugin.price)
-  if (!Number.isFinite(regular) || regular <= 0) return null
-  const launch = Number(plugin.launch_price)
-  const live = Number.isFinite(launch) && launch > 0 && launch < regular ? launch : regular
-  return { live, regular, onSale: live < regular }
-}
-
-const usd = (n) => '$' + (Number.isInteger(n) ? n : n.toFixed(2))
-
-// No product page in the manifest yet (RONE Throw) -> the pricing page sells
-// every plugin, so it is the honest fallback rather than a guessed slug.
-function openStore(plugin) {
-  callNative('openExternalUrl', plugin.store_url || 'https://roneaudio.com/pricing.html').catch(() => {})
-}
-
-// Deterministic, stable "downloads" stat from the plugin id
-function downloadsLabel(id = '') {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0
-  const n = 4000 + (h % 11000) // 4.0K – 15.0K
-  return (n / 1000).toFixed(1) + 'K'
-}
-
-function Tile({ plugin }) {
-  const [imgError, setImgError] = useState(false)
-
-  // The icon file is the same one the plugin ships as its app icon, so the
-  // card tile and the plugin's own icon can never drift apart.
-  if (!imgError) {
-    return (
-      <img
-        src={plugin.logoUrl}
-        alt={plugin.name}
-        className="flex-shrink-0 w-[82px] h-[82px] rounded-[18px]"
-        style={{ boxShadow: '0 10px 22px rgba(0,0,0,0.45)' }}
-        onError={() => setImgError(true)}
-      />
-    )
-  }
-
   return (
-    <div className="flex-shrink-0 w-[82px] h-[82px] rounded-[18px] overflow-hidden relative
-                    border border-rone-border-2 flex items-center justify-center"
-         style={{
-           background: 'radial-gradient(circle at 38% 30%, #2A2E35, #1B1E23 55%, #14161A)',
-           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 22px rgba(0,0,0,0.45)',
-         }}>
-      <span className="font-display text-lg font-bold text-white/85">
-        {plugin.name.substring(0, 2).toUpperCase()}
-      </span>
+    <div className="card-icon flex-none rounded-[14px] grid place-items-center border border-rone-border-2 font-display font-bold text-white/85"
+         style={{ width: size, height: size, background: 'radial-gradient(circle at 38% 30%, #2A2E35, #1B1E23 55%, #14161A)' }}>
+      {shortName(plugin).substring(0, 2).toUpperCase()}
     </div>
   )
 }
 
-function PluginCard({ plugin, licensed, onInstall, onUninstall, onOpen, onOpenFolder, onManual, onInfo, unlockPlaying = false }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  // The menu floats over the page (a portal), not inside the card: the card clips
-  // whatever sticks out of it, and with REINSTALL + UNINSTALL the list is taller
-  // than a card. It opens upwards when there is no room below.
-  const kebabRef = useRef(null)
-  const menuRef = useRef(null)
-  const [menuPos, setMenuPos] = useState(null)
-  const toggleMenu = () => {
-    if (menuOpen) { setMenuOpen(false); return }
-    const r = kebabRef.current?.getBoundingClientRect()
-    if (!r) return
-    setMenuPos({ top: r.bottom + 6, right: window.innerWidth - r.right, anchorTop: r.top, up: false })
-    setMenuOpen(true)
-  }
-  useLayoutEffect(() => {
-    if (!menuOpen || !menuPos || menuPos.up || !menuRef.current) return
-    const h = menuRef.current.offsetHeight
-    if (menuPos.top + h > window.innerHeight - 8)
-      setMenuPos(p => ({ ...p, top: Math.max(8, p.anchorTop - 6 - h), up: true }))
-  }, [menuOpen, menuPos])
-  useEffect(() => {
-    if (!menuOpen) return
-    const close = () => setMenuOpen(false)
-    window.addEventListener('resize', close)
-    window.addEventListener('scroll', close, true)   // the grid scrolls; the menu does not follow
-    return () => { window.removeEventListener('resize', close); window.removeEventListener('scroll', close, true) }
-  }, [menuOpen])
-  const baseAction = ACTION[plugin.status] || ACTION.not_installed
+export function PlayButton ({ t, plugin, preview, big = false }) {
+  if (!plugin.preview) return null
+  const on = preview.id === plugin.id && preview.status !== 'error'
+  const name = 'RONE ' + shortName(plugin)
+  return (
+    <button onClick={(e) => { e.stopPropagation(); preview.toggle(plugin) }}
+            aria-label={on ? t('card.stopHear', { name }) : t('card.hear', { name })} aria-pressed={on}
+            className={`grid place-items-center rounded-full border flex-none transition-all
+                        ${big ? 'w-[52px] h-[52px]' : 'w-[34px] h-[34px]'}
+                        ${on ? 'text-[#101216]' : 'border-rone-border-3 text-rone-text-secondary hover:text-[var(--acc)] hover:border-[var(--acc)]'}`}
+            style={on ? { background: 'var(--acc)', borderColor: 'var(--acc)', boxShadow: '0 0 14px color-mix(in srgb, var(--acc) 50%, transparent)' } : undefined}>
+      {on ? <Icon.stop className={big ? 'w-4 h-4' : 'w-3 h-3'} /> : <Icon.play className={big ? 'w-4 h-4 ml-0.5' : 'w-3 h-3 ml-0.5'} />}
+    </button>
+  )
+}
 
-  const prevStatus = useRef(plugin.status)
-  const [justInstalled, setJustInstalled] = useState(false)
+// What the card's footer says and does, from the plugin's state and access.
+export function cardAction (plugin, access, t) {
+  const st = plugin.status
+  const un = isUnlocked(plugin, access)
+  if (st === 'queued') return { status: t('card.queued'), busy: true, cancel: true }
+  if (st === 'downloading') return { status: t('card.downloading'), busy: true, cancel: true, progress: plugin.downloadProgress }
+  if (st === 'ready') return { status: t('card.ready'), busy: true, cancel: true }
+  if (st === 'installing') return { status: t('card.installing'), busy: true }
+  if (st === 'waiting') return { status: plugin.waitingFor ? t('card.waitingHost', { host: plugin.waitingFor }) : t('card.waitingOwn'), busy: true, cancel: true, waiting: true }
+  if (st === 'uninstalling') return { status: t('card.uninstalling'), busy: true }
+  if (!un) {
+    if (plugin.free) return { status: t('card.freeLine'), primary: { label: t('card.getFree'), kind: 'signin' } }
+    const price = priceOf(plugin)
+    return { price, primary: { label: t('card.getIt'), kind: 'buy' } }
+  }
+  if (st === 'update_available') return { version: true, primary: { label: t('card.update'), kind: 'install', icon: Icon.download, amber: true } }
+  if (st === 'error') return { status: t('card.error'), error: true, primary: { label: t('card.retry'), kind: 'install', icon: Icon.retry } }
+  if (st === 'up_to_date') return { status: t('card.installed'), ok: true, secondary: plugin.hasStandalone ? { label: t('card.open'), kind: 'open', icon: Icon.open } : null }
+  return { status: t('card.notInstalled'), primary: { label: t('card.install'), kind: 'install', icon: Icon.download } }
+}
+
+function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel, onOpen, onDetail, onBuy, onSignIn, onManual, onOpenFolder, onUninstall }) {
+  const acc = accentOf(plugin)
+  const un = isUnlocked(plugin, access)
+  const a = cardAction(plugin, access, t)
+  const menu = useFloatingMenu()
+  const name = shortName(plugin)
+
+  // The neon flickers on when an install has just finished.
+  const prev = useRef(plugin.status)
+  const [power, setPower] = useState(false)
   useEffect(() => {
-    if ((prevStatus.current === 'downloading' || prevStatus.current === 'installing' || prevStatus.current === 'waiting') && plugin.status === 'up_to_date') {
-      setJustInstalled(true)
-      const t = setTimeout(() => setJustInstalled(false), 1200)
-      return () => clearTimeout(t)
+    if (['installing', 'downloading', 'ready', 'queued', 'waiting'].includes(prev.current) && plugin.status === 'up_to_date') {
+      setPower(true)
+      const id = setTimeout(() => setPower(false), 1600)
+      prev.current = plugin.status
+      return () => clearTimeout(id)
     }
-    prevStatus.current = plugin.status
+    prev.current = plugin.status
   }, [plugin.status])
 
-  const needsStandaloneInstall = plugin.status === 'up_to_date' && plugin.hasStandalone && !plugin.standaloneInstalled
-  // Waiting for the files to be free: name the program that holds them ("Close FL Studio");
-  // none named = the plugin's own window or the app itself
-  const waitingLabel = !plugin.waitingFor ? 'Close to update'
-                     : plugin.waitingFor.length <= 10 ? 'Close ' + plugin.waitingFor   // fits the button: FL Studio, Cubase, REAPER
-                     : 'Close your DAW'
-  const action = needsStandaloneInstall ? ACTION.not_installed
-               : plugin.status === 'waiting' ? { ...baseAction, label: waitingLabel }
-               : baseAction
-
-  const isInstalled = plugin.status === 'up_to_date' || plugin.status === 'update_available'
-  const showProgress = plugin.status === 'downloading'
-  // ALL ACCESS unlocks everything; a lifetime licence unlocks this one plugin.
-  // The card never compares ids itself — App tags the entry with the single
-  // canonical comparison (trim, ignore case, whole token), and this only reads
-  // that verdict, so the two can never drift apart.
-  const isOwned = plugin.owned === true
-  const isLocked = !licensed && !isOwned
-  const price = isLocked ? lifetimePrice(plugin) : null
-  const isBusy = plugin.status === 'downloading' || plugin.status === 'installing' || plugin.status === 'waiting'
-              || plugin.status === 'uninstalling'
-
-  // Primary button: for up_to_date -> Open, otherwise -> Install/Update
-  const primaryIsOpen = action.icon === 'open'
-  const handlePrimary = () => {
-    if (isLocked || action.kind === 'busy') return
-    if (primaryIsOpen) onOpen(plugin.id)
-    else onInstall(plugin.id)
+  const act = (kind) => {
+    if (kind === 'install') onInstall(plugin.id)
+    else if (kind === 'open') onOpen(plugin.id)
+    else if (kind === 'buy') onBuy(plugin)
+    else if (kind === 'signin') onSignIn()
   }
 
-  const ledClass = STATUS_LED[plugin.status] || STATUS_LED.not_installed
-
-  const btnClass =
-    action.kind === 'danger' ? 'bg-rone-error text-white hover:brightness-110'
-    : action.kind === 'busy' ? 'bg-rone-drawer text-rone-text-dim cursor-wait'
-    : action.kind === 'open' && !justInstalled ? 'btn-outline'
-    : 'btn-gradient'
+  const items = [
+    { label: t('menu.details'), onSelect: () => onDetail(plugin.id) },
+    (plugin.hasManual || plugin.videoUrl) && { label: plugin.videoUrl ? t('menu.manual') + ' / ' + t('menu.video') : t('menu.manual'), onSelect: () => onManual(plugin) },
+    isInstalled(plugin) && { label: t('menu.openFolder'), onSelect: () => onOpenFolder(plugin.id) },
+    a.cancel && { label: t('menu.cancel'), onSelect: () => onCancel(plugin.id) },
+    un && plugin.status === 'up_to_date' && { label: t('menu.reinstall'), onSelect: () => onInstall(plugin.id) },
+    un && isInstalled(plugin) && !isBusy(plugin) && '-',
+    un && isInstalled(plugin) && !isBusy(plugin) && { label: t('menu.uninstall'), danger: true, onSelect: () => onUninstall(plugin) },
+  ]
 
   return (
-    <motion.div
-      className="pro-card rounded-xl p-4 relative overflow-hidden"
-      variants={cardVariants}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      layout
-    >
-      {/* Lock overlay when unlicensed */}
-      <AnimatePresence>
-        {isLocked && !unlockPlaying && (
-          <motion.div
-            key="lock-overlay"
-            initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
-            className="absolute inset-0 bg-rone-bg/65 rounded-xl z-10 flex flex-col items-center justify-center gap-2.5 backdrop-blur-[1px]"
-          >
-            <span className="bg-rone-error/10 border border-rone-error/25 text-rone-error text-[10px] font-extrabold tracking-[0.16em] px-3 py-1 rounded-md">
-              LOCKED
-            </span>
-
-            {/* Sold on its own: the way out of the lock is the one-off licence */}
-            {price && (
-              <>
-                <div className="flex items-baseline gap-2">
-                  {price.onSale && (
-                    <span className="text-[11px] text-rone-text-faint line-through tabular-nums">{usd(price.regular)}</span>
-                  )}
-                  <span className="font-display text-[17px] font-bold text-rone-text-primary tabular-nums">{usd(price.live)}</span>
-                  <span className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-rone-text-dim">Lifetime</span>
-                </div>
-                <button
-                  onClick={() => openStore(plugin)}
-                  className="btn-gradient px-4 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-[0.18em]"
-                >
-                  Get it &mdash; {usd(price.live)}
-                </button>
-              </>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Top: thumbnail + info */}
-      <div className="flex gap-4">
+    <article className={`card ${un ? '' : 'locked'} ${power ? 'power-on' : ''} relative flex flex-col gap-2.5 p-3.5 rounded-[14px] min-w-0 cursor-pointer`}
+             style={{ '--acc': acc }} onClick={() => onDetail(plugin.id)} data-card={plugin.id}
+             aria-label={'RONE ' + name}>
+      <div className="flex items-start gap-3">
         <Tile plugin={plugin} />
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-2">
-            <h3 className="font-display text-[14px] font-bold text-rone-text-primary truncate flex-1">{plugin.name}</h3>
-            <span className={`mt-1.5 w-[7px] h-[7px] rounded-full flex-shrink-0 ${ledClass}`} />
-            {/* kebab menu */}
-            <div className="relative flex-shrink-0">
-              <button
-                ref={kebabRef}
-                onClick={toggleMenu}
-                onBlur={() => setTimeout(() => setMenuOpen(false), 150)}
-                className="p-0.5 text-rone-text-faint hover:text-rone-text-primary transition-colors rounded"
-                aria-label={`${plugin.name} options`}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" /></svg>
-              </button>
-              {createPortal(<AnimatePresence>
-                {menuOpen && menuPos && (
-                  <motion.div
-                    ref={menuRef}
-                    initial={{ opacity: 0, scale: 0.9, y: menuPos.up ? 4 : -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.15 }}
-                    style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, transformOrigin: menuPos.up ? 'bottom right' : 'top right' }}
-                    className="z-[70] w-36 rounded-lg border border-rone-border bg-rone-drawer shadow-xl shadow-black/40 py-1"
-                  >
-                    <button onMouseDown={() => onInfo(plugin)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Details</button>
-                    {isInstalled && onOpenFolder && (
-                      <button onMouseDown={() => onOpenFolder(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Open Folder</button>
-                    )}
-                    {(plugin.hasManual || plugin.videoUrl) && onManual && (
-                      <button onMouseDown={() => onManual(plugin)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Manual</button>
-                    )}
-                    {!isBusy && plugin.status !== 'up_to_date' && (
-                      <button onMouseDown={() => onInstall(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">
-                        {plugin.status === 'update_available' ? 'Update' : 'Install'}
-                      </button>
-                    )}
-                    {/* Same build again, over what is there: repairs a missing or damaged file */}
-                    {!isBusy && plugin.status === 'up_to_date' && (
-                      <button onMouseDown={() => onInstall(plugin.id)} className="w-full text-left px-3 py-1.5 text-[12px] text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04]">Reinstall</button>
-                    )}
-                    {!isBusy && isInstalled && onUninstall && (
-                      <>
-                        <div className="my-1 border-t border-rone-border/60" />
-                        <button onMouseDown={() => onUninstall(plugin)}
-                                className="w-full text-left px-3 py-1.5 text-[12px] text-rone-error/85 hover:text-rone-error hover:bg-rone-error/[0.07]">
-                          Uninstall
-                        </button>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>, document.body)}
-            </div>
-          </div>
-
-          <p className="text-[11.5px] text-rone-text-secondary mt-1 leading-snug line-clamp-2">{plugin.description}</p>
-
-          {/* Version (update target highlighted in amber) */}
-          <p className="text-[10px] text-rone-text-dim mt-1.5 tabular-nums tracking-[0.05em]">
-            {plugin.status === 'update_available' && plugin.remoteVersion ? (
-              <>v{plugin.installedVersion || '?'} <b className="text-rone-amber font-bold">&rarr; v{plugin.remoteVersion}</b></>
-            ) : plugin.installedVersion && plugin.installedVersion !== '?' ? (
-              <>v{plugin.installedVersion}</>
-            ) : plugin.remoteVersion ? (
-              <>v{plugin.remoteVersion}</>
-            ) : null}
-          </p>
-
-          {/* Format badges */}
-          <div className="flex flex-wrap gap-1.5 mt-2.5">
-            {plugin.formats?.map(fmt => <FormatBadge key={fmt} format={fmt} />)}
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          <h3 className="m-0 font-display font-bold text-[15px] text-rone-text-primary truncate">
+            {/* The name is the keyboard's way into the plugin's page */}
+            <button className="text-left max-w-full truncate" onClick={(e) => { e.stopPropagation(); onDetail(plugin.id) }}>
+              <span className="font-sans text-[11px] font-bold text-rone-text-faint mr-1">RONE</span>{name}
+            </button>
+          </h3>
+          <div className="flex items-center gap-1.5 flex-wrap text-[11.5px] text-rone-text-dim">
+            <span className="font-mono text-[11px]">v{(plugin.remoteVersion || '').split('.').slice(0, 3).join('.')}</span>
+            {categoriesOf(plugin)[0] && <><span aria-hidden="true">·</span><span>{catLabel(categoriesOf(plugin)[0])}</span></>}
+            {isNew(plugin) && <span className="pill pill-new">{t('card.new')}</span>}
+            {plugin.free && <span className="pill pill-free">{t('card.free')}</span>}
+            {plugin.owned && !plugin.free && <span className="pill pill-own">{t('card.lifetime')}</span>}
           </div>
         </div>
+        <span className={`led mt-1.5 ${LED[plugin.status] || ''}`} aria-hidden="true" />
+        <button ref={menu.anchor} onClick={(e) => { e.stopPropagation(); menu.isOpen ? menu.close() : menu.open() }}
+                aria-label={t('card.menu', { name: 'RONE ' + name })} aria-haspopup="menu" aria-expanded={menu.isOpen}
+                className="-mr-1 -mt-0.5 p-1 rounded-md text-rone-text-faint hover:text-rone-text-primary">
+          <Icon.dots className="w-4 h-4" />
+        </button>
+        <FloatingMenu menu={menu} items={items} label={t('card.menu', { name: 'RONE ' + name })} />
       </div>
 
-      {/* Progress bar */}
-      {showProgress && (
-        <div className="mt-3"><ProgressBar progress={plugin.downloadProgress} /></div>
+      <p className="m-0 text-[12.5px] leading-[1.45] text-rone-text-secondary line-clamp-2 min-h-[36px]">
+        {descriptionOf(plugin)}
+      </p>
+
+      {(plugin.status === 'downloading' || plugin.status === 'installing' || plugin.status === 'queued' || plugin.status === 'ready') && (
+        <div className={`prog ${plugin.status !== 'downloading' ? 'indet' : ''}`} aria-hidden="true">
+          <i style={{ width: `${Math.round((plugin.downloadProgress || 0) * 100)}%` }} />
+        </div>
       )}
 
-      {/* Divider + footer */}
-      <div className="mt-3.5 pt-3 border-t border-rone-border flex items-center gap-3">
-        {/* Installed state (semantic green) */}
-        {isInstalled ? (
-          <span className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-rone-green">
-            <svg className="w-[13px] h-[13px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" /></svg>
-            Installed
+      <div className="mt-auto pt-2.5 border-t border-rone-border flex items-center gap-2 min-h-[44px]" onClick={(e) => e.stopPropagation()}>
+        {a.price ? (
+          <span className="flex items-baseline gap-1.5 whitespace-nowrap">
+            <b className="font-display text-[16px] text-rone-text-primary num">{usd(a.price.live)}</b>
+            {a.price.onSale && <s className="text-[11.5px] text-rone-text-faint num">{usd(a.price.regular)}</s>}
+            <span className="text-[10.5px] font-extrabold uppercase tracking-[0.12em] text-rone-text-faint">{t('card.lifetimeShort')}</span>
           </span>
-        ) : plugin.status === 'error' ? (
-          <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-rone-error">Failed</span>
-        ) : isBusy ? (
-          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rone-text-dim">
-            {plugin.status === 'installing' ? 'Installing' : plugin.status === 'waiting' ? 'Ready to install'
-             : plugin.status === 'uninstalling' ? 'Uninstalling' : 'Downloading'}
+        ) : a.version ? (
+          <span className="font-mono text-[11.5px] text-rone-text-dim whitespace-nowrap">
+            v{(plugin.installedVersion || '?').split('.').slice(0, 3).join('.')} <b className="text-rone-amber font-semibold">→ {(plugin.remoteVersion || '').split('.').slice(0, 3).join('.')}</b>
           </span>
         ) : (
-          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-rone-text-dim">Not installed</span>
+          <span className={`text-[11px] font-extrabold uppercase tracking-[0.08em] truncate
+                            ${a.ok ? 'text-rone-green' : a.error ? 'text-rone-error' : a.busy ? 'text-rone-text-secondary normal-case tracking-normal text-[12px] font-bold' : 'text-rone-text-faint'}`}
+                title={a.status}>
+            {a.ok && '✓ '}{a.status}
+            {plugin.status === 'downloading' && plugin.downloadProgress > 0 && <span className="num"> · {Math.round(plugin.downloadProgress * 100)}%</span>}
+          </span>
         )}
-
-        {/* Download count */}
-        <span className="flex items-center gap-1 text-[10px] text-rone-text-faint tabular-nums">
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v9m0 0l-3.5-3.5M12 13l3.5-3.5M5 19h14" /></svg>
-          {downloadsLabel(plugin.id)}
-        </span>
-
-        {/* Bought outright — shown whether or not a pass is also active */}
-        {isOwned && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            title="You own this plugin outright"
-            className="px-2 py-0.5 rounded bg-rone-purple/[0.07] border border-rone-purple/35
-                       text-rone-purple text-[9px] font-extrabold uppercase tracking-[0.16em]"
-          >
-            Lifetime
-          </motion.span>
+        <span className="flex-1" />
+        <PlayButton t={t} plugin={plugin} preview={preview} />
+        {a.cancel && (
+          <button className="btn btn-ghost btn-sm" onClick={() => onCancel(plugin.id)}>{t('card.cancel')}</button>
         )}
-
-        <div className="flex-1" />
-
-        {/* Primary action button */}
-        <motion.button
-          onClick={handlePrimary}
-          disabled={isLocked || action.kind === 'busy'}
-          whileTap={!isLocked && action.kind !== 'busy' ? { scale: 0.96 } : {}}
-          className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg min-w-[96px]
-            text-[10px] font-extrabold uppercase tracking-[0.18em]
-            ${btnClass} disabled:cursor-default`}
-        >
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={plugin.status + (justInstalled ? '-done' : '')}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: justInstalled ? [1.25, 1] : 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={justInstalled ? { type: 'spring', damping: 10, stiffness: 120 } : { duration: 0.18 }}
-              className="flex items-center gap-1.5"
-            >
-              <ActionIcon type={justInstalled ? 'open' : action.icon} />
-              {justInstalled ? 'Open Standalone' : action.label}
-            </motion.span>
-          </AnimatePresence>
-        </motion.button>
+        {a.secondary && (
+          <button className="btn btn-out btn-sm" onClick={() => act(a.secondary.kind)}>
+            {a.secondary.icon && <a.secondary.icon className="w-3 h-3" />}{a.secondary.label}
+          </button>
+        )}
+        {a.primary && (
+          <button className="btn btn-pri btn-sm" onClick={() => act(a.primary.kind)}
+                  style={a.primary.amber ? { '--acc': '#FFD02B' } : undefined}>
+            {a.primary.icon && <a.primary.icon className="w-3 h-3" />}{a.primary.label}
+          </button>
+        )}
       </div>
-    </motion.div>
+
+      {plugin.downloaded && plugin.status === 'update_available' && (
+        <span className="absolute top-2 right-12 text-[10px] font-bold text-rone-green" title={t('card.downloaded')}>●</span>
+      )}
+    </article>
   )
 }
 

@@ -9,12 +9,22 @@ enum class PluginStatus
     NotInstalled,
     UpToDate,
     UpdateAvailable,
+    Queued,           // waiting in the download queue behind another plugin
     Downloading,
+    ReadyToInstall,   // downloaded and verified; installs with the rest of the batch (one permission prompt)
     Installing,
     WaitingForHost,   // downloaded; a DAW or the standalone still holds the files (Windows)
     Uninstalling,     // the plugin's own uninstaller is running (the card's UNINSTALL)
     Error
 };
+
+// Downloading, installing, uninstalling... anything a refresh must not reset and
+// a second click must not start again.
+inline bool isBusyStatus (PluginStatus s) noexcept
+{
+    return s == PluginStatus::Queued || s == PluginStatus::Downloading || s == PluginStatus::ReadyToInstall
+        || s == PluginStatus::Installing || s == PluginStatus::WaitingForHost || s == PluginStatus::Uninstalling;
+}
 
 // ============================================================================
 // Lightweight struct holding everything the UI needs per plugin
@@ -50,6 +60,19 @@ struct PluginInfo
     juce::var    price;               // regular USD
     juce::var    launchPrice;         // what is actually charged during the sale
     juce::String storeUrl;            // product page to send a locked card to
+
+    // Center 2.0 catalog fields. All optional: an older manifest leaves them
+    // empty and the page falls back to what it can say without them.
+    bool              free = false;   // unlocked by any signed-in RONE account
+    juce::StringArray categories;     // "transitions", "space", "rhythm", "vocal", "mix"
+    juce::StringArray tags;           // what a producer types: "riser", "vocal chop"
+    juce::String      accent;         // the plugin's own neon, "#2BD9FF"
+    juce::String      released;       // "2026-10-04": a plugin younger than a month reads as NEW
+    juce::String      previewDry;     // https://roneaudio.com/media/previews/<id>-dry.mp3
+    juce::String      previewWet;
+    juce::String      innoAppId;      // "{GUID}": the installer's AppId, so a new plugin needs no Center release
+    juce::int64       sizeBytes = 0;  // this platform's installer
+    juce::var         i18n;           // {"pt": {"description": ...}, "es": {...}}: the page picks the user's language
 };
 
 // ============================================================================
@@ -81,6 +104,14 @@ public:
 
     // Forget the version the Center stamped for this plugin (after an uninstall).
     static void clearInstalledVersion (const juce::String& registryKey);
+
+    // The installer AppId the manifest names for a plugin (Windows). The built-in
+    // table below stays the fallback for manifests written before the field.
+    static void registerInnoAppId (const juce::String& registryKey, const juce::String& appId);
+
+    // macOS: the version inside an installed bundle's Info.plist ("1.1.10"), for
+    // a plugin installed from the website's .pkg - the Center never stamped it.
+    static juce::String readBundleVersion (const juce::File& bundle);
 
     // Determine the PluginStatus from the two version strings.
     static PluginStatus determineStatus (const juce::String& installed,

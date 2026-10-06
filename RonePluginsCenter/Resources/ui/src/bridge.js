@@ -2,6 +2,7 @@
 // JUCE WebView Bridge — event-based native function calls + event listeners
 // Follows the same protocol as ReverseReverbVST (JUCE 8)
 // ============================================================================
+import { MOCK_CATALOG, MOCK_TIPS } from './mockCatalog.js'
 
 function getBackend() {
   return window.__JUCE__?.backend;
@@ -45,7 +46,6 @@ function createNativeFunction(name, timeoutMs) {
   return function (...args) {
     const backend = getBackend();
     if (!backend) {
-      console.warn('[Bridge] JUCE backend not available');
       return Promise.resolve(null);
     }
 
@@ -96,14 +96,19 @@ export function onEvent(name, callback) {
     callback(parsed);
   });
 
-  // Return unsubscribe (JUCE doesn't provide remove, so this is a no-op placeholder)
+  // JUCE doesn't provide remove, so this is a no-op placeholder
   return () => {};
+}
+
+export function openExternal(url) {
+  return callNative('openExternalUrl', url).catch(() => {});
 }
 
 // ---- Typed API ----
 export const api = {
   getPlugins:        createNativeFunction('getPlugins'),
   installPlugin:     createNativeFunction('installPlugin'),
+  cancelInstall:     createNativeFunction('cancelInstall'),
   openPlugin:        createNativeFunction('openPlugin'),
   openManual:        createNativeFunction('openManual'),
   openFolder:        createNativeFunction('openFolder'),
@@ -113,13 +118,16 @@ export const api = {
   deactivateLicense: createNativeFunction('deactivateLicense'),
   getLicenseStatus:  createNativeFunction('getLicenseStatus'),
   accountSignIn:     createNativeFunction('accountSignIn'),
-  accountGoogleSignIn: createNativeFunction('accountGoogleSignIn'),
+  accountGoogleSignIn: createNativeFunction('accountGoogleSignIn', 300000),
   accountGoogleCancel: createNativeFunction('accountGoogleCancel'),
   accountSignOut:    createNativeFunction('accountSignOut'),
   getAccountStatus:  createNativeFunction('getAccountStatus'),
   getAppVersion:     createNativeFunction('getAppVersion'),
   getAutoStart:      createNativeFunction('getAutoStart'),
   setAutoStart:      createNativeFunction('setAutoStart'),
+  getCenterSettings: createNativeFunction('getCenterSettings'),
+  setCenterSetting:  createNativeFunction('setCenterSetting'),
+  getDaws:           createNativeFunction('getDaws'),
   applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
   getAnnouncements:  createNativeFunction('getAnnouncements'),
   scanOldVersions:   createNativeFunction('scanOldVersions'),
@@ -129,41 +137,60 @@ export const api = {
   uninstallPlugin:   createNativeFunction('uninstallPlugin', 330000),
 };
 
-// ---- Dev mode mock data (when running outside JUCE) ----
+// ---- Dev mode (running outside JUCE: the vite preview) ----
 export function isDevMode() {
   return !getBackend();
 }
 
-export const mockPlugins = [
-  {
-    id: 'ReverseReverb', name: 'RONE Reverse Reverb',
-    description: 'Real-time reverse reverb effect with WebView2 UI',
-    remoteVersion: '1.0.0', installedVersion: '1.0.0',
-    status: 'up_to_date', downloadProgress: 0,
-    formats: ['VST3', 'AU', 'Standalone'], type: 'plugin',
-    whatsNew: 'Initial release', logoUrl: '/logos/ReverseReverb.png',
-    hasStandalone: true, standaloneInstalled: true, hasManual: true,
-    videoUrl: 'https://www.youtube.com/watch?v=gNoltmk77DM',
-  },
-  {
-    id: 'RoneStutter', name: 'RONE Stutter',
-    description: 'Glitch and stutter effect with WebView2 UI',
-    remoteVersion: '1.1.0', installedVersion: '1.0.0',
-    status: 'update_available', downloadProgress: 0,
-    formats: ['VST3', 'AU', 'Standalone'], type: 'plugin',
-    whatsNew: 'New glitch patterns, improved UI', logoUrl: '/logos/RoneStutter.png',
-    hasStandalone: true, standaloneInstalled: false,
-  },
-  {
-    id: 'RoneFlanger', name: 'RONE Flanger',
-    description: 'Manual flanger with custom visualizer',
-    remoteVersion: '1.0.0', installedVersion: '1.0.0',
-    status: 'up_to_date', downloadProgress: 0,
-    formats: ['VST3', 'Standalone'], type: 'plugin',
-    whatsNew: 'Initial release', logoUrl: '/logos/RoneFlanger.png',
-    hasStandalone: true, standaloneInstalled: true, hasManual: true,   // a manual, no video yet
-  },
-];
+// The dev preview's account scenarios, chosen with ?as=guest|free|lifetime|all
+// (the old ?signedout=1 / ?lifetime=1 still work).
+export function devScenario() {
+  const q = new URLSearchParams(location.search)
+  if (q.has('signedout')) return 'guest'
+  if (q.has('lifetime')) return 'lifetime'
+  const as = q.get('as')
+  return ['guest', 'free', 'lifetime', 'all'].includes(as) ? as : 'all'
+}
+
+// What each scenario has installed. Real catalog (versions.json), made-up machine.
+const DEV_INSTALLED = {
+  guest:    {},
+  free:     { RoneClipper: 'cur' },
+  lifetime: { RoneStutter: '1.5.1.245', RoneFlanger: 'cur', RoneClipper: 'cur' },
+  all:      { RoneThrow: '1.7.1.230', RoneStutter: '1.5.1.245', ReverseReverb: 'cur', RoneRise: 'cur',
+              RoneStucker: 'cur', RoneFlanger: 'cur', RoneAfterspace: 'cur', RoneClipper: 'cur' },
+}
+const DEV_META = {
+  RoneIron: { released: '2026-10-04' },
+  RoneClipper: { released: '2026-09-23' },
+  RoneRise: { released: '2026-09-23' },
+}
+
+export function mockPlugins(scenario = devScenario()) {
+  const installed = DEV_INSTALLED[scenario] || {}
+  return MOCK_CATALOG.map(p => {
+    const v = installed[p.id]
+    const status = !v ? 'not_installed' : v === 'cur' ? 'up_to_date' : 'update_available'
+    return {
+      ...p, ...(DEV_META[p.id] || {}),
+      installedVersion: !v ? '' : v === 'cur' ? p.remoteVersion : v,
+      status, downloadProgress: 0, waitingFor: '',
+      standaloneInstalled: !!v, unitUrl: `/units/${p.id}.webp`,
+    }
+  })
+}
+
+export function mockAccount(scenario = devScenario()) {
+  if (scenario === 'guest') return { signedIn: false, licensed: false, email: '', name: '', plan: 'none', deviceLimit: 2, owned: [], passSource: '', message: '' }
+  const base = { signedIn: true, email: 'daniel@example.com', name: 'Daniel M.', deviceLimit: 2, message: '', passSource: '' }
+  if (scenario === 'free') return { ...base, licensed: false, plan: 'none', owned: ['RoneClipper'] }
+  if (scenario === 'lifetime') return { ...base, licensed: false, plan: 'none', owned: ['RoneStutter', 'RoneFlanger', 'RoneClipper'] }
+  return { ...base, licensed: true, plan: 'all-access', owned: [], passSource: 'paddle', renewsAt: Date.now() + 21 * 86400000 }
+}
+
+export const mockDaws = [{ id: 'fl', name: 'FL Studio 2026' }, { id: 'ableton', name: 'Ableton Live 12 Suite' }]
+
+export const mockTips = MOCK_TIPS
 
 // Settings > DELETE OLD VERSIONS in dev mode: what Liran's PC held on 2026-09-26.
 export const mockOldVersions = [
@@ -174,7 +201,6 @@ export const mockOldVersions = [
 ];
 
 // ?announce=1 in dev mode: the website's popup feed as it was on 2026-09-24
-// (roneaudio.com/api/v1/popup), with two not-installed cards to match.
 export const mockAnnouncements = {
   ok: true,
   popups: [
@@ -184,26 +210,5 @@ export const mockAnnouncements = {
       cta: { label: 'Get it free', url: '/products/rone-clipper' },
       image: 'graphics/cutouts/rone-clipper.webp', accent: '#3D8BFF',
     },
-    {
-      id: 'plugin:RoneRise:1790188200069', kind: 'plugin', eyebrow: 'New plugin', title: 'RONE Rise',
-      body: 'One knob turns your mix into a build-up: the lows leave, the reverb opens, the echoes climb.',
-      price: '$29 lifetime · launch price', cta: { label: 'See RONE Rise', url: '/products/rone-rise' },
-      image: 'graphics/cutouts/rone-rise.webp', accent: '#FF5FB8',
-    },
   ],
 };
-
-export const mockAnnouncedPlugins = [
-  {
-    id: 'RoneClipper', name: 'RONE Clipper', description: 'Hard clipper that shows what it cut',
-    remoteVersion: '1.0.1', installedVersion: '', status: 'not_installed', downloadProgress: 0,
-    formats: ['VST3', 'AU', 'Standalone'], type: 'plugin', whatsNew: '', logoUrl: '/logos/RoneClipper.png',
-    hasStandalone: true, standaloneInstalled: false,
-  },
-  {
-    id: 'RoneRise', name: 'RONE Rise', description: 'One-knob build-up',
-    remoteVersion: '1.0.2', installedVersion: '', status: 'not_installed', downloadProgress: 0,
-    formats: ['VST3', 'AU', 'Standalone'], type: 'plugin', whatsNew: '', logoUrl: '/logos/RoneRise.png',
-    hasStandalone: true, standaloneInstalled: false,
-  },
-];

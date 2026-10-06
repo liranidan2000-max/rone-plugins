@@ -6,6 +6,7 @@
 #include "PluginInUse.h"
 #include "OldVersionCleaner.h"
 #include "PluginUninstaller.h"
+#include "DawDetector.h"
 
 // Open mode (remote kill-switch OFF) counts as licensed everywhere:
 // the C++ side and the web UI both key off this one predicate.
@@ -78,49 +79,58 @@ juce::String MainComponent::getMimeForExtension (const juce::String& ext)
     if (ext == "js")   return "application/javascript";
     if (ext == "png")  return "image/png";
     if (ext == "jpg" || ext == "jpeg") return "image/jpeg";
+    if (ext == "webp") return "image/webp";
     if (ext == "svg")  return "image/svg+xml";
     if (ext == "json") return "application/json";
     if (ext == "ico")  return "image/x-icon";
+    if (ext == "woff2") return "font/woff2";
+    if (ext == "woff") return "font/woff";
     return "application/octet-stream";
+}
+
+// The page's files, its fonts, every plugin icon and every 3D unit come out of
+// BinaryData by their original file names, so adding a plugin's artwork is a
+// file in Resources/ and nothing here (it used to be a hand-kept table that
+// every new plugin had to extend).
+static const char* findEmbedded (const juce::String& fileName, int& size)
+{
+    for (int i = 0; i < BinaryData::namedResourceListSize; ++i)
+        if (fileName == BinaryData::originalFilenames[i])
+            return BinaryData::getNamedResource (BinaryData::namedResourceList[i], size);
+    size = 0;
+    return nullptr;
 }
 
 std::optional<juce::WebBrowserComponent::Resource>
 MainComponent::getResource (const juce::String& url)
 {
     auto path = url == "/" ? juce::String ("index.html")
-                           : url.fromFirstOccurrenceOf ("/", false, false);
+                           : url.fromFirstOccurrenceOf ("/", false, false)
+                                .upToFirstOccurrenceOf ("?", false, false);
 
-    // Map URL paths to BinaryData entries
-    struct Entry { const char* data; int size; };
-    const std::map<juce::String, Entry> resources = {
-        { "index.html",              { BinaryData::index_html,              BinaryData::index_htmlSize } },
-        { "bundle.js",               { BinaryData::bundle_js,              BinaryData::bundle_jsSize } },
-        { "styles.css",              { BinaryData::styles_css,             BinaryData::styles_cssSize } },
-        { "logos/ReverseReverb.png",  { BinaryData::ReverseReverb_icon_png, BinaryData::ReverseReverb_icon_pngSize } },
-        { "logos/RoneStutter.png",    { BinaryData::RoneStutter_icon_png,   BinaryData::RoneStutter_icon_pngSize } },
-        { "logos/RoneFlanger.png",    { BinaryData::RoneFlanger_icon_png,   BinaryData::RoneFlanger_icon_pngSize } },
-        { "logos/RONEAnalyzer.png",   { BinaryData::RONEAnalyzer_icon_png,  BinaryData::RONEAnalyzer_icon_pngSize } },
-        { "logos/RoneStucker.png",    { BinaryData::RoneStucker_icon_png,   BinaryData::RoneStucker_icon_pngSize } },
-        { "logos/RoneThrow.png",      { BinaryData::RoneThrow_icon_png,     BinaryData::RoneThrow_icon_pngSize } },
-        { "logos/RoneClipper.png",    { BinaryData::RoneClipper_icon_png,   BinaryData::RoneClipper_icon_pngSize } },
-        { "logos/RoneRise.png",       { BinaryData::RoneRise_icon_png,      BinaryData::RoneRise_icon_pngSize } },
-        { "logos/RoneIron.png",       { BinaryData::RoneIron_icon_png,      BinaryData::RoneIron_icon_pngSize } },
-        { "logos/RoneAfterspace.png", { BinaryData::RoneAfterspace_icon_png, BinaryData::RoneAfterspace_icon_pngSize } },
-    };
+    // /logos/<id>.png -> <id>_icon.png ; /units/<id>.webp -> unit_<id>.webp ; the rest by name.
+    juce::String file;
+    if (path.startsWith ("logos/") && path.endsWith (".png"))
+        file = path.fromFirstOccurrenceOf ("logos/", false, false).dropLastCharacters (4) + "_icon.png";
+    else if (path.startsWith ("units/") && path.endsWith (".webp"))
+        file = "unit_" + path.fromFirstOccurrenceOf ("units/", false, false);
+    else if (! path.containsChar ('/'))
+        file = path;
 
-    auto it = resources.find (path);
-    if (it == resources.end())
+    if (file.isEmpty() || file.contains (".."))
         return std::nullopt;
 
-    auto& entry = it->second;
-    std::vector<std::byte> bytes ((size_t) entry.size);
-    std::memcpy (bytes.data(), entry.data, (size_t) entry.size);
+    int size = 0;
+    const char* data = findEmbedded (file, size);
+    if (data == nullptr || size <= 0)
+        return std::nullopt;
 
-    auto ext = path.fromLastOccurrenceOf (".", false, false).toLowerCase();
+    std::vector<std::byte> bytes ((size_t) size);
+    std::memcpy (bytes.data(), data, (size_t) size);
 
     return juce::WebBrowserComponent::Resource {
         std::move (bytes),
-        getMimeForExtension (ext)
+        getMimeForExtension (file.fromLastOccurrenceOf (".", false, false).toLowerCase())
     };
 }
 
@@ -215,6 +225,18 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         .withNativeFunction ("uninstallPlugin", [this] (NativeArgs args, NativeCompletion complete) {
             handleUninstallPlugin (args, guarded (std::move (complete)));
         })
+        .withNativeFunction ("cancelInstall", [this] (NativeArgs args, NativeCompletion complete) {
+            handleCancelInstall (args, guarded (std::move (complete)));
+        })
+        .withNativeFunction ("getDaws", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetDaws (args, guarded (std::move (complete)));
+        })
+        .withNativeFunction ("getCenterSettings", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetCenterSettings (args, guarded (std::move (complete)));
+        })
+        .withNativeFunction ("setCenterSetting", [this] (NativeArgs args, NativeCompletion complete) {
+            handleSetCenterSetting (args, guarded (std::move (complete)));
+        })
         .withNativeFunction ("openExternalUrl", [] (NativeArgs args, NativeCompletion complete) {
             if (args.size() > 0)
             {
@@ -254,9 +276,18 @@ MainComponent::MainComponent()
     addAndMakeVisible (titleBar);
 #endif
 
-    setSize (1200, 800);   // two plugin cards per row from the first launch
+    setSize (1200, 800);   // three plugin cards per row from the first launch
 
     networkManager.addListener (this);
+
+    // Installs: everything downloaded goes in one batch behind one permission prompt.
+    batcher.downloadsPending = [this] { return networkManager.hasPendingDownloads(); };
+    batcher.onStatus = [this] (const juce::String& id, PluginStatus s, const juce::String& waitingFor)
+    {
+        onBatchStatus (id, s, waitingFor);
+    };
+    batcher.onResult = [this] (const InstallBatcher::Result& r) { onBatchResult (r); };
+    batcher.onIdle   = [this] { applyCenterUpdateWhenIdle(); };
 
     // License handler
     licenseHandler.onLicenseStateChanged = [this] (bool isLicensed)
@@ -292,12 +323,56 @@ MainComponent::MainComponent()
     lastAccountCheckMs = juce::Time::currentTimeMillis();   // initialize() just asked the server
 
     // Fetch manifest after a short delay to let the WebView initialize
-    juce::Timer::callAfterDelay (500, [this] { networkManager.fetchManifest(); });
+    juce::Timer::callAfterDelay (500, [safe = juce::Component::SafePointer<MainComponent> (this)]
+    {
+        if (safe != nullptr)
+            safe->fetchManifestNow();
+    });
+
+    // Did the Center update that was applied before this start land?
+    reportCenterUpdateOutcome();
+
+    // Once a minute: is a manifest check due (every 6 hours, sooner when offline)?
+    startTimer (60 * 1000);
 }
 
 MainComponent::~MainComponent()
 {
+    stopTimer();
     networkManager.removeListener (this);
+}
+
+// ============================================================================
+// Periodic checks
+//
+// Before 2.0 the manifest was read at start-up and on Refresh only, and the
+// Center starts with Windows and lives in the tray - so it showed the versions
+// of the morning it booted for days. Now: every six hours, when the window
+// comes to the front after 15 minutes, and - offline - again after 1, 2, 5,
+// 10 and then every 30 minutes until the network is back.
+// ============================================================================
+void MainComponent::fetchManifestNow()
+{
+    lastManifestAttemptMs = juce::Time::currentTimeMillis();
+    networkManager.fetchManifest();
+}
+
+void MainComponent::timerCallback()
+{
+    const auto now = juce::Time::currentTimeMillis();
+    const auto sinceAttempt = now - lastManifestAttemptMs;
+
+    static constexpr int offlineSteps[] = { 1, 2, 5, 10, 30 };   // minutes
+    const bool offline = manifestFromCache || ! manifestEverLoaded;
+    const juce::int64 due = offline ? (juce::int64) offlineSteps[juce::jmin (offlineRetries, 4)] * 60 * 1000
+                                    : 6LL * 3600 * 1000;
+
+    if (sinceAttempt >= due)
+    {
+        if (offline)
+            ++offlineRetries;
+        fetchManifestNow();
+    }
 }
 
 void MainComponent::paint (juce::Graphics& g)
@@ -342,6 +417,7 @@ void MainComponent::setUiVisible (bool shouldBeLive)
         return;
 
     ++webGeneration;
+    pageReady = false;
 
     if (shouldBeLive)
     {
@@ -378,6 +454,11 @@ void MainComponent::setWindowActive (bool isActive)
             lastAccountCheckMs = now;
             accountClient.validateAsync();
         }
+
+        // ...and the catalog, when the last look is more than 15 minutes old: a
+        // fetch no longer disturbs a download, so there is nothing to wait for.
+        if (now - lastManifestAttemptMs >= 15 * 60 * 1000)
+            fetchManifestNow();
     }
 }
 
@@ -427,7 +508,9 @@ juce::String MainComponent::statusToString (PluginStatus s)
         case PluginStatus::NotInstalled:    return "not_installed";
         case PluginStatus::UpToDate:        return "up_to_date";
         case PluginStatus::UpdateAvailable: return "update_available";
+        case PluginStatus::Queued:          return "queued";
         case PluginStatus::Downloading:     return "downloading";
+        case PluginStatus::ReadyToInstall:  return "ready";
         case PluginStatus::Installing:      return "installing";
         case PluginStatus::WaitingForHost:  return "waiting";
         case PluginStatus::Uninstalling:    return "uninstalling";
@@ -481,6 +564,43 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     if (! info.launchPrice.isVoid()) obj->setProperty ("launch_price", info.launchPrice);
     if (info.storeUrl.isNotEmpty())  obj->setProperty ("store_url",    info.storeUrl);
 
+    // ---- Center 2.0 ----
+    // Free with any RONE account: before 2.0 the page never heard of it, and a
+    // signed-out visitor saw RONE Clipper as LOCKED with no way in.
+    if (info.free) obj->setProperty ("free", true);
+
+    auto list = [] (const juce::StringArray& s)
+    {
+        juce::Array<juce::var> a;
+        for (auto& x : s) a.add (x);
+        return juce::var (a);
+    };
+    obj->setProperty ("categories", list (info.categories));
+    obj->setProperty ("tags",       list (info.tags));
+    if (info.accent.isNotEmpty())    obj->setProperty ("accent",   info.accent);
+    if (info.released.isNotEmpty())  obj->setProperty ("released", info.released);
+    if (info.sizeBytes > 0)          obj->setProperty ("sizeBytes", (double) info.sizeBytes);
+    if (info.i18n.isObject())        obj->setProperty ("i18n", info.i18n);
+
+    // Audio previews, https only (the page plays them straight from roneaudio.com)
+    if (info.previewDry.startsWithIgnoreCase ("https://") && info.previewWet.startsWithIgnoreCase ("https://"))
+    {
+        auto* pv = new juce::DynamicObject();
+        pv->setProperty ("dry", info.previewDry);
+        pv->setProperty ("wet", info.previewWet);
+        obj->setProperty ("preview", juce::var (pv));
+    }
+
+    // The 3D hardware unit, when this build carries it (Resources/units)
+    int unitSize = 0;
+    if (findEmbedded ("unit_" + info.id + ".webp", unitSize) != nullptr)
+        obj->setProperty ("unitUrl", "/units/" + info.id + ".webp");
+
+    // Downloaded in the background already: Update goes straight to installing.
+    const auto pre = prefetched.find (info.id);
+    if (pre != prefetched.end() && pre->second.version == info.remoteVersion && pre->second.file.existsAsFile())
+        obj->setProperty ("downloaded", true);
+
     return juce::var (obj);
 }
 
@@ -502,7 +622,50 @@ juce::var MainComponent::allPluginsToVar()
 
 void MainComponent::emitPluginsUpdated()
 {
+    // The catalog is built on the message thread: it reads the pre-download table.
+    if (! juce::MessageManager::getInstance()->isThisTheMessageThread())
+    {
+        juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<MainComponent> (this)]
+        {
+            if (safe != nullptr)
+                safe->emitPluginsUpdated();
+        });
+        return;
+    }
+
     emitToPage ("pluginsUpdated", allPluginsToVar());
+    publishUpdateCount();
+}
+
+juce::var MainComponent::manifestStateVar() const
+{
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("offline",  manifestFromCache);
+    o->setProperty ("loaded",   manifestEverLoaded);
+    o->setProperty ("syncedAt", (double) networkManager.getLastManifestSuccessMs());
+    return juce::var (o);
+}
+
+// Plugins the user can act on that have a newer version. Not the ones that were
+// never installed: before 2.0 "N updates" counted every plugin on sale.
+int MainComponent::countUpdates()
+{
+    juce::ScopedLock sl (pluginDataLock);
+    int n = 0;
+    for (auto& p : pluginData)
+        if (p.status == PluginStatus::UpdateAvailable)
+            ++n;
+    return n;
+}
+
+void MainComponent::publishUpdateCount()
+{
+    const int n = countUpdates();
+    if (n == lastPublishedUpdates)
+        return;
+    lastPublishedUpdates = n;
+    if (onUpdateCountChanged)
+        onUpdateCountChanged (n);
 }
 
 // A status the Center shows that is nobody's bug: nothing to file in the
@@ -516,12 +679,31 @@ static bool isEnvironmentalStatus (const juce::String& text)
         || text.contains ("installer code 2)");   // Inno: cancelled by the user before installing
 }
 
-void MainComponent::emitStatusMessage (const juce::String& text, const juce::String& type)
+void MainComponent::emitStatusMessage (const juce::String& text, const juce::String& type,
+                                       const juce::String& code, const juce::var& params)
 {
     auto* obj = new juce::DynamicObject();
     obj->setProperty ("text", text);
     obj->setProperty ("type", type);
-    emitToPage ("statusMessage", juce::var (obj));
+    if (code.isNotEmpty())
+    {
+        obj->setProperty ("code", code);
+        obj->setProperty ("params", params.isObject() ? params : juce::var (new juce::DynamicObject()));
+    }
+
+    // No page yet (start-up, or the window is in the tray): kept for when it opens,
+    // so "installed" or "the Center update did not finish" is not lost.
+    if (! pageReady || webView == nullptr)
+    {
+        if (type != "info")
+        {
+            pendingMessages.add (juce::var (obj));
+            while (pendingMessages.size() > 6)
+                pendingMessages.remove (0);
+        }
+    }
+    else
+        emitToPage ("statusMessage", juce::var (obj));
 
     // Every user-visible error is also a queued report (throttled per message,
     // see RoneCrashReporter) — this is the "why didn't it install/open" feed
@@ -551,21 +733,44 @@ void MainComponent::handleGetPlugins (NativeArgs, NativeCompletion complete)
 {
     auto result = allPluginsToVar();
 
-    // Ride the update flag along with the catalog: at startup the UI pulls
-    // this before any events can reach it, so a pending Center update must be
-    // in the pulled payload too.
-    const auto centerVersion = pendingCenterUpdateVersion (networkManager.getCenterInstallerInfo());
-    if (centerVersion.isNotEmpty())
+    if (auto* obj = result.getDynamicObject())
     {
-        if (auto* obj = result.getDynamicObject())
+        // Ride the update flag along with the catalog: at startup the UI pulls
+        // this before any events can reach it, so a pending Center update must be
+        // in the pulled payload too.
+        const auto centerVersion = pendingCenterUpdateVersion (networkManager.getCenterInstallerInfo());
+        if (centerVersion.isNotEmpty())
         {
             auto* upd = new juce::DynamicObject();
             upd->setProperty ("version", centerVersion);
             obj->setProperty ("centerUpdate", juce::var (upd));
         }
+
+        // Offline / last sync, the tips of the week, and where a link asked to go.
+        pageReady = true;
+        obj->setProperty ("manifest", manifestStateVar());
+        obj->setProperty ("tips", networkManager.getManifestExtras().getProperty ("tips", juce::var()));
+        if (pendingNavigation.isNotEmpty())
+        {
+            obj->setProperty ("navigate", pendingNavigation);
+            pendingNavigation.clear();
+        }
     }
 
     complete (juce::JSON::toString (result));
+
+    // What happened while there was no page, shown once it has its catalog.
+    if (! pendingMessages.isEmpty())
+    {
+        auto messages = pendingMessages;
+        pendingMessages.clear();
+        juce::Timer::callAfterDelay (900, [safe = juce::Component::SafePointer<MainComponent> (this), messages]
+        {
+            if (safe != nullptr)
+                for (auto& m : messages)
+                    safe->emitToPage ("statusMessage", m);
+        });
+    }
 }
 
 void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion complete)
@@ -585,54 +790,247 @@ void MainComponent::handleInstallPlugin (NativeArgs args, NativeCompletion compl
 
 bool MainComponent::startInstall (const juce::String& pluginId, juce::String& error)
 {
-    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId))
+    JUCE_ASSERT_MESSAGE_THREAD
+
+    bool isFree = false, known = false;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == pluginId) { isFree = p.free; known = true; break; }
+    }
+
+    // A free plugin is unlocked by any signed-in account (the server lists it in
+    // `owned` too; this keeps it installable even before that answer arrives).
+    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId)
+        && ! (isFree && accountClient.getState().signedIn))
     {
         error = "License required";
         return false;
     }
 
+    if (! known)
+    {
+        error = "Plugin not found";
+        return false;
+    }
+
+    juce::String url, sha, version;
     {
         juce::ScopedLock sl (pluginDataLock);
         for (auto& p : pluginData)
         {
-            if (p.id == pluginId)
+            if (p.id != pluginId)
+                continue;
+
+            if (isBusyStatus (p.status))
             {
-                if (p.status == PluginStatus::NotInstalled
-                 || p.status == PluginStatus::UpdateAvailable
-                 || p.status == PluginStatus::Error
-                 || p.status == PluginStatus::UpToDate)
-                {
-                    p.status = PluginStatus::Downloading;
-                    p.downloadProgress = 0.0;
-
-                #if JUCE_MAC
-                    // `sha256_mac` carries the .pkg hash (empty only for a
-                    // platform that wasn't rebuilt this run = "not verified").
-                    networkManager.downloadInstaller (pluginId, p.downloadUrlMac, p.sha256Mac);
-                #else
-                    networkManager.downloadInstaller (pluginId, p.downloadUrl, p.sha256);
-                #endif
-
-                    emitPluginsUpdated();
-                    return true;
-                }
-                break;
+                error = "Already on its way";
+                return false;
             }
+
+           #if JUCE_MAC
+            // `sha256_mac` carries the .pkg hash (empty only for a platform
+            // that wasn't rebuilt this run = "not verified").
+            url = p.downloadUrlMac; sha = p.sha256Mac;
+           #else
+            url = p.downloadUrl;    sha = p.sha256;
+           #endif
+            version = p.remoteVersion;
+            p.downloadProgress = 0.0;
+            p.waitingFor = {};
+            break;
         }
     }
 
-    error = "Plugin not in installable state";
-    return false;
+    // Already downloaded in the background for this version: install it now
+    // (the batch hashes it once more before it runs).
+    const auto pre = prefetched.find (pluginId);
+    if (pre != prefetched.end() && pre->second.version == version && pre->second.file.existsAsFile())
+    {
+        handBatcher (pluginId, pre->second.file);
+        return true;
+    }
+
+    // A background download of it is running: it simply installs when done.
+    if (networkManager.isDownloadQueued (pluginId))
+    {
+        networkManager.promoteToInstall (pluginId);
+        setStatus (pluginId, PluginStatus::Queued);
+        return true;
+    }
+
+    setStatus (pluginId, PluginStatus::Queued);
+    networkManager.downloadInstaller (pluginId, url, sha);
+    return true;
 }
 
 bool MainComponent::anyPluginBusy()
 {
+    if (batcher.isBusy())
+        return true;
+
     juce::ScopedLock sl (pluginDataLock);
     for (auto& p : pluginData)
-        if (p.status == PluginStatus::Downloading || p.status == PluginStatus::Installing
-         || p.status == PluginStatus::WaitingForHost || p.status == PluginStatus::Uninstalling)
+        if (isBusyStatus (p.status))
             return true;
     return false;
+}
+
+bool MainComponent::isWorking()
+{
+    return anyPluginBusy() || networkManager.hasPendingDownloads();
+}
+
+void MainComponent::setStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor)
+{
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == id)
+            {
+                p.status = status;
+                p.waitingFor = waitingFor;
+                if (status != PluginStatus::Downloading)
+                    p.downloadProgress = status == PluginStatus::Queued ? 0.0 : p.downloadProgress;
+                break;
+            }
+    }
+    emitPluginsUpdated();
+}
+
+// After a cancel or a failure: what is on disk decides the card again.
+void MainComponent::restoreIdleState (const juce::String& id)
+{
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == id)
+            {
+                VersionChecker::refreshInstallState (p);
+                p.waitingFor = {};
+                p.downloadProgress = 0.0;
+                break;
+            }
+    }
+    emitPluginsUpdated();
+}
+
+void MainComponent::handBatcher (const juce::String& pluginId, const juce::File& installer)
+{
+    InstallBatcher::Item item;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == pluginId)
+            {
+                item.id            = p.id;
+                item.name          = p.name;
+                item.registryKey   = p.registryKey;
+                item.version       = p.remoteVersion;
+                item.vst3Bundle    = p.vst3Bundle;
+                item.auBundle      = p.auBundle;
+                item.standaloneExe = p.standaloneExe;
+               #if JUCE_MAC
+                item.sha256        = p.sha256Mac;
+               #else
+                item.sha256        = p.sha256;
+               #endif
+                break;
+            }
+    }
+
+    if (item.id.isEmpty())
+        return;
+
+    item.installer = installer;
+    prefetched.erase (pluginId);
+    setStatus (pluginId, PluginStatus::ReadyToInstall);
+    batcher.add (item);
+    batcher.poke();
+}
+
+void MainComponent::onBatchStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor)
+{
+    juce::String name = id;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == id) { name = p.name; break; }
+    }
+
+    setStatus (id, status, waitingFor);
+
+    if (status == PluginStatus::WaitingForHost)
+    {
+        auto* params = new juce::DynamicObject();
+        params->setProperty ("name", name);
+        params->setProperty ("host", waitingFor);
+        // "Close FL Studio" - a DAW keeps the plugin loaded until it quits, so
+        // the program is named, not the plugin window.
+        emitStatusMessage (waitingFor.isEmpty()
+                               ? name + " is still open. Close it and the update installs by itself."
+                               : name + " is loaded in " + waitingFor + ". Close " + waitingFor
+                                      + " and the update installs by itself.",
+                           "info", waitingFor.isEmpty() ? "waiting_own" : "waiting_host", juce::var (params));
+    }
+}
+
+void MainComponent::onBatchResult (const InstallBatcher::Result& r)
+{
+    juce::String name = r.id, version;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == r.id)
+            {
+                name = p.name;
+                version = p.remoteVersion;
+                if (r.ok)
+                {
+                    p.installedVersion = VersionChecker::getInstalledVersion (p.registryKey);
+                    if (p.installedVersion.isEmpty())
+                        p.installedVersion = p.remoteVersion;
+                    p.status = PluginStatus::UpToDate;
+                }
+                else
+                    p.status = PluginStatus::Error;
+                p.waitingFor = {};
+                break;
+            }
+    }
+
+    // A refused prompt is the user's choice, not a failure: back to what is on disk.
+    if (r.declined)
+        restoreIdleState (r.id);
+    else
+        emitPluginsUpdated();
+
+    auto* params = new juce::DynamicObject();
+    params->setProperty ("name", name);
+    params->setProperty ("id", r.id);
+    params->setProperty ("version", version);
+    params->setProperty ("exitCode", r.exitCode);
+
+    emitStatusMessage (r.message, r.ok ? "success" : (r.declined ? "info" : "error"), r.code, juce::var (params));
+
+   #if JUCE_MAC
+    // As before: a standalone that just arrived opens by itself on macOS.
+    if (r.ok)
+    {
+        juce::String exe;
+        {
+            juce::ScopedLock sl (pluginDataLock);
+            for (auto& p : pluginData)
+                if (p.id == r.id) { exe = p.standaloneExe; break; }
+        }
+        if (exe.isNotEmpty())
+        {
+            const auto appName = exe.replace (".exe", "") + ".app";
+            for (auto dir : { juce::File ("/Applications"), juce::File ("/Applications/RONE Plugins") })
+                if (dir.getChildFile (appName).exists()) { dir.getChildFile (appName).startAsProcess(); break; }
+        }
+    }
+   #endif
 }
 
 void MainComponent::requestUpdate (const juce::String& productId)
@@ -649,20 +1047,17 @@ void MainComponent::requestUpdate (const juce::String& productId)
         haveData = ! pluginData.isEmpty();
         for (auto& p : pluginData)
             if (p.id == productId)
-                knowsUpdate = p.status == PluginStatus::UpdateAvailable
-                           || p.status == PluginStatus::Downloading
-                           || p.status == PluginStatus::Installing
-                           || p.status == PluginStatus::WaitingForHost;
+                knowsUpdate = p.status == PluginStatus::UpdateAvailable || isBusyStatus (p.status);
     }
 
     // The Center may have sat in the tray since before the release the plugin
-    // just saw: read the manifest again first - unless something is being
-    // downloaded, which a fresh fetch would cancel. With no data yet the start-up
-    // fetch is already on its way and serves the request when it lands.
-    if (knowsUpdate || (haveData && anyPluginBusy()))
+    // just saw: read the manifest again first (a fetch no longer disturbs a
+    // download). With no data yet the start-up fetch is already on its way and
+    // serves the request when it lands.
+    if (knowsUpdate)
         servePendingUpdate();
     else if (haveData)
-        networkManager.fetchManifest();
+        fetchManifestNow();
 }
 
 void MainComponent::servePendingUpdate()
@@ -684,21 +1079,81 @@ void MainComponent::servePendingUpdate()
     if (! found)
         return;
 
-    if (status == PluginStatus::UpdateAvailable || status == PluginStatus::Error)
+    auto* params = new juce::DynamicObject();
+    params->setProperty ("name", name);
+    params->setProperty ("id", id);
+
+    if (status == PluginStatus::UpdateAvailable || status == PluginStatus::Error || status == PluginStatus::NotInstalled)
     {
         juce::String error;
         if (startInstall (id, error))
-            emitStatusMessage ("Updating " + name + "...", "info");
+            emitStatusMessage ("Updating " + name + "...", "info", "updating", juce::var (params));
         else
-            emitStatusMessage (name + ": " + error, "error");
+            emitStatusMessage (name + ": " + error, "error", error == "License required" ? "license_required" : juce::String(),
+                               juce::var (params));
     }
     else if (status == PluginStatus::UpToDate)
     {
         // The new version is on disk while the DAW still runs the old one (macOS
         // replaces loaded bundles); a DAW loads a plugin's code once per session.
-        emitStatusMessage (name + " is already up to date - restart your DAW to load the new version.", "success");
+        emitStatusMessage (name + " is already up to date - restart your DAW to load the new version.", "success",
+                           "already_current", juce::var (params));
     }
     // Downloading / installing / waiting: it is already on its way.
+}
+
+// ============================================================================
+// ronecenter:// links (CenterLinks.h)
+// ============================================================================
+void MainComponent::handleLink (const CenterLinks::Link& link)
+{
+    JUCE_ASSERT_MESSAGE_THREAD
+    if (! link.isValid())
+        return;
+
+    if (link.action == "plugin" || link.action == "install")
+        pendingNavigation = "plugin:" + link.productId;
+    else if (link.action == "updates")
+        pendingNavigation = "updates";
+
+    // A page that is up takes it now; one still loading pulls it with getPlugins.
+    if (pendingNavigation.isNotEmpty() && pageReady && webView != nullptr)
+    {
+        auto* o = new juce::DynamicObject();
+        o->setProperty ("to", pendingNavigation);
+        emitToPage ("navigate", juce::var (o));
+        pendingNavigation.clear();
+    }
+
+    if (link.action != "install")
+        return;
+
+    // The purchase is seconds old: ask the server what this account owns first,
+    // then install - or, if the payment is still on its way, say so on the page.
+    const auto id = link.productId;
+    lastAccountCheckMs = juce::Time::currentTimeMillis();
+    accountClient.validateAsync ([safe = juce::Component::SafePointer<MainComponent> (this), id] (bool)
+    {
+        if (safe == nullptr)
+            return;
+
+        bool known = false;
+        {
+            juce::ScopedLock sl (safe->pluginDataLock);
+            for (auto& p : safe->pluginData)
+                if (p.id == id) { known = true; break; }
+        }
+
+        if (! known)
+        {
+            // The manifest is not in yet (a cold start from the link): its arrival serves it.
+            safe->pendingUpdateId = id;
+            return;
+        }
+
+        safe->pendingUpdateId = id;
+        safe->servePendingUpdate();
+    });
 }
 
 // ============================================================================
@@ -845,7 +1300,15 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
 
     auto pluginId = args[0].toString();
 
-    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId))
+    bool isFree = false;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == pluginId) { isFree = p.free; break; }
+    }
+
+    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId)
+        && ! (isFree && accountClient.getState().signedIn))
     {
         complete ("{\"success\":false,\"error\":\"License required\"}");
         return;
@@ -905,8 +1368,142 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
 
 void MainComponent::handleRefreshPlugins (NativeArgs, NativeCompletion complete)
 {
-    networkManager.fetchManifest();
+    // Safe at any moment now: a fetch never touches a running download.
+    offlineRetries = 0;
+    fetchManifestNow();
     complete ("{\"success\":true}");
+}
+
+// ============================================================================
+// Center 2.0 handlers
+// ============================================================================
+
+// Cancel one plugin (queued, downloading, ready or waiting for its DAW) - or,
+// with no id, everything that has not started installing.
+void MainComponent::handleCancelInstall (NativeArgs args, NativeCompletion complete)
+{
+    juce::StringArray ids;
+    if (args.size() > 0 && args[0].toString().isNotEmpty())
+        ids.add (args[0].toString());
+    else
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.status == PluginStatus::Queued || p.status == PluginStatus::Downloading
+                || p.status == PluginStatus::ReadyToInstall || p.status == PluginStatus::WaitingForHost)
+                ids.add (p.id);
+    }
+
+    int cancelled = 0;
+    for (auto& id : ids)
+    {
+        PluginStatus s = PluginStatus::NotInstalled;
+        {
+            juce::ScopedLock sl (pluginDataLock);
+            for (auto& p : pluginData)
+                if (p.id == id) { s = p.status; break; }
+        }
+
+        if (s == PluginStatus::Queued || s == PluginStatus::Downloading)
+        {
+            networkManager.cancelDownload (id);
+            restoreIdleState (id);
+            ++cancelled;
+        }
+        else if ((s == PluginStatus::ReadyToInstall || s == PluginStatus::WaitingForHost) && batcher.cancel (id))
+        {
+            restoreIdleState (id);
+            ++cancelled;
+        }
+    }
+
+    batcher.poke();
+
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("cancelled", cancelled);
+    complete (juce::var (o));
+}
+
+void MainComponent::handleGetDaws (NativeArgs, NativeCompletion complete)
+{
+    complete (DawDetector::toVar (DawDetector::find()));
+}
+
+void MainComponent::handleGetCenterSettings (NativeArgs, NativeCompletion complete)
+{
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("backgroundDownload", CenterSettings::getBool (CenterSettings::backgroundDownload, true));
+    o->setProperty ("autoStartSupported", AutoStart::isSupported());
+    o->setProperty ("autoStart",          AutoStart::isEnabled());
+    complete (juce::var (o));
+}
+
+void MainComponent::handleSetCenterSetting (NativeArgs args, NativeCompletion complete)
+{
+    const auto key = args.size() > 0 ? args[0].toString() : juce::String();
+    const bool value = args.size() > 1 && (bool) args[1];
+
+    if (key == CenterSettings::backgroundDownload.toString())
+    {
+        CenterSettings::setBool (CenterSettings::backgroundDownload, value);
+        if (value)
+            startBackgroundDownloads();
+        else
+        {
+            // Stop what is fetching on its own; what the user asked for keeps going.
+            juce::StringArray stop;
+            {
+                juce::ScopedLock sl (pluginDataLock);
+                for (auto& p : pluginData)
+                    if (networkManager.isPrefetch (p.id))
+                        stop.add (p.id);
+            }
+            for (auto& id : stop)
+                networkManager.cancelDownload (id);
+        }
+    }
+    else if (key == "autoStart")
+        AutoStart::setEnabled (value);
+
+    handleGetCenterSettings ({}, std::move (complete));
+}
+
+// Updates of plugins this account can install are fetched quietly, one at a
+// time, behind anything the user asked for; the card then reads "downloaded"
+// and Update goes straight to installing. Never a plugin that is not installed,
+// never anything locked, and never an install - that always waits for the user.
+void MainComponent::startBackgroundDownloads()
+{
+    if (! CenterSettings::getBool (CenterSettings::backgroundDownload, true) || manifestFromCache)
+        return;
+
+    struct Want { juce::String id, url, sha, version; };
+    juce::Array<Want> wants;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+        {
+            if (p.status != PluginStatus::UpdateAvailable || p.installedVersion == "?")
+                continue;
+            if (! isEffectivelyLicensed (licenseHandler, accountClient, p.id) && ! (p.free && accountClient.getState().signedIn))
+                continue;
+           #if JUCE_MAC
+            wants.add ({ p.id, p.downloadUrlMac, p.sha256Mac, p.remoteVersion });
+           #else
+            wants.add ({ p.id, p.downloadUrl, p.sha256, p.remoteVersion });
+           #endif
+        }
+    }
+
+    for (auto& w : wants)
+    {
+        const auto pre = prefetched.find (w.id);
+        if (pre != prefetched.end() && pre->second.version == w.version && pre->second.file.existsAsFile())
+            continue;
+        if (w.sha.isEmpty() || networkManager.isDownloadQueued (w.id))
+            continue;
+        networkManager.downloadInstaller (w.id, w.url, w.sha, true);
+    }
 }
 
 void MainComponent::handleActivateLicense (NativeArgs args, NativeCompletion complete)
@@ -1193,8 +1790,7 @@ void MainComponent::handleUninstallPlugin (NativeArgs args, NativeCompletion com
             if (p.id == pluginId)
             {
                 found = true;
-                busy = p.status == PluginStatus::Downloading || p.status == PluginStatus::Installing
-                    || p.status == PluginStatus::WaitingForHost || p.status == PluginStatus::Uninstalling;
+                busy = isBusyStatus (p.status);
                 if (! busy)
                 {
                     target = p;
@@ -1212,15 +1808,17 @@ void MainComponent::handleUninstallPlugin (NativeArgs args, NativeCompletion com
     }
     emitPluginsUpdated();
 
-    juce::Thread::launch ([this, target, complete = std::move (complete)]() mutable
+    juce::Thread::launch ([safe = juce::Component::SafePointer<MainComponent> (this), target, complete = std::move (complete)]() mutable
     {
         const auto r = PluginUninstaller::uninstall (target);
 
-        juce::MessageManager::callAsync ([this, target, r, complete = std::move (complete)]() mutable
+        juce::MessageManager::callAsync ([safe, target, r, complete = std::move (complete)]() mutable
         {
+            if (safe == nullptr)
+                return;
             {
-                juce::ScopedLock sl (pluginDataLock);
-                for (auto& p : pluginData)
+                juce::ScopedLock sl (safe->pluginDataLock);
+                for (auto& p : safe->pluginData)
                     if (p.id == target.id)
                     {
                         VersionChecker::refreshInstallState (p);
@@ -1228,7 +1826,8 @@ void MainComponent::handleUninstallPlugin (NativeArgs args, NativeCompletion com
                         break;
                     }
             }
-            emitPluginsUpdated();
+            safe->prefetched.erase (target.id);
+            safe->emitPluginsUpdated();
 
             auto* o = new juce::DynamicObject();
             o->setProperty ("ok", r.ok);
@@ -1307,7 +1906,10 @@ juce::String MainComponent::readInstalledCenterVersion()
 #endif
 }
 
+
 // Empty string = up to date (or unknowable); otherwise the catalog version.
+// Only ever a NEWER version: the old rule ("anything but the catalog's") would
+// have offered a downgrade the day a manifest went backwards.
 static juce::String pendingCenterUpdateVersion (const NetworkManager::CenterInstallerInfo& info)
 {
     if (! info.isValid())
@@ -1316,14 +1918,14 @@ static juce::String pendingCenterUpdateVersion (const NetworkManager::CenterInst
     const auto installed = MainComponent::readInstalledCenterVersion();
 
     if (installed.isNotEmpty())
-        return installed == info.version ? juce::String() : info.version;   // catalog is truth
+        return VersionChecker::isNewerVersion (installed, info.version) ? info.version : juce::String();
 
     // Installs older than this feature never stamped their version; only the
     // CMake base is known. A base change (which any release carrying this
     // feature makes) is detectable - same-base rebuilds are not.
     const juce::String base (JUCE_APPLICATION_VERSION_STRING);
     const bool sameBase = info.version == base || info.version.startsWith (base + ".");
-    return sameBase ? juce::String() : info.version;
+    return (sameBase || ! VersionChecker::isNewerVersion (base, info.version)) ? juce::String() : info.version;
 }
 
 void MainComponent::checkForCenterUpdate()
@@ -1337,14 +1939,20 @@ void MainComponent::checkForCenterUpdate()
     emitToPage ("centerUpdateAvailable", juce::var (obj));
 }
 
+static juce::File centerUpdateMarker()
+{
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+               .getChildFile ("RonePluginsCenter").getChildFile ("center-update.json");
+}
+
+static juce::File centerUpdateLog()
+{
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+               .getChildFile ("RonePluginsCenter").getChildFile ("center-update.log");
+}
+
 void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion complete)
 {
-#if ! JUCE_WINDOWS
-    // Self-update is Windows-only for now; the manifest's center url/sha256
-    // point at the Windows installer, so don't download it elsewhere.
-    complete ("{\"started\":false,\"error\":\"Center self-update is Windows-only for now\"}");
-    return;
-#else
     const auto info = networkManager.getCenterInstallerInfo();
 
     if (! info.isValid())
@@ -1353,69 +1961,313 @@ void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion comple
         return;
     }
 
-    emitStatusMessage ("Downloading Center update v" + info.version + "...", "info");
+    // Never in the middle of an install: the Center has to quit to be replaced,
+    // and quitting abandoned whatever was downloading or waiting for a DAW.
+    if (isWorking())
+    {
+        centerUpdateWanted = true;
+        complete ("{\"started\":false,\"waiting\":true}");
+        auto* params = new juce::DynamicObject();
+        params->setProperty ("version", info.version);
+        emitStatusMessage ("The Center updates itself as soon as the installs finish.", "info",
+                           "center_update_waiting", juce::var (params));
+        return;
+    }
+
+    centerUpdateWanted = false;
+    auto* params = new juce::DynamicObject();
+    params->setProperty ("version", info.version);
+    emitStatusMessage ("Downloading Center update v" + info.version + "...", "info",
+                       "center_update_downloading", juce::var (params));
+   #if JUCE_MAC
+    networkManager.downloadInstaller ("__center__", info.urlMac, info.sha256Mac);
+   #else
     networkManager.downloadInstaller ("__center__", info.url, info.sha256);
+   #endif
     complete ("{\"started\":true}");
-#endif
 }
+
+void MainComponent::applyCenterUpdateWhenIdle()
+{
+    if (! centerUpdateWanted || isWorking())
+        return;
+
+    handleApplyCenterUpdate ({}, [] (juce::var) {});
+}
+
+#if JUCE_WINDOWS
+// The Center's own installer (installer/RONE_Plugins.iss), started with
+// /RELAUNCH=1, creates this mutex once it runs elevated - then waits for the
+// Center to exit before it replaces the exe, and starts the new one as the user.
+static bool centerSetupIsReady()
+{
+    if (auto h = OpenMutexW (SYNCHRONIZE, FALSE, L"RoneCenterUpdateGo"))
+    {
+        CloseHandle (h);
+        return true;
+    }
+    // Made by an elevated process: we may not open it, but it is there.
+    return GetLastError() == ERROR_ACCESS_DENIED;
+}
+#endif
 
 void MainComponent::applyCenterUpdate (const juce::File& installerFile)
 {
-#if JUCE_WINDOWS
-    const auto exePath = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
-                             .getFullPathName();
+    const auto info = networkManager.getCenterInstallerInfo();
 
-    // The script outlives this process: waits for our exit, runs the installer
-    // elevated (one UAC prompt), then relaunches the exe - the old build if the
-    // user declined UAC, the new one after a successful swap.
-    juce::String script;
-    script << "Wait-Process -Id " << (int) GetCurrentProcessId() << " -ErrorAction SilentlyContinue; "
-           << "try { Start-Process -FilePath '" << installerFile.getFullPathName().replace ("'", "''")
-           << "' -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Verb RunAs -Wait } catch { }; "
-           << "Start-Process -FilePath '" << exePath.replace ("'", "''") << "'";
-
-    juce::ChildProcess updater;
-    const juce::StringArray cmd { "powershell.exe", "-NoProfile", "-WindowStyle", "Hidden",
-                                  "-ExecutionPolicy", "Bypass", "-Command", script };
-
-    if (updater.start (cmd, 0))   // 0 = capture nothing; fully detached
+    // Read back after the restart (reportCenterUpdateOutcome): did it land?
     {
-        emitStatusMessage ("Restarting to finish the Center update...", "info");
-        juce::Timer::callAfterDelay (600, []
+        auto* m = new juce::DynamicObject();
+        m->setProperty ("version", info.version);
+        m->setProperty ("from", juce::String (JUCE_APPLICATION_VERSION_STRING));
+        m->setProperty ("at", (double) juce::Time::currentTimeMillis());
+        centerUpdateMarker().getParentDirectory().createDirectory();
+        centerUpdateMarker().replaceWithText (juce::JSON::toString (juce::var (m)));
+    }
+
+    auto failed = [safe = juce::Component::SafePointer<MainComponent> (this)] (const juce::String& text, const juce::String& code)
+    {
+        juce::MessageManager::callAsync ([safe, text, code]
         {
-            juce::JUCEApplication::getInstance()->systemRequestedQuit();
+            if (safe == nullptr) return;
+            centerUpdateMarker().deleteFile();
+            safe->emitStatusMessage (text, code == "center_update_declined" ? "info" : "error", code);
         });
-    }
-    else
+    };
+
+#if JUCE_WINDOWS
+    // No PowerShell any more (a hidden "-ExecutionPolicy Bypass" script started by
+    // an unsigned exe is exactly what antivirus flags). The installer is opened
+    // the normal way: it asks Windows for permission itself, and the elevated
+    // setup tells us (centerSetupIsReady) when to step aside.
+    const auto log = centerUpdateLog();
+    log.deleteFile();
+    const auto params = juce::String ("/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /RELAUNCH=1 /LOG=\"")
+                      + log.getFullPathName() + "\"";
+    const auto file = installerFile.getFullPathName();
+
+    SHELLEXECUTEINFOW sei {};
+    sei.cbSize = sizeof (sei);
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+    sei.lpVerb = L"open";
+    sei.lpFile = file.toWideCharPointer();
+    sei.lpParameters = params.toWideCharPointer();
+    sei.nShow = SW_HIDE;
+
+    if (! ShellExecuteExW (&sei) || sei.hProcess == nullptr)
     {
-        emitStatusMessage ("Could not start the Center updater.", "error");
+        failed ("Could not start the Center update.", "center_update_failed");
+        return;
     }
+
+    emitStatusMessage ("Restarting to finish the Center update...", "info", "center_update_restarting");
+
+    const auto stub = sei.hProcess;
+    juce::Thread::launch ([stub, failed]
+    {
+        // Up to ten minutes for the permission prompt to be answered.
+        for (int waited = 0; waited < 600000; waited += 200)
+        {
+            if (centerSetupIsReady())
+            {
+                CloseHandle (stub);
+                juce::MessageManager::callAsync ([] { juce::JUCEApplication::getInstance()->systemRequestedQuit(); });
+                return;
+            }
+
+            if (WaitForSingleObject (stub, 200) == WAIT_OBJECT_0)
+            {
+                DWORD code = 0;
+                GetExitCodeProcess (stub, &code);
+                CloseHandle (stub);
+                // The setup ended without ever running elevated: the prompt was refused.
+                failed (code == 0 ? juce::String ("The Center update did not start.")
+                                  : juce::String ("Windows did not give permission - the Center was not updated."),
+                        code == 0 ? "center_update_failed" : "center_update_declined");
+                return;
+            }
+        }
+        CloseHandle (stub);
+        failed ("The Center update did not start.", "center_update_failed");
+    });
+
+#elif JUCE_MAC
+    // macOS: the .dmg holds the app. Mount it, put the new app where this one
+    // is (asking for the administrator password only when that folder needs
+    // it), unmount, start the new app, quit.
+    const auto target = juce::File::getSpecialLocation (juce::File::currentApplicationFile);
+    const auto dmg = installerFile;
+    emitStatusMessage ("Restarting to finish the Center update...", "info", "center_update_restarting");
+
+    juce::Thread::launch ([target, dmg, failed]
+    {
+        const auto mount = juce::File::getSpecialLocation (juce::File::tempDirectory)
+                               .getChildFile ("RONE_center_update_" + juce::Uuid().toString().substring (0, 8));
+        mount.createDirectory();
+
+        juce::ChildProcess attach;
+        if (! attach.start (juce::StringArray { "/usr/bin/hdiutil", "attach", "-nobrowse", "-noautoopen", "-quiet",
+                                                "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() })
+            || ! attach.waitForProcessToFinish (120000) || attach.getExitCode() != 0)
+        {
+            failed ("The Center update could not be opened.", "center_update_failed");
+            return;
+        }
+
+        juce::File app;
+        for (const auto& f : mount.findChildFiles (juce::File::findDirectories, false, "*.app"))
+            app = f;
+
+        bool ok = false;
+        if (app.isDirectory() && ! target.getFullPathName().containsAnyOf ("'\"\\") && target.getFileName().endsWith (".app"))
+        {
+            const auto staged = target.getSiblingFile (target.getFileNameWithoutExtension() + ".updating.app");
+            staged.deleteRecursively();
+
+            juce::ChildProcess ditto;
+            ok = ditto.start (juce::StringArray { "/usr/bin/ditto", app.getFullPathName(), staged.getFullPathName() })
+              && ditto.waitForProcessToFinish (300000) && ditto.getExitCode() == 0
+              && target.deleteRecursively() && staged.moveFileTo (target);
+
+            if (! ok)
+            {
+                staged.deleteRecursively();
+                // /Applications needs the administrator: one password prompt.
+                const auto cmd = "osascript -e 'do shell script \"/bin/rm -rf \\\"" + target.getFullPathName()
+                               + "\\\" && /usr/bin/ditto \\\"" + app.getFullPathName() + "\\\" \\\""
+                               + target.getFullPathName() + "\\\"\" with administrator privileges'";
+                const int status = std::system (cmd.toRawUTF8());
+                ok = WIFEXITED (status) && WEXITSTATUS (status) == 0 && target.isDirectory();
+            }
+        }
+
+        juce::ChildProcess detach;
+        if (detach.start (juce::StringArray { "/usr/bin/hdiutil", "detach", mount.getFullPathName(), "-quiet" }))
+            detach.waitForProcessToFinish (60000);
+        mount.deleteRecursively();
+
+        if (! ok)
+        {
+            failed ("The Center update was not installed.", "center_update_failed");
+            return;
+        }
+
+        juce::MessageManager::callAsync ([target]
+        {
+            juce::ChildProcess open;
+            open.start (juce::StringArray { "/usr/bin/open", "-n", target.getFullPathName(), "--args", "--updated" });
+            juce::Timer::callAfterDelay (400, [] { juce::JUCEApplication::getInstance()->systemRequestedQuit(); });
+        });
+    });
 #else
     juce::ignoreUnused (installerFile);
-    emitStatusMessage ("Center self-update is Windows-only for now.", "info");
+    failed ("Center self-update is not supported on this system.", "center_update_failed");
 #endif
+}
+
+// After a restart: the marker names the version the update was for. Landed =
+// say so; not landed = say that, with what the installer's log says, and file it.
+void MainComponent::reportCenterUpdateOutcome()
+{
+    const auto marker = centerUpdateMarker();
+    if (! marker.existsAsFile())
+        return;
+
+    const auto m = juce::JSON::parse (marker.loadFileAsString());
+    marker.deleteFile();
+
+    const auto target = m.getProperty ("version", "").toString();
+    if (target.isEmpty())
+        return;
+
+    const juce::String running (JUCE_APPLICATION_VERSION_STRING);
+    auto installed = readInstalledCenterVersion();
+    if (installed.isEmpty())
+        installed = running;
+
+    auto* params = new juce::DynamicObject();
+    params->setProperty ("version", target);
+
+    // The bundle carries the base (1.6.3), the catalog the build (1.6.3.250).
+    const bool landed = ! VersionChecker::isNewerVersion (installed, target)
+                     || target.startsWith (running + ".") || target == running;
+
+    if (landed)
+    {
+        emitStatusMessage ("RONE Plugins Center updated to v" + target + ".", "success", "center_updated", juce::var (params));
+        return;
+    }
+
+    juce::String detail;
+    const auto lines = juce::StringArray::fromLines (centerUpdateLog().loadFileAsString());
+    for (int i = juce::jmax (0, lines.size() - 6); i < lines.size(); ++i)
+        detail << lines[i].trim() << "\n";
+
+    emitStatusMessage ("The Center update to v" + target + " did not finish." + (detail.isNotEmpty() ? "\n" + detail.trim() : juce::String()),
+                       "error", "center_update_unfinished", juce::var (params));
 }
 
 // ============================================================================
 // NetworkManager callbacks → push to JS
 // ============================================================================
 
-void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
+void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins, bool fromCache)
 {
+    // A refresh must not reset a card that is downloading, installing, waiting
+    // for its DAW or uninstalling: before 2.0 it put them all back to "Update",
+    // and a second click started a second elevated installer next to the first.
     {
         juce::ScopedLock sl (pluginDataLock);
-        pluginData = plugins;
+        juce::Array<PluginInfo> merged = plugins;
+        for (auto& fresh : merged)
+            for (auto& old : pluginData)
+                if (old.id == fresh.id && isBusyStatus (old.status))
+                {
+                    fresh.status           = old.status;
+                    fresh.downloadProgress = old.downloadProgress;
+                    fresh.waitingFor       = old.waitingFor;
+                    break;
+                }
+        pluginData = merged;
     }
 
-    if (plugins.isEmpty())
+    const bool wasCached = manifestFromCache;
+    manifestFromCache = fromCache;
+    manifestEverLoaded = true;
+    if (! fromCache)
+        offlineRetries = 0;
+
+    // Pre-downloads made for a version the catalog has since moved past are worthless.
     {
-        emitStatusMessage ("Could not load plugins - check your connection", "error");
-        return;
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto it = prefetched.begin(); it != prefetched.end();)
+        {
+            bool current = false;
+            for (auto& p : pluginData)
+                if (p.id == it->first && p.remoteVersion == it->second.version)
+                    current = true;
+            it = current ? std::next (it) : prefetched.erase (it);
+        }
     }
 
     emitPluginsUpdated();
+    emitToPage ("manifestState", manifestStateVar());
 
-    // A plugin's UPDATE button asked for this manifest (requestUpdate).
+    if (fromCache && ! wasCached)
+    {
+        offlineSeen = true;
+        emitStatusMessage ("Offline - showing the plugins as they were at the last check.", "info", "offline_cached");
+    }
+    else if (! fromCache && offlineSeen)
+    {
+        offlineSeen = false;
+        emitStatusMessage ("Back online.", "success", "back_online");
+    }
+
+    if (fromCache)
+        return;   // nothing below may act on an old catalog
+
+    // A plugin's UPDATE button or a ronecenter:// link asked for this manifest.
     servePendingUpdate();
 
     // A download that failed its hash check asked for this manifest. Now that
@@ -1430,7 +2282,11 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
         if (retryId == "__center__")
         {
             const auto info = networkManager.getCenterInstallerInfo();
+           #if JUCE_MAC
+            url = info.urlMac; sha = info.sha256Mac;
+           #else
             url = info.url; sha = info.sha256;
+           #endif
         }
         else
         {
@@ -1443,7 +2299,7 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
                    #else
                     url = p.downloadUrl;    sha = p.sha256;
                    #endif
-                    p.status = PluginStatus::Downloading;
+                    p.status = PluginStatus::Queued;
                     p.downloadProgress = 0.0;
                     break;
                 }
@@ -1456,24 +2312,11 @@ void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins)
             staleHashRetryInFlight = retryId;
             emitPluginsUpdated();
             networkManager.downloadInstaller (retryId, url, sha);
-            return;
         }
     }
 
     checkForCenterUpdate();
-
-    int updates = 0;
-    {
-        juce::ScopedLock sl (pluginDataLock);
-        for (auto& p : pluginData)
-            if (p.status == PluginStatus::UpdateAvailable || p.status == PluginStatus::NotInstalled)
-                ++updates;
-    }
-
-    if (updates > 0)
-        emitStatusMessage (juce::String (updates) + " update(s) available", "info");
-    else
-        emitStatusMessage ("All plugins up to date", "success");
+    startBackgroundDownloads();
 }
 
 void MainComponent::onManifestError (const juce::String& errorMessage)
@@ -1484,38 +2327,42 @@ void MainComponent::onManifestError (const juce::String& errorMessage)
     {
         const auto id = staleHashRetryId;
         staleHashRetryId.clear();
-
-        {
-            juce::ScopedLock sl (pluginDataLock);
-            for (auto& p : pluginData)
-                if (p.id == id)
-                {
-                    p.status = PluginStatus::Error;
-                    break;
-                }
-        }
-
-        emitPluginsUpdated();
-        emitStatusMessage ("Download could not be verified - please try again in a few minutes.", "error");
+        setStatus (id, PluginStatus::Error);
+        emitStatusMessage ("Download could not be verified - please try again in a few minutes.", "error", "verify_retry_failed");
         return;
     }
 
-    emitStatusMessage ("Offline - " + errorMessage, "error");
+    emitToPage ("manifestState", manifestStateVar());
+
+    // Said once, not on every retry; "Offline - " keeps it out of the error reports.
+    if (! offlineSeen)
+    {
+        offlineSeen = true;
+        emitStatusMessage ("Offline - " + errorMessage, "error", "offline");
+    }
+}
+
+void MainComponent::onDownloadStarted (const juce::String& pluginId)
+{
+    if (pluginId == "__center__" || networkManager.isPrefetch (pluginId))
+        return;
+    setStatus (pluginId, PluginStatus::Downloading);
 }
 
 void MainComponent::onDownloadProgress (const juce::String& pluginId, double progress)
 {
-    // Update local state
+    if (networkManager.isPrefetch (pluginId))
+        return;   // a background download stays out of sight
+
     {
         juce::ScopedLock sl (pluginDataLock);
         for (auto& p : pluginData)
-        {
             if (p.id == pluginId)
             {
                 p.downloadProgress = progress;
+                p.status = PluginStatus::Downloading;
                 break;
             }
-        }
     }
 
     auto* obj = new juce::DynamicObject();
@@ -1527,8 +2374,29 @@ void MainComponent::onDownloadProgress (const juce::String& pluginId, double pro
 void MainComponent::onDownloadComplete (const juce::String& pluginId,
                                          const juce::File& localFile,
                                          bool success,
+                                         bool cancelled,
                                          const juce::String& errorMessage)
 {
+    // What was this download for? The status says: a card that is Queued or
+    // Downloading wants an install; anything else was a background pre-download.
+    PluginStatus status = PluginStatus::NotInstalled;
+    juce::String version, name = pluginId;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == pluginId) { status = p.status; version = p.remoteVersion; name = p.name; break; }
+    }
+    const bool wantsInstall = status == PluginStatus::Queued || status == PluginStatus::Downloading;
+
+    if (cancelled)
+    {
+        if (wantsInstall)
+            restoreIdleState (pluginId);
+        batcher.poke();
+        applyCenterUpdateWhenIdle();
+        return;
+    }
+
     // A hash mismatch usually means our manifest is OLD, not that the file is
     // bad - see below. Decide that first, for the Center's own installer too:
     // it sits behind the same moving tag and the same cached manifest.
@@ -1537,10 +2405,12 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
     if (isRetry)
         staleHashRetryInFlight.clear();
 
-    if (! success && errorMessage.contains ("SHA256") && ! isRetry && staleHashRetryId.isEmpty())
+    if (! success && errorMessage.contains ("SHA256") && ! isRetry && staleHashRetryId.isEmpty()
+        && (wantsInstall || pluginId == "__center__"))
     {
         staleHashRetryId = pluginId;
-        emitStatusMessage ("Checking for a newer version...", "info");
+        emitStatusMessage ("Checking for a newer version...", "info", "checking_newer");
+        lastManifestAttemptMs = juce::Time::currentTimeMillis();
         networkManager.fetchManifest (true);
         return;
     }
@@ -1556,9 +2426,21 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
         return;
     }
 
+    if (! wantsInstall)
+    {
+        // A background pre-download: keep it for its version, quietly.
+        if (success)
+        {
+            prefetched[pluginId] = { version, localFile };
+            emitPluginsUpdated();
+        }
+        batcher.poke();
+        return;
+    }
+
     if (success)
     {
-        launchSilentInstaller (localFile, pluginId);
+        handBatcher (pluginId, localFile);
     }
     else
     {
@@ -1572,338 +2454,17 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
         // So the first mismatch (handled above) fetches the manifest again -
         // from origin, past the CDN's five-minute copy - and tries once. A
         // mismatch on that retry lands here: the file really is wrong, and the
-        // error stands. The first version of this cleared the retry id before
-        // the retry ran, so every mismatch counted as the first and the
-        // Analyzer update looped for as long as the CDN stayed stale.
-        {
-            juce::ScopedLock sl (pluginDataLock);
-            for (auto& p : pluginData)
-            {
-                if (p.id == pluginId)
-                {
-                    p.status = PluginStatus::Error;
-                    break;
-                }
-            }
-        }
+        // error stands.
+        setStatus (pluginId, PluginStatus::Error);
 
-        emitPluginsUpdated();
+        auto* params = new juce::DynamicObject();
+        params->setProperty ("name", name);
         // NetworkManager already prefixes errors with "Download failed - " where
         // appropriate; just surface whatever it sent.
-        emitStatusMessage (errorMessage.isNotEmpty() ? errorMessage
-                                                     : juce::String ("Download failed."),
-                           "error");
-    }
-}
-
-// ============================================================================
-// Silent installer — runs in background thread
-// ============================================================================
-
-void MainComponent::launchSilentInstaller (const juce::File& installerFile,
-                                            const juce::String& pluginId)
-{
-    {
-        juce::ScopedLock sl (pluginDataLock);
-        for (auto& p : pluginData)
-        {
-            if (p.id == pluginId)
-            {
-                p.status = PluginStatus::Installing;
-                break;
-            }
-        }
-    }
-    emitPluginsUpdated();
-    emitStatusMessage ("Installing...", "info");
-
-    auto filePath     = installerFile.getFullPathName();
-    auto pid          = pluginId;
-    juce::String regKey, remoteVer, vst3Bundle, auBundle, standaloneExe;
-
-    {
-        juce::ScopedLock sl (pluginDataLock);
-        for (auto& p : pluginData)
-        {
-            if (p.id == pluginId)
-            {
-                regKey        = p.registryKey;
-                remoteVer     = p.remoteVersion;
-                vst3Bundle    = p.vst3Bundle;
-                auBundle      = p.auBundle;
-                standaloneExe = p.standaloneExe;
-                break;
-            }
-        }
+        emitStatusMessage (errorMessage.isNotEmpty() ? errorMessage : juce::String ("Download failed."),
+                           "error", "download_failed", juce::var (params));
     }
 
-    juce::Thread::launch ([this, filePath, pid, regKey, remoteVer,
-                           vst3Bundle, auBundle, standaloneExe]
-    {
-        bool started = false;
-
-    #if JUCE_MAC
-        // Record what was already on disk BEFORE installation
-        bool hadVst3Before       = VersionChecker::isVst3Installed (vst3Bundle);
-        bool hadAUBefore         = VersionChecker::isAUInstalled (auBundle);
-        bool hadStandaloneBefore = VersionChecker::isStandaloneInstalled (standaloneExe);
-
-        juce::String cmd = juce::String ("osascript -e 'do shell script \"installer -pkg ")
-                         + "\\\"" + filePath + "\\\""
-                         + " -target /\" with administrator privileges'";
-
-        DBG ("[Installer] Running: " + cmd);
-
-        // Use system() instead of ChildProcess — ChildProcess can't show
-        // the macOS admin password dialog from a background thread
-        int exitCode = std::system (cmd.toRawUTF8());
-        bool processFinished = true;
-        started = true;
-    #else
-        // A DAW with the plugin loaded (or its standalone) holds the files the
-        // installer must replace, and Inno would roll back with exit code 5. The
-        // plugin's own UPDATE button asked the user to close it, so wait for the
-        // files to be free and install then - once, with one UAC prompt.
-        {
-            // The Analyzer is an app, but its installer also replaces the VST3
-            // bridge a DAW keeps on its master bus - outside the RONE folder.
-            const auto bundle = vst3Bundle.isNotEmpty() ? VersionChecker::getVst3InstallDir().getChildFile (vst3Bundle)
-                              : pid == "RONEAnalyzer" ? VersionChecker::getVst3InstallDir().getParentDirectory()
-                                                                                 .getChildFile ("RONE Analyzer Bridge.vst3")
-                                                      : juce::File();
-            const auto exe = standaloneExe.isNotEmpty() ? juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
-                                                              .getChildFile ("RONE Plugins").getChildFile (standaloneExe)
-                                                        : juce::File();
-            auto holders = PluginInUse::find (bundle, exe);
-
-            if (! holders.isEmpty())
-            {
-                // "Close FL Studio" - a DAW keeps the plugin loaded until it quits,
-                // so the program is named, not the plugin window.
-                auto announce = [this, pid] (const juce::String& waitingFor)
-                {
-                    juce::MessageManager::callAsync ([this, pid, waitingFor]
-                    {
-                        juce::String name = pid;
-                        {
-                            juce::ScopedLock sl (pluginDataLock);
-                            for (auto& p : pluginData)
-                                if (p.id == pid)
-                                {
-                                    p.status = PluginStatus::WaitingForHost;
-                                    p.waitingFor = waitingFor;
-                                    name = p.name;
-                                    break;
-                                }
-                        }
-                        emitPluginsUpdated();
-                        emitStatusMessage (waitingFor.isEmpty()
-                                               ? name + " is still open. Close it and the update installs by itself."
-                                               : name + " is loaded in " + waitingFor + ". Close " + waitingFor
-                                                      + " and the update installs by itself.", "info");
-                    });
-                };
-
-                auto waitingFor = holders.hosts.joinIntoString (", ");
-                announce (waitingFor);
-
-                const auto startedWaiting = juce::Time::getMillisecondCounter();
-                while (! holders.isEmpty())
-                {
-                    if (juce::MessageManager::getInstance()->hasStopMessageBeenSent())
-                        return;   // the Center is quitting; the plugin will ask again next time
-                    if (juce::Time::getMillisecondCounter() - startedWaiting > 12u * 3600u * 1000u)
-                        break;    // half a day: try anyway, the installer reports the lock
-                    juce::Thread::sleep (4000);
-
-                    // Cheap: only the processes that held the files. Once they all let
-                    // go, one full scan - another program may have loaded it meanwhile.
-                    const auto known = holders.pids;
-                    holders = PluginInUse::find (bundle, exe, &known);
-                    if (holders.isEmpty())
-                        holders = PluginInUse::find (bundle, exe);
-
-                    const auto nowWaitingFor = holders.hosts.joinIntoString (", ");
-                    if (! holders.isEmpty() && nowWaitingFor != waitingFor)
-                        announce (waitingFor = nowWaitingFor);
-                }
-
-                juce::MessageManager::callAsync ([this, pid]
-                {
-                    {
-                        juce::ScopedLock sl (pluginDataLock);
-                        for (auto& p : pluginData)
-                            if (p.id == pid) { p.status = PluginStatus::Installing; p.waitingFor = {}; break; }
-                    }
-                    emitPluginsUpdated();
-                });
-            }
-        }
-
-        juce::ChildProcess process;
-        juce::String cmd = "\"" + filePath + "\" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-";
-        started = process.start (cmd);
-
-        if (! started)
-        {
-            DBG ("[Installer] Failed to start process");
-            juce::MessageManager::callAsync ([this, pid] {
-                for (auto& p : pluginData)
-                    if (p.id == pid) { p.status = PluginStatus::Error; break; }
-                emitPluginsUpdated();
-                emitStatusMessage ("Failed to launch installer.", "error");
-            });
-            return;
-        }
-
-        // JUCE's waitForProcessToFinish looks every 2 ms. An installer runs for
-        // tens of seconds (plus a UAC prompt), so ten looks a second is plenty.
-        bool processFinished = false;
-        for (int waited = 0; waited < 120000; waited += 100)
-        {
-            if (! process.isRunning()) { processFinished = true; break; }
-            juce::Thread::sleep (100);
-        }
-        auto exitCode = process.getExitCode();
-    #endif
-        DBG ("[Installer] Process finished=" + juce::String (processFinished ? "YES" : "NO")
-             + " exitCode=" + juce::String (exitCode));
-
-        bool verified = false;
-
-    #if JUCE_MAC
-        if (processFinished && exitCode == 0)
-        {
-            // Check that something NEW was installed (not just pre-existing files)
-            bool hasVst3Now       = VersionChecker::isVst3Installed (vst3Bundle);
-            bool hasAUNow         = VersionChecker::isAUInstalled (auBundle);
-            bool hasStandaloneNow = VersionChecker::isStandaloneInstalled (standaloneExe);
-
-            bool somethingNew = (hasVst3Now && ! hadVst3Before)
-                             || (hasAUNow && ! hadAUBefore)
-                             || (hasStandaloneNow && ! hadStandaloneBefore);
-
-            // If nothing new but all targets exist, still consider it verified
-            // (re-installing over existing files)
-            bool allTargetsPresent = (vst3Bundle.isEmpty()    || hasVst3Now)
-                                  && (auBundle.isEmpty()      || hasAUNow)
-                                  && (standaloneExe.isEmpty() || hasStandaloneNow);
-
-            verified = somethingNew || allTargetsPresent;
-
-            DBG ("[Installer] Verification: somethingNew=" + juce::String (somethingNew ? "YES" : "NO")
-                 + " allTargetsPresent=" + juce::String (allTargetsPresent ? "YES" : "NO")
-                 + " verified=" + juce::String (verified ? "YES" : "NO"));
-
-            if (verified)
-                VersionChecker::setInstalledVersion (regKey, remoteVer);
-        }
-        else
-        {
-            DBG ("[Installer] Installation failed or was cancelled (exitCode=" + juce::String (exitCode) + ")");
-        }
-    #else
-        if (processFinished)
-        {
-            // Inno Setup exit codes: 0 = installed; 8 = installed, but a file
-            // in use is replaced at the next reboot (/NORESTART); anything
-            // else means the install was cancelled or failed - by far the
-            // most common is 5: a plugin file was open in the DAW, the silent
-            // installer could not replace it and rolled everything back.
-            //
-            // This used to accept any run whose registry stamp was non-empty,
-            // i.e. every re-install of a plugin that had EVER been installed,
-            // so a rolled-back update was announced as "installed
-            // successfully!" and offered again at the next check, forever.
-            verified = (exitCode == 0 || exitCode == 8);
-
-            if (verified)
-                VersionChecker::setInstalledVersion (regKey, remoteVer);
-        }
-    #endif
-
-        juce::MessageManager::callAsync ([this, pid, verified, remoteVer, exitCode, processFinished]
-        {
-            juce::String pluginName;
-
-            {
-                juce::ScopedLock sl (pluginDataLock);
-                for (auto& p : pluginData)
-                {
-                    if (p.id == pid)
-                    {
-                        pluginName = p.name;
-
-                        if (verified)
-                        {
-                            p.installedVersion = VersionChecker::getInstalledVersion (p.registryKey);
-                            if (p.installedVersion.isEmpty())
-                                p.installedVersion = remoteVer;
-                            p.status = PluginStatus::UpToDate;
-                        }
-                        else
-                        {
-                            p.status = PluginStatus::Error;
-                        }
-
-                        break;
-                    }
-                }
-            }
-
-            if (verified)
-            {
-                if (exitCode == 8)
-                    emitStatusMessage (pluginName + " installed - restart Windows to finish replacing a file that was in use.", "success");
-                else
-                    emitStatusMessage (pluginName + " installed successfully!", "success");
-
-                // Auto-open standalone after install
-            #if JUCE_MAC
-                juce::String standaloneExeLocal;
-                {
-                    juce::ScopedLock sl (pluginDataLock);
-                    for (auto& p : pluginData)
-                        if (p.id == pid) { standaloneExeLocal = p.standaloneExe; break; }
-                }
-                if (standaloneExeLocal.isNotEmpty())
-                {
-                    auto appName = standaloneExeLocal.replace (".exe", "") + ".app";
-                    juce::File app;
-                    for (auto& dir : { juce::File ("/Applications"),
-                                        juce::File ("/Applications/RONE Plugins"),
-                                        VersionChecker::getStandaloneInstallDir() })
-                    {
-                        auto candidate = dir.getChildFile (appName);
-                        if (candidate.exists()) { app = candidate; break; }
-                    }
-                    if (app.exists())
-                        app.startAsProcess();
-                }
-            #endif
-            }
-            else
-            {
-                if (! processFinished)
-                    emitStatusMessage ("Install timed out.", "error");
-                else if (exitCode != 0)
-                {
-                #if JUCE_WINDOWS
-                    if (exitCode == 5)
-                        emitStatusMessage ("Install cancelled - a file was in use. Close the DAW or standalone that has "
-                                           + pluginName + " open, then update again.", "error");
-                    else
-                        emitStatusMessage ("Install failed (installer code " + juce::String (exitCode) + ").", "error");
-                #else
-                    emitStatusMessage ("Install cancelled or failed (code " + juce::String (exitCode) + "). Enter your password when prompted.", "error");
-                #endif
-                }
-                else
-                    emitStatusMessage ("Install verification failed - components not found.", "error");
-            }
-
-            // Push full updated state
-            emitPluginsUpdated();
-        });
-    });
+    // Nothing more downloading may be the moment the batch was waiting for.
+    batcher.poke();
 }

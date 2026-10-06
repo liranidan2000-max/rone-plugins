@@ -34,6 +34,22 @@ inline juce::String command()
     return "\"" + executable().getFullPathName() + "\" " + kTrayFlag;
 }
 
+// The copy the installer put in place (Program Files\RONE Plugins, or an app in
+// /Applications). A build run from a source tree must never take over the login
+// entry or the ronecenter:// link: a dev build left them pointing at itself
+// overnight on 2026-10-05, and the installed Center no longer started at login.
+inline bool isInstalledCopy()
+{
+   #if JUCE_WINDOWS
+    const auto dir = juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory).getChildFile ("RONE Plugins");
+    return executable().getParentDirectory() == dir;
+   #elif JUCE_MAC
+    return juce::File::getSpecialLocation (juce::File::currentApplicationFile).getFullPathName().startsWith ("/Applications/");
+   #else
+    return false;
+   #endif
+}
+
 inline bool isSupported()
 {
    #if JUCE_WINDOWS || JUCE_MAC
@@ -101,7 +117,7 @@ inline bool setEnabled (bool on)
 /** Switch it on the first time this build runs; never override a later choice. */
 inline void applyDefaultOnce()
 {
-    if (! isSupported())
+    if (! isSupported() || ! isInstalledCopy())
         return;
 
     auto marker = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
@@ -118,7 +134,7 @@ inline void applyDefaultOnce()
 /** The exe moved (update, reinstall) - keep the entry pointing at the new path. */
 inline void refreshIfEnabled()
 {
-    if (isEnabled())
+    if (isEnabled() && isInstalledCopy())
         setEnabled (true);
 }
 } // namespace AutoStart

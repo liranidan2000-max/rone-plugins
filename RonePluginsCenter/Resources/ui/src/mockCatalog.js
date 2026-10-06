@@ -1,0 +1,443 @@
+// Generated from versions.json for the dev preview (no JUCE backend). Not used in the Center.
+export const MOCK_CATALOG = [
+ {
+  "id": "ReverseReverb",
+  "name": "RONE Reverse Reverb",
+  "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
+  "remoteVersion": "1.1.10.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.1.10 - Mac standalone: OPTIONS opens again and the window can be dragged by its title bar - a click there used to be caught by the file-drop layer. 1.1.9 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.1.8 - TREMOLO: with RAMP on, the TO box stays inside the tremolo panel instead of running off its right edge. 1.1.7 - NOW AN EFFECT: put it on a mixer insert - the audio passing through stays untouched and the swell is added on top (a project that had it in an instrument slot needs it added again, as an effect). REC: the red dot on RATE records your hand into the sample. TRANSITION: the swell runs straight into the original hit and its decay - no gap. This build's installer also removes a leftover file from older versions that made FL Studio keep listing it as a synth.",
+  "type": "plugin",
+  "logoUrl": "/logos/ReverseReverb.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=gNoltmk77DM",
+  "price": 49,
+  "launch_price": 39,
+  "store_url": "https://roneaudio.com/products/reverse-reverb.html",
+  "accent": "#2BD9FF",
+  "tags": [
+   "riser",
+   "reverse",
+   "swell",
+   "reverb",
+   "transition"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Reverb reverso sincronizado ao tempo para risers, swells de voz e transições sem emenda - caudas de 1/32 a 8 compassos, moldadas com fades, filtros e largura estéreo"
+   },
+   "es": {
+    "description": "Reverb inverso sincronizado al tempo para risers, swells de voz y transiciones sin cortes - colas de 1/32 a 8 compases, moldeadas con fades, filtros y anchura estéreo"
+   }
+  },
+  "categories": [
+   "transitions",
+   "space"
+  ]
+ },
+ {
+  "id": "RoneStutter",
+  "name": "RONE Stutter",
+  "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
+  "remoteVersion": "1.5.4.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.5.4 - Mac standalone: OPTIONS opens again and the window can be dragged by its title bar - a click there used to be caught by the file-drop layer. The standalone no longer asks for the microphone: it plays the file you loaded and has no audio input, so the mic never reaches your speakers either. 1.5.3 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.5.2 - The preview stops when the song stops (a 10 ms fade, no click), and a preview still waiting for the bar line is called off. ON BAR starts off: RESULT plays at the click - light ON BAR to start it on the next bar line. BARS reaches down to 1/4 and 1/8 for short fills. The standalone's BPM box selects its number on a click, so a typed tempo replaces it. 1.5.1 - FIX: play no longer feels late. With ON BAR lit, a preview used to wait for the next bar line even when the DAW was stopped (and in the standalone app) - up to a whole bar of silence after the click. Now it starts at the click whenever the song is not playing. While the song plays, ON BAR still starts the preview on the next bar line, and the play button itself shows the wait: it pulses and reads NEXT BAR - press it again to call the preview off. FIX: with the DAW looping, a preview pressed in the last bar of the loop could start a whole loop late or not at all; it now starts on the next bar line the song reaches. 1.5.0 - PRESETS: fourteen factory presets in the header, the builds from the tutorial with the exact values - Swell 16, Gated Swell, Speed-Up Roll, Octave Riser, Tuned Riser, Fifth Up, Wide To Centre, Auto Tighten, Soft Pulses, Tremolo 1 Bar, Tremolo 2 Bars, Tape Slowdown and Downlifter. Arrows step through them, the name opens the list. A preset changes the stutter only: your KEY, MIX and BPM stay as they are. SIX MACRO SLOTS beside the name are yours - hold one to store the current settings, tap it to get them back; they are the same in every project. The preset name is saved with the project, so closing the window never looks like a reset. FIX: two Stutter windows that open together (a project with two of them) no longer leave one of them blank. 1.4.2 - FIX: when the plugin window is smaller or larger than its default size, the waveform follows the mouse again. A click on a hit picks that hit, GLOBAL IN / OUT and the curve dot stay under the pointer while you drag, the right end of the fades' band starts a GLOBAL OUT again, and the wheel zooms around the point under the mouse. 1.4.1 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 1.4.0 - AUTO: an OFF / up / down chip under FADE OUT and STEREO moves the knob by itself across the clip. The knob is where the fill starts; up walks it to 100 %, down to 0 %, repeat by repeat - STEREO 100 % and down opens in full left / right ping-pong and lands in the centre on the last hit. A thin ring outside each knob shows the road and a dot rides it while the result plays, like an LFO display. FREE: a new GRID button that takes the repeat length off the tempo grid - drag the SLICE chip anywhere from 5 ms to 2 s; the clip is still BARS long, so it still lands on the bar. TREMOLO (in FREE): the repeat length glides from SLICE to an END length across the clip, wide to dense or dense to wide, with no steps. Ramps now reach their full value on the last repeat (PITCH RAMP included). 1.3.0 - The page opens minimal now: the waveform, GRID, SLICE, BARS, FADE OUT, STEREO, one transport and EXPORT. ADVANCED in the footer brings the rest of the controls bar and the STUTTER button back, and EXTRAS beside it opens the drawer. A file you drop IS a stutter - it is rendered the moment it lands, starting from the first transient that actually sounds, and PREV / NEXT re-roll the same fill from the neighbouring hits. Every change re-renders by itself, so the STUTTER button is only there when you want to force one. One play button instead of two: it plays whatever the ORIGINAL / RESULT toggle is showing. The DRAG TO EXPORT strip under the window is gone and the waveform itself is the drag source - press on the lower part of the result and pull it into the arrangement. The top of the waveform is the fades' band, where GLOBAL IN and GLOBAL OUT are full-height columns you can grab at any height instead of a dot to hit, and the curve's belly is pulled up and down. 1.2.0 - RAMP TO: one render that accelerates from the GRID to 1/16, 1/32 or 1/64, stage by stage (LIN / EXP), the classic fill without arranging three clips. PITCH and PITCH RAMP re-pitch the repeats; KEY + SCALE tune the fast stages so the buzz at the end of a roll is in key. ADVANCED drawer with MIX (LOCK at 100 %), the fade curves and the global fades as knobs. ON BAR: previews start on the next bar line. A reopened project now shows its file and selection immediately. 1.1.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.1.4 - the bottom row of the standalone window no longer hangs below its edge. Dragging audio in from Cubase now works. A project-window event is rendered on the spot and handed over as a promise rather than a plain file, and the plugin now picks that up, so you can drop an event straight off the timeline instead of exporting it first.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneStutter.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
+  "price": 49,
+  "launch_price": 39,
+  "store_url": "https://roneaudio.com/products/rone-stutter.html",
+  "accent": "#FFD02B",
+  "tags": [
+   "stutter",
+   "gate",
+   "glitch",
+   "fill",
+   "edit"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Motor de stutter travado no tempo - divisões de batida, curvas de fade esculpidas e movimento estéreo para fills, edits e builds glitch na hora"
+   },
+   "es": {
+    "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
+   }
+  },
+  "categories": [
+   "rhythm"
+  ]
+ },
+ {
+  "id": "RoneStucker",
+  "name": "RONE Stucker",
+  "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
+  "remoteVersion": "1.3.1.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.3.1 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.3.0 - The stutter catches what starts where the knob comes up: draw the automation up on a hit and that hit is caught, every time. In SYNC the slice starts exactly on the grid line, even when your DAW hands the automation over a few milliseconds early, so the result no longer depends on the buffer size. The first pass is the live sound itself, then it repeats (before 1.3.0 the slice was the beat that had already played). Also: two Stucker windows opened together both show their page. 1.2.1 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 1.2.0 - GO now starts the ride from the downbeat of the bar you press it in (the press is the mark, no waiting for the next bar). SCALE and REV are gone; KEY stays and steps in semitones to the root. 1.1.0 - RIDE: pick 1, 2, 4 or 8 bars and press GO - from the next bar the knob climbs by itself to 100 % and releases exactly on the downbeat (LIN / EXP / S curve; MIDI C2). KEY + SCALE in ADVANCED: the scream lands on the root of the song and steps through the scale on the way up; the LANDS chip shows the note. ON THE DROP: CUT (as always), TAIL (the last loop rings and fades over a beat) or REVERSE (the slice plays backwards once - a downlifter). REV reads the slice backwards while it shrinks. 1.0.8 - MIX 100 % is LOCK (the loop replaces the source, as always; the knob turns white and reads LOCK); anything below 100 % keeps the source at full level and adds the stutter on top at MIX. 1.0.6 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable and its version line is real. 1.0.5 - the bottom row of the standalone window no longer hangs below its edge. A new MIX control in the bottom right corner sets the dry/wet of the stuck signal. It sits at 100 % by default, where the plugin behaves exactly as before, and it is fully automatable: ride it down to pull a long roll back under the mix and bring it up again without a click, mid-stutter.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneStucker.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=l6_cvuOajI4",
+  "price": 29,
+  "launch_price": 19,
+  "store_url": "https://roneaudio.com/products/rone-stucker.html",
+  "accent": "#9D6BFF",
+  "tags": [
+   "loop roll",
+   "buffer",
+   "repeat",
+   "fill",
+   "stutter"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Um knob que agarra o loop e o enrola - a fatia capturada encolhe cada vez mais até gritar, e então solta de volta no beat"
+   },
+   "es": {
+    "description": "Un knob que atrapa el loop y lo enrolla - la porción capturada se encoge cada vez más hasta gritar, y luego suelta de vuelta al beat"
+   }
+  },
+  "categories": [
+   "rhythm",
+   "transitions"
+  ]
+ },
+ {
+  "id": "RoneThrow",
+  "name": "RONE Throw",
+  "description": "One knob that throws anything into a tempo-locked atmosphere - a dotted-8th ping-pong delay whose band-limited feedback loop stays clean at near-infinite feedback, so the wash sits behind the mix instead of muddying it",
+  "remoteVersion": "1.8.1.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.8.1 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.8.0 - THROW OPENS, MIX FADES: THROW is now the send - automate it up where the throw should happen, and when it comes back to 0 the atmosphere keeps ringing instead of vanishing with the knob. MIX is the fader that takes it down or out (the whole tail at once, reverb included), KILL still cuts it, and BYPASS is your dry sound only. Raising THROW again, stopping the song or loading a preset starts a fresh throw. 1.7.3 - LOUDER: the whole effect is 2.8 dB louder at GAIN 0, so THROW at 100 % comes through without reaching for GAIN. GAIN still starts at 0 and adds on top, and your dry sound is never touched. The first preset is now simply INIT. 1.7.2 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 1.7.1 - REST ON STOP: when the song stops, Throw kills its tail and rests until you press play or touch the knob, so an automated throw never keeps ringing into a stopped project. 1.7.0 - PITCH has an HZ / NOTE chip: in NOTE the knob steps in semitones and stays a note, and the readout shows the note coming in and the note going out (A3 > E4). RIDE is gone. 1.6.0 - KILL replaces FREEZE: one press cuts the tail in 6 ms so the next throw starts clean (MIDI D2). GAIN moved out of ADVANCED into the footer next to PITCH and MIX. SHIMMER and the PITCH 20K range are gone. The window writes to the screen only when something changed. 1.5.0 - RIDE: pick 1, 2, 4 or 8 bars and press GO - from the next bar the knob climbs by itself to 100 %, lands on the downbeat and eases back (LIN / EXP / S curve in ADVANCED; MIDI C2). FREEZE next to BYPASS holds the tail as a bed, on the bar when RIDE is set (MIDI D2). SHIMMER +7 / +12 / +19 lifts the loop in key on every pass. DUCK KEY can duck to a sidechain input (the kick) instead of the input. MIDI notes C1-F1 recall the six macro slots. 1.4.0 - GAIN in ADVANCED: the whole effect, delay and reverb, up to +18 dB louder on top of MIX; the dry is untouched. 1.3.0 - a 200 / 20K chip beside PITCH: 20K makes the same knob span 20 kHz each way, far past subtle - fold-over and grit. The mouse wheel now moves every knob (shift = fine). The About panel's texts are readable and its version line is real. 1.2.1 - the footer (PITCH, MIX) no longer hangs below the standalone window. 1.2.0 - PITCH. A new knob in the footer next to MIX frequency-shifts the finished delay up or down, -200 to +200 Hz: every partial of the repeats moves by the same number of Hz, so the tail turns metallic and bell-like instead of becoming a second voice. It sits after the delay and before SPACE, the dry is never touched, and at 0 nothing changes. Also from 1.1.0: a macro slot with a macro stored in it stays lit white in every project - lit means stored, dark means empty.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneThrow.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=htrhBnLIBtQ",
+  "price": 39,
+  "launch_price": 29,
+  "store_url": "https://roneaudio.com/products/rone-throw.html",
+  "accent": "#D8E4EC",
+  "tags": [
+   "delay",
+   "throw",
+   "dub",
+   "echo",
+   "ping-pong"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Um knob que joga qualquer som numa atmosfera travada no tempo - um delay ping-pong de colcheia pontuada cujo feedback limitado em banda fica limpo mesmo quase infinito, então a cauda fica atrás da mix sem embolar"
+   },
+   "es": {
+    "description": "Un knob que lanza cualquier sonido a una atmósfera fijada al tempo - un delay ping-pong de corchea con puntillo cuyo feedback limitado en banda sigue limpio casi infinito, así la cola queda detrás de la mezcla sin embarrarla"
+   }
+  },
+  "categories": [
+   "space"
+  ]
+ },
+ {
+  "id": "RoneClipper",
+  "name": "RONE Clipper",
+  "description": "FREE plugin - sign in to the Center with a free RONE account and it unlocks. A hard clipper that shows you exactly what it cut: the waveform after the clip stage with the removed peaks in blue, one CLIP knob, LOW CUT that keeps kick and bass out of the clipper, and integer-latency oversampling that nulls against the input at -100 dB",
+  "remoteVersion": "1.0.2.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.0.2 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.0.1 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 1.0.0 - first release. WAVE / PEAKS / DETAIL views of what the clipper removed (drag up and down on the graph to zoom time), a single CLIP threshold knob, LOW CUT (the band below it bypasses the clipper and the clipper's own low products are filtered out, linear phase), DELTA to hear only what was removed, AUTO GAIN make-up for the threshold, 1x-16x oversampling with a fixed latency, and INPUT / OUTPUT faders with meters under ADVANCED.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneClipper.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
+  "price": 0,
+  "launch_price": 0,
+  "store_url": "https://roneaudio.com/products/rone-clipper.html",
+  "accent": "#3D8BFF",
+  "released": "2026-09-22",
+  "tags": [
+   "clipper",
+   "loudness",
+   "master",
+   "limiter"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Um hard clipper que mostra exatamente o que cortou: a forma de onda depois do clip com os picos removidos em azul, um knob CLIP, LOW CUT que mantém kick e baixo fora do clipper, e oversampling que zera contra a entrada a -100 dB"
+   },
+   "es": {
+    "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que deja el kick y el bajo fuera del clipper, y oversampling que se anula contra la entrada a -100 dB"
+   }
+  },
+  "categories": [
+   "mix"
+  ],
+  "free": true
+ },
+ {
+  "id": "RoneRise",
+  "name": "RONE Rise",
+  "description": "One knob, the whole build-up: turn INTENSITY up over the phrase and the mix becomes a rise (a steep high-pass, a big reverb, echoes, noise, a barber-pole climb), snap it to zero and the drop hits with the reverb still spilling into it - or press GO and let it land on the bar by itself",
+  "remoteVersion": "1.0.3.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.0.3 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.0.2 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 1.0.1 - REST ON STOP: when the song stops, Rise lets its tail go and rests at zero until you press play or touch the knob, whatever the automation left it at; the noise riser follows the input so it never hisses into silence; cuts fade instead of clicking. 1.0.0 - first release. One INTENSITY knob and five presets (SUNRISE, HORIZON, UPLIFT, DEEP DIVE, SUPERNOVA). ADVANCED: LAND ON BAR (4 / 8 / 16 / 32 bars, GO runs the rise and lands on the drop, four curves, MIDI C1 = GO), TAIL (1-4 bars of reverb and echo released under the drop, or CUT), and eight macros - RISE (Shepard climb), NOISE, SPACE, KILL LOW, DIVE (low-pass build), GATE (tempo gate that speeds up), SINK and PITCH (up to +200 Hz). A sunrise that follows the knob and pulses on the beat.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneRise.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=WscHq4OLH1s",
+  "price": 39,
+  "launch_price": 29,
+  "store_url": "https://roneaudio.com/products/rone-rise.html",
+  "accent": "#FF5FB8",
+  "released": "2026-09-23",
+  "tags": [
+   "build-up",
+   "riser",
+   "transition",
+   "sweep",
+   "drop"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Um knob, o build-up inteiro: suba o INTENSITY ao longo da frase e a mix vira um rise (high-pass íngreme, reverb grande, ecos, ruído, uma subida infinita), zere no drop e o reverb ainda transborda nele - ou aperte GO e deixe pousar no compasso sozinho"
+   },
+   "es": {
+    "description": "Un knob, todo el build-up: sube INTENSITY a lo largo de la frase y la mezcla se vuelve un rise (high-pass pronunciado, gran reverb, ecos, ruido, una subida infinita), llévalo a cero en el drop y la reverb aún se derrama en él - o pulsa GO y deja que aterrice en el compás solo"
+   }
+  },
+  "categories": [
+   "transitions"
+  ]
+ },
+ {
+  "id": "RoneIron",
+  "name": "RONE Iron",
+  "description": "Drop a vocal and it becomes a metallic chop instrument: Iron flattens it to the note you pick, slices it into chops on your MIDI keys, rings each chop through a comb tuned to that note and throws it left and right - play it from the piano roll or let the GROOVE engine write the pattern",
+  "remoteVersion": "1.0.3.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.0.3 - Mac standalone: OPTIONS opens again and the window can be dragged by its title bar - a click there used to be caught by the file-drop layer. 1.0.2 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.0.1 - GROOVE plays the moment you switch it on, even with your DAW stopped, at your project's tempo: press play and it follows your song, press stop and it stops (click RUN in the footer to run it again). The preset locks are always shown next to their controls. The chop read-out no longer jumps while the groove plays, and a macro's card stays open while the mouse rests on it. Drop any sample, not only vocals. 1.0.0 - first release. Drop any vocal (up to 60 s): it is flattened to one note with its formants kept, sliced into chops (AUTO SLICE small / medium / large) and mapped to your keys. IRON and RING tune a metallic comb to the note, every chop pans to its own side (manual per chop or AUTO), FADE shortens every chop, MIX keeps the dry vocal and MIX NOTE keeps the straight note without the metal. GROOVE writes a pattern from 16 researched presets, with per-step editing, on/off per step, rolls, history and lock, and DRAG MIDI into your piano roll. ARP gives each chop the next note of a chord or scale (FOLLOW snaps to it), OCTAVE +/- and MIDI NOTE let the keys under the chops change the note while the groove plays. 15 presets with four macros (METAL, CHOP, SPACE, MOTION), locks that keep a control when you switch presets, six MY SLOTS, TONE, LEVEL, LOW CUT and a SAFE limiter.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneIron.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "price": 39,
+  "launch_price": 29,
+  "store_url": "https://roneaudio.com/products/rone-iron.html",
+  "accent": "#E552FF",
+  "released": "2026-10-04",
+  "tags": [
+   "vocal chop",
+   "slicer",
+   "metallic",
+   "vocal",
+   "instrument"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Solte um vocal e ele vira um instrumento de chops metálicos: o Iron afina na nota que você escolhe, fatia em chops nas suas teclas MIDI, faz cada chop ressoar num comb afinado e o joga para os lados - toque no piano roll ou deixe o GROOVE escrever o padrão"
+   },
+   "es": {
+    "description": "Suelta una voz y se convierte en un instrumento de chops metálicos: Iron la afina a la nota que elijas, la corta en chops en tus teclas MIDI, hace sonar cada chop en un comb afinado y lo lanza a izquierda y derecha - tócalo desde el piano roll o deja que GROOVE escriba el patrón"
+   }
+  },
+  "categories": [
+   "vocal"
+  ]
+ },
+ {
+  "id": "RoneFlanger",
+  "name": "RONE Flanger",
+  "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
+  "remoteVersion": "2.0.9.249",
+  "formats": [
+   "VST3",
+   "Standalone"
+  ],
+  "whatsNew": "2.0.9 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 2.0.8 - INFINITE has three new lengths: 32 BAR and 16 BAR for long builds, 1/4 (one beat) for a fast shimmer - eight in all, from 32 bars down to a quarter bar. Projects and presets saved with an older version open on the length they had; only automation drawn on the sweep length in an older project needs redrawing. 2.0.7 - FIX: OUTPUT works while you play. Turning it, or automating it, now changes the level at once (with a 20 ms ramp) instead of only after the audio restarted. GATE no longer clicks: the effect fades in and out over 5 ms right on the grid line, where it used to switch hard on the edge of the audio buffer (up to a whole buffer late), and the flanger keeps running while the gate is closed, so every pulse comes back clean. 2.0.6 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 2.0.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable. Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneFlanger.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
+  "price": 39,
+  "launch_price": 29,
+  "store_url": "https://roneaudio.com/products/rone-flanger.html",
+  "accent": "#FF3E6C",
+  "tags": [
+   "flanger",
+   "sweep",
+   "jet",
+   "riser",
+   "barberpole"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Um flanger de transição - varra na mão ou ligue o modo INFINITE para subidas e descidas sem fim travadas no compasso, com feedback, offset estéreo e um gate rítmico"
+   },
+   "es": {
+    "description": "Un flanger de transición - barre a mano o activa el modo INFINITE para subidas y bajadas sin fin fijadas al compás, con feedback, offset estéreo y un gate rítmico"
+   }
+  },
+  "categories": [
+   "transitions"
+  ]
+ },
+ {
+  "id": "RoneAfterspace",
+  "name": "RONE AFTERSPACE",
+  "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
+  "remoteVersion": "1.0.3.249",
+  "formats": [
+   "VST3",
+   "AU",
+   "Standalone"
+  ],
+  "whatsNew": "1.0.3 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.0.2 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 1.0.1 - the About panel's texts are readable and its version line is real. Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also: the plugin is named RONE AFTERSPACE in your DAW and ships with a PDF manual.",
+  "type": "plugin",
+  "logoUrl": "/logos/RoneAfterspace.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "videoUrl": "https://www.youtube.com/watch?v=lbKXq6iuctM",
+  "price": 59,
+  "launch_price": 49,
+  "store_url": "https://roneaudio.com/products/afterspace.html",
+  "accent": "#FF8A3D",
+  "tags": [
+   "reverb",
+   "delay",
+   "atmosphere",
+   "ambient",
+   "cinematic"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Designer criativo de reverb, delay e atmosfera - espaços cinematográficos enormes que ficam limpos com ducking embutido, de-esser na cauda (SILK), auto-gain e eco sincronizado, tudo num plugin só"
+   },
+   "es": {
+    "description": "Diseñador creativo de reverb, delay y atmósfera - espacios cinematográficos enormes que se mantienen limpios con ducking integrado, de-esser en la cola (SILK), auto-gain y eco sincronizado, todo en un solo plugin"
+   }
+  },
+  "categories": [
+   "space"
+  ]
+ },
+ {
+  "id": "RONEAnalyzer",
+  "name": "RONE Analyzer",
+  "description": "Professional measurement suite: 30-band spectrum with reference-track comparison, vectorscope, level meters, EBU R128 loudness and bit statistics",
+  "remoteVersion": "1.3.4.243",
+  "formats": [
+   "Standalone"
+  ],
+  "whatsNew": "1.3.4 - Appearance opens as a drawer on the side: the Analyzer moves over and every panel changes as you choose, so the instrument itself is the preview. Every colour in Customize has Copy and Paste, to match one colour across panels. 1.3.3 - A new Appearance panel (app menu or F4): the six themes as cards with a live preview, your own themes, Meter colour (level ramp or the theme's colour) and Meter style (segmented or solid bars). Customize sets every colour, now including the RMS bars and the peak-hold caps. Save as new theme, Set as default, Reset to default - and nothing changes until Apply theme. F2 opens Setup again. 1.3.2 - The correlation meter's colours fade into each other - red through orange, a short yellow at zero, into green - instead of three hard blocks, on the bar, the figure and the ten-second trace. 1.3.1 - The left panel is SPECTROGRAM, with a clean title row. The vectorscope's MODE button switches the frame between the diamond and a circle, and the picture itself is corrected: a left-only signal now draws under L (it drew under R) and full-scale mono lands on the M tip. A new correlation meter: an LED bar in zone colours, the last ten seconds as a trace, and a balance bar. LOUDNESS starts closed and takes no space - the small arrow under the Spectrogram's right scale (or L) opens it. Real cog icons on the settings buttons. 1.3.0 - STEREO / MONO on the vectorscope (key M): fold everything to mono at a click, and with RONE Analyzer Bridge on your DAW's master the DAW plays the fold too - a dot on the chip says the bridge is there. The REF reference corridor is drawn again, with a live average curve, a legend and the distance in the hover readout. Every Setup value now applies: Source (Max L/R, L+R, L, R, Mid, Side), Mode (Peak / Peak Hold / RMS), Top L., Res., Size, Freeze (F), the meters' Display and comp / full range, the goniometer's Release 1 / 2 and AGC. PLAY / STOP and SCAN for a file, a Loop you can switch off, RESET also drops the caps, and Setup's RESET buttons work. 1.2.0 - LOUDNESS: an EBU R128 / BS.1770-4 strip under the Totalyser - Momentary, Short-term, Integrated, Range, true peak (4x oversampled, flat to 20 kHz) and the distance to a CLUB -8 / STREAM -14 / EBU -23 target. L hides it. 1.1.2 - FIX: closing the window quits. It used to hide RONE Analyzer in the system tray and keep it running, which looked like a hang, held up updates and could bring the window back blank. Now the X closes it cleanly and it opens where you left it - including the DAW master (RONE Bridge) source, which now reopens by itself. 1.1.1 - UPDATE NOTICE: when a newer version is out, the Analyzer says so as it opens. UPDATE hands it to the Plugins Center, which installs it once the Analyzer is closed (and the DAW, if the Analyzer Bridge is loaded in it). LATER hides the note for three days. 1.1.0 - A new interface. The same three instruments - Totalyser, Level Meters, Vectorscope - redrawn with a proper type scale, readable numerics and a corner resize grip, and running at a fraction of the CPU it used to.",
+  "type": "standalone",
+  "logoUrl": "/logos/RONEAnalyzer.png",
+  "hasStandalone": true,
+  "hasManual": true,
+  "price": 49,
+  "launch_price": 39,
+  "store_url": "https://roneaudio.com/products/rone-analyzer.html",
+  "accent": "#2DD4BF",
+  "tags": [
+   "spectrum",
+   "loudness",
+   "lufs",
+   "reference",
+   "meter"
+  ],
+  "i18n": {
+   "pt": {
+    "description": "Suíte de medição profissional: espectro de 30 bandas com comparação a uma faixa de referência, vectorscope, medidores de nível, loudness EBU R128 e estatísticas de bits"
+   },
+   "es": {
+    "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
+   }
+  },
+  "categories": [
+   "mix"
+  ]
+ }
+]
+export const MOCK_TIPS = [
+ {
+  "plugin": "RoneThrow",
+  "text": "End the bar with a Throw: automate THROW up on the last beat only, on a dry sound, and let the tail carry the transition.",
+  "i18n": {
+   "pt": "Termine o compasso com um Throw: automatize o THROW só no último tempo, num som seco, e deixe a cauda levar a transição.",
+   "es": "Cierra el compás con un Throw: automatiza THROW solo en el último tiempo, sobre un sonido seco, y deja que la cola lleve la transición."
+  }
+ },
+ {
+  "plugin": "RoneStucker",
+  "text": "Draw the Stucker knob up exactly on the hit you want caught: it grabs what starts where the knob comes up, every time.",
+  "i18n": {
+   "pt": "Desenhe o knob do Stucker subindo exatamente no hit que você quer capturar: ele pega o que começa onde o knob sobe, sempre.",
+   "es": "Dibuja el knob de Stucker subiendo justo en el golpe que quieres atrapar: atrapa lo que empieza donde sube el knob, siempre."
+  }
+ },
+ {
+  "plugin": "RoneRise",
+  "text": "Turn Rise up over the last 8 bars and snap it to zero on the drop: the reverb still spills into the first hit.",
+  "i18n": {
+   "pt": "Suba o Rise nos últimos 8 compassos e zere no drop: o reverb ainda transborda no primeiro hit.",
+   "es": "Sube Rise en los últimos 8 compases y llévalo a cero en el drop: la reverb aún se derrama en el primer golpe."
+  }
+ },
+ {
+  "plugin": "RoneClipper",
+  "text": "Turn LOW CUT up so the kick and bass stay out of the clipper, then push CLIP until the blue only touches the transients.",
+  "i18n": {
+   "pt": "Suba o LOW CUT para o kick e o baixo ficarem fora do clipper, depois empurre o CLIP até o azul só tocar os transientes.",
+   "es": "Sube LOW CUT para que el kick y el bajo queden fuera del clipper, luego empuja CLIP hasta que el azul solo toque los transitorios."
+  }
+ },
+ {
+  "plugin": "ReverseReverb",
+  "text": "Put Reverse Reverb on the last word before the drop: the swell runs straight into the hit, with no gap.",
+  "i18n": {
+   "pt": "Coloque o Reverse Reverb na última palavra antes do drop: o swell entra direto no hit, sem buraco.",
+   "es": "Pon Reverse Reverb en la última palabra antes del drop: el swell entra directo en el golpe, sin hueco."
+  }
+ },
+ {
+  "plugin": "RoneFlanger",
+  "text": "INFINITE at 32 BAR gives a rise that never stops climbing: automate MIX up over the build.",
+  "i18n": {
+   "pt": "O INFINITE em 32 BAR dá um rise que nunca para de subir: automatize o MIX ao longo do build.",
+   "es": "INFINITE en 32 BAR da un rise que nunca deja de subir: automatiza MIX a lo largo del build."
+  }
+ }
+]

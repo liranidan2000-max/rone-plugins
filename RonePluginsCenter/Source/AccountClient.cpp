@@ -18,6 +18,24 @@ AccountClient::AccountClient() = default;
 AccountClient::~AccountClient()
 {
     stopTimer();
+
+    // Answers still on their way must not land in a destroyed client: callbacks
+    // are dropped from here on, and the network threads (sign-in, Google, the
+    // refresh) get a moment to finish - they all touch this object's state.
+    alive->store (false);
+    googleCancel = true;
+    for (int waited = 0; inFlight.load() > 0 && waited < 3000; waited += 20)
+        juce::Thread::sleep (20);
+}
+
+// Runs fn on the message thread unless this client is gone by then.
+void AccountClient::postToMessageThread (std::function<void()> fn)
+{
+    juce::MessageManager::callAsync ([flag = alive, fn = std::move (fn)]
+    {
+        if (flag->load())
+            fn();
+    });
 }
 
 AccountClient::State AccountClient::getState() const
@@ -261,7 +279,7 @@ void AccountClient::applyServerState (const juce::var& response)
 void AccountClient::notifyChanged()
 {
     if (onStateChanged)
-        juce::MessageManager::callAsync ([cb = onStateChanged] { cb(); });
+        postToMessageThread ([cb = onStateChanged] { cb(); });
 }
 
 // Someone who bought a plugin outright and holds no pass is not "unlicensed" —
@@ -293,6 +311,7 @@ void AccountClient::signIn (const juce::String& email, const juce::String& passw
 
     juce::Thread::launch ([this, email, password, cb]
     {
+        const InFlight scope (inFlight);
         auto* payload = new juce::DynamicObject();
         payload->setProperty ("email",       email.trim());
         payload->setProperty ("password",    password);
@@ -341,7 +360,7 @@ void AccountClient::signIn (const juce::String& email, const juce::String& passw
         notifyChanged();
 
         if (cb)
-            juce::MessageManager::callAsync ([cb, success, message] { cb (success, message); });
+            postToMessageThread ([cb, success, message] { cb (success, message); });
     });
 }
 
@@ -380,6 +399,7 @@ void AccountClient::signInWithGoogle (Callback cb)
 
     juce::Thread::launch ([this, cb]
     {
+        const InFlight scope (inFlight);
         auto finish = [this, cb] (bool success, juce::String message)
         {
             {
@@ -389,7 +409,7 @@ void AccountClient::signInWithGoogle (Callback cb)
             busy = false;
             notifyChanged();
             if (cb)
-                juce::MessageManager::callAsync ([cb, success, message] { cb (success, message); });
+                postToMessageThread ([cb, success, message] { cb (success, message); });
         };
 
         // 1. A listener on localhost, on whatever high port is free.
@@ -529,6 +549,7 @@ void AccountClient::signOut (Callback cb)
     {
         juce::Thread::launch ([this, current]
         {
+        const InFlight scope (inFlight);
             int status = 0;
             post ("/app/logout", juce::var (new juce::DynamicObject()), current, status);
         });
@@ -563,12 +584,13 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
     if (! validating.compare_exchange_strong (idle, true))
     {
         if (done)
-            juce::MessageManager::callAsync ([done, licensed = getState().licensed] { done (licensed); });
+            postToMessageThread ([done, licensed = getState().licensed] { done (licensed); });
         return;
     }
 
     juce::Thread::launch ([this, current, done]
     {
+        const InFlight scope (inFlight);
         int status = 0;
         auto response = post ("/app/refresh", juce::var (new juce::DynamicObject()), current, status);
 
@@ -620,7 +642,7 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         notifyChanged();
 
         if (done)
-            juce::MessageManager::callAsync ([done, licensed] { done (licensed); });
+            postToMessageThread ([done, licensed] { done (licensed); });
     });
 }
 

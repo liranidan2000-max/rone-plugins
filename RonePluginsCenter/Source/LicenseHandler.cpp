@@ -328,9 +328,12 @@ void LicenseHandler::validateLicenseAsync (std::function<void (bool)> callback)
 
         juce::MessageManager::callAsync ([this, json, callback]()
         {
-            if (json.isVoid())
+            // Network error — keep cached state, don't revoke. The same for an
+            // answer that is not a verdict at all: a rate limit (429) or a server
+            // error comes back as JSON with no "valid" in it, and used to revoke
+            // a paying customer's serial (Center 2.0 review).
+            if (json.isVoid() || ! json.hasProperty ("valid"))
             {
-                // Network error — keep cached state, don't revoke
                 if (callback) callback (licensed.load());
                 return;
             }

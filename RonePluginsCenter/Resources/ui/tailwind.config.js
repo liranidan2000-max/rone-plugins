@@ -1,88 +1,57 @@
 /** @type {import('tailwindcss').Config} */
+// Colours are CSS variables (index.css) so Settings > High contrast can lift
+// every label and border at once. Values are "R G B" so opacity modifiers
+// (bg-rone-purple/10) keep working.
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+
+const v = (name) => `rgb(var(--${name}) / <alpha-value>)`
+
+// Absolute: the dev server can be started from another folder (.claude/launch.json),
+// and relative globs would then match nothing - the page rendered unstyled.
+const here = path.dirname(fileURLToPath(import.meta.url)).replace(/\\/g, '/')
+
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{js,jsx}",
+    `${here}/index.html`,
+    `${here}/src/**/*.{js,jsx}`,
   ],
   theme: {
     extend: {
       colors: {
         rone: {
-          // --- RONE graphite surfaces (Xvox-inspired house style) ---
-          bg:           '#14161A',
-          panel:        '#17191E',
-          sidebar:      '#17191E',
-          footer:       '#15171B',
-          card:         '#101216',
-          'card-hover': '#15181D',
-          drawer:       '#1B1E23',
-          border:       '#23262C',
-          'border-2':   '#2A2E35',
-          'border-3':   '#383D45',
-          header:       '#17191E',
-          license:      '#15171B',
+          // --- RONE graphite surfaces ---
+          bg:           v('ground'),
+          panel:        v('panel'),
+          card:         v('card'),
+          'card-hover': v('card-hover'),
+          drawer:       v('drawer'),
+          border:       v('line'),
+          'border-2':   v('line2'),
+          'border-3':   v('line3'),
 
-          // --- Accent: Center neon = purple (one neon per product) ---
-          purple:       '#9D6BFF',
-          violet:       '#B18AFF',
-          pink:         '#FF3E6C',
-          'deep-purple':'#9D6BFF',
-          'light-purple':'#C4ADFF',
-          'neon-dark':  '#160F21',
-          button:       '#1B1E23',
+          // --- Accent: the Center's neon is purple; each plugin card uses its own (style --acc) ---
+          purple:       v('purple'),
+          'light-purple': v('purple-light'),
+          'neon-dark':  v('neon-dark'),
 
           // --- Semantic (separate from the accent) ---
-          green:        '#3EFF8B',
-          error:        '#F43F5E',
-          amber:        '#FFD02B',
-          cyan:         '#2BD9FF',
+          green:        v('ok'),
+          error:        v('err'),
+          amber:        v('amber'),
+          cyan:         v('cyan'),
 
-          // --- Format badges: graphite chips ---
-          'badge-vst3': '#2A2E35',
-          'badge-au':   '#2A2E35',
-          'badge-standalone': '#2A2E35',
-
-          // --- Text ---
-          'text-primary':   '#E8EAED',
-          'text-secondary': '#B9BDC4',
-          'text-dim':       '#7A7F88',
-          'text-faint':     '#4E535B',
-          'progress-track': '#1B1E23',
-
-          // --- Surface elevation ---
-          'surface-0':  '#14161A',
-          'surface-1':  '#15171B',
-          'surface-2':  '#101216',
-          'surface-3':  '#1B1E23',
+          // --- Text: dim and faint are lighter than before 2.0 (faint was 2.3:1 on the cards) ---
+          'text-primary':   v('tx'),
+          'text-secondary': v('tx2'),
+          'text-dim':       v('tx3'),
+          'text-faint':     v('tx4'),
         }
       },
       fontFamily: {
         sans: ['Manrope', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['Sora', 'Segoe UI', 'sans-serif'],
-      },
-      animation: {
-        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
-        'progress': 'progressShimmer 1.5s linear infinite',
-        'shimmer': 'shimmer 1.8s ease-in-out infinite',
-        'fade-in-up': 'fadeInUp 0.4s ease-out',
-      },
-      keyframes: {
-        pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 5px rgba(157, 107, 255, 0.3)' },
-          '50%': { boxShadow: '0 0 14px rgba(157, 107, 255, 0.55)' },
-        },
-        progressShimmer: {
-          '0%': { backgroundPosition: '200% 0' },
-          '100%': { backgroundPosition: '-200% 0' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
-        },
-        fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(12px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
+        mono: ['"IBM Plex Mono"', 'Consolas', 'monospace'],
       },
     },
   },

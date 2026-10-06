@@ -75,17 +75,34 @@ static juce::String readRegString (HKEY root, const juce::String& subKey, const 
     return result;
 }
 
-static juce::String innoUninstallValue (const juce::String& registryKey, const wchar_t* valueName)
+// AppIds the manifest carries (inno_app_id). A plugin released after this
+// Center build is found through these, without a Center release of its own.
+static juce::CriticalSection& manifestIdsLock() { static juce::CriticalSection l; return l; }
+static std::map<juce::String, juce::String>& manifestIds() { static std::map<juce::String, juce::String> m; return m; }
+
+static juce::String appIdFor (const juce::String& registryKey)
 {
+    {
+        const juce::ScopedLock sl (manifestIdsLock());
+        const auto it = manifestIds().find (registryKey);
+        if (it != manifestIds().end())
+            return it->second;
+    }
     const auto& ids = innoAppIds();
     const auto it = ids.find (registryKey);
-    if (it == ids.end())
+    return it == ids.end() ? juce::String() : it->second;
+}
+
+static juce::String innoUninstallValue (const juce::String& registryKey, const wchar_t* valueName)
+{
+    const auto appId = appIdFor (registryKey);
+    if (appId.isEmpty())
         return {};
 
     // The installers run in 64-bit mode, so the entry lives in the native
     // view; ask for it explicitly in case the Center is ever built 32-bit.
     return readRegString (HKEY_LOCAL_MACHINE,
-                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + it->second + "_is1",
+                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + appId + "_is1",
                           valueName, KEY_WOW64_64KEY);
 }
 
@@ -133,6 +150,51 @@ void VersionChecker::clearInstalledVersion (const juce::String& registryKey)
 #endif
 }
 
+void VersionChecker::registerInnoAppId (const juce::String& registryKey, const juce::String& appId)
+{
+   #if JUCE_WINDOWS
+    const auto id = appId.trim();
+    // "{GUID}" only: the value ends up inside a registry path.
+    if (registryKey.isEmpty() || ! id.startsWithChar ('{') || ! id.endsWithChar ('}')
+        || ! id.containsOnly ("{}-0123456789ABCDEFabcdefGHIJKLMNOPQRSTUVWXYZghijklmnopqrstuvwxyz"))
+        return;
+    const juce::ScopedLock sl (manifestIdsLock());
+    manifestIds()[registryKey] = id;
+   #else
+    juce::ignoreUnused (registryKey, appId);
+   #endif
+}
+
+juce::String VersionChecker::readBundleVersion (const juce::File& bundle)
+{
+   #if JUCE_MAC
+    const auto plist = bundle.getChildFile ("Contents").getChildFile ("Info.plist");
+    if (! plist.existsAsFile())
+        return {};
+
+    // Info.plist is XML in every bundle JUCE builds: <key>CFBundleShortVersionString</key><string>1.1.10</string>
+    if (auto xml = juce::parseXML (plist))
+        if (auto* dict = xml->getChildByName ("dict"))
+            for (auto* e = dict->getFirstChildElement(); e != nullptr; e = e->getNextElement())
+                if (e->hasTagName ("key") && e->getAllSubText() == "CFBundleShortVersionString")
+                    if (auto* value = e->getNextElement())
+                        return value->getAllSubText().trim();
+   #else
+    juce::ignoreUnused (bundle);
+   #endif
+    return {};
+}
+
+#if JUCE_MAC
+// "1.1.10.249" -> "1.1.10": the bundles carry the CMake version, the manifest adds the build number.
+static juce::String baseVersion (const juce::String& v)
+{
+    auto parts = juce::StringArray::fromTokens (v, ".", {});
+    while (parts.size() > 3) parts.remove (parts.size() - 1);
+    return parts.joinIntoString (".");
+}
+#endif
+
 void VersionChecker::refreshInstallState (PluginInfo& info)
 {
     info.installedVersion = getInstalledVersion (info.registryKey);
@@ -149,6 +211,32 @@ void VersionChecker::refreshInstallState (PluginInfo& info)
         {
             info.installedVersion = "?";
             info.status = PluginStatus::UpdateAvailable;  // can't compare -> prompt update
+
+           #if JUCE_MAC
+            // A .pkg from the website never told the Center its version, and "?"
+            // offered the same update forever. The bundle itself knows.
+            juce::String bundleVersion;
+            if (info.vst3Bundle.isNotEmpty())
+                bundleVersion = readBundleVersion (getVst3InstallDir().getChildFile (info.vst3Bundle));
+            if (bundleVersion.isEmpty() && info.auBundle.isNotEmpty())
+                bundleVersion = readBundleVersion (getAUInstallDir().getChildFile (info.auBundle));
+            if (bundleVersion.isEmpty() && info.standaloneExe.isNotEmpty())
+            {
+                const auto app = info.standaloneExe.replace (".exe", "") + ".app";
+                for (auto dir : { juce::File ("/Applications"), juce::File ("/Applications/RONE Plugins") })
+                    if (bundleVersion.isEmpty())
+                        bundleVersion = readBundleVersion (dir.getChildFile (app));
+            }
+
+            if (bundleVersion.isNotEmpty())
+            {
+                const bool current = baseVersion (bundleVersion) == baseVersion (info.remoteVersion);
+                info.installedVersion = current ? info.remoteVersion : bundleVersion;
+                info.status = current ? PluginStatus::UpToDate : PluginStatus::UpdateAvailable;
+                if (current)
+                    setInstalledVersion (info.registryKey, info.remoteVersion);
+            }
+           #endif
         }
     }
 }

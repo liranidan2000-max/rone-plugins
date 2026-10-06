@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"const fs=require('fs');for(const f of fs.readdirSync('dist'))if(f.endsWith('.woff'))fs.unlinkSync('dist/'+f)\"",
     "preview": "vite preview",
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/manrope": "^5.3.0",
+    "@fontsource/sora": "^5.3.0",
     "framer-motion": "^12.38.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

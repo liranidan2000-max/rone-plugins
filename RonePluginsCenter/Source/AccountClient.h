@@ -116,6 +116,17 @@ private:
 
     void applyServerState (const juce::var& response);
     void notifyChanged();
+    void postToMessageThread (std::function<void()> fn);
+
+    // Counts the network threads that are still using this object.
+    struct InFlight
+    {
+        explicit InFlight (std::atomic<int>& c) : count (c) { ++count; }
+        ~InFlight() { --count; }
+        std::atomic<int>& count;
+    };
+    std::atomic<int> inFlight { 0 };
+    std::shared_ptr<std::atomic<bool>> alive = std::make_shared<std::atomic<bool>> (true);
 
     void timerCallback() override;
 

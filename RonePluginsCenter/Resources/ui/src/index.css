@@ -3,9 +3,43 @@
 @tailwind utilities;
 
 /* ============================================================
-   RONE graphite design language (Xvox-inspired)
-   Center accent: purple #9D6BFF - semantic green stays status-only
+   RONE graphite design language - Center 2.0
+   Ground, panels and type are the house's; each plugin card carries
+   its own neon in --acc, the Center's own neon is purple.
    ============================================================ */
+
+:root {
+  --ground: 20 22 26;      /* #14161A */
+  --panel: 23 25 30;       /* #17191E */
+  --card: 16 18 22;        /* #101216 */
+  --card-hover: 21 24 29;
+  --drawer: 27 30 35;      /* #1B1E23 */
+  --line: 35 38 44;        /* #23262C */
+  --line2: 42 46 53;       /* #2A2E35 */
+  --line3: 56 61 69;       /* #383D45 */
+  --purple: 157 107 255;   /* #9D6BFF */
+  --purple-light: 196 173 255;
+  --neon-dark: 22 15 33;   /* #160F21 */
+  --ok: 62 255 139;
+  --err: 244 63 94;
+  --amber: 255 208 43;
+  --cyan: 43 217 255;
+  --tx: 232 234 237;       /* #E8EAED */
+  --tx2: 185 189 196;      /* #B9BDC4 */
+  --tx3: 154 159 168;      /* #9A9FA8 - 6.5:1 on the cards */
+  --tx4: 122 127 136;      /* #7A7F88 - 4.6:1 (was #4E535B, 2.3:1) */
+  color-scheme: dark;
+}
+
+/* Settings > High contrast */
+.hc {
+  --tx2: 215 218 223;
+  --tx3: 194 198 204;
+  --tx4: 169 174 182;
+  --line: 62 67 76;
+  --line2: 74 80 90;
+  --line3: 96 103 114;
+}
 
 html, body, #root {
   margin: 0;
@@ -13,7 +47,7 @@ html, body, #root {
   width: 100%;
   height: 100%;
   background: linear-gradient(180deg, #17191E 0%, #14161A 100%);
-  color: #E8EAED;
+  color: rgb(var(--tx));
   font-family: 'Manrope', 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -21,96 +55,115 @@ html, body, #root {
 }
 
 /* Prevent text selection in UI (feels more native) */
-body {
-  user-select: none;
-  -webkit-user-select: none;
-}
+body { user-select: none; -webkit-user-select: none; }
+input, textarea { user-select: text; -webkit-user-select: text; }
 
-/* Allow text selection in input fields */
-input, textarea {
-  user-select: text;
-  -webkit-user-select: text;
-}
+/* Keyboard focus is always visible (mouse clicks do not draw it) */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid rgb(var(--purple)); outline-offset: 2px; border-radius: 6px; }
 
-/* Custom scrollbar for the plugin grid */
-.plugin-grid-scroll::-webkit-scrollbar { width: 7px; }
-.plugin-grid-scroll::-webkit-scrollbar-track { background: transparent; }
-.plugin-grid-scroll::-webkit-scrollbar-thumb {
-  background: rgba(157, 107, 255, 0.18);
-  border-radius: 4px;
-}
-.plugin-grid-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(157, 107, 255, 0.35);
-}
+.num { font-variant-numeric: tabular-nums; }
 
-/* Surface elevation system */
-.surface-0 { background: #14161A; }
-.surface-1 { background: #15171B; }
-.surface-2 { background: #101216; }
-.surface-3 { background: #1B1E23; }
+/* Scrollbars */
+.scroll-y { overflow-y: auto; }
+.scroll-y::-webkit-scrollbar { width: 8px; }
+.scroll-y::-webkit-scrollbar-track { background: transparent; }
+.scroll-y::-webkit-scrollbar-thumb { background: rgba(157, 107, 255, 0.2); border-radius: 4px; }
+.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(157, 107, 255, 0.36); }
 
-/* Card surface (plugin cards) */
+/* Surfaces */
 .pro-card {
-  background: #101216;
-  border: 1px solid #23262C;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--line));
 }
-.pro-card:hover {
-  border-color: #383D45;
-  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.6);
-}
-
-/* Modal / dialog surface */
-.glass-card {
-  background: linear-gradient(160deg, #1B1E23 0%, #101216 100%);
-}
-
-/* Sidebar panel */
+.glass-card { background: linear-gradient(160deg, #1B1E23 0%, #101216 100%); }
 .sidebar-panel {
   background: linear-gradient(180deg, #17191E 0%, #15171B 100%);
-  border-right: 1px solid #23262C;
+  border-right: 1px solid rgb(var(--line));
 }
 
-/* Banner surface */
-.banner-gradient {
-  background:
-    radial-gradient(120% 160% at 100% 0%, rgba(157, 107, 255, 0.09) 0%, transparent 55%),
-    linear-gradient(160deg, #1B1E23 0%, #101216 100%);
-  border: 1px solid #2A2E35;
+/* Buttons. --acc is the plugin's neon on a card, purple elsewhere. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 34px; padding: 0 14px; border-radius: 9px;
+  font-size: 12px; font-weight: 800; letter-spacing: 0.04em; white-space: nowrap;
+  transition: filter .15s ease, transform .1s ease, border-color .2s, color .2s, background .2s;
 }
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-pri { background: var(--acc, #9D6BFF); color: #101216; box-shadow: 0 0 14px color-mix(in srgb, var(--acc, #9D6BFF) 32%, transparent); }
+.btn-pri:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-out { border: 1px solid rgb(var(--line3)); color: rgb(var(--tx2)); }
+.btn-out:hover:not(:disabled) { border-color: var(--acc, #9D6BFF); color: rgb(var(--tx)); }
+.btn-ghost { color: rgb(var(--tx3)); padding: 0 10px; }
+.btn-ghost:hover { color: rgb(var(--tx)); }
+.btn-busy { background: rgb(var(--drawer)); color: rgb(var(--tx3)); cursor: default; }
+.btn-danger { background: rgb(var(--err)); color: #fff; }
+.btn-sm { height: 30px; padding: 0 11px; font-size: 11.5px; }
 
-/* Primary action: neon fill, dark text (Xvox segmented style) */
-.btn-gradient {
-  background: #9D6BFF;
-  color: #160F21;
-  box-shadow: 0 0 12px rgba(157, 107, 255, 0.28);
-  transition: filter 0.15s ease, transform 0.1s ease;
-}
+/* Legacy names some kept components still use */
+.btn-gradient { background: #9D6BFF; color: #160F21; box-shadow: 0 0 12px rgba(157, 107, 255, 0.28); }
 .btn-gradient:hover { filter: brightness(1.08); }
-.btn-gradient:active { transform: scale(0.97); }
-
-/* Secondary action: outline that lights up */
-.btn-outline {
-  border: 1px solid #383D45;
-  color: #B9BDC4;
-  transition: border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-}
+.btn-outline { border: 1px solid rgb(var(--line3)); color: rgb(var(--tx2)); }
 .btn-outline:hover { border-color: rgba(157, 107, 255, 0.5); color: #9D6BFF; }
-.btn-outline:active { transform: scale(0.97); }
+
+/* Plugin cards */
+.card {
+  --acc: #9D6BFF;
+  background: rgb(var(--card));
+  border: 1px solid rgb(var(--line));
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+.card:hover {
+  border-color: color-mix(in srgb, var(--acc) 45%, rgb(var(--line)));
+  box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--acc) 40%, transparent);
+  transform: translateY(-2px);
+}
+.card.locked .card-icon { filter: saturate(.6) brightness(.82); }
+
+/* The moment an install finishes: the icon flickers on like a neon tube */
+.power-on .card-icon { animation: powerOn 1.5s ease-out; }
+.power-on { animation: powerRing 1.5s ease-out; }
+@keyframes powerOn {
+  0% { filter: brightness(.25) saturate(0); }
+  8% { filter: brightness(1.7); }
+  14% { filter: brightness(.35) saturate(.3); }
+  24% { filter: brightness(1.5); }
+  30% { filter: brightness(.6); }
+  46% { filter: brightness(1.35); }
+  100% { filter: none; }
+}
+@keyframes powerRing {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acc) 70%, transparent); }
+  40% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--acc) 0%, transparent), 0 0 40px color-mix(in srgb, var(--acc) 45%, transparent); }
+  100% { box-shadow: none; }
+}
+
+/* Status LEDs */
+.led { width: 8px; height: 8px; border-radius: 50%; flex: none; background: #4E535B; }
+.led-ok   { background: rgb(var(--ok)); box-shadow: 0 0 8px rgba(62, 255, 139, 0.6); }
+.led-upd  { background: rgb(var(--amber)); box-shadow: 0 0 8px rgba(255, 208, 43, 0.6); }
+.led-busy { background: rgb(var(--cyan)); box-shadow: 0 0 8px rgba(43, 217, 255, 0.6); animation: dotPulse 1.4s ease-in-out infinite; }
+.led-err  { background: rgb(var(--err)); box-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
+@keyframes dotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* Progress */
+.prog { height: 4px; border-radius: 2px; background: rgb(var(--drawer)); overflow: hidden; }
+.prog > i { display: block; height: 100%; background: var(--acc, #2BD9FF); box-shadow: 0 0 8px var(--acc, #2BD9FF); transition: width .2s linear; }
+.prog.indet > i { width: 35% !important; animation: indet 1.2s ease-in-out infinite; }
+@keyframes indet { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+/* Pills */
+.pill { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; padding: 2px 7px; border-radius: 6px; border: 1px solid rgb(var(--line2)); color: rgb(var(--tx3)); text-transform: uppercase; white-space: nowrap; }
+.pill-new { color: var(--acc); border-color: color-mix(in srgb, var(--acc) 50%, transparent); background: color-mix(in srgb, var(--acc) 10%, transparent); }
+.pill-free { color: #7DB2FF; border-color: rgba(61, 139, 255, .5); background: rgba(61, 139, 255, .1); }
+.pill-own { color: #B18AFF; border-color: rgba(157, 107, 255, .4); }
 
 /* Nav item active highlight */
-.nav-active {
-  background: #1B1E23;
-  color: #E8EAED;
-}
+.nav-active { background: rgb(var(--drawer)); color: rgb(var(--tx)); }
 .nav-active::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 22%; bottom: 22%;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: #9D6BFF;
-  box-shadow: 0 0 10px rgba(157, 107, 255, 0.5);
+  content: ''; position: absolute; left: 0; top: 24%; bottom: 24%; width: 3px;
+  border-radius: 0 3px 3px 0; background: #9D6BFF; box-shadow: 0 0 10px rgba(157, 107, 255, 0.5);
 }
 
 /* Skeleton shimmer */
@@ -119,57 +172,19 @@ input, textarea {
   background-size: 200% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
 }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
+/* Dialog backdrop */
+.confirm-backdrop { background: rgba(0, 0, 0, 0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 
-/* Progress bar shimmer - downloading = cyan */
-.progress-shimmer {
-  background-size: 200% 100%;
-  background-image: linear-gradient(90deg, #2BD9FF 0%, #7FE9FF 50%, #2BD9FF 100%);
-  box-shadow: 0 0 8px rgba(43, 217, 255, 0.5);
-}
+/* The rack */
+.rack-shelf { background: repeating-linear-gradient(180deg, #121418 0 2px, #101216 2px 6px); }
+.slot-off img { filter: grayscale(1) brightness(.62); opacity: .72; }
 
-/* Status LED pulse */
-.status-dot-pulse { animation: dotPulse 2s ease-in-out infinite; }
-@keyframes dotPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-
-/* Status LEDs (glow is restrained: <=10px) */
-.led-ok    { background: #3EFF8B; box-shadow: 0 0 8px rgba(62, 255, 139, 0.6); }
-.led-upd   { background: #FFD02B; box-shadow: 0 0 8px rgba(255, 208, 43, 0.6); }
-.led-busy  { background: #2BD9FF; box-shadow: 0 0 8px rgba(43, 217, 255, 0.6); }
-.led-err   { background: #F43F5E; box-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
-.led-off   { background: #4E535B; }
-
-/* Filter pill active */
-.filter-pill-active {
-  background: #9D6BFF;
-  border-color: #9D6BFF;
-  color: #160F21;
-  box-shadow: 0 0 12px rgba(157, 107, 255, 0.3);
-}
-
-/* Confirm dialog backdrop */
-.confirm-backdrop {
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-/* Equalizer bars (sidebar decoration) */
-@keyframes eqBar {
-  0%, 100% { transform: scaleY(0.35); }
-  50% { transform: scaleY(1); }
-}
-.eq-bar { transform-origin: bottom; animation: eqBar 1.6s ease-in-out infinite; }
-
+/* Reduced motion: the user's choice (Settings) or the system's */
+.rm *, .rm *::before, .rm *::after { animation: none !important; transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
-  .eq-bar, .skeleton, .status-dot-pulse, .progress-shimmer { animation: none !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
 /* The window is behind another app (App.jsx 'windowActive'): every CSS

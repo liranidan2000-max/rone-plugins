@@ -108,10 +108,48 @@ Filename: "{app}\RONE Plugins Center.exe"; \
   Description: "Launch RONE Plugins Center"; \
   Flags: nowait postinstall skipifsilent
 
+; Center 2.0 self-update (MainComponent::applyCenterUpdate): the running Center
+; opens this installer with /VERYSILENT /RELAUNCH=1. Once setup is running
+; elevated it waits for that Center to exit (InitializeSetup below), installs,
+; and starts the new Center here - as the user, not elevated.
+Filename: "{app}\RONE Plugins Center.exe"; \
+  Parameters: "--updated"; \
+  Flags: nowait runasoriginaluser; \
+  Check: WantRelaunch
+
 ; ============================================================================
 ; WebView2 detection — skip the install if the runtime is already present
 ; ============================================================================
 [Code]
+// ---- Center self-update handshake ----
+// The Center (Source/Main.cpp) holds the mutex "RonePluginsCenterRunning" for
+// as long as it runs. With /RELAUNCH=1, setup creates "RoneCenterUpdateGo" -
+// the Center's sign that permission was given and it should quit - then waits
+// up to 30 s for the Center's mutex to go before it replaces the exe. An older
+// Center (1.6.x) waits for its own exit before it starts setup and passes no
+// /RELAUNCH, so nothing here changes for it.
+function WantRelaunch: Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;
+
+function InitializeSetup(): Boolean;
+var
+  Waited: Integer;
+begin
+  Result := True;
+  if WantRelaunch then
+  begin
+    CreateMutex('RoneCenterUpdateGo');
+    Waited := 0;
+    while CheckForMutexes('RonePluginsCenterRunning') and (Waited < 150) do
+    begin
+      Sleep(200);
+      Waited := Waited + 1;
+    end;
+  end;
+end;
+
 function WV2Installed(const RootKey: Integer; const SubKey: String): Boolean;
 var
   Version: String;

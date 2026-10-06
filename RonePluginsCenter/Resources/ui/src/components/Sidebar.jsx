@@ -1,207 +1,115 @@
-import React from 'react'
-import { callNative } from '../bridge'
-
-function IconHome() {
-  return (
-    <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" strokeWidth={1.8} />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" strokeWidth={1.8} />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" strokeWidth={1.8} />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" strokeWidth={1.8} />
-    </svg>
-  )
-}
-function IconPlugins() {
-  return (
-    <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
-      <path strokeWidth={1.8} strokeLinecap="round" d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
-    </svg>
-  )
-}
-function IconUpdates() {
-  return (
-    <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
-    </svg>
-  )
-}
-function IconAccount() {
-  return (
-    <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <circle cx="12" cy="8" r="3.5" strokeWidth={1.8} />
-      <path strokeWidth={1.8} strokeLinecap="round" d="M5 20a7 7 0 0114 0" />
-    </svg>
-  )
-}
-function IconSettings() {
-  return (
-    <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" strokeWidth={1.8} />
-      <path strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  )
-}
-
-function IconGlobe() {
-  return (
-    <svg className="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
-      <path strokeWidth={1.8} strokeLinecap="round" d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18M5 7.5h14M5 16.5h14" />
-    </svg>
-  )
-}
+import React, { useRef } from 'react'
+import { Icon } from './ui'
+import { openExternal } from '../bridge'
+import { useBars } from '../usePreview'
+import { accentOf, shortName } from '../catalog'
+import { isGiftPass } from '../announcements'
 
 const NAV = [
-  { key: 'home', label: 'Home', Icon: IconHome },
-  { key: 'plugins', label: 'Plugins', Icon: IconPlugins },
-  { key: 'updates', label: 'Updates', Icon: IconUpdates },
-  { key: 'account', label: 'Account', Icon: IconAccount },
-  { key: 'settings', label: 'Settings', Icon: IconSettings },
+  ['library', Icon.library], ['updates', Icon.updates], ['rack', Icon.rack], ['learn', Icon.learn], ['settings', Icon.settings],
 ]
 
-function EqualizerArt() {
-  // Decorative equalizer graphic - restrained neon glow
-  const bars = [0.4, 0.7, 1.0, 0.55, 0.85, 0.45, 0.75, 0.6, 0.95, 0.5, 0.7, 0.4]
+// The preview player that took the place of the decorative equaliser: its bars
+// move only when something really plays, in the playing plugin's colour.
+function PreviewPlayer ({ t, preview, playingPlugin, reduced }) {
+  const canvas = useRef(null)
+  const color = playingPlugin ? accentOf(playingPlugin) : '#4E535B'
+  useBars(canvas, { color, active: !!playingPlugin, reduced })
+  const status = preview.status
+
   return (
-    <div className="relative h-40 mx-3 my-2 rounded-xl overflow-hidden"
-         style={{ background: 'radial-gradient(120% 90% at 50% 100%, rgba(157,107,255,0.10) 0%, transparent 65%)' }}>
-      <div className="absolute inset-x-0 bottom-0 flex items-end justify-center gap-[4px] h-28 px-4 opacity-85">
-        {bars.map((h, i) => (
-          <div
-            key={i}
-            className="eq-bar w-[3px] rounded-full"
-            style={{
-              height: `${h * 100}%`,
-              background: 'linear-gradient(180deg, #E4D9FF 0%, #9D6BFF 55%, rgba(157,107,255,0) 100%)',
-              animationDelay: `${i * 0.12}s`,
-              animationDuration: `${1.3 + (i % 4) * 0.2}s`,
-            }}
-          />
-        ))}
+    <div className="mx-3 mt-auto rounded-xl border border-rone-border bg-rone-card p-3" style={{ '--acc': color }} aria-live="polite">
+      <div className="flex items-center justify-between">
+        <span className="text-[10.5px] font-extrabold tracking-[0.14em] uppercase text-rone-text-faint">{t('pv.title')}</span>
+        {playingPlugin && (
+          <span className="inline-flex border border-rone-border-2 rounded-[7px] p-[2px] gap-[2px]" role="radiogroup" aria-label="Dry / wet">
+            {[[false, t('pv.dry')], [true, t('pv.wet')]].map(([w, label]) => (
+              <button key={label} type="button" role="radio" aria-checked={preview.wet === w} onClick={() => preview.setWet(w)}
+                      className={`px-2 h-[20px] rounded-[5px] text-[10px] font-extrabold tracking-[0.08em] ${preview.wet === w ? 'text-[#101216]' : 'text-rone-text-dim'}`}
+                      style={preview.wet === w ? { background: color } : undefined}>{label}</button>
+            ))}
+          </span>
+        )}
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-px"
-           style={{ background: 'linear-gradient(90deg, transparent, rgba(157,107,255,0.5), transparent)' }} />
+      <p className={`mt-1 mb-1.5 ${playingPlugin ? 'font-display font-bold text-[13px] text-rone-text-primary truncate' : 'text-[12px] text-rone-text-dim leading-snug'}`}>
+        {playingPlugin ? (status === 'loading' ? t('pv.loading') : 'RONE ' + shortName(playingPlugin))
+          : status === 'error' ? t('pv.error') : t('pv.idle')}
+      </p>
+      <canvas ref={canvas} width="360" height="100" className="block w-full h-[50px]" aria-hidden="true" />
     </div>
   )
 }
 
-export default function Sidebar({ active, onNavigate, updatesCount = 0, license, ownedPlugins = [] }) {
-  // Plugins bought outright, same list AccountPanel gets. The card at the
-  // bottom is on every screen, so it is the one place that must never tell a
-  // customer who paid for two plugins that nothing is activated.
-  const lifetime = Array.isArray(ownedPlugins) ? ownedPlugins : []
-  const passActive = !!license?.licensed
-  // ALL ACCESS already covers every plugin - it wins, and its card is untouched.
-  const lifetimeOnly = !passActive && lifetime.length > 0
+export default function Sidebar ({ t, view, onNavigate, updatesCount, account, license, ownedPlugins, preview, playingPlugin, reduced, locale }) {
+  const navView = view === 'detail' ? 'library' : view
+  const signedIn = !!account.signedIn
+  const pass = !!license.licensed
+  const owned = ownedPlugins.filter(p => !p.free)
+  const gift = isGiftPass(account.passSource)
 
-  // The card is 174px wide inside its padding: two short names still read as a
-  // list, anything longer only survives as a count.
-  const lifetimeNames = lifetime.map(p => p.name || p.id).join(', ')
-  const lifetimeLine = lifetime.length <= 2 && lifetimeNames.length <= 30
-    ? lifetimeNames
-    : `${lifetime.length} plugin${lifetime.length !== 1 ? 's' : ''} unlocked`
+  // The plan card says what is true for this person - before 2.0 a guest read
+  // "PRO · Professional Plan · Not activated".
+  let plan
+  if (pass) {
+    const renews = !gift && account.renewsAt ? new Date(account.renewsAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' }) : ''
+    plan = { k: t('plan.all'), body: renews ? t('plan.allRenews', { date: renews }) : t('plan.allBody'), go: t('plan.allGo'), to: 'account' }
+  } else if (owned.length) {
+    const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+    const names = owned.length <= 2 ? owned.map(p => esc(shortName(p))).join(', ') : t('plan.lifetimeCount', { n: owned.length })
+    plan = { k: t('plan.lifetime'), body: t('plan.lifetimeBody', { names }), go: t('plan.lifetimeGo'), to: 'account' }
+  } else if (signedIn) {
+    plan = { k: t('plan.free'), body: t('plan.freeBody'), go: t('plan.accountGo'), to: 'account' }
+  } else {
+    plan = { k: t('plan.guest'), body: t('plan.guestBody'), go: t('plan.guestGo'), to: 'signup' }
+  }
 
   return (
-    <div className="sidebar-panel flex-shrink-0 w-[230px] h-full flex flex-col">
-      {/* Wordmark: RONE white + PLUGINS neon (house pattern). Clicking it always goes Home. */}
-      <button
-        onClick={() => onNavigate('home')}
-        className="group px-5 pt-5 pb-4 select-none text-left cursor-pointer"
-        title="Home"
-        aria-label="Home"
-      >
-        <div className="font-display font-extrabold text-[19px] tracking-[0.02em] text-rone-text-primary whitespace-nowrap transition-transform duration-200 group-hover:scale-[1.03] origin-left">
-          RONE<span className="ml-1.5 text-rone-purple transition-[text-shadow] duration-200" style={{ textShadow: '0 0 12px rgba(157,107,255,0.35)' }}>PLUGINS</span>
+    <aside className="sidebar-panel flex-shrink-0 w-[224px] h-full flex flex-col" aria-label="RONE Plugins Center">
+      <button onClick={() => onNavigate('library')} className="group px-5 pt-5 pb-4 text-left" aria-label={t('nav.library')}>
+        <div className="font-display font-extrabold text-[19px] tracking-[0.01em] text-rone-text-primary whitespace-nowrap transition-transform duration-200 group-hover:scale-[1.03] origin-left">
+          RONE<span className="ml-1.5 text-rone-purple" style={{ textShadow: '0 0 12px rgba(157,107,255,0.35)' }}>PLUGINS</span>
         </div>
-        <div className="mt-0.5 text-[9px] font-bold tracking-[0.34em] text-rone-text-faint uppercase group-hover:text-rone-text-dim transition-colors">Center</div>
+        <div className="mt-0.5 text-[10px] font-extrabold tracking-[0.32em] text-rone-text-faint uppercase">Center</div>
       </button>
 
-      {/* Nav */}
-      <nav className="px-3 mt-1 flex flex-col gap-1">
-        {NAV.map(({ key, label, Icon }) => {
-          const isActive = active === key
+      <nav className="px-2.5 flex flex-col gap-0.5" aria-label="Main">
+        {NAV.map(([key, I]) => {
+          const active = navView === key
           const badge = key === 'updates' ? updatesCount : 0
           return (
-            <button
-              key={key}
-              onClick={() => onNavigate(key)}
-              className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-[0.14em]
-                          transition-colors duration-200
-                          ${isActive ? 'nav-active' : 'text-rone-text-dim hover:text-rone-text-secondary hover:bg-white/[0.025]'}`}
-            >
-              <span className={isActive ? 'text-rone-purple' : 'text-rone-text-faint'}>
-                <Icon />
-              </span>
-              <span className="flex-1 text-left">{label}</span>
+            <button key={key} onClick={() => onNavigate(key)} aria-current={active ? 'page' : undefined}
+                    className={`relative flex items-center gap-3 px-3 py-[9px] rounded-[10px] text-[13px] font-bold transition-colors
+                                ${active ? 'nav-active' : 'text-rone-text-dim hover:text-rone-text-secondary hover:bg-white/[0.03]'}`}>
+              <I className={`w-[17px] h-[17px] ${active ? 'text-rone-purple' : 'text-rone-text-faint'}`} />
+              <span className="flex-1 text-left">{t('nav.' + key)}</span>
               {badge > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rone-purple text-rone-neon-dark text-[10px] font-extrabold tracking-normal flex items-center justify-center"
-                      style={{ boxShadow: '0 0 10px rgba(157,107,255,0.35)' }}>
-                  {badge}
-                </span>
+                <span className="min-w-[20px] h-[20px] px-1.5 rounded-full bg-rone-amber text-[#1d1600] text-[11px] font-extrabold grid place-items-center"
+                      aria-label={String(badge)}>{badge}</span>
               )}
             </button>
           )
         })}
+        <button onClick={() => openExternal('https://roneaudio.com/?utm_source=plugins_center&utm_medium=sidebar')}
+                className="mt-1.5 flex items-center gap-3 px-3 py-[9px] rounded-[10px] text-[12.5px] font-semibold text-rone-text-dim hover:text-rone-purple hover:bg-white/[0.03]">
+          <Icon.globe className="w-[17px] h-[17px] text-rone-text-faint" />
+          <span className="flex-1 text-left">roneaudio.com</span>
+          <Icon.open className="w-3 h-3" />
+        </button>
       </nav>
 
-      {/* The website - always one click away */}
-      <div className="px-3 mt-3">
-        <button
-          onClick={() => callNative('openExternalUrl', 'https://roneaudio.com').catch(() => {})}
-          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg border border-rone-border/70 text-[11px] font-bold uppercase tracking-[0.14em]
-                     text-rone-text-dim hover:text-rone-purple hover:border-rone-purple/40 hover:bg-white/[0.025] transition-colors duration-200"
-          title="Open roneaudio.com in your browser"
-        >
-          <span className="text-rone-text-faint"><IconGlobe /></span>
-          <span className="flex-1 text-left normal-case tracking-[0.06em]">roneaudio.com</span>
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M7 17L17 7M9 7h8v8" />
-          </svg>
+      <PreviewPlayer t={t} preview={preview} playingPlugin={playingPlugin} reduced={reduced} />
+
+      <div className="m-3 rounded-xl border border-rone-border p-3.5" style={{ background: 'linear-gradient(160deg, #1B1E23 0%, #101216 100%)' }}>
+        <div className="flex items-center gap-2 font-display text-[12px] font-extrabold tracking-[0.16em] text-rone-text-primary">
+          <Icon.bolt className="w-3.5 h-3.5 text-rone-purple" />{plan.k}
+        </div>
+        <p className="mt-1.5 text-[12px] leading-snug text-rone-text-secondary [&_b]:text-rone-green [&_b]:font-bold"
+           dangerouslySetInnerHTML={{ __html: plan.body }} />
+        <button onClick={() => plan.to === 'signup' ? onNavigate('account') : onNavigate(plan.to)}
+                className="mt-2.5 text-[11px] font-extrabold uppercase tracking-[0.12em] text-rone-purple hover:text-rone-light-purple">
+          {plan.go} ›
         </button>
       </div>
-
-      {/* Decorative art */}
-      <div className="flex-1 flex items-center">
-        <div className="w-full">
-          <EqualizerArt />
-        </div>
-      </div>
-
-      {/* PRO plan card - or LIFETIME, for someone who bought plugins instead of the pass */}
-      <div className="p-3">
-        <div className="rounded-xl border border-rone-border p-4"
-             style={{ background: 'linear-gradient(160deg, #1B1E23 0%, #101216 100%)' }}>
-          <div className="flex items-center gap-2">
-            <svg className="w-3.5 h-3.5" fill="#9D6BFF" viewBox="0 0 24 24">
-              <path d="M13 2L4 14h6l-1 8 9-12h-6z" />
-            </svg>
-            <span className="font-display text-[12px] font-extrabold text-rone-text-primary tracking-[0.22em]">
-              {lifetimeOnly ? 'LIFETIME' : 'PRO'}
-            </span>
-          </div>
-          <p className="text-[11px] text-rone-text-secondary mt-2 font-semibold">
-            {lifetimeOnly ? `Lifetime Licence${lifetime.length !== 1 ? 's' : ''}` : 'Professional Plan'}
-          </p>
-          <p className="text-[10px] text-rone-text-dim mt-0.5">
-            {passActive
-              ? (<><span className="text-rone-green font-bold">Active</span> &middot; all plugins unlocked</>)
-              : lifetimeOnly
-              ? (<><span className="text-rone-green font-bold">Active</span> &middot; {lifetimeLine}</>)
-              : 'Not activated'}
-          </p>
-          <button
-            onClick={() => onNavigate('account')}
-            className="mt-3 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-rone-purple hover:text-rone-light-purple transition-colors"
-          >
-            {/* No plan to manage when the plugins are owned outright */}
-            {lifetimeOnly ? 'Your Licences' : 'Manage Plan'}
-            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
+    </aside>
   )
 }
