@@ -555,17 +555,34 @@ private:
         script.replaceWithText (sh);
 
         bool declined = false;
+        juce::String failure;
         if (script.getFullPathName().containsAnyOf ("'\"\\$`"))
-            declined = true;
+            failure = "the download folder's path holds a quote or a $";
         else
         {
             // std::system, not ChildProcess: a ChildProcess cannot show the macOS
             // administrator password dialog from a background thread.
-            const auto cmd = "osascript -e 'do shell script \"/bin/sh " + script.getFullPathName()
-                           + "\" with administrator privileges'";
+            //
+            // The script sits in ~/Library/Caches/RONE Plugins Center - a path with
+            // spaces. 2.0.0 passed it unquoted, sh ran ".../Caches/RONE" and every
+            // Mac install failed as "password not given" (Marvin, 2026-10-06). It is
+            // quoted inside the AppleScript string now, as 1.6 quoted the .pkg, and
+            // osascript's own error is kept: -128 alone means the user cancelled.
+            const auto errFile = dir.getChildFile ("batch-" + tag + ".err.txt");
+            const auto cmd = "osascript -e 'do shell script \"/bin/sh \\\"" + script.getFullPathName()
+                           + "\\\"\" with administrator privileges' 2>'" + errFile.getFullPathName() + "'";
             const int status = std::system (cmd.toRawUTF8());
             const int code = WIFEXITED (status) ? WEXITSTATUS (status) : -1;
-            declined = code != 0 && resultFile.loadFileAsString().trim().isEmpty();
+            const auto err = errFile.loadFileAsString().trim();
+            errFile.deleteFile();
+
+            if (code != 0 && resultFile.loadFileAsString().trim().isEmpty())
+            {
+                declined = err.contains ("-128") || err.containsIgnoreCase ("cancel");
+                if (! declined)
+                    failure = err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
+                                               : "the installer could not start (code " + juce::String (code) + ")";
+            }
         }
 
         juce::StringArray reported;
@@ -598,7 +615,8 @@ private:
                 r.declined = declined;
                 r.code = declined ? "declined" : "failed";
                 r.message = declined ? juce::String ("The administrator password was not given - nothing was installed.")
-                                     : juce::String ("Install cancelled or failed. Enter your password when prompted.");
+                          : failure.isNotEmpty() ? "Install failed - " + failure + ". Nothing was installed."
+                                                 : juce::String ("Install cancelled or failed. Enter your password when prompted.");
                 postResult (r);
             }
 
