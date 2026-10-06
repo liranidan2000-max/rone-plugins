@@ -2100,22 +2100,70 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
     // macOS: the .dmg holds the app. Mount it, put the new app where this one
     // is (asking for the administrator password only when that folder needs
     // it), unmount, start the new app, quit.
+    //
+    // Since macOS 13, App Management can refuse an unsigned app the right to
+    // touch an app in /Applications - root included ("Operation not permitted").
+    // Marvin, macOS 26, 2026-10-06: the password, then "not installed"; the retry
+    // then failed to attach the image a first try had left mounted. 2.0.0 also
+    // deleted the running app BEFORE copying, so a refusal could leave it broken.
+    // Now: copy beside it and swap by renaming (the old app comes back on any
+    // failure), ask for the password only when plain permissions are the reason,
+    // and when macOS says no, open the .dmg in Finder for one drag onto
+    // Applications - Finder is always allowed.
+    juce::ignoreUnused (failed);
     const auto target = juce::File::getSpecialLocation (juce::File::currentApplicationFile);
     const auto dmg = installerFile;
     emitStatusMessage ("Restarting to finish the Center update...", "info", "center_update_restarting");
 
-    juce::Thread::launch ([target, dmg, failed]
+    juce::Thread::launch ([target, dmg, safe = juce::Component::SafePointer<MainComponent> (this)]
     {
-        const auto mount = juce::File::getSpecialLocation (juce::File::tempDirectory)
-                               .getChildFile ("RONE_center_update_" + juce::Uuid().toString().substring (0, 8));
+        auto run = [] (const juce::StringArray& args, int timeoutMs, juce::String* output = nullptr)
+        {
+            juce::ChildProcess p;
+            if (! p.start (args, juce::ChildProcess::wantStdOut | juce::ChildProcess::wantStdErr))
+                return false;
+            // Wait first (with its limit), then read: these tools say a line or two.
+            const bool finished = p.waitForProcessToFinish (timeoutMs);
+            if (! finished)
+                p.kill();
+            else if (output != nullptr)
+                *output = p.readAllProcessOutput();
+            return finished && p.getExitCode() == 0;
+        };
+
+        // The finish line when the Center may not do it itself.
+        auto manual = [dmg, safe]
+        {
+            juce::MessageManager::callAsync ([dmg, safe]
+            {
+                if (safe == nullptr)
+                    return;
+                centerUpdateMarker().deleteFile();
+                juce::ChildProcess open;
+                open.start (juce::StringArray { "/usr/bin/open", dmg.getFullPathName() });
+                safe->emitStatusMessage ("macOS did not let the Center replace itself. The update is open in Finder: "
+                                         "drag RONE Plugins Center onto Applications, choose Replace, then open it again.",
+                                         "error", "center_update_manual");
+            });
+        };
+
+        // A mount left by an earlier try keeps the image busy: hdiutil then
+        // refuses to attach it again.
+        const auto tmp = juce::File::getSpecialLocation (juce::File::tempDirectory);
+        for (const auto& old : tmp.findChildFiles (juce::File::findDirectories, false, "RONE_center_update_*"))
+        {
+            run (juce::StringArray { "/usr/bin/hdiutil", "detach", old.getFullPathName(), "-force", "-quiet" }, 60000);
+            old.deleteRecursively();
+        }
+
+        const auto mount = tmp.getChildFile ("RONE_center_update_" + juce::Uuid().toString().substring (0, 8));
         mount.createDirectory();
 
-        juce::ChildProcess attach;
-        if (! attach.start (juce::StringArray { "/usr/bin/hdiutil", "attach", "-nobrowse", "-noautoopen", "-quiet",
-                                                "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() })
-            || ! attach.waitForProcessToFinish (120000) || attach.getExitCode() != 0)
+        if (! run (juce::StringArray { "/usr/bin/hdiutil", "attach", "-nobrowse", "-noautoopen", "-quiet",
+                                       "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() }, 120000))
         {
-            failed ("The Center update could not be opened.", "center_update_failed");
+            mount.deleteRecursively();
+            manual();
             return;
         }
 
@@ -2123,37 +2171,54 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
         for (const auto& f : mount.findChildFiles (juce::File::findDirectories, false, "*.app"))
             app = f;
 
+        // Fresh names every time: a leftover directory under a fixed name would
+        // turn "mv old new" into "mv old INTO new".
+        const auto tag    = juce::Uuid().toString().substring (0, 8);
+        const auto name   = target.getFileNameWithoutExtension();
+        const auto staged = target.getSiblingFile (name + ".updating-" + tag + ".app");
+        const auto backup = target.getSiblingFile (name + ".previous-" + tag + ".app");
         bool ok = false;
-        if (app.isDirectory() && ! target.getFullPathName().containsAnyOf ("'\"\\") && target.getFileName().endsWith (".app"))
+
+        if (app.isDirectory() && target.getFileName().endsWith (".app")
+            && ! (target.getFullPathName() + app.getFullPathName()).containsAnyOf ("'\"\\$`"))
         {
-            const auto staged = target.getSiblingFile (target.getFileNameWithoutExtension() + ".updating.app");
+            // As this user: copy beside, then two renames.
+            juce::String why;
+            if (run (juce::StringArray { "/usr/bin/ditto", app.getFullPathName(), staged.getFullPathName() }, 300000, &why)
+                && run (juce::StringArray { "/bin/mv", target.getFullPathName(), backup.getFullPathName() }, 30000, &why))
+            {
+                ok = run (juce::StringArray { "/bin/mv", staged.getFullPathName(), target.getFullPathName() }, 30000, &why);
+                if (! ok)
+                    run (juce::StringArray { "/bin/mv", backup.getFullPathName(), target.getFullPathName() }, 30000);
+            }
             staged.deleteRecursively();
 
-            juce::ChildProcess ditto;
-            ok = ditto.start (juce::StringArray { "/usr/bin/ditto", app.getFullPathName(), staged.getFullPathName() })
-              && ditto.waitForProcessToFinish (300000) && ditto.getExitCode() == 0
-              && target.deleteRecursively() && staged.moveFileTo (target);
-
-            if (! ok)
+            // "Permission denied" = the folder's permissions: the administrator can.
+            // "Operation not permitted" = macOS protecting the app: nobody can, so no
+            // password is asked for nothing.
+            if (! ok && ! why.containsIgnoreCase ("not permitted"))
             {
-                staged.deleteRecursively();
-                // /Applications needs the administrator: one password prompt.
-                const auto cmd = "osascript -e 'do shell script \"/bin/rm -rf \\\"" + target.getFullPathName()
-                               + "\\\" && /usr/bin/ditto \\\"" + app.getFullPathName() + "\\\" \\\""
-                               + target.getFullPathName() + "\\\"\" with administrator privileges'";
+                auto q = [] (const juce::File& f) { return "\\\"" + f.getFullPathName() + "\\\""; };
+                const juce::String sh = "/usr/bin/ditto " + q (app) + " " + q (staged)
+                                      + " && /bin/mv " + q (target) + " " + q (backup)
+                                      + " && { /bin/mv " + q (staged) + " " + q (target)
+                                      + " || { /bin/mv " + q (backup) + " " + q (target) + "; false; }; }"
+                                      + " && /bin/rm -rf " + q (backup) + "; R=$?; /bin/rm -rf " + q (staged) + "; exit $R";
+                const auto cmd = "osascript -e 'do shell script \"" + sh + "\" with administrator privileges'";
                 const int status = std::system (cmd.toRawUTF8());
                 ok = WIFEXITED (status) && WEXITSTATUS (status) == 0 && target.isDirectory();
             }
+
+            if (ok)
+                backup.deleteRecursively();
         }
 
-        juce::ChildProcess detach;
-        if (detach.start (juce::StringArray { "/usr/bin/hdiutil", "detach", mount.getFullPathName(), "-quiet" }))
-            detach.waitForProcessToFinish (60000);
+        run (juce::StringArray { "/usr/bin/hdiutil", "detach", mount.getFullPathName(), "-quiet" }, 60000);
         mount.deleteRecursively();
 
         if (! ok)
         {
-            failed ("The Center update was not installed.", "center_update_failed");
+            manual();
             return;
         }
 
