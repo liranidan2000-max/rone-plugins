@@ -32,6 +32,10 @@ export default defineConfig({
   plugins: [react(), centerResources()],
   css: { postcss: path.join(here, 'postcss.config.js') },
   build: {
+    // The Mac runs this page in the system WebKit - on macOS 10.15 that can be
+    // Safari 13 - so syntax and CSS are lowered that far (postcss.config.js too).
+    target: ['es2019', 'chrome100', 'safari13'],
+    cssTarget: ['chrome100', 'safari13'],
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: '.',

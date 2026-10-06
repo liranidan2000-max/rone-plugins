@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import { Icon } from '../components/ui'
 import { PlayButton, cardAction } from '../components/PluginCard'
 import { useBars } from '../usePreview'
-import { accentOf, categoriesOf, descriptionOf, formatSize, isInstalled, isUnlocked, parseChangelog, priceOf, shortName, tagsOf, usd } from '../catalog'
+import { accentOf, categoriesOf, descriptionOf, formatSize, isInstalled, isUnlocked, parseChangelog, priceOf, shortName, tagsOf, tint, usd } from '../catalog'
 import { openExternal } from '../bridge'
 
 // A plugin's own page: the unit, a dry/wet player, what is new, where it shows
@@ -34,8 +34,8 @@ export default function DetailView ({ t, plugin, access, preview, reduced, daws,
 
       <div className="grid grid-cols-[minmax(260px,340px)_1fr] gap-7 items-start">
         <div className="relative h-[560px] rounded-[16px] border border-rone-border grid place-items-center overflow-hidden"
-             style={{ background: `radial-gradient(70% 55% at 50% 60%, color-mix(in srgb, ${acc} 22%, transparent), transparent 70%), linear-gradient(180deg,#16181C,#0F1114)` }}>
-          <div className="absolute left-[12%] right-[12%] bottom-5 h-3.5 rounded-full blur-[14px]" style={{ background: `color-mix(in srgb, ${acc} 40%, transparent)` }} />
+             style={{ background: `radial-gradient(70% 55% at 50% 60%, ${tint(acc, 0.22)}, transparent 70%), linear-gradient(180deg,#16181C,#0F1114)` }}>
+          <div className="absolute left-[12%] right-[12%] bottom-5 h-3.5 rounded-full blur-[14px]" style={{ background: `${tint(acc, 0.4)}` }} />
           <img src={plugin.unitUrl || plugin.logoUrl} alt={'RONE ' + name}
                className={plugin.unitUrl ? 'max-w-[88%] max-h-[92%]' : 'w-[140px] h-[140px] rounded-[30px]'}
                style={{ filter: 'drop-shadow(0 26px 40px rgba(0,0,0,.65))' }} />
@@ -123,7 +123,7 @@ export default function DetailView ({ t, plugin, access, preview, reduced, daws,
             {plugin.videoUrl ? (
               <button onClick={() => openExternal(plugin.videoUrl)} className="flex items-center gap-3 text-left group">
                 <span className="relative w-[150px] h-[84px] rounded-[10px] overflow-hidden flex-none"
-                      style={{ background: `radial-gradient(80% 90% at 70% 40%, color-mix(in srgb, ${acc} 40%, transparent), #0F1114)` }}>
+                      style={{ background: `radial-gradient(80% 90% at 70% 40%, ${tint(acc, 0.4)}, #0F1114)` }}>
                   {plugin.unitUrl && <img src={plugin.unitUrl} alt="" className="absolute right-[-6px] top-[6px] h-[150%]" />}
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-white/90 grid place-items-center text-[#101216] group-hover:scale-110 transition-transform">
                     <Icon.play className="w-3 h-3 ml-0.5" />

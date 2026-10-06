@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 #include "BinaryData.h"
 #include "../../Shared/RemoteLicenseGate.h"
+#include "../../Shared/RoneWebCompat.h"
 #include "CrashReportUploader.h"   // also brings in Shared/RoneCrashReporter.h
 #include "AutoStart.h"
 #include "PluginInUse.h"
@@ -153,6 +154,10 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
                     juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
                         .getChildFile ("RonePluginsCenter")
                         .getChildFile ("WebView2")))
+        // On the Mac the page runs in the system WebKit; on an older macOS that
+        // is an older Safari with no flex `gap` (Zanon, 2026-10-06). The same
+        // document-start polyfill every plugin carries; a modern engine skips it.
+        .withUserScript (RoneWebCompat::script())
         .withNativeIntegrationEnabled()
 
         // ---- JS → C++ native functions ----

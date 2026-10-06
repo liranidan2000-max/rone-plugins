@@ -1,6 +1,6 @@
 import React from 'react'
 import { Icon } from '../components/ui'
-import { accentOf, shortName, tipOfTheWeek } from '../catalog'
+import { accentOf, shortName, tint, tipOfTheWeek } from '../catalog'
 import { openExternal } from '../bridge'
 
 // Every video guide and manual in one place, and the tip of the week.
@@ -15,7 +15,7 @@ export default function LearnView ({ t, plugins, tips, onManualPdf, onDetail }) 
 
       {tip && (
         <div className="flex items-center gap-4 p-4 mb-4 rounded-[14px] border border-rone-border-2"
-             style={{ background: `linear-gradient(120deg, color-mix(in srgb, ${tipPlugin ? accentOf(tipPlugin) : '#D8E4EC'} 10%, transparent), transparent 60%), rgb(var(--card))` }}>
+             style={{ background: `linear-gradient(120deg, ${tint(tipPlugin ? accentOf(tipPlugin) : '#D8E4EC', 0.1)}, transparent 60%), rgb(var(--card))` }}>
           {tipPlugin && <img src={tipPlugin.logoUrl} alt="" className="w-[52px] h-[52px] rounded-[12px]" />}
           <div className="flex-1 min-w-0">
             <div className="text-[11px] font-extrabold tracking-[0.18em] uppercase text-rone-text-dim">{t('hero.tip')}</div>
@@ -34,7 +34,7 @@ export default function LearnView ({ t, plugins, tips, onManualPdf, onDetail }) 
             <div key={p.id} className="flex flex-col gap-2.5 p-3 rounded-[14px] border border-rone-border bg-rone-card" style={{ '--acc': acc }}>
               <button onClick={() => p.videoUrl ? openExternal(p.videoUrl) : onDetail(p.id)}
                       className="relative h-[120px] rounded-[10px] overflow-hidden text-left group"
-                      style={{ background: `radial-gradient(80% 90% at 70% 40%, color-mix(in srgb, ${acc} 40%, transparent), #0F1114)` }}
+                      style={{ background: `radial-gradient(80% 90% at 70% 40%, ${tint(acc, 0.4)}, #0F1114)` }}
                       aria-label={p.videoUrl ? t('detail.video') + ' · RONE ' + shortName(p) : 'RONE ' + shortName(p)}>
                 {p.unitUrl && <img src={p.unitUrl} alt="" loading="lazy" className="absolute right-[-6px] top-[8px] h-[170%]" />}
                 {p.videoUrl && (

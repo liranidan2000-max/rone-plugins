@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Dialog, Seg } from './ui'
 import { LANGS } from '../i18n'
-import { accentOf } from '../catalog'
+import { accentOf, tint } from '../catalog'
 
 const ALL = [['fl', 'FL Studio'], ['ableton', 'Ableton Live'], ['cubase', 'Cubase'], ['studioone', 'Studio One'],
              ['reaper', 'REAPER'], ['bitwig', 'Bitwig Studio'], ['logic', 'Logic Pro']]
@@ -57,7 +57,7 @@ export default function Onboarding ({ t, open, prefs, setPrefs, daws, freePlugin
       {step === 1 && (
         <>
           <div className="flex gap-4 items-center p-4 rounded-[14px] border border-rone-border-2"
-               style={{ background: `linear-gradient(120deg, color-mix(in srgb, ${freePlugin ? accentOf(freePlugin) : '#3D8BFF'} 14%, transparent), transparent 70%)` }}>
+               style={{ background: `linear-gradient(120deg, ${tint(freePlugin ? accentOf(freePlugin) : '#3D8BFF', 0.14)}, transparent 70%)` }}>
             {freePlugin && <img src={freePlugin.logoUrl} alt="" className="w-[64px] h-[64px] rounded-[16px]" />}
             <div>
               <p className="m-0 text-[15px] font-bold text-rone-text-primary">{t('onb.freeTitle')}</p>

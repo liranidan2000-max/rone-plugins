@@ -32,7 +32,11 @@ public:
             g.setColour (juce::Colour (0xffFFD02B));
             g.fillEllipse (dot);
         }
+       #if JUCE_MAC
+        setIconImage (image, menuBarTemplate (n > 0));
+       #else
         setIconImage (image, image);
+       #endif
         setIconTooltip (n > 0 ? "RONE Plugins Center - " + juce::String (n) + (n == 1 ? " update ready" : " updates ready")
                               : juce::String ("RONE Plugins Center"));
 
@@ -60,6 +64,33 @@ public:
     }
 
 private:
+   #if JUCE_MAC
+    // The macOS menu bar uses ONLY this image, as a template: its alpha in the
+    // menu bar's own colour, squeezed to 20 x 20 pt (juce_SystemTrayIcon_mac).
+    // The app icon there was an opaque rounded square - a white block (Zanon,
+    // 2026-10-06). This is the R mark alone, the path every plugin header draws,
+    // with a heavier line so it reads at 20 pt, and a dot when updates wait.
+    static juce::Image menuBarTemplate (bool dot)
+    {
+        constexpr int size = 64;   // shown at 20 pt: sharp on Retina
+        juce::Image img (juce::Image::ARGB, size, size, true);
+        juce::Graphics g (img);
+        g.setColour (juce::Colours::black);
+
+        const auto line = juce::Drawable::parseSVGPath (
+            "M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100");
+        juce::Path mark;
+        juce::PathStrokeType (7.0f, juce::PathStrokeType::curved, juce::PathStrokeType::butt).createStrokedPath (mark, line);
+        mark.addPath (juce::Drawable::parseSVGPath ("M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"));
+
+        g.fillPath (mark, mark.getTransformToScaleToFit ({ 2.0f, 2.0f, size - 4.0f, size - 4.0f },
+                                                         true, juce::Justification::centred));
+        if (dot)
+            g.fillEllipse (size - 17.0f, 1.0f, 16.0f, 16.0f);
+        return img;
+    }
+   #endif
+
     void showWindow()
     {
         mainWindow.setVisible (true);

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Dialog, Icon } from './ui'
-import { accentOf, shortName } from '../catalog'
+import { accentOf, shortName, tint } from '../catalog'
 
 // MANUAL: the PDF or the YouTube guide.
 export default function ManualDialog ({ t, plugin, onPdf, onVideo, onClose }) {
@@ -9,7 +9,7 @@ export default function ManualDialog ({ t, plugin, onPdf, onVideo, onClose }) {
   const Choice = ({ icon: I, title, sub, onClick, enabled }) => (
     <button onClick={onClick} disabled={!enabled}
             className="flex items-center gap-3 w-full p-3 rounded-[12px] border border-rone-border-2 text-left hover:border-[var(--acc)] disabled:opacity-45 disabled:hover:border-rone-border-2">
-      <span className="w-10 h-10 rounded-[10px] grid place-items-center text-[var(--acc)]" style={{ background: `color-mix(in srgb, ${acc} 14%, transparent)` }}>
+      <span className="w-10 h-10 rounded-[10px] grid place-items-center text-[var(--acc)]" style={{ background: `${tint(acc, 0.14)}` }}>
         <I className="w-5 h-5" />
       </span>
       <span><b className="block text-[13.5px] text-rone-text-primary">{title}</b><span className="text-[12px] text-rone-text-dim">{sub}</span></span>

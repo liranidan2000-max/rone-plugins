@@ -91,7 +91,8 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 }
 .btn:active:not(:disabled) { transform: scale(0.97); }
 .btn:disabled { opacity: .5; cursor: default; }
-.btn-pri { background: var(--acc, #9D6BFF); color: #101216; box-shadow: 0 0 14px color-mix(in srgb, var(--acc, #9D6BFF) 32%, transparent); }
+/* Each color-mix() below has a plain line before it: a WebKit older than Safari 16.2 (old Macs) drops color-mix and keeps that. */
+.btn-pri { background: var(--acc, #9D6BFF); color: #101216; box-shadow: 0 0 14px rgba(0, 0, 0, .35); box-shadow: 0 0 14px color-mix(in srgb, var(--acc, #9D6BFF) 32%, transparent); }
 .btn-pri:hover:not(:disabled) { filter: brightness(1.08); }
 .btn-out { border: 1px solid rgb(var(--line3)); color: rgb(var(--tx2)); }
 .btn-out:hover:not(:disabled) { border-color: var(--acc, #9D6BFF); color: rgb(var(--tx)); }
@@ -115,7 +116,9 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
 }
 .card:hover {
+  border-color: var(--acc);
   border-color: color-mix(in srgb, var(--acc) 45%, rgb(var(--line)));
+  box-shadow: 0 16px 34px -18px rgba(0, 0, 0, .7);
   box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--acc) 40%, transparent);
   transform: translateY(-2px);
 }
@@ -155,7 +158,7 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 
 /* Pills */
 .pill { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; padding: 2px 7px; border-radius: 6px; border: 1px solid rgb(var(--line2)); color: rgb(var(--tx3)); text-transform: uppercase; white-space: nowrap; }
-.pill-new { color: var(--acc); border-color: color-mix(in srgb, var(--acc) 50%, transparent); background: color-mix(in srgb, var(--acc) 10%, transparent); }
+.pill-new { color: var(--acc); border-color: var(--acc); border-color: color-mix(in srgb, var(--acc) 50%, transparent); background: color-mix(in srgb, var(--acc) 10%, transparent); }
 .pill-free { color: #7DB2FF; border-color: rgba(61, 139, 255, .5); background: rgba(61, 139, 255, .1); }
 .pill-own { color: #B18AFF; border-color: rgba(157, 107, 255, .4); }
 

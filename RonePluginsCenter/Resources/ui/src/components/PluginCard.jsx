@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Icon, FloatingMenu, useFloatingMenu } from './ui'
-import { accentOf, categoriesOf, descriptionOf, isBusy, isInstalled, isNew, isUnlocked, priceOf, shortName, usd } from '../catalog'
+import { accentOf, categoriesOf, descriptionOf, isBusy, isInstalled, isNew, isUnlocked, priceOf, shortName, tint, usd } from '../catalog'
 
 const LED = {
   up_to_date: 'led-ok', update_available: 'led-upd', error: 'led-err',
@@ -31,7 +31,7 @@ export function PlayButton ({ t, plugin, preview, big = false }) {
             className={`grid place-items-center rounded-full border flex-none transition-all
                         ${big ? 'w-[52px] h-[52px]' : 'w-[34px] h-[34px]'}
                         ${on ? 'text-[#101216]' : 'border-rone-border-3 text-rone-text-secondary hover:text-[var(--acc)] hover:border-[var(--acc)]'}`}
-            style={on ? { background: 'var(--acc)', borderColor: 'var(--acc)', boxShadow: '0 0 14px color-mix(in srgb, var(--acc) 50%, transparent)' } : undefined}>
+            style={on ? { background: 'var(--acc)', borderColor: 'var(--acc)', boxShadow: `0 0 14px ${tint(accentOf(plugin), 0.5)}` } : undefined}>
       {on ? <Icon.stop className={big ? 'w-4 h-4' : 'w-3 h-3'} /> : <Icon.play className={big ? 'w-4 h-4 ml-0.5' : 'w-3 h-3 ml-0.5'} />}
     </button>
   )

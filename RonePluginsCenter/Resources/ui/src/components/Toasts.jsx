@@ -1,5 +1,6 @@
 import React from 'react'
 import { Icon } from './ui'
+import { mixHex } from '../catalog'
 
 // Messages, read out by screen readers (role="status" / "alert"). An install
 // that finished says where to find the plugin in the user's DAW.
@@ -11,7 +12,7 @@ export default function Toasts ({ toasts, onRemove }) {
       {toasts.map(x => (
         <div key={x.id} role={x.type === 'error' ? 'alert' : 'status'}
              className="pointer-events-auto rounded-[12px] border px-3.5 py-3 shadow-[0_18px_40px_-12px_rgba(0,0,0,.8)] animate-[toastIn_.3s_ease-out]"
-             style={{ background: 'rgba(27,30,35,.98)', borderColor: `color-mix(in srgb, ${x.accent || TONE[x.type] || TONE.info} 40%, #2A2E35)` }}>
+             style={{ background: 'rgba(27,30,35,.98)', borderColor: mixHex(x.accent || TONE[x.type] || TONE.info, 0.4, '#2A2E35') }}>
           <div className="flex items-start gap-2.5">
             <span className="mt-[5px] w-2 h-2 rounded-full flex-none"
                   style={{ background: x.accent || TONE[x.type] || TONE.info, boxShadow: `0 0 8px ${x.accent || TONE[x.type] || TONE.info}` }} />

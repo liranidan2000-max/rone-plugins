@@ -21,6 +21,28 @@ export function accentOf (plugin) {
   return ACCENTS[plugin?.id] || CENTER_PURPLE
 }
 
+// Accent arithmetic happens here, not in CSS color-mix(): on the Mac the page
+// runs in the system WebKit, and before Safari 16.2 a color-mix() value is
+// thrown away - and with it the whole background or shadow it sits in.
+function rgbOf (hex) {
+  const m = /^#?([0-9a-fA-F]{6})$/.exec(String(hex || '').trim())
+  const n = parseInt(m ? m[1] : CENTER_PURPLE.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+// The accent at `alpha` opacity: what color-mix(in srgb, hex N%, transparent) gives.
+export function tint (hex, alpha) {
+  const [r, g, b] = rgbOf(hex)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+// `weight` of `hex` over `base`, opaque: color-mix(in srgb, hex N%, base).
+export function mixHex (hex, weight, base) {
+  const a = rgbOf(hex), b = rgbOf(base)
+  const c = a.map((v, i) => Math.round(v * weight + b[i] * (1 - weight)))
+  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`
+}
+
 // What a producer reaches for it for. Same idea as the accent: the manifest's
 // `category` wins, this is the fallback.
 export const CATEGORY_KEYS = ['transitions', 'space', 'rhythm', 'vocal', 'mix']
