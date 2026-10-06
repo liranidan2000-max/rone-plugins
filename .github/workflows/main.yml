@@ -726,6 +726,31 @@ jobs:
         run: |
           REPO="${{ github.repository }}"
           changed='${{ needs.detect-changes.outputs.changed }}'
+          matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
+          matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
+
+          # One file at a time, three tries each. --clobber deletes the old asset
+          # before the upload; when GitHub answers 500 to that delete (a stuck
+          # asset, #254 on 2026-10-06) the old one is renamed aside - GitHub
+          # accepts that - and the upload goes again. Never several files in one
+          # call: #254's second try deleted the .exe, failed on the .dmg and
+          # uploaded neither, so the Center could not be downloaded at all.
+          upload_one() {
+            local tag=$1 f=$2 name i sid
+            name=$(basename "$f")
+            for i in 1 2 3; do
+              if gh release upload "$tag" "$f" --clobber -R "$REPO"; then return 0; fi
+              echo "::warning::upload of $name to $tag failed (try $i)"
+              sid=$(gh api "repos/$REPO/releases/tags/$tag" --jq ".assets[] | select(.name == \"$name\") | .id" 2>/dev/null || true)
+              if [ -n "$sid" ]; then
+                gh api -X PATCH "repos/$REPO/releases/assets/$sid" -f name="stale-$sid-$name" >/dev/null \
+                  && echo "moved a stuck $name aside (asset $sid)"
+              fi
+              sleep $((i * 15))
+            done
+            echo "::error::$name could not be uploaded to $tag"
+            return 1
+          }
 
           for id in $(echo "$changed" | jq -r '.[]'); do
             case "$id" in
@@ -758,13 +783,32 @@ jobs:
               continue
             fi
 
+            # Every platform it was built for, or nothing (2026-10-06, #253: the
+            # Mac Center failed, Windows went out alone, and the manifest then
+            # called the old Mac .dmg the new version). Update versions.json
+            # applies the same rule, so the release and the manifest stay as
+            # they were and the red run says why.
+            missing=""
+            if [ "$(echo "$matrix_win" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] \
+               && ! ls artifacts/installer-${id}-windows/* >/dev/null 2>&1; then missing="$missing windows"; fi
+            if [ "$(echo "$matrix_mac" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] \
+               && ! ls artifacts/installer-${id}-macos/* >/dev/null 2>&1; then missing="$missing macos"; fi
+            if [ -n "$missing" ]; then
+              echo "::error::$id did not build on:$missing - nothing of it is published this run"
+              continue
+            fi
+
             # Replace assets in-place. The old delete+recreate wiped the OTHER
             # platform's installer on [win-only]/[mac-only] builds, leaving the
             # manifest pointing at dead download links.
             NOTES="Build #${{ github.run_number }} · $(date -u +%Y-%m-%d)"
             if gh release view "$tag" -R "$REPO" >/dev/null 2>&1; then
-              gh release upload "$tag" "${files[@]}" --clobber -R "$REPO"
-              gh release edit "$tag" --title "$title" --notes "$NOTES" -R "$REPO"
+              # leftovers a stuck upload moved aside: best effort, they harm nothing
+              for sid in $(gh api "repos/$REPO/releases/tags/$tag" --jq '.assets[] | select(.name | startswith("stale-")) | .id' 2>/dev/null || true); do
+                gh api -X DELETE "repos/$REPO/releases/assets/$sid" >/dev/null 2>&1 || true
+              done
+              for f in "${files[@]}"; do upload_one "$tag" "$f" || exit 1; done
+              gh release edit "$tag" --title "$title" --notes "$NOTES" -R "$REPO" || echo "::warning::release notes of $tag not updated"
             else
               gh release create "$tag" "${files[@]}" \
                 --title "$title" \
@@ -844,6 +888,8 @@ jobs:
       - name: Bump versions.json
         run: |
           changed='${{ needs.detect-changes.outputs.changed }}'
+          matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
+          matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
           RUN="${{ github.run_number }}"
           REPO="${{ github.repository }}"
 
@@ -892,6 +938,16 @@ jobs:
             # a hash that does not match it - an update that can only fail.
             if [ -z "$win_file" ] && [ -z "$mac_file" ]; then
               echo "  $jid: no artefacts this run - manifest left alone"
+              continue
+            fi
+
+            # Built on only one of the platforms it was meant for: the Release
+            # job published nothing of it, so the manifest stays too. The ONE
+            # version field covers both platforms - bumping it would offer the
+            # other platform's OLD installer as the new version (#253, 2026-10-06).
+            if { [ "$(echo "$matrix_win" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] && [ -z "$win_file" ]; } \
+               || { [ "$(echo "$matrix_mac" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] && [ -z "$mac_file" ]; }; then
+              echo "  $jid: did not build on every platform it was meant for - manifest left alone"
               continue
             fi
 
