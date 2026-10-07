@@ -552,7 +552,10 @@ private:
                << "else echo \"" << i.id << " -2\" >> \"$R\"; fi\n";
         }
         sh << "/bin/rm -rf \"$W\"\n";
-        script.replaceWithText (sh);
+        // "\n", not JUCE's default "\r\n": the Mac's sh read "fi\r" as a word, the
+        // if never closed, and every install died on "line 7: syntax error:
+        // unexpected end of file" (Zanon, a user in Korea; 2.0.2 - 2.0.4).
+        script.replaceWithText (sh, false, false, "\n");
 
         bool declined = false;
         juce::String failure;

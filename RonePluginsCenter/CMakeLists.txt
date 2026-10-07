@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RonePluginsCenter VERSION 2.0.4 LANGUAGES C CXX)
+project(RonePluginsCenter VERSION 2.0.5 LANGUAGES C CXX)
 
 # Build nonce 2026-09-02-a. The v1.3.0 release push never produced a run: its
 # commit body quoted the CI skip token while explaining an earlier commit, and
@@ -55,7 +55,10 @@ FetchContent_MakeAvailable(JUCE)
 juce_add_gui_app(RonePluginsCenter
     PRODUCT_NAME  "RONE Plugins Center"
     COMPANY_NAME  "RONE Plugins"
-    VERSION       "2.0.0"
+    # The project version, never a second number: this one stayed "2.0.0" through
+    # 2.0.4, so a Mac Center - which knows itself only by it - always saw an
+    # update and reported every finished one as "did not finish" (2026-10-07).
+    VERSION       ${PROJECT_VERSION}
     ICON_BIG      "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
     ICON_SMALL    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/AppIcon.png"
     # ronecenter:// links from the website (Source/CenterLinks.h); JUCE hands
