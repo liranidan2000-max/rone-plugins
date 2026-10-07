@@ -215,18 +215,11 @@ void VersionChecker::refreshInstallState (PluginInfo& info)
            #if JUCE_MAC
             // A .pkg from the website never told the Center its version, and "?"
             // offered the same update forever. The bundle itself knows.
+            // System-wide or in the user's folders (Center 2.1), wherever it is.
             juce::String bundleVersion;
-            if (info.vst3Bundle.isNotEmpty())
-                bundleVersion = readBundleVersion (getVst3InstallDir().getChildFile (info.vst3Bundle));
-            if (bundleVersion.isEmpty() && info.auBundle.isNotEmpty())
-                bundleVersion = readBundleVersion (getAUInstallDir().getChildFile (info.auBundle));
-            if (bundleVersion.isEmpty() && info.standaloneExe.isNotEmpty())
-            {
-                const auto app = info.standaloneExe.replace (".exe", "") + ".app";
-                for (auto dir : { juce::File ("/Applications"), juce::File ("/Applications/RONE Plugins") })
-                    if (bundleVersion.isEmpty())
-                        bundleVersion = readBundleVersion (dir.getChildFile (app));
-            }
+            for (const auto& bundle : { findVst3 (info.vst3Bundle), findAU (info.auBundle), findApp (info.standaloneExe) })
+                if (bundleVersion.isEmpty() && bundle != juce::File())
+                    bundleVersion = readBundleVersion (bundle);
 
             if (bundleVersion.isNotEmpty())
             {
@@ -450,27 +443,66 @@ juce::File VersionChecker::getAUInstallDir()
 #endif
 }
 
+#if JUCE_MAC
+juce::File VersionChecker::getUserVst3Dir()
+{
+    return juce::File::getSpecialLocation (juce::File::userHomeDirectory).getChildFile ("Library/Audio/Plug-Ins/VST3");
+}
+
+juce::File VersionChecker::getUserAUDir()
+{
+    return juce::File::getSpecialLocation (juce::File::userHomeDirectory).getChildFile ("Library/Audio/Plug-Ins/Components");
+}
+
+juce::File VersionChecker::getUserAppsDir()
+{
+    return juce::File::getSpecialLocation (juce::File::userHomeDirectory).getChildFile ("Applications");
+}
+
+juce::File VersionChecker::getUserManualsDir()
+{
+    return juce::File::getSpecialLocation (juce::File::userHomeDirectory)
+               .getChildFile ("Library/Application Support/RONE Plugins/Manuals");
+}
+
+juce::File VersionChecker::findVst3 (const juce::String& bundleName)
+{
+    if (bundleName.isEmpty()) return {};
+    for (const auto& dir : { getVst3InstallDir(), getUserVst3Dir() })
+        if (dir.getChildFile (bundleName).exists())
+            return dir.getChildFile (bundleName);
+    return {};
+}
+
+juce::File VersionChecker::findAU (const juce::String& bundleName)
+{
+    if (bundleName.isEmpty()) return {};
+    for (const auto& dir : { getAUInstallDir(), getUserAUDir() })
+        if (dir.getChildFile (bundleName).exists())
+            return dir.getChildFile (bundleName);
+    return {};
+}
+
+juce::File VersionChecker::findApp (const juce::String& exeName)
+{
+    if (exeName.isEmpty()) return {};
+    const auto appName = exeName.replace (".exe", "") + ".app";
+    // /Applications (the .pkg), /Applications/RONE Plugins (older installers),
+    // ~/Applications (Center 2.1), ~/Library/RONE Plugins (older still)
+    for (const auto& dir : { juce::File ("/Applications"), juce::File ("/Applications/RONE Plugins"),
+                             getUserAppsDir(), getStandaloneInstallDir() })
+        if (dir.getChildFile (appName).exists())
+            return dir.getChildFile (appName);
+    return {};
+}
+#endif
+
 bool VersionChecker::isStandaloneInstalled (const juce::String& exeName)
 {
     if (exeName.isEmpty()) return false;
 
 #if JUCE_MAC
-    // On Mac, standalone apps are .app bundles — check multiple locations
-    auto appName = exeName.replace (".exe", "") + ".app";
-
-    // 1. /Applications/  (direct install)
-    if (juce::File ("/Applications").getChildFile (appName).exists())
-        return true;
-
-    // 2. /Applications/RONE Plugins/  (standardized subfolder)
-    if (juce::File ("/Applications/RONE Plugins").getChildFile (appName).exists())
-        return true;
-
-    // 3. ~/Library/Application Support/RONE Plugins/
-    if (getStandaloneInstallDir().getChildFile (appName).exists())
-        return true;
-
-    return false;
+    return findApp (exeName) != juce::File();
 #else
     return getStandaloneInstallDir().getChildFile (exeName).existsAsFile();
 #endif
@@ -479,8 +511,12 @@ bool VersionChecker::isStandaloneInstalled (const juce::String& exeName)
 bool VersionChecker::isVst3Installed (const juce::String& bundleName)
 {
     if (bundleName.isEmpty()) return false;
+#if JUCE_MAC
+    return findVst3 (bundleName) != juce::File();
+#else
     auto vst3 = getVst3InstallDir().getChildFile (bundleName);
     return vst3.exists(); // could be file or directory (bundle)
+#endif
 }
 
 bool VersionChecker::isAUInstalled (const juce::String& bundleName)
@@ -488,14 +524,7 @@ bool VersionChecker::isAUInstalled (const juce::String& bundleName)
     if (bundleName.isEmpty()) return false;
 
 #if JUCE_MAC
-    // Check system-wide and user AU directories
-    if (getAUInstallDir().getChildFile (bundleName).exists())
-        return true;
-
-    auto userAU = juce::File::getSpecialLocation (juce::File::userHomeDirectory)
-                      .getChildFile ("Library/Audio/Plug-Ins/Components")
-                      .getChildFile (bundleName);
-    return userAU.exists();
+    return findAU (bundleName) != juce::File();
 #else
     juce::ignoreUnused (bundleName);
     return false;

@@ -31,7 +31,8 @@
 // --uninstall-plugin <registry key> <files...> (one permission prompt), and
 // then reads the result off the machine itself: the uninstall entry gone and
 // the files gone. macOS has no uninstaller for a .pkg: the files are removed
-// with the administrator password, the same way the .pkg was installed.
+// with the administrator password, the same way the .pkg was installed - and
+// without one when they are in the user's own folders (Center 2.1).
 // A plugin loaded in a DAW is never uninstalled: the user is told what to close.
 // ============================================================================
 namespace PluginUninstaller
@@ -82,9 +83,23 @@ namespace PluginUninstaller
             const auto app = p.standaloneExe.replace (".exe", "") + ".app";
             add (juce::File ("/Applications").getChildFile (app));
             add (juce::File ("/Applications/RONE Plugins").getChildFile (app));
+            add (VersionChecker::getUserAppsDir().getChildFile (app));
         }
         if (p.manualPdf.isNotEmpty())
+        {
             add (juce::File ("/Users/Shared/RONE Plugins/Manuals").getChildFile (p.manualPdf));
+            add (VersionChecker::getUserManualsDir().getChildFile (p.manualPdf));
+        }
+
+        // Center 2.1 installs what was not system-wide into the user's folders.
+        if (p.vst3Bundle.isNotEmpty())
+            add (VersionChecker::getUserVst3Dir().getChildFile (p.vst3Bundle));
+        if (p.id == "RONEAnalyzer")
+        {
+            add (VersionChecker::getUserVst3Dir().getChildFile ("RONE Analyzer Bridge.vst3"));
+            add (VersionChecker::getAUInstallDir().getChildFile ("RONE Analyzer Bridge.component"));
+            add (VersionChecker::getUserAUDir().getChildFile ("RONE Analyzer Bridge.component"));
+        }
        #else
         const auto appDir = VersionChecker::getStandaloneInstallDir();
         if (p.standaloneExe.isNotEmpty())
@@ -107,9 +122,9 @@ namespace PluginUninstaller
                                    VersionChecker::getStandaloneInstallDir() };                 // ...\RONE Plugins
        #elif JUCE_MAC
         const juce::File roots[] { VersionChecker::getVst3InstallDir(), VersionChecker::getAUInstallDir(),
-                                   juce::File::getSpecialLocation (juce::File::userHomeDirectory)
-                                       .getChildFile ("Library/Audio/Plug-Ins/Components"),
-                                   juce::File ("/Applications"), juce::File ("/Users/Shared/RONE Plugins/Manuals") };
+                                   VersionChecker::getUserVst3Dir(), VersionChecker::getUserAUDir(),
+                                   juce::File ("/Applications"), VersionChecker::getUserAppsDir(),
+                                   juce::File ("/Users/Shared/RONE Plugins/Manuals"), VersionChecker::getUserManualsDir() };
        #else
         const juce::File roots[] { VersionChecker::getVst3InstallDir() };
        #endif
@@ -239,6 +254,16 @@ namespace PluginUninstaller
 
         const bool entryGone = VersionChecker::getUninstallCommand (p.registryKey).isEmpty();
        #elif JUCE_MAC
+        // What the Center 2.1 put in the user's folders goes without a password;
+        // the password is asked for only when a .pkg's system-wide copy is left.
+        const auto home = juce::File::getSpecialLocation (juce::File::userHomeDirectory);
+        for (const auto& f : files)
+            if (f.exists() && isRemovable (f) && f.isAChildOf (home))
+            {
+                if (f.isDirectory()) f.deleteRecursively (false);
+                else                 f.deleteFile();
+            }
+
         juce::String quoted;
         for (const auto& f : files)
         {

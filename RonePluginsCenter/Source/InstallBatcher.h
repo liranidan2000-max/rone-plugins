@@ -4,6 +4,7 @@
 #include "VersionChecker.h"
 #include "PluginInUse.h"
 #include "NetworkManager.h"
+#include "OldVersionCleaner.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -16,6 +17,9 @@
 
 #if JUCE_MAC
  #include <sys/wait.h>
+ #include <cstdio>
+ #include <cerrno>
+ #include <cstring>
 #endif
 
 // ============================================================================
@@ -36,8 +40,13 @@
 //            copy against the manifest - the file that runs is the file that
 //            was checked - and runs the installers one after another, writing a
 //            result per plugin as it goes. No time limit while one is running.
-//   macOS:   one shell script run with administrator privileges (one password
-//            prompt), the same copy - hash - install for each .pkg.
+//   macOS:   a plugin that is not on the Mac system-wide yet needs no password
+//            at all (Center 2.1): its .pkg is hashed and unpacked as the user
+//            and the bundles go into ~/Library/Audio/Plug-Ins and ~/Applications
+//            (installUserDomain below). The rest - plugins a .pkg put in /Library
+//            before - go through one shell script run with administrator
+//            privileges (one password prompt), the same copy - hash - install
+//            for each .pkg.
 // A plugin a DAW still has loaded (Windows) waits as "waiting for FL Studio"
 // and joins the next batch once the DAW lets go, exactly as before.
 // ============================================================================
@@ -439,6 +448,267 @@ private:
         postResult (r);
     }
 
+   #if JUCE_MAC
+    // ---- Center 2.1: installing without a password ---------------------------
+    // Liran's Mac, 2026-10-07: too many approvals. A plugin that is not on the
+    // Mac system-wide goes into the user's own folders, which every DAW scans
+    // and which need no administrator. One that a .pkg once put in /Library
+    // stays there - a second copy in ~/Library would list the plugin twice -
+    // and still goes through the password batch.
+    //
+    // Anything unexpected before the disk is touched (a pkgutil that cannot
+    // unpack, a payload holding a file this does not know where to put) hands
+    // the plugin to the password batch, which installs the .pkg as before.
+    enum class Route { done, system };
+
+    struct Move { juce::File from, to; };
+
+    static int runTool (const juce::StringArray& args, int timeoutMs, juce::String* output = nullptr)
+    {
+        juce::ChildProcess p;
+        if (! p.start (args, juce::ChildProcess::wantStdOut | juce::ChildProcess::wantStdErr))
+            return -1;
+        // Wait first (with its limit), then read: these tools say a line or two.
+        if (! p.waitForProcessToFinish (timeoutMs))
+        {
+            p.kill();
+            return -1;
+        }
+        if (output != nullptr)
+            *output = p.readAllProcessOutput().trim();
+        return (int) p.getExitCode();
+    }
+
+    // Where each bundle of an unpacked .pkg goes in the user's folders. False
+    // when the payload holds anything else.
+    static bool planUserMoves (const juce::File& payload, juce::Array<Move>& moves)
+    {
+        struct Place { const char* in; const char* pattern; juce::File userDir; };
+        const Place places[] {
+            { "Library/Audio/Plug-Ins/VST3",       "*.vst3",      VersionChecker::getUserVst3Dir() },
+            { "Library/Audio/Plug-Ins/Components", "*.component", VersionChecker::getUserAUDir() },
+            { "Applications",                      "*.app",       VersionChecker::getUserAppsDir() },
+            { "Users/Shared/RONE Plugins/Manuals", "*.pdf",       VersionChecker::getUserManualsDir() },
+        };
+        for (const auto& pl : places)
+            for (const auto& f : payload.getChildFile (pl.in).findChildFiles (juce::File::findFilesAndDirectories, false, pl.pattern))
+                moves.add ({ f, pl.userDir.getChildFile (f.getFileName()) });
+
+        for (const auto& e : juce::RangedDirectoryIterator (payload, true, "*", juce::File::findFiles,
+                                                             juce::File::FollowSymlinks::no))
+        {
+            bool known = false;
+            for (const auto& m : moves)
+                if (e.getFile() == m.from || e.getFile().isAChildOf (m.from)) { known = true; break; }
+            if (! known)
+                return false;
+        }
+        return ! moves.isEmpty();
+    }
+
+    // The names a bundle had before the "RONE <Name>" rename (build #155); names
+    // that differ only in case are the same file on a Mac and are left out.
+    static juce::StringArray legacyFileNames (const juce::File& bundle)
+    {
+        juce::StringArray names;
+        const auto legacy = OldVersionCleaner::legacyNames();
+        for (int k = 0; k < legacy.size(); ++k)
+            if (legacy.getAllValues()[k] == bundle.getFileNameWithoutExtension()
+                && ! legacy.getAllKeys()[k].equalsIgnoreCase (legacy.getAllValues()[k]))
+                names.add (legacy.getAllKeys()[k] + bundle.getFileExtension());
+        return names;
+    }
+
+    // A copy a .pkg put system-wide, under today's name or the old one: only the
+    // .pkg (with the password) replaces it - its preinstall also clears the old name.
+    static bool hasSystemCopy (const juce::Array<Move>& moves)
+    {
+        for (const auto& m : moves)
+        {
+            const auto ext = m.to.getFileExtension();
+            juce::Array<juce::File> dirs;
+            if (ext == ".vst3")           dirs.add (VersionChecker::getVst3InstallDir());
+            else if (ext == ".component") dirs.add (VersionChecker::getAUInstallDir());
+            else if (ext == ".app")       { dirs.add (juce::File ("/Applications")); dirs.add (juce::File ("/Applications/RONE Plugins")); }
+            else continue;   // a manual: the newer one in the user's folder is the one the Center opens
+
+            auto names = legacyFileNames (m.to);
+            names.add (m.to.getFileName());
+            for (const auto& d : dirs)
+                for (const auto& n : names)
+                    if (d.getChildFile (n).exists())
+                        return true;
+        }
+        return false;
+    }
+
+    static bool hasUserCopy (const Item& i)
+    {
+        const auto app = i.standaloneExe.replace (".exe", "") + ".app";
+        return (i.vst3Bundle.isNotEmpty()    && VersionChecker::getUserVst3Dir().getChildFile (i.vst3Bundle).exists())
+            || (i.auBundle.isNotEmpty()      && VersionChecker::getUserAUDir().getChildFile (i.auBundle).exists())
+            || (i.standaloneExe.isNotEmpty() && VersionChecker::getUserAppsDir().getChildFile (app).exists());
+    }
+
+    // Every bundle is copied beside its place first (hidden), then swapped in by
+    // renaming; a rename that fails puts back what was there. Empty = installed.
+    static juce::String installUserDomain (const juce::Array<Move>& moves, const juce::String& tag)
+    {
+        struct Swap { juce::File to, staged, old; bool movedOld = false, placed = false; };
+        juce::Array<Swap> swaps;
+        juce::String error;
+
+        for (const auto& m : moves)
+        {
+            Swap s;
+            s.to     = m.to;
+            s.staged = m.to.getSiblingFile ("." + m.to.getFileName() + ".rone-new-" + tag);
+            s.old    = m.to.getSiblingFile ("." + m.to.getFileName() + ".rone-old-" + tag);
+            swaps.add (s);
+
+            juce::String out;
+            if (! m.to.getParentDirectory().createDirectory()
+                || runTool (juce::StringArray { "/usr/bin/ditto", m.from.getFullPathName(), s.staged.getFullPathName() }, 300000, &out) != 0)
+            {
+                error = "could not write to " + m.to.getParentDirectory().getFullPathName()
+                      + (out.isNotEmpty() ? " (" + out + ")" : juce::String());
+                break;
+            }
+        }
+
+        auto rename = [&error] (const juce::File& from, const juce::File& to, const juce::File& bundle)
+        {
+            if (std::rename (from.getFullPathName().toRawUTF8(), to.getFullPathName().toRawUTF8()) == 0)
+                return true;
+            const int e = errno;
+            if (error.isEmpty())
+                error = "macOS did not let the Center replace " + bundle.getFileName()
+                      + " (" + juce::String (juce::CharPointer_UTF8 (std::strerror (e))) + ")"
+                      // EPERM is macOS protecting an app (App Management, macOS 13+), not the folder
+                      + (e == EPERM ? juce::String (" - allow RONE Plugins Center in System Settings > Privacy & Security"
+                                                    " > App Management, then update again")
+                                    : juce::String());
+            return false;
+        };
+
+        if (error.isEmpty())
+            for (auto& s : swaps)
+            {
+                if (s.to.exists())
+                {
+                    if (! rename (s.to, s.old, s.to)) break;
+                    s.movedOld = true;
+                }
+                if (! rename (s.staged, s.to, s.to)) break;
+                s.placed = true;
+            }
+
+        if (error.isNotEmpty())
+        {
+            // Back as it was, last swap first. A copy that cannot go back stays
+            // beside its place (hidden) rather than being deleted.
+            for (int k = swaps.size(); --k >= 0;)
+            {
+                auto& s = swaps.getReference (k);
+                if (s.placed)
+                    std::rename (s.to.getFullPathName().toRawUTF8(), s.staged.getFullPathName().toRawUTF8());
+                if (s.movedOld)
+                    std::rename (s.old.getFullPathName().toRawUTF8(), s.to.getFullPathName().toRawUTF8());
+            }
+            for (auto& s : swaps)
+                s.staged.deleteRecursively();
+            return error;
+        }
+
+        bool anyAU = false;
+        juce::StringArray placed (juce::StringArray { "/usr/bin/xattr", "-dr", "com.apple.quarantine" });
+        for (auto& s : swaps)
+        {
+            s.old.deleteRecursively();
+            placed.add (s.to.getFullPathName());
+            anyAU = anyAU || s.to.hasFileExtension ("component");
+            for (const auto& n : legacyFileNames (s.to))       // a pre-rename copy in the same folder
+                s.to.getSiblingFile (n).deleteRecursively();
+        }
+        runTool (placed, 30000);     // nothing the Center downloads is quarantined - only in case
+        if (anyAU)
+            runTool (juce::StringArray { "/usr/bin/killall", "-9", "AudioComponentRegistrar" }, 10000);   // hosts see the new AU now
+        return {};
+    }
+
+    // Done (installed or failed, reported) or handed to the password batch.
+    Route installWithoutPassword (const Item& i, const juce::File& work, const juce::String& tag)
+    {
+        auto fail = [this, &i] (const juce::String& why)
+        {
+            Result r;
+            r.id = i.id;
+            r.code = "failed";
+            r.message = "Install failed - " + why + ". Nothing was changed.";
+            finishItem (i, r);
+            return Route::done;
+        };
+
+        {
+            juce::FileInputStream in (i.installer);
+            if (! in.openedOk() || ! juce::SHA256 (in).toHexString().equalsIgnoreCase (i.sha256))
+            {
+                Result r;
+                r.id = i.id;
+                r.exitCode = -2;
+                r.code = "hash";
+                r.message = i.name + ": the installer changed after it was checked - nothing was installed. Try again.";
+                finishItem (i, r);
+                return Route::done;
+            }
+        }
+
+        // pkgutil wants a folder that does not exist yet.
+        const auto unpacked = work.getChildFile (i.id);
+        work.createDirectory();
+        unpacked.deleteRecursively();
+        juce::String out;
+        const bool expanded = runTool (juce::StringArray { "/usr/sbin/pkgutil", "--expand-full", i.installer.getFullPathName(),
+                                         unpacked.getFullPathName() }, 300000, &out) == 0;
+
+        auto payload = unpacked.getChildFile ("Payload");
+        if (expanded && ! payload.isDirectory())
+            for (const auto& sub : unpacked.findChildFiles (juce::File::findDirectories, false, "*.pkg"))
+                if (sub.getChildFile ("Payload").isDirectory())
+                    payload = sub.getChildFile ("Payload");
+
+        juce::Array<Move> moves;
+        const bool planned = expanded && payload.isDirectory() && planUserMoves (payload, moves);
+
+        if (planned && hasSystemCopy (moves))
+            return Route::system;
+
+        if (! planned)
+        {
+            // The .pkg would put it in /Library - next to the copy already in the
+            // user's folders, and the DAW would list it twice.
+            if (hasUserCopy (i))
+                return fail (! expanded ? "the installer could not be unpacked" + (out.isNotEmpty() ? " (" + out + ")" : juce::String())
+                                        : juce::String ("the installer holds files outside the plugin folders"));
+            return Route::system;
+        }
+
+        const auto error = installUserDomain (moves, tag);
+        unpacked.deleteRecursively();
+        if (error.isNotEmpty())
+            return fail (error);
+
+        Result r;
+        r.id = i.id;
+        r.ok = verifyOnDisk (i);
+        r.code = r.ok ? "installed" : "failed";
+        r.message = r.ok ? i.name + " installed successfully!"
+                         : juce::String ("Install verification failed - components not found.");
+        finishItem (i, r);
+        return Route::done;
+    }
+   #endif
+
     void runBatch (const juce::Array<Item>& batch)
     {
         const auto dir = NetworkManager::getDownloadDir();
@@ -534,6 +804,19 @@ private:
         resultFile.deleteFile();
 
        #elif JUCE_MAC
+        // Center 2.1: what can go in without a password goes in first; the rest
+        // waits for the one password below.
+        juce::Array<Item> adminBatch;
+        {
+            const auto work = dir.getChildFile ("unpack-" + tag);
+            for (auto& i : batch)
+                if (installWithoutPassword (i, work, tag) == Route::system)
+                    adminBatch.add (i);
+            work.deleteRecursively();
+        }
+        if (adminBatch.isEmpty())
+            return;
+
         // Record what was already on disk, to tell a fresh install from leftovers.
         const auto resultFile = dir.getChildFile ("batch-" + tag + ".result.txt");
         const auto script = dir.getChildFile ("batch-" + tag + ".sh");
@@ -545,7 +828,7 @@ private:
         sh << "#!/bin/sh\n"
            << "R=" << q (resultFile.getFullPathName()) << "\n"
            << "W=$(/usr/bin/mktemp -d /tmp/rone-install.XXXXXX) || exit 1\n";
-        for (auto& i : batch)
+        for (auto& i : adminBatch)
         {
             const auto pkg = i.installer.getFullPathName();
             if (pkg.containsAnyOf ("'\"\\$`") || ! i.id.containsOnly ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
@@ -600,7 +883,7 @@ private:
         {
             const auto id = line.upToFirstOccurrenceOf (" ", false, false).trim();
             const int code = line.fromFirstOccurrenceOf (" ", false, false).trim().getIntValue();
-            for (auto& i : batch)
+            for (auto& i : adminBatch)
                 if (i.id == id && ! reported.contains (id))
                 {
                     reported.add (id);
@@ -617,7 +900,7 @@ private:
                 }
         }
 
-        for (auto& i : batch)
+        for (auto& i : adminBatch)
             if (! reported.contains (i.id))
             {
                 Result r;

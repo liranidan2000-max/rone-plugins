@@ -1151,7 +1151,8 @@ void MainComponent::handleLink (const CenterLinks::Link& link)
 // ============================================================================
 // Open the plugin's user manual. The PDF ships inside the installer
 // (Windows: <Program Files>\RONE Plugins\Manuals, macOS: /Users/Shared/RONE
-// Plugins/Manuals); when the local copy is missing (older install, manual
+// Plugins/Manuals, or Application Support for a plugin the Center 2.1 put in the
+// user's folders); when the local copy is missing (older install, manual
 // deleted) the same file is served from the public monorepo.
 // ============================================================================
 void MainComponent::handleOpenManual (NativeArgs args, NativeCompletion complete)
@@ -1177,7 +1178,9 @@ void MainComponent::handleOpenManual (NativeArgs args, NativeCompletion complete
     }
 
    #if JUCE_MAC
-    juce::File local = juce::File ("/Users/Shared/RONE Plugins/Manuals").getChildFile (manualPdf);
+    juce::File local = VersionChecker::getUserManualsDir().getChildFile (manualPdf);   // the newer one, when both
+    if (! local.existsAsFile())
+        local = juce::File ("/Users/Shared/RONE Plugins/Manuals").getChildFile (manualPdf);
    #else
     juce::File local = VersionChecker::getStandaloneInstallDir().getChildFile ("Manuals").getChildFile (manualPdf);
    #endif
@@ -1216,6 +1219,12 @@ void MainComponent::handleOpenFolder (NativeArgs args, NativeCompletion complete
     }
 
     juce::Array<juce::File> candidates;
+   #if JUCE_MAC
+    // System-wide or in the user's folders (Center 2.1)
+    candidates.add (VersionChecker::findVst3 (vst3));
+    candidates.add (VersionChecker::findAU (au));
+    candidates.add (VersionChecker::findApp (exe));
+   #else
     if (vst3.isNotEmpty())
     {
         candidates.add (VersionChecker::getVst3InstallDir().getChildFile (vst3));
@@ -1223,21 +1232,12 @@ void MainComponent::handleOpenFolder (NativeArgs args, NativeCompletion complete
         candidates.add (VersionChecker::getVst3InstallDir().getParentDirectory().getChildFile (vst3)); // top-level VST3 folder
        #endif
     }
-   #if JUCE_MAC
-    if (au.isNotEmpty())  candidates.add (VersionChecker::getAUInstallDir().getChildFile (au));
-    if (exe.isNotEmpty())
-    {
-        auto appName = exe.replace (".exe", "") + ".app";
-        candidates.add (juce::File ("/Applications").getChildFile (appName));
-        candidates.add (juce::File ("/Applications/RONE Plugins").getChildFile (appName));
-    }
-   #else
     if (exe.isNotEmpty()) candidates.add (VersionChecker::getStandaloneInstallDir().getChildFile (exe));
    #endif
 
     for (auto& f : candidates)
     {
-        if (f.exists())
+        if (f != juce::File() && f.exists())
         {
             f.revealToUser();
             complete ("{\"success\":true}");
@@ -1253,6 +1253,17 @@ void MainComponent::handleOpenFolder (NativeArgs args, NativeCompletion complete
 // VST3 plugins, the standalone apps (with the manuals beside them), and on
 // macOS the Audio Units. Opens the folder itself, not its parent.
 // ============================================================================
+#if JUCE_MAC
+static bool holdsRone (const juce::File& dir)
+{
+    if (! dir.isDirectory()) return false;
+    for (const auto& e : juce::RangedDirectoryIterator (dir, false, "*", juce::File::findFilesAndDirectories))
+        if (e.getFile().getFileName().startsWithIgnoreCase ("RONE "))
+            return true;
+    return false;
+}
+#endif
+
 void MainComponent::handleOpenInstallFolder (NativeArgs args, NativeCompletion complete)
 {
     const auto kind = args.size() > 0 ? args[0].toString() : juce::String ("vst3");
@@ -1263,6 +1274,8 @@ void MainComponent::handleOpenInstallFolder (NativeArgs args, NativeCompletion c
        #if JUCE_MAC
         dir = juce::File ("/Applications/RONE Plugins");
         if (! dir.isDirectory()) dir = juce::File ("/Applications");
+        if (! holdsRone (dir) && holdsRone (VersionChecker::getUserAppsDir()))
+            dir = VersionChecker::getUserAppsDir();
        #else
         dir = VersionChecker::getStandaloneInstallDir();
        #endif
@@ -1271,6 +1284,15 @@ void MainComponent::handleOpenInstallFolder (NativeArgs args, NativeCompletion c
         dir = VersionChecker::getAUInstallDir();
     else
         dir = VersionChecker::getVst3InstallDir();
+
+   #if JUCE_MAC
+    // Center 2.1 installs into the user's folders what was not system-wide:
+    // open the one that holds the RONE plugins.
+    if (kind == "au" && ! holdsRone (dir) && holdsRone (VersionChecker::getUserAUDir()))
+        dir = VersionChecker::getUserAUDir();
+    if (kind != "au" && kind != "standalone" && ! holdsRone (dir) && holdsRone (VersionChecker::getUserVst3Dir()))
+        dir = VersionChecker::getUserVst3Dir();
+   #endif
 
     if (dir == juce::File() || ! dir.isDirectory())
     {
@@ -1314,16 +1336,7 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
         #if JUCE_MAC
             if (p.standaloneExe.isNotEmpty())
             {
-                auto appName = p.standaloneExe.replace (".exe", "") + ".app";
-                juce::File app;
-
-                for (auto& dir : { juce::File ("/Applications"),
-                                    juce::File ("/Applications/RONE Plugins"),
-                                    VersionChecker::getStandaloneInstallDir() })
-                {
-                    auto candidate = dir.getChildFile (appName);
-                    if (candidate.exists()) { app = candidate; break; }
-                }
+                const auto app = VersionChecker::findApp (p.standaloneExe);   // /Applications or ~/Applications
 
                 if (app.exists())
                 {

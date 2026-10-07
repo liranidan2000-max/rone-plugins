@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "VersionChecker.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -47,6 +48,10 @@ public:
        #if JUCE_WINDOWS
         return juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
                    .getChildFile ("Common Files").getChildFile ("VST3").getChildFile ("RONE").getChildFile ("RONE Control.vst3");
+       #elif JUCE_MAC
+        // /Library from a .pkg, ~/Library when the Center 2.1 installed it without a password
+        const auto found = VersionChecker::findVst3 ("RONE Control.vst3");
+        return found != juce::File() ? found : juce::File ("/Library/Audio/Plug-Ins/VST3/RONE Control.vst3");
        #else
         return juce::File ("/Library/Audio/Plug-Ins/VST3/RONE Control.vst3");
        #endif

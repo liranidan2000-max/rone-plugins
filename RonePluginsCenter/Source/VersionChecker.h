@@ -127,6 +127,22 @@ public:
     static juce::File getVst3InstallDir();
     static juce::File getAUInstallDir();
 
+   #if JUCE_MAC
+    // Center 2.1: a plugin that is not already on the Mac system-wide installs
+    // into the user's own folders, with no password - ~/Library/Audio/Plug-Ins/
+    // VST3 and Components, ~/Applications, and the manual in Application Support.
+    // Every DAW scans the user folders too.
+    static juce::File getUserVst3Dir();
+    static juce::File getUserAUDir();
+    static juce::File getUserAppsDir();
+    static juce::File getUserManualsDir();
+
+    // Where an installed copy is, system-wide first; File() when there is none.
+    static juce::File findVst3 (const juce::String& bundleName);
+    static juce::File findAU (const juce::String& bundleName);
+    static juce::File findApp (const juce::String& exeName);   // "RONE Stutter.exe" -> the .app
+   #endif
+
 private:
     // Split "1.2.3" into {1, 2, 3}.
     static juce::Array<int> parseVersion (const juce::String& v);
