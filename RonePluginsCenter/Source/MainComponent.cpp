@@ -1018,24 +1018,11 @@ void MainComponent::onBatchResult (const InstallBatcher::Result& r)
 
     emitStatusMessage (r.message, r.ok ? "success" : (r.declined ? "info" : "error"), r.code, juce::var (params));
 
-   #if JUCE_MAC
-    // As before: a standalone that just arrived opens by itself on macOS.
-    if (r.ok)
-    {
-        juce::String exe;
-        {
-            juce::ScopedLock sl (pluginDataLock);
-            for (auto& p : pluginData)
-                if (p.id == r.id) { exe = p.standaloneExe; break; }
-        }
-        if (exe.isNotEmpty())
-        {
-            const auto appName = exe.replace (".exe", "") + ".app";
-            for (auto dir : { juce::File ("/Applications"), juce::File ("/Applications/RONE Plugins") })
-                if (dir.getChildFile (appName).exists()) { dir.getChildFile (appName).startAsProcess(); break; }
-        }
-    }
-   #endif
+    // 2.0.6: nothing opens by itself after an install any more. On the Mac every
+    // standalone that 1.x/2.0 launched here asked for the microphone the first
+    // time it ran, so installing a few plugins became a string of permission
+    // prompts nobody asked for (Liran on his Mac, 2026-10-07). A standalone now
+    // opens - and asks - only when the user opens it (the card's Open).
 }
 
 void MainComponent::requestUpdate (const juce::String& productId)

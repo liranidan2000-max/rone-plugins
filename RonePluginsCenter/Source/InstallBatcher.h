@@ -92,6 +92,7 @@ public:
                     return;
             entries.add ({ item });
         }
+        lastAddMs.store (juce::Time::getMillisecondCounter());
         wake.signal();
     }
 
@@ -345,6 +346,12 @@ private:
 
             if (downloadsPending && downloadsPending())
                 continue;   // one batch, one prompt: wait for the rest of what the user asked for
+
+            // 2.0.6: and a few quiet seconds after the last plugin joined. Clicked
+            // one after another (already downloaded, or small), each became its
+            // own batch and asked for the password again (Liran's Mac, 2026-10-07).
+            if (juce::Time::getMillisecondCounter() - lastAddMs.load() < kGatherMs)
+                continue;
 
             juce::Array<Item> batch;
             {
@@ -636,6 +643,9 @@ private:
         }
        #endif
     }
+
+    static constexpr juce::uint32 kGatherMs = 4000;
+    std::atomic<juce::uint32> lastAddMs { 0 };
 
     mutable juce::CriticalSection lock;
     juce::Array<Entry> entries;
