@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How to install RONE Plugins Center on a Mac</title>
+<style>
+@font-face { font-family: 'Manrope'; font-weight: 500; src: url('../../../RonePluginsCenter/Resources/ui/dist/manrope-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Manrope'; font-weight: 600; src: url('../../../RonePluginsCenter/Resources/ui/dist/manrope-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Manrope'; font-weight: 700; src: url('../../../RonePluginsCenter/Resources/ui/dist/manrope-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Manrope'; font-weight: 800; src: url('../../../RonePluginsCenter/Resources/ui/dist/manrope-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Sora'; font-weight: 700; src: url('../../../RonePluginsCenter/Resources/ui/dist/sora-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Sora'; font-weight: 800; src: url('../../../RonePluginsCenter/Resources/ui/dist/sora-latin-800-normal.woff2') format('woff2'); }
+
+@page { size: A4; margin: 0; }
+:root { --accent: #9D6BFF; --ink: #16181C; --ink2: #3C4149; --dim: #7A7F88; --line: #E3E5E8; --panel: #F4F5F7; --graphite: #14161A; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #fff; color: var(--ink); font-family: 'Manrope', 'Segoe UI', Arial, sans-serif; font-size: 10.4pt; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { width: 210mm; height: 297mm; padding: 0 16mm 14mm 16mm; position: relative; overflow: hidden; break-after: page; }
+.page:last-child { break-after: auto; }
+
+/* header band */
+.band { margin: 0 -16mm 6mm -16mm; padding: 9mm 16mm 7mm 16mm; background: var(--graphite); color: #E8EAED; }
+.brand { display: flex; align-items: center; gap: 3.5mm; }
+.brand img { width: 11mm; height: 11mm; border-radius: 2.4mm; }
+.brand .wm { font-family: 'Sora'; font-weight: 800; font-size: 11pt; letter-spacing: .22em; }
+.brand .wm small { display: block; font-family: 'Manrope'; font-size: 7pt; letter-spacing: .3em; color: var(--dim); font-weight: 700; margin-top: .6mm; }
+.band h1 { font-family: 'Sora'; font-weight: 800; font-size: 24pt; line-height: 1.05; margin: 5mm 0 2mm; color: #fff; }
+.band h1 i { font-style: normal; color: var(--accent); }
+.band p { margin: 0; color: #B9BEC7; font-size: 11pt; max-width: 150mm; }
+.mini-band { margin: 0 -16mm 6mm -16mm; padding: 4.5mm 16mm; background: var(--graphite); color: #E8EAED; display: flex; justify-content: space-between; align-items: center; }
+.mini-band .t { font-family: 'Sora'; font-weight: 800; font-size: 12pt; }
+.mini-band .t span { color: var(--accent); }
+.mini-band .s { font-size: 8pt; letter-spacing: .25em; color: var(--dim); font-weight: 700; }
+
+/* steps */
+.step { display: grid; grid-template-columns: 11mm 1fr; column-gap: 4mm; margin-bottom: 5mm; break-inside: avoid; }
+.n { width: 9mm; height: 9mm; border-radius: 50%; background: var(--accent); color: #fff; font-family: 'Sora'; font-weight: 800; font-size: 12pt; display: flex; align-items: center; justify-content: center; margin-top: .4mm; }
+.step h2 { font-family: 'Sora'; font-weight: 800; font-size: 14pt; margin: 0 0 1.2mm; }
+.step p { margin: 0 0 2.5mm; color: var(--ink2); }
+.step p strong { color: var(--ink); }
+.why { font-size: 9pt; color: var(--dim); background: var(--panel); border-left: 2.5pt solid var(--accent); padding: 2mm 3mm; border-radius: 0 1.5mm 1.5mm 0; margin: 0 0 3mm; }
+.shot { margin-top: 1mm; display: flex; justify-content: center; }
+.cap { text-align: center; font-size: 8pt; color: var(--dim); margin-top: 1.5mm; }
+
+/* ---------- macOS look-alikes ---------- */
+.mac { font-family: -apple-system, 'SF Pro Text', 'Segoe UI', Arial, sans-serif; color: #1d1d1f; }
+.win { border-radius: 11px; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.22), 0 12px 32px rgba(0,0,0,.22); background: #fff; }
+.titlebar { height: 26px; background: #ECECEE; display: flex; align-items: center; padding: 0 9px; gap: 7px; border-bottom: 1px solid #D9D9DC; position: relative; }
+.light { width: 11px; height: 11px; border-radius: 50%; }
+.titlebar .ttl { position: absolute; left: 0; right: 0; text-align: center; font-size: 11.5px; font-weight: 600; color: #4a4a4f; pointer-events: none; }
+
+/* the .dmg window */
+.dmg { width: 112mm; }
+.dmg .body { position: relative; height: 80.5mm; background: url('../dmg-background@2x.png') center/cover; }
+.dmg .ico { position: absolute; top: calc(160 / 460 * 100% - 8.4mm); width: 30mm; text-align: center; font-size: 10px; color: #1d1d1f; }
+.dmg .ico img, .dmg .ico svg { width: 16.8mm; height: 16.8mm; display: block; margin: 0 auto 1.5mm; }
+
+/* alerts (macOS 15 / 26 style) */
+.alert { width: 62mm; background: #EDEDEF; border-radius: 15px; padding: 4.5mm 4.5mm 3.5mm; text-align: center; box-shadow: 0 0 0 .5px rgba(0,0,0,.2), 0 14px 36px rgba(0,0,0,.25); }
+.alert .icon { position: relative; width: 15mm; height: 15mm; margin: 0 auto 3mm; }
+.alert .icon img { width: 15mm; height: 15mm; border-radius: 3.4mm; }
+.alert .icon .badge { position: absolute; right: -2.5mm; bottom: -1.5mm; width: 7mm; height: 7mm; }
+.alert h3 { font-size: 11.5px; font-weight: 700; margin: 0 0 2mm; line-height: 1.3; }
+.alert p { font-size: 10px; line-height: 1.38; margin: 0 0 3.5mm; color: #2b2b2e; }
+.btn { display: block; border-radius: 7px; font-size: 11px; font-weight: 600; padding: 1.7mm 0; margin-top: 1.6mm; background: #DCDCE0; color: #1d1d1f; position: relative; }
+.btn.blue { background: #1474F5; color: #fff; }
+.btn.ring, .os-btn.ring { box-shadow: 0 0 0 2.4px #fff, 0 0 0 5px var(--accent); }
+
+/* System Settings */
+.settings { width: 172mm; }
+.settings .body { display: grid; grid-template-columns: 44mm 1fr; height: 60mm; }
+.side { background: #EFEFF1; border-right: 1px solid #DADADD; padding: 3mm 2.5mm; font-size: 10.5px; }
+.search { background: #E2E2E6; border-radius: 6px; color: #8a8a90; padding: 1mm 2mm; margin-bottom: 2.5mm; font-size: 10px; }
+.item { display: flex; align-items: center; gap: 2mm; padding: 1.15mm 1.6mm; border-radius: 6px; color: #2b2b2e; }
+.item .sq { width: 4.2mm; height: 4.2mm; border-radius: 1.2mm; flex: none; }
+.item.on { background: #1474F5; color: #fff; }
+.main { padding: 4mm 5mm; font-size: 10.5px; background: #F7F7F8; }
+.main h4 { font-size: 13px; margin: 0 0 3mm; font-weight: 700; }
+.group-t { font-size: 10px; font-weight: 700; color: #6b6b70; margin: 0 0 1.5mm 1mm; }
+.group { background: #fff; border-radius: 9px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); margin-bottom: 3mm; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 3mm; padding: 2.3mm 3mm; border-top: 1px solid #ECECEF; }
+.row:first-child { border-top: 0; }
+.row .dim { color: #8a8a90; }
+.popup { background: #F0F0F3; border-radius: 6px; padding: .8mm 2.2mm; font-size: 10px; box-shadow: 0 0 0 .5px rgba(0,0,0,.15); white-space: nowrap; }
+.os-btn { background: #fff; border-radius: 6px; padding: 1mm 3mm; font-size: 10.5px; font-weight: 600; box-shadow: 0 0 0 .5px rgba(0,0,0,.25), 0 .5px 1px rgba(0,0,0,.1); white-space: nowrap; }
+.callout { position: absolute; background: var(--accent); color: #fff; font-family: 'Manrope'; font-weight: 800; font-size: 8.5pt; padding: 1mm 2.6mm; border-radius: 10mm; white-space: nowrap; }
+
+.two { display: flex; gap: 7mm; justify-content: center; align-items: flex-start; }
+.two .alert { width: 57mm; padding: 4mm 4mm 3mm; }
+.two .alert p { font-size: 9.4px; margin-bottom: 2.5mm; }
+.two .alert .icon, .two .alert .icon img { width: 12mm; height: 12mm; }
+.note { background: var(--panel); border-radius: 2mm; padding: 2.6mm 3mm; font-size: 8.2pt; line-height: 1.45; color: var(--ink2); break-inside: avoid; }
+.notes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3.5mm; margin-left: 15mm; }
+.split { display: grid; grid-template-columns: 1fr 62mm; gap: 6mm; align-items: start; }
+.note b { color: var(--ink); }
+.foot { position: absolute; left: 16mm; right: 16mm; bottom: 8mm; display: flex; justify-content: space-between; font-size: 7.5pt; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- ======================= PAGE 1 ======================= -->
+<div class="page">
+  <div class="band">
+    <div class="brand"><img src="../../../RonePluginsCenter/Resources/AppIcon.png"><div class="wm">RONE PLUGINS<small>PLUGINS CENTER</small></div></div>
+    <h1>Install the Center<br>on your <i>Mac</i></h1>
+    <p>Two minutes, once. After this the Center installs and updates every RONE plugin for you.</p>
+  </div>
+
+  <div class="step">
+    <div class="n">1</div>
+    <div>
+      <h2>Drag it into Applications</h2>
+      <p>Open the <strong>RONE_Plugins_Center.dmg</strong> you downloaded. In the window that opens, drag <strong>RONE Plugins Center</strong> onto <strong>Applications</strong>. If macOS asks, choose <strong>Replace</strong>.</p>
+      <div class="shot mac">
+        <div class="win dmg">
+          <div class="titlebar"><span class="light" style="background:#FF5F57"></span><span class="light" style="background:#FEBC2E"></span><span class="light" style="background:#28C840"></span><span class="ttl">RONE Plugins Center</span></div>
+          <div class="body">
+            <div class="ico" style="left:calc(170 / 640 * 100% - 15mm)"><img src="../../../RonePluginsCenter/Resources/AppIcon.png">RONE Plugins Center</div>
+            <div class="ico" style="left:calc(470 / 640 * 100% - 15mm)">
+              <svg viewBox="0 0 64 64"><defs><linearGradient id="fd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6CB8F5"/><stop offset="1" stop-color="#2E8DE6"/></linearGradient></defs>
+                <path d="M6 16a4 4 0 0 1 4-4h14l5 5h25a4 4 0 0 1 4 4v29a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="#3A97EA"/>
+                <rect x="6" y="21" width="52" height="33" rx="4" fill="url(#fd)"/>
+                <path d="M32 27l9 18h-4l-1.8-4h-6.4L27 45h-4zm0 6.5L29.9 38h4.2z" fill="#E9F4FF" opacity=".95"/></svg>
+              Applications</div>
+            <div class="ico" style="left:calc(320 / 640 * 100% - 15mm);top:calc(350 / 460 * 100% - 8.4mm)">
+              <svg viewBox="0 0 64 64"><path d="M14 4h26l12 12v42a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" fill="#fff" stroke="#C9CDD3"/><path d="M40 4v9a3 3 0 0 0 3 3h9" fill="#EDEDF0" stroke="#C9CDD3"/><rect x="11" y="36" width="34" height="14" rx="2.5" fill="#E5484D"/><text x="28" y="46.5" font-size="9.5" font-weight="800" text-anchor="middle" fill="#fff" font-family="Arial">PDF</text></svg>
+              How to install.pdf</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="n">2</div>
+    <div>
+      <h2>Open it - macOS stops it the first time</h2>
+      <div class="split"><div><p>Open <strong>RONE Plugins Center</strong> from your Applications folder. macOS shows the message below. Click <strong>Done</strong> - nothing is wrong.</p>
+      <div class="why">Apple shows this for apps from independent developers that are not yet notarized by Apple. The Center is the same app every RONE customer uses; you only allow it once.</div>
+      <div class="cap" style="text-align:left">Click Done. Do not move it to the Trash.</div></div><div class="mac">
+        <div class="alert">
+          <div class="icon"><img src="../../../RonePluginsCenter/Resources/AppIcon.png">
+            <svg class="badge" viewBox="0 0 24 24"><path d="M12 2.5l10.4 18.2H1.6z" fill="#FFCC00" stroke="#E2A800" stroke-width=".8"/><rect x="11" y="8.5" width="2" height="6.5" rx="1" fill="#1d1d1f"/><circle cx="12" cy="17.6" r="1.15" fill="#1d1d1f"/></svg></div>
+          <h3>“RONE Plugins Center” Not Opened</h3>
+          <p>Apple could not verify “RONE Plugins Center” is free of malware that may harm your Mac or compromise your privacy.</p>
+          <span class="btn blue ring">Done</span>
+          <span class="btn">Move to Trash</span>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>RONE Plugins Center · Mac install</span><span>1 / 2</span></div>
+</div>
+
+<!-- ======================= PAGE 2 ======================= -->
+<div class="page">
+  <div class="mini-band"><div class="t">Install the Center on your <span>Mac</span></div><div class="s">STEPS 3 - 5</div></div>
+
+  <div class="step">
+    <div class="n">3</div>
+    <div>
+      <h2>Allow it in Privacy &amp; Security</h2>
+      <p>Open the  <strong>Apple menu → System Settings → Privacy &amp; Security</strong> and scroll down to <strong>Security</strong>. Next to <em>“RONE Plugins Center” was blocked</em>, click <strong>Open Anyway</strong>.</p>
+      <div class="shot mac" style="position:relative">
+        <div class="win settings">
+          <div class="titlebar"><span class="light" style="background:#FF5F57"></span><span class="light" style="background:#FEBC2E"></span><span class="light" style="background:#28C840"></span><span class="ttl">Privacy &amp; Security</span></div>
+          <div class="body">
+            <div class="side">
+              <div class="search">Search</div>
+              <div class="item"><span class="sq" style="background:#1E90FF"></span>Wi‑Fi</div>
+              <div class="item"><span class="sq" style="background:#1E90FF"></span>Bluetooth</div>
+              <div class="item"><span class="sq" style="background:#1E90FF"></span>Network</div>
+              <div class="item"><span class="sq" style="background:#8E8E93"></span>General</div>
+              
+              <div class="item"><span class="sq" style="background:#FF3B30"></span>Notifications</div>
+              <div class="item"><span class="sq" style="background:#FF2D55"></span>Sound</div>
+              <div class="item on"><span class="sq" style="background:#fff"></span>Privacy &amp; Security</div>
+              
+              
+            </div>
+            <div class="main">
+              <h4>Privacy &amp; Security</h4>
+              <div class="group">
+                <div class="row"><span>Analytics &amp; Improvements</span><span class="dim">›</span></div>
+                <div class="row"><span>Apple Advertising</span><span class="dim">›</span></div>
+              </div>
+              <div class="group-t">Security</div>
+              <div class="group">
+                <div class="row"><span>Allow applications from</span><span class="popup">App Store &amp; Known Developers ⌄</span></div>
+                <div class="row"><span>“RONE Plugins Center” was blocked to protect your Mac.</span><span class="os-btn ring">Open Anyway</span></div>
+              </div>
+              <div class="group">
+                <div class="row"><span>FileVault</span><span class="dim">On ›</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="n">4</div>
+    <div>
+      <h2>Confirm - with your Mac password</h2>
+      <p>macOS asks once more. Click <strong>Open Anyway</strong>, then enter your Mac password (or use Touch ID). The Center opens.</p>
+      <div class="two mac">
+        <div class="alert">
+          <div class="icon"><img src="../../../RonePluginsCenter/Resources/AppIcon.png"></div>
+          <h3>Open “RONE Plugins Center”?</h3>
+          <p>Apple is not able to verify that it is free from malware that could harm your Mac or compromise your privacy. Don’t open this unless you are certain it is from a trustworthy source.</p>
+          <span class="btn blue ring">Open Anyway</span>
+          <span class="btn">Move to Trash</span>
+        </div>
+        <div class="alert">
+          <div class="icon"><svg viewBox="0 0 24 24" style="width:15mm;height:15mm"><rect x="5" y="10" width="14" height="11" rx="2.2" fill="#8E8E93"/><path d="M8 10V7.6a4 4 0 0 1 8 0V10" fill="none" stroke="#8E8E93" stroke-width="2"/></svg></div>
+          <h3>Privacy &amp; Security</h3>
+          <p>You are making changes to your Security &amp; Privacy settings. Enter your password to allow this.</p>
+          <span class="btn" style="background:#fff;text-align:left;padding-left:3mm;color:#8a8a90;font-weight:500">Password</span>
+          <span class="btn blue">Modify Settings</span>
+          <span class="btn">Cancel</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="n">5</div>
+    <div>
+      <h2>That’s it</h2>
+      <p>From now on the Center opens like any other app. Sign in, pick your plugins and press <strong>Install</strong> - macOS asks for your Mac password <strong>once</strong> per install, because plugins go into <code>/Library/Audio/Plug-Ins</code>.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+  <div class="note"><b>On macOS 14 Sonoma or older?</b> It is quicker: Control-click RONE Plugins Center in Applications, choose <b>Open</b>, then <b>Open</b> again.</div>
+  <div class="note"><b>A plugin does not show up in your DAW?</b> Rescan plugins once. In Logic: Audio FX → Audio Units → <b>RonePlugins</b>. In Ableton / FL Studio: the VST3 list under <b>RonePlugins</b>.</div>
+  <div class="note"><b>Stuck?</b> Reply to the email you got from us, or write through the Support form at <b>roneaudio.com</b> - a real person answers.</div>
+  </div>
+
+  <div class="foot"><span>roneaudio.com · Instagram @roneplugins</span><span>2 / 2</span></div>
+</div>
+
+</body>
+</html>

@@ -32,9 +32,9 @@ tiffutil -cathidpicheck "$MAC/dmg-background.png" "$MAC/dmg-background@2x.png" -
 
 if command -v create-dmg >/dev/null 2>&1 || brew install create-dmg >/dev/null 2>&1; then
   set -- --volname "RONE Plugins Center" --background "$WORK/background.tiff" \
-         --window-pos 200 120 --window-size 640 400 --icon-size 112 --text-size 13 \
-         --icon "$NAME" 170 190 --hide-extension "$NAME" --app-drop-link 470 190
-  [ -f "$STAGE/How to install.pdf" ] && set -- "$@" --icon "How to install.pdf" 320 290
+         --window-pos 200 120 --window-size 640 490 --icon-size 96 --text-size 13 \
+         --icon "$NAME" 170 160 --hide-extension "$NAME" --app-drop-link 470 160
+  [ -f "$STAGE/How to install.pdf" ] && set -- "$@" --icon "How to install.pdf" 320 350
   if create-dmg "$@" "$OUT" "$STAGE"; then
     echo "dmg: laid out by create-dmg"
     rm -rf "$WORK"

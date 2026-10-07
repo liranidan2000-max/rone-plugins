@@ -4,9 +4,9 @@ what to do. Light on purpose: Finder writes the icon names in black.
 
     python installer/mac/make_dmg_background.py
 
-Writes dmg-background.png (640x400) and dmg-background@2x.png (1280x800).
-scripts/ci/make-center-dmg.sh places the icons at the matching points:
-the app at (170, 190), Applications at (470, 190).
+Writes dmg-background.png (640x460) and dmg-background@2x.png (1280x920).
+scripts/ci/make-center-dmg.sh places the icons (96 px) at the matching points:
+the app at (170, 160), Applications at (470, 160), How to install.pdf at (320, 350).
 """
 import os
 from PIL import Image, ImageDraw, ImageFont
@@ -21,7 +21,7 @@ def font(name, size):
 
 
 def draw(scale):
-    W, H = 640 * scale, 400 * scale
+    W, H = 640 * scale, 460 * scale
     img = Image.new('RGB', (W, H))
     d = ImageDraw.Draw(img)
     for y in range(H):                                   # a quiet top-to-bottom wash
@@ -33,18 +33,18 @@ def draw(scale):
     d.text((s(28), s(24)), 'R O N E   P L U G I N S', font=font('segoeuib.ttf', s(11)), fill=PURPLE)
     title = 'Install the Plugins Center'
     f = font('segoeuib.ttf', s(22))
-    d.text(((W - d.textlength(title, font=f)) / 2, s(54)), title, font=f, fill=(20, 22, 26))
+    d.text(((W - d.textlength(title, font=f)) / 2, s(40)), title, font=f, fill=(20, 22, 26))
 
-    # the arrow between the two icons (icons are 112 px, centred on y = 190)
-    y, x0, x1 = s(190), s(250), s(388)
+    # the arrow between the two icons (icons are 96 px, centred on y = 160)
+    y, x0, x1 = s(160), s(246), s(392)
     d.line([(x0, y), (x1 - s(16), y)], fill=PURPLE, width=s(7))
     d.polygon([(x1, y), (x1 - s(24), y - s(15)), (x1 - s(24), y + s(15))], fill=PURPLE)
 
     line1 = 'Drag RONE Plugins Center onto Applications'
-    line2 = 'Then open it from your Applications folder'
+    line2 = 'First time on this Mac? Open How to install.pdf below'
     f1, f2 = font('segoeuib.ttf', s(15)), font('segoeui.ttf', s(12))
-    d.text(((W - d.textlength(line1, font=f1)) / 2, s(318)), line1, font=f1, fill=(46, 49, 56))
-    d.text(((W - d.textlength(line2, font=f2)) / 2, s(344)), line2, font=f2, fill=(122, 127, 136))
+    d.text(((W - d.textlength(line1, font=f1)) / 2, s(246)), line1, font=f1, fill=(46, 49, 56))
+    d.text(((W - d.textlength(line2, font=f2)) / 2, s(272)), line2, font=f2, fill=(122, 127, 136))
     return img
 
 
