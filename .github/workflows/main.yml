@@ -113,6 +113,8 @@ jobs:
               - 'RonePluginsCenter/**'
               - 'Shared/**'
               - 'installer/RONE_Plugins.iss'
+              - 'installer/mac/**'
+              - 'scripts/ci/make-center-dmg.sh'
               - '.github/workflows/main.yml'
 
       - name: Generate build matrices
@@ -556,11 +558,9 @@ jobs:
             APP=$(find "${{ matrix.folder }}/build-ci" -name "*.app" -type d | head -1)
             if [ -n "$APP" ]; then
               echo "Found app: $APP"
-              mkdir -p dmg_staging && cp -R "$APP" dmg_staging/
-              hdiutil create -volname "RONE Plugins Center" -srcfolder dmg_staging \
-                -ov -format UDZO build-output/RONE_Plugins_Center.dmg
+              # 2.0.6: the classic window (app, arrow, Applications link) - see the script
+              bash scripts/ci/make-center-dmg.sh "$APP" build-output/RONE_Plugins_Center.dmg
               bash scripts/ci/sign-macos.sh dmg build-output/RONE_Plugins_Center.dmg
-              rm -rf dmg_staging
             else
               echo "::error::No .app found for plugins_center"
               find "${{ matrix.folder }}/build-ci" -maxdepth 5 -type d | head -40
