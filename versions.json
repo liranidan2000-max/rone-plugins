@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-12T09:09:56Z",
+  "last_updated": "2026-10-12T19:23:33Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
@@ -450,7 +450,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.3.7.262",
+      "version": "1.3.8.265",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -463,9 +463,9 @@
       "manual": "RONE Analyzer - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "6de93713d9e6da79db466f244507313b43e8708ba00fa739f35b7c6f3ca3ce5f",
+      "sha256": "e43047c382da4aae900e46cf70e28ecd4ee6cd30d7134284cf7c951155fee57e",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "cd797e51496fa13a1e8a8e1311287b316c8f3a7a615714b4e0e76173ef0f5c39",
+      "sha256_mac": "a45f206d9092ad7622d5ae231d2246a2142ac608a86db547680870ae9d230b95",
       "price": 49,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html",
@@ -489,8 +489,8 @@
           "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
         }
       },
-      "size": 5782385,
-      "size_mac": 27740159
+      "size": 5788280,
+      "size_mac": 27764444
     }
   ],
   "tips": [
