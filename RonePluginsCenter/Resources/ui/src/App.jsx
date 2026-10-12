@@ -169,6 +169,12 @@ export default function App () {
     if (m.code === 'download_failed' || !t('msg.' + m.code) || t('msg.' + m.code) === 'msg.' + m.code) {
       return { text: m.text, type: m.type || 'info' }
     }
+    // 'failed' with no real installer exit code (0 or below) is a failure the Center
+    // explains itself - why, and often how to fix it. The template turned that into
+    // "installer code 0" (Andre, macOS, 12.10: "it says error 0"), so show the reason.
+    if (m.code === 'failed' && m.text && !(Number(params.exitCode) > 0)) {
+      return { text: m.text, type: m.type || 'error' }
+    }
     if (m.code === 'declined' || m.code === 'center_update_declined') {
       return { text: t('msg.' + m.code, p), type: 'info' }
     }

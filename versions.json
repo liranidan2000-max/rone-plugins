@@ -9,7 +9,7 @@
     "version": "2.1.1.263",
     "sha256": "570c9fdd041e57d6793ea18d481652b85996347847ddec4b4f35b8f5d259ac7e",
     "sha256_mac": "be0de288777064435a3ef16e937b80a5dbb4e1dee05084b29b29f38a11e05a77",
-    "whats_new": "2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
+    "whats_new": "2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
   },
   "plugins": [
     {
