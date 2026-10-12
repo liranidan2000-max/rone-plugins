@@ -44,7 +44,8 @@
 //            at all (Center 2.1): its .pkg is hashed and unpacked as the user
 //            and the bundles go into ~/Library/Audio/Plug-Ins and ~/Applications
 //            (installUserDomain below). The rest - plugins a .pkg put in /Library
-//            before - go through one shell script run with administrator
+//            before, or whose user folder the user may not write to (2.1.1) -
+//            go through one shell script run with administrator
 //            privileges (one password prompt), the same copy - hash - install
 //            for each .pkg.
 // A plugin a DAW still has loaded (Windows) waits as "waiting for FL Studio"
@@ -456,9 +457,10 @@ private:
     // stays there - a second copy in ~/Library would list the plugin twice -
     // and still goes through the password batch.
     //
-    // Anything unexpected before the disk is touched (a pkgutil that cannot
-    // unpack, a payload holding a file this does not know where to put) hands
-    // the plugin to the password batch, which installs the .pkg as before.
+    // Anything unexpected before a bundle is swapped in (a pkgutil that cannot
+    // unpack, a payload holding a file this does not know where to put, a user
+    // folder that cannot be written) hands the plugin to the password batch,
+    // which installs the .pkg as before.
     enum class Route { done, system };
 
     struct Move { juce::File from, to; };
@@ -552,7 +554,9 @@ private:
 
     // Every bundle is copied beside its place first (hidden), then swapped in by
     // renaming; a rename that fails puts back what was there. Empty = installed.
-    static juce::String installUserDomain (const juce::Array<Move>& moves, const juce::String& tag)
+    // A copy that cannot even be written beside its place names that folder in
+    // `unwritable`: then nothing in the user's folders was replaced.
+    static juce::String installUserDomain (const juce::Array<Move>& moves, const juce::String& tag, juce::File& unwritable)
     {
         struct Swap { juce::File to, staged, old; bool movedOld = false, placed = false; };
         juce::Array<Swap> swaps;
@@ -570,7 +574,8 @@ private:
             if (! m.to.getParentDirectory().createDirectory()
                 || runTool (juce::StringArray { "/usr/bin/ditto", m.from.getFullPathName(), s.staged.getFullPathName() }, 300000, &out) != 0)
             {
-                error = "could not write to " + m.to.getParentDirectory().getFullPathName()
+                unwritable = m.to.getParentDirectory();
+                error = "could not write to " + unwritable.getFullPathName()
                       + (out.isNotEmpty() ? " (" + out + ")" : juce::String());
                 break;
             }
@@ -636,15 +641,28 @@ private:
         return {};
     }
 
+    // How the user takes back a folder of theirs that someone else's installer
+    // made root's. Empty when the failure was not about permissions (a full disk).
+    static juce::String unwritableFolderFix (juce::File dir, const juce::String& error)
+    {
+        while (! dir.isDirectory() && dir.getParentDirectory() != dir)   // the folder that stopped createDirectory
+            dir = dir.getParentDirectory();
+        if (dir.hasWriteAccess() && ! error.containsIgnoreCase ("permission denied"))
+            return {};
+        const auto path = dir.getFullPathName();
+        return "To fix it: in Finder, Get Info on the folder " + path + " > Sharing & Permissions > give your user"
+               " Read & Write - or in Terminal run: sudo chown -R \"$USER\" \"" + path + "\" - then install again.";
+    }
+
     // Done (installed or failed, reported) or handed to the password batch.
     Route installWithoutPassword (const Item& i, const juce::File& work, const juce::String& tag)
     {
-        auto fail = [this, &i] (const juce::String& why)
+        auto fail = [this, &i] (const juce::String& why, const juce::String& fix = {})
         {
             Result r;
             r.id = i.id;
             r.code = "failed";
-            r.message = "Install failed - " + why + ". Nothing was changed.";
+            r.message = "Install failed - " + why + ". Nothing was changed." + (fix.isNotEmpty() ? " " + fix : juce::String());
             finishItem (i, r);
             return Route::done;
         };
@@ -693,8 +711,21 @@ private:
             return Route::system;
         }
 
-        const auto error = installUserDomain (moves, tag);
+        juce::File unwritable;
+        const auto error = installUserDomain (moves, tag, unwritable);
         unpacked.deleteRecursively();
+        if (error.isNotEmpty() && unwritable != juce::File())
+        {
+            // A user folder the Center may not write to - typically one another
+            // vendor's installer made as root (crash reports #114-#122, Center
+            // 2.1.0: ~/Library/Audio/Plug-Ins/VST3, "Permission denied" every try).
+            // Nothing was placed, so the .pkg installs it system-wide with the
+            // password, as before 2.1 - unless a copy already sits in the user's
+            // folders, which the DAW would then list twice.
+            if (! hasUserCopy (i))
+                return Route::system;
+            return fail (error, unwritableFolderFix (unwritable, error));
+        }
         if (error.isNotEmpty())
             return fail (error);
 
