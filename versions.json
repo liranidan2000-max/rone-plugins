@@ -35,7 +35,7 @@
       "registry_key": "ReverseReverb",
       "sha256_mac": "92ea3670f69fcfba23a194a6964d2b396482ba841a7055b83b8148dd3a8275c6",
       "price": 49,
-      "launch_price": 39,
+      "launch_price": 49,
       "store_url": "https://roneaudio.com/products/reverse-reverb.html",
       "category": [
         "transitions",
@@ -84,7 +84,7 @@
       "registry_key": "RoneStutter",
       "sha256_mac": "8050c12a629000cf03914361ff6b441095f4ec1c9a08d3fa0cb393503c0a1f26",
       "price": 49,
-      "launch_price": 39,
+      "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
       "category": [
         "rhythm"
@@ -132,7 +132,7 @@
       "registry_key": "RoneStucker",
       "sha256_mac": "c0bfa5e3c247b88c1b0a90341a9a7c1dc64570293344d0447867a19e89a23ea3",
       "price": 29,
-      "launch_price": 19,
+      "launch_price": 29,
       "store_url": "https://roneaudio.com/products/rone-stucker.html",
       "category": [
         "rhythm",
@@ -182,7 +182,7 @@
       "sha256_mac": "52080c3ac9bf4dd0de773b08f7a3a85906886ec9ce254d481e5af1ee705d6e68",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
-      "launch_price": 29,
+      "launch_price": 39,
       "category": [
         "space"
       ],
@@ -279,7 +279,7 @@
       "sha256_mac": "9d1696c05700979f55c0a8ed17c0d0ec51c1d5fb6c4c6107b759ed04c0eb6bc5",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
-      "launch_price": 29,
+      "launch_price": 39,
       "category": [
         "transitions"
       ],
@@ -327,7 +327,7 @@
       "sha256_mac": "cdaa3ecbcb4f368092ed775a864c8a357902bf8a5d3debfd1045943db88687fe",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
-      "launch_price": 29,
+      "launch_price": 39,
       "category": [
         "vocal"
       ],
@@ -374,7 +374,7 @@
       "registry_key": "RoneFlanger",
       "sha256_mac": "9d706c8f23835aa6d31b7fa6f2594969186142c73fa9c21fa1fa941541171de4",
       "price": 39,
-      "launch_price": 29,
+      "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-flanger.html",
       "category": [
         "transitions"
@@ -422,7 +422,7 @@
       "registry_key": "RoneAfterspace",
       "sha256_mac": "9225f671535bed0fb0db0bb1823b879573150a6893ee0067348d5dcf28486346",
       "price": 59,
-      "launch_price": 49,
+      "launch_price": 59,
       "store_url": "https://roneaudio.com/products/afterspace.html",
       "category": [
         "space"
@@ -467,7 +467,7 @@
       "registry_key": "RONEAnalyzer",
       "sha256_mac": "d33ad40c413df4d0c3c9cc7dddc504b6f67c955bb6471930e77f3ac7401781c6",
       "price": 49,
-      "launch_price": 39,
+      "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html",
       "category": [
         "mix"
