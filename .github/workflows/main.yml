@@ -10,8 +10,17 @@ on:
     branches: [main]
     tags:     ['v*']
 
+# Read-only by default. Only 'release' gets contents: write (gh release
+# upload/edit/create). update-manifest pushes versions.json with GH_PAT
+# (checkout token + insteadOf), not with the job token, so it stays read-only.
+# Every action is pinned to a full commit SHA (tag in the comment).
 permissions:
-  contents: write
+  contents: read
+
+# Deliberately NO workflow-level concurrency group: GitHub cancels a PENDING
+# run when a third push queues, and the path filter only diffs each push's own
+# commits, so the cancelled run's plugins would never be built. Older runs
+# finishing last are stopped by scripts/ci/release-guard.sh instead.
 
 jobs:
   # ================================================================
@@ -28,14 +37,14 @@ jobs:
       changed:        ${{ steps.matrix.outputs.changed }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 2
           submodules: false
 
       - name: Path filter
         if: "!startsWith(github.ref, 'refs/tags/v')"
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
         id: filter
         with:
           filters: |
@@ -235,7 +244,7 @@ jobs:
       - name: Configure git PAT
         run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: false
           token: ${{ secrets.GH_PAT }}
@@ -245,12 +254,12 @@ jobs:
         run: git submodule update --init --depth 1 -- "${{ matrix.folder }}" || echo "::notice::${{ matrix.folder }} is not a submodule (in-repo sources)"
 
       # --- MSVC ---
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
         with: { arch: x64 }
 
       # --- Caches ---
       - name: Build cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ matrix.folder }}/build-ci
           key:  build-${{ matrix.plugin_id }}-win-${{ hashFiles(format('{0}/CMakeLists.txt', matrix.folder)) }}-${{ github.sha }}
@@ -258,7 +267,7 @@ jobs:
 
       - name: WebView2 cache
         if: matrix.needs_webview2 == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: wv-cache
         with:
           path: ${{ github.workspace }}\webview2
@@ -270,7 +279,7 @@ jobs:
 
       - name: JUCE extras cache (flanger)
         if: matrix.is_flanger == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: extras-cache
         with:
           path: rone-flanger-/JUCE/extras/Build
@@ -407,6 +416,10 @@ jobs:
           $m = Select-String -Path "${{ matrix.folder }}\CMakeLists.txt" -Pattern 'VERSION\s+(\d+\.\d+\.\d+)' | Select-Object -First 1
           $base = if ($m) { $m.Matches[0].Groups[1].Value } else { "1.0.0" }
           $ver = "$base.${{ github.run_number }}"
+          # The exact version stamped into this installer, for the release guard
+          # (separate buildinfo-* artefact: Release publishes every installer-* file).
+          New-Item -ItemType Directory -Force -Path buildinfo | Out-Null
+          Set-Content -Path "buildinfo\version.txt" -Value $ver -NoNewline -Encoding ascii
           # With a signing backend, Inno Setup signs the uninstaller and Setup.exe
           # itself through scripts/ci/sign-windows.ps1 (SignTool=rone in the .iss).
           $signArgs = @()
@@ -428,10 +441,17 @@ jobs:
 
       # --- Upload ---
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: installer-${{ matrix.plugin_id }}-windows
           path: build-output/${{ matrix.installer_name }}_Installer.exe
+          retention-days: 5
+
+      - name: Upload build version
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: buildinfo-${{ matrix.plugin_id }}-windows
+          path: buildinfo/version.txt
           retention-days: 5
 
   # ================================================================
@@ -460,7 +480,7 @@ jobs:
       - name: Configure git PAT
         run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: false
           token: ${{ secrets.GH_PAT }}
@@ -471,7 +491,7 @@ jobs:
 
       # --- Caches ---
       - name: Build cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ matrix.folder }}/build-ci
           key:  build-${{ matrix.plugin_id }}-mac-${{ hashFiles(format('{0}/CMakeLists.txt', matrix.folder)) }}-${{ github.sha }}
@@ -479,7 +499,7 @@ jobs:
 
       - name: JUCE extras cache (flanger)
         if: matrix.is_flanger == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: extras-cache
         with:
           path: rone-flanger-/JUCE/extras/Build
@@ -550,6 +570,8 @@ jobs:
           A="${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
           BASE=$(grep -oE 'VERSION +[0-9]+\.[0-9]+\.[0-9]+' "${{ matrix.folder }}/CMakeLists.txt" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "1.0.0")
           VER="${BASE}.${{ github.run_number }}"
+          # The exact version stamped into this installer, for the release guard
+          mkdir -p buildinfo && printf '%s' "$VER" > buildinfo/version.txt
 
           if [ "${{ matrix.plugin_id }}" = "plugins_center" ]; then
             # .dmg for the Center app — search broadly in build-ci/
@@ -661,12 +683,19 @@ jobs:
 
       # --- Upload ---
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: installer-${{ matrix.plugin_id }}-macos
           path: |
             build-output/*.pkg
             build-output/*.dmg
+          retention-days: 5
+
+      - name: Upload build version
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: buildinfo-${{ matrix.plugin_id }}-macos
+          path: buildinfo/version.txt
           retention-days: 5
 
       - name: Remove signing keychain
@@ -696,10 +725,22 @@ jobs:
       !cancelled() &&
       needs.detect-changes.outputs.changed != '[]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+    outputs:
+      published:     ${{ steps.publish.outputs.published }}
+      guard_skipped: ${{ steps.publish.outputs.guard_skipped }}
 
     steps:
+      # This run's commit: the release guard reads tree entries from it and
+      # compares them with a fresh origin/main.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          submodules: false
+
       - name: Note a partial build
         if: needs.build-windows.result != 'success' || needs.build-macos.result != 'success'
         run: |
@@ -717,17 +758,32 @@ jobs:
           } >> $GITHUB_STEP_SUMMARY
 
       - name: Download all installer artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts/
           pattern: installer-*
 
+      - name: Download build versions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: buildinfo/
+          pattern: buildinfo-*
+
       - name: Create per-plugin releases
+        id: publish
         run: |
           REPO="${{ github.repository }}"
+          RUN="${{ github.run_number }}"
           changed='${{ needs.detect-changes.outputs.changed }}'
           matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
           matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
+          published='[]'; guard_skipped=''
+
+          # Version-regression guard (scripts/ci/release-guard.sh). Cannot read
+          # origin/main -> fail here, before anything is uploaded.
+          GUARD_FETCH_ARGS="--depth 1"
+          source scripts/ci/release-guard.sh
+          guard_fetch_main || exit 1
 
           # One file at a time, three tries each. --clobber deletes the old asset
           # before the upload; when GitHub answers 500 to that delete (a stuck
@@ -754,19 +810,20 @@ jobs:
 
           for id in $(echo "$changed" | jq -r '.[]'); do
             case "$id" in
-              reverse_reverb) tag=ReverseReverb-latest;    title="RONE Reverse Reverb (Latest)" ;;
-              stems_fixer)    tag=RoneStemsFixer-latest;    title="RONE Stems Fixer (Latest)" ;;
-              stutter)        tag=RoneStutter-latest;       title="RONE Stutter (Latest)" ;;
-              stucker)        tag=RoneStucker-latest;       title="RONE Stucker (Latest)" ;;
-              throw)          tag=RoneThrow-latest;         title="RONE Throw (Latest)" ;;
-              clipper)        tag=RoneClipper-latest;       title="RONE Clipper (Latest)" ;;
-              rise)           tag=RoneRise-latest;          title="RONE Rise (Latest)" ;;
-              iron)           tag=RoneIron-latest;          title="RONE Iron (Latest)" ;;
-              flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)" ;;
-              sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)" ;;
-              afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)" ;;
-              plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)" ;;
-              analyzer)       tag=RONEAnalyzer-latest;      title="RONE Analyzer (Latest)" ;;
+              reverse_reverb) tag=ReverseReverb-latest;    title="RONE Reverse Reverb (Latest)";  folder=ReverseReverbVST;   jid=ReverseReverb ;;
+              stems_fixer)    tag=RoneStemsFixer-latest;    title="RONE Stems Fixer (Latest)";    folder=RoneStemsFixer;     jid=RoneStemsFixer ;;
+              stutter)        tag=RoneStutter-latest;       title="RONE Stutter (Latest)";        folder=RoneStutter;        jid=RoneStutter ;;
+              stucker)        tag=RoneStucker-latest;       title="RONE Stucker (Latest)";        folder=RoneStucker;        jid=RoneStucker ;;
+              throw)          tag=RoneThrow-latest;         title="RONE Throw (Latest)";          folder=RoneThrow;          jid=RoneThrow ;;
+              clipper)        tag=RoneClipper-latest;       title="RONE Clipper (Latest)";        folder=RoneClipper;        jid=RoneClipper ;;
+              rise)           tag=RoneRise-latest;          title="RONE Rise (Latest)";           folder=RoneRise;           jid=RoneRise ;;
+              iron)           tag=RoneIron-latest;          title="RONE Iron (Latest)";           folder=RoneIron;           jid=RoneIron ;;
+              flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)";        folder=rone-flanger-;      jid=RoneFlanger ;;
+              sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)";      folder="rone sync verb";   jid=RoneSyncVerb ;;
+              afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)";     folder="RONE AFTER SPACE"; jid=RoneAfterspace ;;
+              plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)"; folder=RonePluginsCenter;  jid=__center__ ;;
+              analyzer)       tag=RONEAnalyzer-latest;      title="RONE Analyzer (Latest)";       folder=RONEAnalyzer;       jid=RONEAnalyzer ;;
+              *) echo "::error::$id: unknown product - skipped"; continue ;;
             esac
 
             # Collect all installer files for this plugin
@@ -798,6 +855,25 @@ jobs:
               continue
             fi
 
+            # Version-regression guard, before any upload: the version the legs
+            # stamped (buildinfo-*), both platforms agreeing, newer than live,
+            # built from the folder that is on main now.
+            vers=$(cat buildinfo/buildinfo-${id}-*/version.txt 2>/dev/null | tr -d '\r' | sort -u)
+            if [ -z "$vers" ] || [ "$(printf '%s\n' "$vers" | wc -l)" -ne 1 ]; then
+              echo "::error::$id: build version missing or different per platform ('$(echo $vers)') - not published"
+              guard_skipped="$guard_skipped $id"; continue
+            fi
+            if ! guard_check "$id" "$folder" "$jid" "$vers"; then
+              guard_skipped="$guard_skipped $id"; continue
+            fi
+            # A newer run already put its build on this release (its versions.json
+            # commit may still be on the way): never overwrite it with an older one.
+            cur=$(gh release view "$tag" -R "$REPO" --json body -q .body 2>/dev/null | grep -oE 'Build #[0-9]+' | head -1 | tr -dc '0-9' || true)
+            if [ -n "$cur" ] && [ "$cur" -gt "$RUN" ]; then
+              echo "::error::$id: $tag already carries build #$cur, newer than this run #$RUN - not published"
+              guard_skipped="$guard_skipped $id"; continue
+            fi
+
             # Replace assets in-place. The old delete+recreate wiped the OTHER
             # platform's installer on [win-only]/[mac-only] builds, leaving the
             # manifest pointing at dead download links.
@@ -818,7 +894,15 @@ jobs:
             fi
 
             echo "✓ $tag — ${#files[@]} file(s)"
+            published=$(echo "$published" | jq -c --arg id "$id" '. + [$id]')
           done
+
+          # update-manifest bumps only what was really published here.
+          echo "published=$published" >> $GITHUB_OUTPUT
+          echo "guard_skipped=${guard_skipped# }" >> $GITHUB_OUTPUT
+          if [ -n "$guard_skipped" ]; then
+            echo "### Release guard skipped:$guard_skipped" >> $GITHUB_STEP_SUMMARY
+          fi
 
       # On tag push: also create a full versioned release
       - name: Create version release (tag push)
@@ -848,19 +932,28 @@ jobs:
       needs.detect-changes.outputs.changed != '[]' &&
       needs.release.result == 'success'
     runs-on: ubuntu-latest
+    # contents: read is enough: the push below authenticates with GH_PAT.
+    outputs:
+      guard_skipped: ${{ steps.bump.outputs.guard_skipped }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           token: ${{ secrets.GH_PAT }}
           submodules: false
           ref: main
 
       - name: Download installer artifacts (for sha256)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts/
           pattern: installer-*
+
+      - name: Download build versions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: buildinfo/
+          pattern: buildinfo-*
 
       - name: Init changed submodules
         run: |
@@ -886,14 +979,41 @@ jobs:
           done
 
       - name: Bump versions.json
+        id: bump
+        env:
+          # gh release view: which build owns each <Tag>-latest asset now.
+          GH_TOKEN: ${{ github.token }}
         run: |
-          changed='${{ needs.detect-changes.outputs.changed }}'
+          # Only what Release really published (a product the release guard
+          # skipped kept its old assets, so its entry must stay too).
+          published='${{ needs.release.outputs.published || '[]' }}'
           matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
           matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
           RUN="${{ github.run_number }}"
           REPO="${{ github.repository }}"
+          guard_skipped=''
 
-          for id in $(echo "$changed" | jq -r '.[]'); do
+          # Release already ran the full guard BEFORE uploading; every id in
+          # 'published' is now this run's build on <Tag>-latest, so its entry
+          # must follow it - never held back because main moved since (that
+          # would pair the new installer with the old sha256). Skipped only
+          # when origin/main's versions.json already has this version or newer,
+          # or a newer build has since replaced the asset (guard_manifest_check).
+          # No --depth: this clone rebases onto main below. A failed fetch fails
+          # this job loudly; re-run it to write what Release published.
+          GUARD_FETCH_ARGS=""
+          GUARD_NO_RUN_COMMIT=1
+          source scripts/ci/release-guard.sh
+          if ! guard_fetch_main; then
+            {
+              echo "### versions.json NOT updated"
+              echo "Release published $published - those installers are live but the"
+              echo "manifest still has the old version/sha256. Re-run this job."
+            } >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          for id in $(echo "$published" | jq -r '.[]'); do
             case "$id" in
               reverse_reverb) folder=ReverseReverbVST;  jid=ReverseReverb;  tag=ReverseReverb-latest;  inst=ReverseReverb ;;
               stems_fixer)    folder=RoneStemsFixer;     jid=RoneStemsFixer;  tag=RoneStemsFixer-latest;  inst=RoneStemsFixer ;;
@@ -910,9 +1030,22 @@ jobs:
               analyzer)       folder=RONEAnalyzer;       jid=RONEAnalyzer;   tag=RONEAnalyzer-latest;    inst=RONEAnalyzer ;;
             esac
 
-            # Read base version from CMakeLists.txt
-            base=$(grep -oP 'VERSION\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$folder/CMakeLists.txt" | head -1 || echo "1.0.0")
-            ver="${base}.${RUN}"
+            # The label is the version the installers carry (buildinfo, which
+            # Release already checked); main's CMakeLists is only a cross-check.
+            base=$(grep -oP 'VERSION\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$folder/CMakeLists.txt" 2>/dev/null | head -1 || true)
+            built=$(cat buildinfo/buildinfo-${id}-*/version.txt 2>/dev/null | tr -d '\r' | sort -u || true)
+            if [ -n "$built" ] &&[ "$(printf '%s\n' "$built" | wc -l)" -eq 1 ]; then
+              ver="$built"
+              if [ -n "$base" ] && [ "$ver" != "${base}.${RUN}" ]; then
+                echo "::warning::$id: installers carry $ver, main's CMakeLists says ${base}.${RUN} - the manifest follows the installers"
+              fi
+            elif [ -n "$base" ]; then
+              ver="${base}.${RUN}"
+              echo "::warning::$id: no single build version in buildinfo ('$(echo $built)') - labelled $ver from CMakeLists"
+            else
+              echo "::error::$id: no build version and no CMakeLists version - manifest left alone although Release published it; re-run this job"
+              guard_skipped="$guard_skipped $id"; continue
+            fi
 
             # Compute SHA256 for whatever we built this run (per-platform).
             # Missing artifacts (e.g. [mac-only] / [win-only] commits) -> empty string,
@@ -949,6 +1082,15 @@ jobs:
                || { [ "$(echo "$matrix_mac" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] && [ -z "$mac_file" ]; }; then
               echo "  $jid: did not build on every platform it was meant for - manifest left alone"
               continue
+            fi
+
+            # Leave the entry only when the live manifest already has this
+            # version (rc 2, a re-run) or newer, or a newer build now owns
+            # <Tag>-latest (rc 1, flagged). No folder-vs-main test here.
+            rc=0; guard_manifest_check "$id" "$jid" "$ver" "$tag" "$RUN" "$REPO" || rc=$?
+            if [ "$rc" -eq 2 ]; then continue; fi
+            if [ "$rc" -ne 0 ]; then
+              guard_skipped="$guard_skipped $id"; continue
             fi
 
             # Only touch a platform's url+sha when that platform was actually
@@ -1004,6 +1146,10 @@ jobs:
           # Timestamp
           jq --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.last_updated=$t' versions.json > tmp && mv tmp versions.json
 
+          echo "guard_skipped=${guard_skipped# }" >> $GITHUB_OUTPUT
+          if [ -n "$guard_skipped" ]; then
+            echo "### Release guard left alone:$guard_skipped" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "### Updated versions.json" >> $GITHUB_STEP_SUMMARY
           cat versions.json | jq '.' >> $GITHUB_STEP_SUMMARY
 
@@ -1043,7 +1189,15 @@ jobs:
           mac='${{ needs.build-macos.result }}'
           rel='${{ needs.release.result }}'
           man='${{ needs.update-manifest.result }}'
+          rel_skip='${{ needs.release.outputs.guard_skipped }}'
+          man_skip='${{ needs.update-manifest.outputs.guard_skipped }}'
           echo "windows=$win macos=$mac release=$rel manifest=$man"
+
+          # Products the version-regression guard held back (scripts/ci/release-guard.sh)
+          if [ -n "$rel_skip$man_skip" ]; then
+            echo "::error::The release guard held back: ${rel_skip:-} ${man_skip:-} - see the Release / Update versions.json logs."
+            exit 1
+          fi
 
           bad=0
           for r in "$win" "$mac" "$rel" "$man"; do
