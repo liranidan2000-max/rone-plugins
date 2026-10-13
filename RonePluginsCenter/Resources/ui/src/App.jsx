@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, callNative, onEvent, openExternal, isDevMode, devScenario, mockPlugins, mockAccount, mockDaws, mockTips, mockAnnouncements } from './bridge'
+import { api, callNative, onEvent, openExternal, isDevMode, devScenario, mockPlugins, mockAccount, mockDaws, mockTips, mockAnnouncements, mockUpsell } from './bridge'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import InstallDock from './components/InstallDock'
@@ -7,6 +7,7 @@ import Toasts from './components/Toasts'
 import Onboarding from './components/Onboarding'
 import ManualDialog from './components/ManualDialog'
 import AnnouncementModal from './components/AnnouncementModal'
+import UpsellModal from './components/UpsellModal'
 import { Dialog } from './components/ui'
 import LibraryView from './views/LibraryView'
 import UpdatesView from './views/UpdatesView'
@@ -54,6 +55,10 @@ export default function App () {
   const [manualPlugin, setManualPlugin] = useState(null)
   const [uninstallAsk, setUninstallAsk] = useState(null)
   const [announcement, setAnnouncement] = useState(null)
+  // This account's own prices from roneaudio.com/api/v1/upsell (null = none): { offer, owner, links }
+  const [upsell, setUpsell] = useState(null)
+  const [upsellShown, setUpsellShown] = useState(null)
+  const [upsellTick, setUpsellTick] = useState(0)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
 
   const catLabel = useCallback((c) => t('cat.' + c), [t])
@@ -74,11 +79,22 @@ export default function App () {
   const ownedIds = useMemo(() => ownedProductIds(account.owned), [account.owned])
   const ownedKeys = useMemo(() => new Set(ownedIds.map(productKey)), [ownedIds])
   // Each plugin as this page shows it: owned or not, and described in the user's language.
+  // A plugin this owner lacks also carries their price (catalog.js priceOf reads it): the 24-hour $19 offer or the owner price.
+  const myPrices = useMemo(() => {
+    const m = new Map()
+    if (!upsell) return m
+    for (const [id, x] of Object.entries(upsell.owner?.prices || {})) m.set(productKey(id), { ownerPrice: x.price })
+    const o = upsell.offer
+    if (o && Date.parse(o.endsAt) > Date.now()) m.set(productKey(o.product), { ...(m.get(productKey(o.product)) || {}), offerPrice: o.price, offerEndsAt: o.endsAt })
+    return m
+  }, [upsell, upsellTick])
   const tagged = useMemo(() => plugins.map(p => {
     const d = p.i18n?.[prefs.lang]?.description
     const q = d ? { ...p, description: d } : p
-    return ownedKeys.has(productKey(p.id)) ? { ...q, owned: true } : q
-  }), [plugins, ownedKeys, prefs.lang])
+    if (ownedKeys.has(productKey(p.id))) return { ...q, owned: true }
+    const mine = myPrices.get(productKey(p.id))
+    return mine ? { ...q, ...mine } : q
+  }), [plugins, ownedKeys, prefs.lang, myPrices])
   const localTips = useMemo(() => tips.map(x => ({ ...x, text: (typeof x.i18n?.[prefs.lang] === 'string' && x.i18n[prefs.lang]) || x.text })), [tips, prefs.lang])
   const ownedPlugins = useMemo(() => tagged.filter(p => p.owned), [tagged])
   const access = useMemo(() => ({ licensed: !!license.licensed, signedIn: !!account.signedIn }), [license.licensed, account.signedIn])
@@ -288,7 +304,10 @@ export default function App () {
     if (DEV) return
     try { const r = await api.openFolder(id); if (r && !r.success && r.error) addToast({ text: r.error, type: 'error' }) } catch (e) { addToast({ text: e.message, type: 'error' }) }
   }
-  const buy = (plugin) => {
+  const buy = (plugin, src = 'card') => {
+    // An owner's price opens their signed roneaudio.com/owner link, where checkout applies it (src = where they clicked).
+    const link = Object.entries(upsell?.links || {}).find(([id]) => productKey(id) === productKey(plugin.id))?.[1]
+    if (link) { openExternal(link + (link.includes('?') ? '&' : '?') + 'src=' + src); return }
     const url = (plugin.store_url || 'https://roneaudio.com/pricing.html')
     openExternal(url + (url.includes('?') ? '&' : '?') + 'utm_source=plugins_center&utm_medium=card')
   }
@@ -358,12 +377,61 @@ export default function App () {
     navigate('account')
   }
 
+  // ---- this account's own prices: the $19 day after a purchase and the owner price (roneaudio.com/api/v1/upsell) ----
+  // Asked again whenever what they own changes (a purchase reaches the Center through accountChanged) and when the
+  // 24-hour offer runs out. Never for a guest or an ALL ACCESS pass; the server also says nothing to a gift.
+  const ownedSig = (account.owned || []).join(',')
+  useEffect(() => {
+    if (loading) return
+    if (!account.signedIn || license.licensed) { setUpsell(null); return }
+    let alive = true
+    let timer = null
+    ;(async () => {
+      let r = null
+      if (DEV) r = new URLSearchParams(location.search).has('upsell') ? mockUpsell() : null
+      else { try { r = await api.getUpsell() } catch {} }
+      if (!alive) return
+      setUpsell(r && r.ok ? r : null)
+      const ms = r?.offer ? Date.parse(r.offer.endsAt) - Date.now() : 0
+      if (ms > 0 && ms < 2 ** 31) timer = setTimeout(() => setUpsellTick(n => n + 1), ms + 3000)
+    })()
+    return () => { alive = false; if (timer) clearTimeout(timer) }
+  }, [loading, account.signedIn, license.licensed, ownedSig, upsellTick])
+
+  // The video popup: once per offer, at an open of the Center after the plugin they bought is installed (it was
+  // installed when this window loaded), never over an install or another popup.
+  const installedAtStart = useRef(null)
+  useEffect(() => { if (!loading && plugins.length && !installedAtStart.current) installedAtStart.current = new Set(plugins.filter(isInstalled).map(p => productKey(p.id))) }, [loading, plugins])
+  useEffect(() => {
+    const o = upsell?.offer
+    if (!o || loading || onboardingOpen || announcement || upsellShown || !installedAtStart.current) return
+    if (!(Date.parse(o.endsAt) > Date.now())) return
+    if (!installedAtStart.current.has(productKey(o.because)) || tagged.some(isBusy)) return
+    const key = 'rone_center_upsell_seen:' + o.because + ':' + o.endsAt
+    let seen = false
+    try { seen = localStorage.getItem(key) === '1' } catch {}
+    if (seen && !DEV) return
+    try { localStorage.setItem(key, '1') } catch {}
+    setUpsellShown(o)
+  }, [upsell, loading, onboardingOpen, announcement, tagged])
+  const upsellPlugin = upsellShown ? tagged.find(p => productKey(p.id) === productKey(upsellShown.product)) : null
+
+  // The banner's personal slide: the $19 plugin while that day runs, else the owner pick.
+  const personal = useMemo(() => {
+    if (!upsell) return null
+    const o = upsell.offer && Date.parse(upsell.offer.endsAt) > Date.now() ? upsell.offer : null
+    const id = o ? o.product : upsell.owner?.pick
+    const plugin = id && tagged.find(p => productKey(p.id) === productKey(id))
+    if (!plugin || plugin.owned) return null
+    return { plugin, becauseName: (o ? o.becauseName : upsell.owner?.becauseName) || '', line: o?.line || '' }
+  }, [upsell, tagged])
+
   // ---- announcements (the website's popups), once per page after the catalog is in ----
   const announceAsked = useRef(false)
   const latest = useRef({})
   latest.current = { plugins: tagged, ownedKeys, licensed: license.licensed, passSource: account.passSource }
   useEffect(() => {
-    if (loading || announceAsked.current || !plugins.length || onboardingOpen) return
+    if (loading || announceAsked.current || !plugins.length || onboardingOpen || upsellShown) return
     if (!(account.signedIn || license.licensed)) return
     announceAsked.current = true
     setTimeout(async () => {
@@ -376,7 +444,7 @@ export default function App () {
       if (!DEV) rememberAnnouncement(item.popup.id)
       setAnnouncement(item)
     }, 1800)
-  }, [loading, plugins.length, account.signedIn, license.licensed, onboardingOpen])
+  }, [loading, plugins.length, account.signedIn, license.licensed, onboardingOpen, upsellShown])
   const runAnnouncement = () => {
     const item = announcement
     setAnnouncement(null)
@@ -423,7 +491,7 @@ export default function App () {
 
           <div ref={scroller} className="flex-1 min-h-0 overflow-y-auto scroll-y px-6 pt-5 pb-24">
             {view === 'library' && (
-              <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} preview={preview}
+              <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} preview={preview} personal={personal}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
                            catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} />
             )}
@@ -433,7 +501,7 @@ export default function App () {
             {view === 'detail' && detailPlugin && (
               <DetailView t={t} plugin={detailPlugin} access={access} preview={preview} reduced={reduced} daws={daws} dawId={dawId}
                           onDaw={(id) => setPrefs({ daw: id })} catLabel={catLabel} onBack={() => navigate(returnView)}
-                          onInstall={install} onCancel={cancel} onOpen={open} onBuy={buy} onSignIn={() => navigate('account')}
+                          onInstall={install} onCancel={cancel} onOpen={open} onBuy={(p) => buy(p, 'detail')} onSignIn={() => navigate('account')}
                           onManualPdf={manualPdf} onOpenFolder={openFolder} onUninstall={setUninstallAsk} />
             )}
             {view === 'rack' && <RackView t={t} plugins={tagged} access={access} onDetail={openDetail} />}
@@ -464,6 +532,11 @@ export default function App () {
           <button className="btn btn-danger" onClick={confirmUninstall}>{t('dlg.uninstall')}</button>
         </div>
       </Dialog>
+
+      {upsellShown && !onboardingOpen && (
+        <UpsellModal t={t} offer={upsellShown} plugin={upsellPlugin} accent={upsellPlugin ? accentOf(upsellPlugin) : '#9D6BFF'} reduced={reduced}
+                     onBuy={() => { const p = upsellPlugin; setUpsellShown(null); if (p) buy(p, 'popup') }} onClose={() => setUpsellShown(null)} />
+      )}
 
       {announcement && !onboardingOpen && (
         <AnnouncementModal t={t} item={announcement} onPrimary={runAnnouncement} onClose={() => setAnnouncement(null)} />

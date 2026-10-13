@@ -6,7 +6,7 @@ import { openExternal } from '../bridge'
 // The banner: the newest plugin with its real 3D unit, the free plugin, and the
 // tip of the week - instead of a status banner. A guest or a lapsed pass sees
 // what unlocks things first. Slides change every 8 s unless motion is reduced.
-export default function Hero ({ t, plugins, access, account, license, preview, tips, reduced, onInstall, onDetail, onAccount }) {
+export default function Hero ({ t, plugins, access, account, license, preview, personal, onBuy, tips, reduced, onInstall, onDetail, onAccount }) {
   const slides = useMemo(() => {
     const out = []
     const signedIn = !!account.signedIn
@@ -48,12 +48,25 @@ export default function Hero ({ t, plugins, access, account, license, preview, t
                            p && { label: t('hero.details'), ghost: true, onClick: () => onDetail(p.id) }].filter(Boolean) })
     }
 
+    // An owner's own slide first: "Because you have X" - the $19 plugin while that day runs, else the owner pick.
+    if (personal?.plugin && onBuy) {
+      const p = personal.plugin
+      const price = priceOf(p)
+      out.unshift({ key: 'mine', color: accentOf(p), eyebrow: t('hero.because', { name: personal.becauseName }),
+                    title: 'RONE ' + shortName(p), body: personal.line ? personal.line + '.' : descriptionOf(p), unit: p.unitUrl || p.logoUrl,
+                    actions: [
+                      price && { label: price.kind === 'owner' ? t('hero.ownerPrice', { price: usd(price.live) }) : t('hero.getIt', { price: usd(price.live) }),
+                                 primary: true, onClick: () => onBuy(p, 'hero') },
+                      { label: t('hero.details'), ghost: true, onClick: () => onDetail(p.id) },
+                    ].filter(Boolean) })
+    }
+
     if (signedIn && !license.licensed && account.plan === 'all-access') {
       out.unshift({ key: 'pass', color: '#9D6BFF', eyebrow: 'ALL ACCESS', title: t('hero.passTitle'), body: t('hero.passBody'),
                     actions: [{ label: t('plan.accountGo'), primary: true, onClick: onAccount }] })
     }
     return out
-  }, [plugins, access, account, license, preview.id, preview.status, tips, t])
+  }, [plugins, access, account, license, preview.id, preview.status, tips, t, personal, onBuy])
 
   const [i, setI] = useState(0)
   useEffect(() => { if (i >= slides.length) setI(0) }, [slides.length])

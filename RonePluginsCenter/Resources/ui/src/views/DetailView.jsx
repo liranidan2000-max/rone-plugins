@@ -66,7 +66,7 @@ export default function DetailView ({ t, plugin, access, preview, reduced, daws,
             {a.ok && <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-rone-green">✓ {t('card.installed')}</span>}
             {!un && price && (
               <span className="text-[12px] text-rone-text-dim">
-                {price.onSale && <>{t('card.lifetime')} · <s>{usd(price.regular)}</s> · </>}{t('card.trial')}
+                {price.onSale && <>{price.kind ? t(price.kind === 'offer' ? 'card.todayOnly' : 'card.ownerPrice') : t('card.lifetime')} · <s>{usd(price.regular)}</s> · </>}{t('card.trial')}
               </span>
             )}
             <span className="flex-1" />

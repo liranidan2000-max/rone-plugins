@@ -130,6 +130,8 @@ export const api = {
   getDaws:           createNativeFunction('getDaws'),
   applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
   getAnnouncements:  createNativeFunction('getAnnouncements'),
+  // roneaudio.com/api/v1/upsell with the device token: the 24-hour $19 offer, owner prices, signed /owner links
+  getUpsell:         createNativeFunction('getUpsell'),
   scanOldVersions:   createNativeFunction('scanOldVersions'),
   // may wait for the OS permission prompt (an elevated copy of the Center deletes)
   deleteOldVersions: createNativeFunction('deleteOldVersions', 150000),
@@ -223,3 +225,18 @@ export const mockAnnouncements = {
     },
   ],
 };
+
+// ?upsell=1 in dev mode (with ?as=lifetime): a Stucker bought 2 hours ago - the $19 Stutter day and the owner prices.
+export function mockUpsell () {
+  const link = (id) => 'https://roneaudio.com/owner?k=dev.' + id
+  const prices = { RoneThrow: 29, RoneRise: 29, RoneIron: 29, ReverseReverb: 37, RoneAfterspace: 44, RONEAnalyzer: 37 }
+  return {
+    ok: true,
+    offer: { kind: 'upsell', product: 'RoneStucker', name: 'RONE Stucker', price: 19, regular: 29, because: 'RoneStutter', becauseName: 'RONE Stutter',
+             endsAt: new Date(Date.now() + 21.6 * 3600000).toISOString(), line: 'The classic roll-up, back on the beat',
+             video: '/media/shorts/RoneStucker.mp4', poster: '/media/shorts/RoneStucker.jpg' },
+    owner: { prices: Object.fromEntries(Object.entries(prices).map(([id, price]) => [id, { price, regular: Math.round(price / 0.75) }])),
+             pick: 'RoneStucker', because: 'RoneStutter', becauseName: 'RONE Stutter' },
+    links: Object.fromEntries(['RoneStucker', ...Object.keys(prices)].map(id => [id, link(id)])),
+  }
+}

@@ -130,6 +130,7 @@ private:
     // deal - the same list the website shows, so one place (the admin console)
     // runs both. Fetched here because the endpoint sends no CORS headers.
     void handleGetAnnouncements (NativeArgs args, NativeCompletion complete);
+    void handleGetUpsell (NativeArgs args, NativeCompletion complete);
     void handleGetAutoStart    (NativeArgs args, NativeCompletion complete);
 
     // Settings > DELETE OLD VERSIONS (OldVersionCleaner.h): list, then delete.

@@ -233,6 +233,9 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         .withNativeFunction ("getAnnouncements", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetAnnouncements (args, guarded (std::move (complete)));
         })
+        .withNativeFunction ("getUpsell", [this] (NativeArgs args, NativeCompletion complete) {
+            handleGetUpsell (args, guarded (std::move (complete)));
+        })
         .withNativeFunction ("scanOldVersions", [this] (NativeArgs args, NativeCompletion complete) {
             handleScanOldVersions (args, guarded (std::move (complete)));
         })
@@ -1867,6 +1870,25 @@ void MainComponent::handleGetAnnouncements (NativeArgs, NativeCompletion complet
         if (auto stream = url.createInputStream (options))
             result = juce::JSON::parse (stream->readEntireStreamAsString());
 
+        if (! result.isObject())
+        {
+            auto* none = new juce::DynamicObject();
+            none->setProperty ("ok", false);
+            result = juce::var (none);
+        }
+        complete (result);
+    });
+}
+
+void MainComponent::handleGetUpsell (NativeArgs, NativeCompletion complete)
+{
+    // This account's own prices (roneaudio.com/api/v1/upsell, worker/_lib/upsell.js on the site): the 24-hour
+    // "one more for $19" after a purchase, the owner price on every plugin it lacks, and a signed /owner link for
+    // each. Asked with the device token, off the message thread. Signed out, offline or a bad answer =
+    // {"ok": false}: the page shows the ordinary prices.
+    juce::Thread::launch ([job = accountClient.authorizedGet ("/upsell"), complete = std::move (complete)]() mutable
+    {
+        auto result = job();
         if (! result.isObject())
         {
             auto* none = new juce::DynamicObject();

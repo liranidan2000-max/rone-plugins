@@ -141,7 +141,9 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
           <span className="flex items-baseline gap-1.5 whitespace-nowrap">
             <b className="font-display text-[16px] text-rone-text-primary num">{usd(a.price.live)}</b>
             {a.price.onSale && <s className="text-[11.5px] text-rone-text-faint num">{usd(a.price.regular)}</s>}
-            <span className="text-[10.5px] font-extrabold uppercase tracking-[0.12em] text-rone-text-faint">{t('card.lifetimeShort')}</span>
+            {a.price.kind
+              ? <span className="text-[10.5px] font-extrabold uppercase tracking-[0.12em]" style={{ color: acc }}>{t(a.price.kind === 'offer' ? 'card.todayOnly' : 'card.ownerPrice')}</span>
+              : <span className="text-[10.5px] font-extrabold uppercase tracking-[0.12em] text-rone-text-faint">{t('card.lifetimeShort')}</span>}
           </span>
         ) : a.version ? (
           <span className="font-mono text-[11.5px] text-rone-text-dim whitespace-nowrap">

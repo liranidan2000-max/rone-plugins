@@ -84,6 +84,11 @@ public:
         when signed out, offline, or on any error - the channel simply is not there. */
     void fetchDevChannelAsync (std::function<void (juce::String body)> done);
 
+    /** A GET of <RONE_API_BASE><path> with this machine's device token, to run OFF the message thread. The job
+        holds a copy of the token, never the client, so it is safe after the window closes. It answers {} when
+        signed out, offline, or with anything but a JSON object. (The "one more" offer: /upsell.) */
+    std::function<juce::var()> authorizedGet (const juce::String& path) const;
+
 private:
     // Same 7-day offline tolerance as the license-key path: a working studio
     // must not go dark because the internet did. It gates the PASS only — a

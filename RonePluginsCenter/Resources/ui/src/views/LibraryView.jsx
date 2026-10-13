@@ -14,7 +14,7 @@ function Skeleton () {
   )
 }
 
-export default function LibraryView ({ t, plugins, loading, access, account, license, preview, tips, reduced, query, setQuery,
+export default function LibraryView ({ t, plugins, loading, access, account, license, preview, personal, tips, reduced, query, setQuery,
                                        cat, setCat, sort, setSort, catLabel, onNavigate, onUpdateAll, onRefresh, handlers }) {
   const ups = updatable(plugins, access)
   const filtered = sortPlugins(plugins.filter(p => (cat === 'all' || categoriesOf(p).includes(cat)) && matchesSearch(p, query, catLabel)), access, sort)
@@ -23,7 +23,7 @@ export default function LibraryView ({ t, plugins, loading, access, account, lic
   return (
     <div className="flex flex-col">
       {!query && (
-        <Hero t={t} plugins={plugins} access={access} account={account} license={license} preview={preview} tips={tips} reduced={reduced}
+        <Hero t={t} plugins={plugins} access={access} account={account} license={license} preview={preview} personal={personal} onBuy={handlers.onBuy} tips={tips} reduced={reduced}
               onInstall={handlers.onInstall} onDetail={handlers.onDetail} onAccount={() => onNavigate('account')} />
       )}
 

@@ -50,6 +50,29 @@ bool AccountClient::hasStoredToken() const
     return token.isNotEmpty();
 }
 
+std::function<juce::var()> AccountClient::authorizedGet (const juce::String& path) const
+{
+    juce::String bearer;
+    {
+        const juce::ScopedLock sl (lock);
+        bearer = token;
+    }
+    return [bearer, path]() -> juce::var
+    {
+        if (bearer.isEmpty())
+            return {};
+        juce::URL url (juce::String (RONE_API_BASE) + path);
+        auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
+                           .withConnectionTimeoutMs (10000)
+                           .withExtraHeaders ("Accept: application/json\r\nAuthorization: Bearer " + bearer);
+        auto stream = url.createInputStream (options);
+        if (stream == nullptr)
+            return {};                                  // offline / unreachable
+        auto parsed = juce::JSON::parse (stream->readEntireStreamAsString());
+        return parsed.isObject() ? parsed : juce::var();
+    };
+}
+
 // ============================================================================
 // The device token at rest (Center 2.0)
 //

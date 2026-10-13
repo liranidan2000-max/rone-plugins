@@ -192,6 +192,12 @@ export function sortPlugins (plugins, access, mode = 'yours', now = Date.now()) 
 export function priceOf (plugin) {
   const regular = Number(plugin?.price)
   if (!Number.isFinite(regular) || regular <= 0) return null
+  // This account's own prices (roneaudio.com/api/v1/upsell, tagged on the plugin by App.jsx): the 24-hour
+  // "one more for $19" after a purchase wins, then the owner price every owner gets on what they lack.
+  const offer = Number(plugin?.offerPrice)
+  if (Number.isFinite(offer) && offer > 0 && offer < regular) return { live: offer, regular, onSale: true, kind: 'offer', endsAt: plugin.offerEndsAt }
+  const owner = Number(plugin?.ownerPrice)
+  if (Number.isFinite(owner) && owner > 0 && owner < regular) return { live: owner, regular, onSale: true, kind: 'owner' }
   const launch = Number(plugin?.launch_price)
   const live = Number.isFinite(launch) && launch > 0 && launch < regular ? launch : regular
   return { live, regular, onSale: live < regular }
