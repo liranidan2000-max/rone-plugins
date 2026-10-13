@@ -1,5 +1,6 @@
 #include "NetworkManager.h"
 #include "../../Shared/RemoteLicenseGate.h"
+#include "../../Shared/RoneCrashReporter.h"
 
 NetworkManager::NetworkManager()
 {
@@ -191,10 +192,49 @@ void NetworkManager::captureManifestWide (const juce::var& root)
 // Downloads
 // ============================================================================
 
+juce::String NetworkManager::untrustedInstallerUrlReason (const juce::String& url, bool allowDevFile)
+{
+    if (! url.startsWithIgnoreCase ("https://"))
+        return "not https";
+
+    const auto rest      = url.substring (8);
+    const auto authority = rest.upToFirstOccurrenceOf ("/", false, false);
+    auto path            = rest.containsChar ('/') ? rest.fromFirstOccurrenceOf ("/", true, false) : juce::String();
+    const auto query     = path.fromFirstOccurrenceOf ("?", false, false);
+    path = path.upToFirstOccurrenceOf ("?", false, false);
+
+    if (url.containsChar ('#'))
+        return "a fragment";
+    if (authority.containsAnyOf ("@:\\") || authority.isEmpty())
+        return "user info, a port or a backslash in the host";
+    if (path.containsChar ('\\') || path.contains ("..") || path.containsIgnoreCase ("%2e")
+        || path.containsIgnoreCase ("%2f") || path.containsIgnoreCase ("%5c"))
+        return "a dot segment or an encoded separator in the path";
+
+    const auto host = authority.toLowerCase();
+    if (host == "github.com")
+    {
+        const juce::String prefix ("/liranidan2000-max/rone-plugins/releases/download/");
+        const auto tail = path.startsWith (prefix) ? path.substring (prefix.length()) : juce::String();
+        const auto tag  = tail.upToFirstOccurrenceOf ("/", false, false);
+        const auto file = tail.fromFirstOccurrenceOf ("/", false, false);
+        const char* const safe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-";
+        if (tag.isEmpty() || file.isEmpty() || query.isNotEmpty() || ! tag.containsOnly (safe) || ! file.containsOnly (safe))
+            return "not a release asset of liranidan2000-max/rone-plugins";
+        return {};
+    }
+
+    if (allowDevFile && host == "roneaudio.com" && path == "/api/v1/app/dev-file")
+        return {};
+
+    return "the host " + host + " is not one the Center downloads from";
+}
+
 void NetworkManager::downloadInstaller (const juce::String& pluginId,
                                          const juce::String& url,
                                          const juce::String& sha256,
-                                         bool prefetch)
+                                         bool prefetch,
+                                         bool isDev)
 {
     {
         const juce::ScopedLock sl (queueLock);
@@ -212,7 +252,7 @@ void NetworkManager::downloadInstaller (const juce::String& pluginId,
                 return;
             }
 
-        DownloadJob job { pluginId, url, sha256, prefetch };
+        DownloadJob job { pluginId, url, sha256, prefetch, isDev };
 
         // What the user asked for goes before what the Center fetches on its own.
         if (prefetch)
@@ -359,7 +399,7 @@ namespace
 
 void NetworkManager::runDownloadJob (const DownloadJob& job)
 {
-    getDownloadDir().createDirectory();
+    const auto dirMade  = getDownloadDir().createDirectory();
     const auto tempFile = installerFileFor (job.pluginId);
     const auto partFile = tempFile.withFileExtension (tempFile.getFileExtension() + ".part");
 
@@ -368,6 +408,21 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
     bool         success = false;
     bool         cancelled = false;
     juce::String errorMsg;
+
+    // Audit R202: a download folder that cannot be made is said as that, with the
+    // folder and the reason - it used to surface as a bare temp-file failure.
+    if (dirMade.failed())
+        errorMsg = "Could not create temp file for download in " + getDownloadDir().getFullPathName()
+                 + " (" + dirMade.getErrorMessage().trim() + "). Check antivirus and free disk space,"
+                   " or download the installer from roneaudio.com/account.";
+
+    // Audit R027, stage 1: a link the Center does not expect is reported, and - in
+    // this release - still downloaded (it is hashed against the manifest as always).
+    // Stage 2 refuses it. The query (a signed dev link) never goes into the report.
+    if (const auto why = untrustedInstallerUrlReason (job.url, job.dev); why.isNotEmpty())
+        RoneCrashReporter::reportError ("RONE Plugins Center", JUCE_APPLICATION_VERSION_STRING, "Center", "CENTER_URL",
+                                        "Unexpected installer link for " + job.pluginId + " (" + why + "): "
+                                            + job.url.upToFirstOccurrenceOf ("?", false, false));
 
     // Already here and already verified (a background pre-download, or the same
     // file a cancelled install left): no second transfer.
@@ -378,7 +433,7 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
         success = fis.openedOk() && juce::SHA256 (fis).toHexString().equalsIgnoreCase (job.sha256);
     }
 
-    for (int attempt = 1; ! success && attempt <= downloadAttempts; ++attempt)
+    for (int attempt = 1; ! success && dirMade.wasOk() && attempt <= downloadAttempts; ++attempt)
     {
         if (shouldAbortDownload())
             break;
@@ -599,11 +654,18 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
 
     totalBytes = juce::jmax ((juce::int64) 0, stream->getTotalLength());
 
+    bool writeFailed = false;
+    juce::String writeError;
     {
         juce::FileOutputStream output (tempFile);
         if (! output.openedOk())
         {
-            errorMessage = "Could not create temp file for download.";
+            // Audit R202: where, and what Windows said - and one more try, since an
+            // antivirus scan or a sync tool holding the old .part lets go in seconds.
+            errorMessage = "Could not create temp file for download in " + tempFile.getParentDirectory().getFullPathName()
+                         + " (" + output.getStatus().getErrorMessage().trim() + "). Check antivirus and free disk space,"
+                           " or download the installer from roneaudio.com/account.";
+            retryable = true;
             return false;
         }
 
@@ -617,7 +679,14 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
             if (bytesRead <= 0)
                 break;
 
-            output.write (buffer, (size_t) bytesRead);
+            // Audit R284: a write that fails (a full disk) used to go unnoticed, and
+            // the short file was then reported as a SHA256 mismatch - which made the
+            // Center re-read the manifest and file a false error report.
+            if (! output.write (buffer, (size_t) bytesRead))
+            {
+                writeFailed = true;
+                break;
+            }
             downloaded += bytesRead;
 
             if (totalBytes > 0)
@@ -637,12 +706,25 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
         }
 
         output.flush();
+        writeFailed = writeFailed || output.getStatus().failed();
+        if (writeFailed)
+            writeError = output.getStatus().getErrorMessage().trim();
     }
 
     if (shouldAbortDownload())
     {
         tempFile.deleteFile();
         errorMessage = "Download cancelled.";
+        return false;
+    }
+
+    if (writeFailed)
+    {
+        tempFile.deleteFile();
+        errorMessage = "Download failed - could not write to " + tempFile.getParentDirectory().getFullPathName()
+                     + (writeError.isNotEmpty() ? " (" + writeError + ")" : juce::String())
+                     + ". Free some disk space or check antivirus.";
+        retryable = false;
         return false;
     }
 #endif

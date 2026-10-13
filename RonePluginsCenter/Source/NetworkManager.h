@@ -67,10 +67,19 @@ public:
     // Queue a download (async — progress via listener). The file is verified
     // against sha256, which must be present. A prefetch is a background
     // pre-download: the caller keeps the file for the moment the user says Update.
+    // isDev: a DEV CHANNEL plug-in, served from roneaudio.com instead of GitHub.
     void downloadInstaller (const juce::String& pluginId,
                             const juce::String& url,
                             const juce::String& sha256,
-                            bool isPrefetch = false);
+                            bool isPrefetch = false,
+                            bool isDev = false);
+
+    // Audit R027 (stage 1 - logged, not enforced): why an installer URL is not one
+    // the Center expects, or empty when it is. Expected: https, github.com, a
+    // release asset of liranidan2000-max/rone-plugins (<tag>/<file>); for a DEV
+    // CHANNEL plug-in also roneaudio.com/api/v1/app/dev-file. No user info, port,
+    // fragment, backslash, dot segment or encoded separator in the path.
+    static juce::String untrustedInstallerUrlReason (const juce::String& url, bool allowDevFile);
 
     // Cancel one plugin's download, queued or running.
     void cancelDownload (const juce::String& pluginId);
@@ -123,6 +132,7 @@ private:
         juce::String url;
         juce::String sha256;
         bool prefetch = false;
+        bool dev = false;
     };
 
     // ---- the two workers -----------------------------------------------------
