@@ -3,6 +3,7 @@
 #include "RoneTrayIcon.h"
 #include "AutoStart.h"
 #include "OldVersionCleaner.h"
+#include "UserFolderMove.h"
 #include "PluginUninstaller.h"
 #include "ControlPort.h"
 #include "InstallBatcher.h"
@@ -26,6 +27,7 @@ public:
     // The elevated DELETE OLD VERSIONS run (and its dry run), UNINSTALL and the
     // install batch must start next to the open Center.
     bool moreThanOneInstanceAllowed()          override { return OldVersionCleaner::isCommandLineMode (getCommandLineParameters())
+                                                                  || UserFolderMove::isCommandLineMode (getCommandLineParameters())
                                                                   || PluginUninstaller::isCommandLineMode (getCommandLineParameters())
                                                                   || InstallBatcher::isCommandLineMode (getCommandLineParameters()); }
 
@@ -35,7 +37,7 @@ public:
         // --uninstall-plugin <key> <files...>: the elevated half of a card's UNINSTALL.
         // --install-batch <job>: the elevated half of every install (InstallBatcher.h).
         if (OldVersionCleaner::runCommandLine (commandLine) || PluginUninstaller::runCommandLine (commandLine)
-            || InstallBatcher::runCommandLine (commandLine))
+            || InstallBatcher::runCommandLine (commandLine) || UserFolderMove::runCommandLine (commandLine))
         {
             quit();
             return;

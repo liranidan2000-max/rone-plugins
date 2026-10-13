@@ -120,6 +120,7 @@ export default function App () {
         setManifest({ offline: new URLSearchParams(location.search).has('offline'), loaded: true, syncedAt: Date.now() - 60000 })
         setTips(mockTips); setDaws(mockDaws)
         if (new URLSearchParams(location.search).has('centerupdate')) setCenterUpdate('2.0.1.250')
+        if (new URLSearchParams(location.search).has('mac')) setPlatform('mac')   // the Mac-only rows
         setLoading(false)
         return
       }

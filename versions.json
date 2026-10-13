@@ -9,7 +9,7 @@
     "version": "2.1.2.264",
     "sha256": "e8be80c37341331be4241d18f36e8615cc6ed486ed158cfb46fa9b8885ba3bc5",
     "sha256_mac": "975b3690b5dd6271a35ace7620b9fa42ab3822b9ce2bd502f561b3adbbe927fd",
-    "whats_new": "2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
+    "whats_new": "2.1.3 (Mac): Settings > Updates without a password. One button moves your RONE plugins from the system folders into your own (one last password), and from then on every update installs with no password. 2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
   },
   "plugins": [
     {

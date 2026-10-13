@@ -6,6 +6,7 @@
 #include "AutoStart.h"
 #include "PluginInUse.h"
 #include "OldVersionCleaner.h"
+#include "UserFolderMove.h"
 #include "PluginUninstaller.h"
 #include "DawDetector.h"
 
@@ -226,6 +227,12 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         })
         .withNativeFunction ("deleteOldVersions", [this] (NativeArgs args, NativeCompletion complete) {
             handleDeleteOldVersions (args, guarded (std::move (complete)));
+        })
+        .withNativeFunction ("scanUserFolderMove", [this] (NativeArgs args, NativeCompletion complete) {
+            handleScanUserFolderMove (args, guarded (std::move (complete)));
+        })
+        .withNativeFunction ("moveToUserFolders", [this] (NativeArgs args, NativeCompletion complete) {
+            handleMoveToUserFolders (args, guarded (std::move (complete)));
         })
         .withNativeFunction ("uninstallPlugin", [this] (NativeArgs args, NativeCompletion complete) {
             handleUninstallPlugin (args, guarded (std::move (complete)));
@@ -1761,6 +1768,28 @@ void MainComponent::handleDeleteOldVersions (NativeArgs, NativeCompletion comple
     juce::Thread::launch ([complete = std::move (complete)]() mutable
     {
         complete (OldVersionCleaner::cleanNow());
+    });
+}
+
+// ============================================================================
+// Settings > MOVE PLUGINS TO MY FOLDER (macOS) - see UserFolderMove.h. After
+// it, every update installs with no password. The scan is a few directory
+// listings; the move waits for the password, so it runs off the message thread.
+// ============================================================================
+void MainComponent::handleScanUserFolderMove (NativeArgs, NativeCompletion complete)
+{
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("success", true);
+    o->setProperty ("supported", UserFolderMove::isSupported());
+    o->setProperty ("items", UserFolderMove::toVar (UserFolderMove::scan()));
+    complete (juce::var (o));
+}
+
+void MainComponent::handleMoveToUserFolders (NativeArgs, NativeCompletion complete)
+{
+    juce::Thread::launch ([complete = std::move (complete)]() mutable
+    {
+        complete (UserFolderMove::moveNow());
     });
 }
 

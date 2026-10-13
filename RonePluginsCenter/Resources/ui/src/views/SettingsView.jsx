@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { api, isDevMode, mockOldVersions } from '../bridge'
+import { api, isDevMode, mockOldVersions, mockUserFolderMove } from '../bridge'
 import { Dialog, Seg, Switch, timeAgo } from '../components/ui'
 import BackPanel from '../components/BackPanel'
 import { LANGS } from '../i18n'
@@ -75,6 +75,55 @@ function OldVersionsDialog ({ t, phase, items, result, onConfirm, onClose }) {
   )
 }
 
+// Mac: the plugins a .pkg put in /Library and /Applications, moved into the
+// user's own folders once, so every later update installs with no password
+// (UserFolderMove.h). The list first, then one password.
+function MoveDialog ({ t, phase, items, result, onConfirm, onClose }) {
+  const shown = result?.items || items
+  const busy = phase === 'moving'
+  const open = phase === 'confirm' || phase === 'moving' || phase === 'done'
+  const moved = result?.moved ?? 0
+  const failed = result?.failed ?? 0
+  return (
+    <Dialog open={open} onClose={() => { if (!busy) onClose() }} label={t('set.moveUser')} width={560}>
+      <h3 className="m-0 mb-1 text-[15px] font-extrabold text-rone-text-primary">
+        {phase === 'done' ? t('mv.titleDone') : t('mv.title', { n: items.length })}
+      </h3>
+      <p className="m-0 mb-3 text-[12.5px] text-rone-text-secondary leading-relaxed">
+        {phase === 'done'
+          ? (result?.declined
+              ? t('mv.declined')
+              : <>{t('mv.done', { n: moved })} {failed > 0 && t('mv.failedSome', { n: failed })} {moved > 0 && t('mv.rescan')}</>)
+          : busy ? t('mv.moving') : t('mv.body')}
+      </p>
+      <div className="max-h-[260px] overflow-y-auto scroll-y rounded-[10px] border border-rone-border divide-y divide-rone-border">
+        {shown.map((it, i) => (
+          <div key={i} className="px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-rone-text-dim flex-none">{t('mv.kind.' + it.kind)}</span>
+              <span className="text-[12.5px] font-semibold text-rone-text-primary truncate">{it.name}</span>
+              {it.status && (
+                <span className={`ml-auto text-[11px] font-bold flex-none ${it.status === 'failed' ? 'text-rone-error' : 'text-rone-green'}`}>
+                  {t('mv.status.' + it.status)}
+                </span>
+              )}
+            </div>
+            <p className="m-0 mt-0.5 text-[11.5px] text-rone-text-dim truncate">{it.from} → {it.to}</p>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-end gap-2 mt-4">
+        {phase === 'done'
+          ? <button className="btn btn-pri" onClick={onClose} data-autofocus>{t('dlg.close')}</button>
+          : <>
+              <button className="btn btn-out" onClick={onClose} disabled={busy}>{t('dlg.cancel')}</button>
+              <button className="btn btn-pri" onClick={onConfirm} disabled={busy}>{busy ? t('set.looking') : t('mv.go', { n: items.length })}</button>
+            </>}
+      </div>
+    </Dialog>
+  )
+}
+
 export default function SettingsView ({ t, prefs, setPrefs, daws, platform, manifest, onRefresh, onShowOnboarding }) {
   const [center, setCenter] = useState({ backgroundDownload: true, autoStart: false, autoStartSupported: false })
   const [version, setVersion] = useState('')
@@ -113,6 +162,31 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
       const r = isDevMode() ? { deleted: items.length, items: items.map(it => ({ ...it, status: 'deleted' })) } : await api.deleteOldVersions()
       setResult(r); setPhase('done')
     } catch (e) { setPhase('idle'); setMsg(e.message || '') }
+  }
+
+  // Updates without a password (Mac): idle -> scanning -> confirm -> moving -> done
+  const [mvPhase, setMvPhase] = useState('idle')
+  const [mvItems, setMvItems] = useState([])
+  const [mvResult, setMvResult] = useState(null)
+  const [mvMsg, setMvMsg] = useState('')
+  const startMove = async () => {
+    setMvMsg(''); setMvResult(null); setMvPhase('scanning')
+    try {
+      const r = isDevMode() ? { items: mockUserFolderMove } : await api.scanUserFolderMove()
+      const found = r?.items || []
+      setMvItems(found)
+      if (!found.length) { setMvPhase('idle'); setMvMsg(t('set.moveUserNone')); return }
+      setMvPhase('confirm')
+    } catch (e) { setMvPhase('idle'); setMvMsg(e.message || '') }
+  }
+  const confirmMove = async () => {
+    setMvPhase('moving')
+    try {
+      const r = isDevMode()
+        ? { moved: mvItems.length, failed: 0, items: mvItems.map(it => ({ ...it, status: it.kind === 'remove' ? 'removed' : 'moved' })) }
+        : await api.moveToUserFolders()
+      setMvResult(r); setMvPhase('done')
+    } catch (e) { setMvPhase('idle'); setMvMsg(e.message || '') }
   }
 
   const openFolder = (kind) => { if (!isDevMode()) api.openInstallFolder(kind).catch(() => {}) }
@@ -180,6 +254,13 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
               {phase === 'scanning' ? t('set.looking') : t('set.deleteOldBtn')}
             </button>
           </Row>
+          {platform === 'mac' && (
+            <Row title={t('set.moveUser')} desc={t('set.moveUserSub') + (mvMsg ? ' ' + mvMsg : '')}>
+              <button className="btn btn-out btn-sm" onClick={startMove} disabled={mvPhase === 'scanning' || mvPhase === 'moving'}>
+                {mvPhase === 'scanning' ? t('set.looking') : t('set.moveUserBtn')}
+              </button>
+            </Row>
+          )}
           <Row title={t('set.onboarding')}>
             <button className="btn btn-ghost btn-sm" onClick={onShowOnboarding}>›</button>
           </Row>
@@ -193,6 +274,7 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
       </div>
 
       <OldVersionsDialog t={t} phase={phase} items={items} result={result} onConfirm={confirmClean} onClose={() => { setPhase('idle'); setResult(null) }} />
+      <MoveDialog t={t} phase={mvPhase} items={mvItems} result={mvResult} onConfirm={confirmMove} onClose={() => { setMvPhase('idle'); setMvResult(null) }} />
       {showBack && <BackPanel version={version} onClose={() => setShowBack(false)} />}
     </div>
   )

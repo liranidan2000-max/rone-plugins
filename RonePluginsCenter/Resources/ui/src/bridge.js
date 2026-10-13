@@ -135,6 +135,10 @@ export const api = {
   deleteOldVersions: createNativeFunction('deleteOldVersions', 150000),
   // answers when done: waits for the permission prompt and the plugin's own uninstaller
   uninstallPlugin:   createNativeFunction('uninstallPlugin', 330000),
+  // Mac: Settings > updates without a password (UserFolderMove.h)
+  scanUserFolderMove: createNativeFunction('scanUserFolderMove'),
+  // waits for the password and the moves (a copy across volumes can take a while)
+  moveToUserFolders:  createNativeFunction('moveToUserFolders', 330000),
 };
 
 // ---- Dev mode (running outside JUCE: the vite preview) ----
@@ -198,6 +202,13 @@ export const mockOldVersions = [
     reason: 'An old description file (version 1.0.2) inside RONE Reverse Reverb.vst3 - your DAW reads it instead of the plugin' },
   { name: 'RONE Iron.vst3.locked-old01', kind: 'leftover',
     reason: 'A copy an earlier update set aside because a program was using it' },
+];
+
+// Settings > updates without a password in dev mode: a Mac with three system-wide plugins.
+export const mockUserFolderMove = [
+  { name: 'RONE Analyzer.app', from: '/Applications', to: '/Users/you/Applications', kind: 'move' },
+  { name: 'RONE Analyzer Bridge.vst3', from: '/Library/Audio/Plug-Ins/VST3', to: '/Users/you/Library/Audio/Plug-Ins/VST3', kind: 'move' },
+  { name: 'RONE Stutter.component', from: '/Library/Audio/Plug-Ins/Components', to: '/Users/you/Library/Audio/Plug-Ins/Components', kind: 'remove' },
 ];
 
 // ?announce=1 in dev mode: the website's popup feed as it was on 2026-09-24
