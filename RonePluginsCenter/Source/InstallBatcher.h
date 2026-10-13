@@ -234,10 +234,12 @@ public:
                            && source.getFileName().endsWithIgnoreCase ("_Installer.exe")
                            && source.existsAsFile() && sha.length() == 64;
 
+            // The log gets a fresh name every run: a hung installer from an earlier
+            // batch may still hold the old one open, and Inno aborts Setup (installs
+            // nothing) when it cannot create its /LOG file.
             const auto copy = cacheDir.getChildFile (id + "_Installer.exe");
-            const auto log  = cacheDir.getChildFile (id + "_Installer.log");
+            const auto log  = cacheDir.getChildFile (id + "_" + juce::Uuid().toString().substring (0, 8) + "_Installer.log");
             copy.deleteFile();
-            log.deleteFile();
 
             if (! sane || ! source.copyFileTo (copy))
             {
@@ -253,9 +255,14 @@ public:
                 else
                 {
                     // /LOG (audit R195): what Inno itself says comes back with a failure.
+                    // Passed only when the Center could make that file itself, so the log
+                    // can never be the reason an install does not run.
+                    juce::StringArray args { copy.getFullPathName(), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-" };
+                    if (log.create().wasOk())
+                        args.add ("/LOG=" + log.getFullPathName());
+
                     juce::ChildProcess setup;
-                    if (setup.start (juce::StringArray { copy.getFullPathName(), "/VERYSILENT", "/SUPPRESSMSGBOXES",
-                                                         "/NORESTART", "/SP-", "/LOG=" + log.getFullPathName() }, 0))
+                    if (setup.start (args, 0))
                     {
                         // No time limit while setup runs; an hour is a hung installer, not a slow one.
                         for (int waited = 0; setup.isRunning() && waited < kInstallerHangMs; waited += 250)
