@@ -72,6 +72,7 @@ static bool isEffectivelyLicensed (const LicenseHandler& handler,
 
 #if JUCE_MAC
  #include <unistd.h>
+ #include <sys/mount.h>
 #endif
 
 // The home folder as "~" in what goes into an error report.
@@ -2351,9 +2352,18 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
     // quarantine copy macOS runs it from) can never replace itself - it asked for
     // a password for nothing, failed and filed an error. Say how instead, and open
     // the new image for the one drag onto Applications.
+    // The test is a READ-ONLY volume, not the place: a Center kept on a writable
+    // drive under /Volumes/ updates itself as before (a mounted .dmg and the
+    // AppTranslocation mount are both read-only). Only under /Volumes/, where a
+    // .dmg mounts: the boot disk's system part is read-only too, and a Center in
+    // /Applications must never be turned away here.
     {
         const auto path = target.getFullPathName();
-        if (path.startsWith ("/Volumes/") || path.contains ("/AppTranslocation/"))
+        struct statfs fs {};
+        const bool readOnlyVolume = path.startsWith ("/Volumes/")
+                                    && ::statfs (target.getParentDirectory().getFullPathName().toRawUTF8(), &fs) == 0
+                                    && (fs.f_flags & MNT_RDONLY) != 0;
+        if (readOnlyVolume || path.contains ("/AppTranslocation/"))
         {
             centerUpdateMarker().deleteFile();
             juce::ChildProcess open;
