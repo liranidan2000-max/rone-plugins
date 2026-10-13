@@ -720,7 +720,7 @@ static bool isEnvironmentalStatus (const juce::String& text)
         || text.contains ("a file was in use")
         || text.contains ("Enter your password when prompted")
         || text.contains ("installer code 2)")                            // Inno: cancelled by the user before installing
-        || text.startsWith ("Could not reach the download server")         // R123: GitHub's assets blocked, not a bug
+        || text.startsWith ("Could not reach the download server")         // R101, R123: GitHub's assets blocked, not a bug
         || text.startsWith ("Download interrupted")                        // R123: the connection dropped
         || text.startsWith ("Download failed - could not write")           // R284: a full disk
         || text.contains ("Windows needs a restart before")                 // R195: Inno exit 8
