@@ -75,6 +75,10 @@ public:
     /** True when a token exists, regardless of whether it is still valid. */
     bool hasStoredToken() const;
 
+    /** Something about the start-up worth a diagnostic report (audit R285, logged
+        only), handed out once; empty when there is nothing to say. */
+    juce::String takeStartupNote();
+
     /** The DEV CHANNEL (/api/v1/app/dev): plug-ins in development, answered for Liran's accounts only.
         `done` runs on the message thread with the raw JSON body, or an empty string for everyone else,
         when signed out, offline, or on any error - the channel simply is not there. */
@@ -111,6 +115,13 @@ private:
     /** Drops the account's claim on BundleLicense.xml. A legacy Lemon Squeezy
         serial on the same machine survives it. */
     void clearLicenseFile();
+
+    /** Audit R126: a sign-out that could not reach roneaudio.com (offline) never
+        released its device slot. The old token is kept (sealed on Windows) in
+        pending-logout.xml and sent to /app/logout at the next start, sign-in or
+        refresh until the server takes it. Never a token that is the current one. */
+    void rememberPendingLogout (const juce::String& oldToken);
+    void retryPendingLogoutsAsync();
 
     /** Stable per-machine id, hashed so the raw device id never leaves the PC. */
     static juce::String getMachineId();
@@ -153,6 +164,8 @@ private:
     // file and BundleLicense.xml.
     std::atomic<bool> validating { false };
     std::atomic<bool> googleCancel { false };
+    std::atomic<bool> logoutRetrying { false };
+    juce::String startupNote;            // under `lock`
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AccountClient)
 };

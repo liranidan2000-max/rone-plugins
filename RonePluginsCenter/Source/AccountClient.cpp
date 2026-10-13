@@ -164,6 +164,26 @@ bool AccountClient::loadAccountFile()
    #else
     token              = xml->getStringAttribute ("token");
    #endif
+
+    // Audit R125: a sealed token this Windows account cannot open (the file came
+    // from another user or machine, or DPAPI failed) left `licensed` and the owned
+    // plugins read from the file with signedIn = false: the page hid the sign-in
+    // while it showed ALL ACCESS as active. Now only the e-mail stays, the page
+    // asks for a sign-in, and the file is left alone - a passing DPAPI failure
+    // must stay recoverable, and a fresh sign-in overwrites it anyway.
+    // BundleLicense.xml is not touched either, so the plugins keep their grace.
+    if (token.isEmpty() && xml->getStringAttribute ("tokenSealed").isNotEmpty())
+    {
+        const auto email = xml->getStringAttribute ("email");
+        state = State{};
+        state.email = email;
+        state.message = "Your saved sign-in could not be read on this Windows account. Please sign in again.";
+        signedEntitlement = {};
+        signedEntitlementSig = {};
+        lastValidationTime = 0;
+        return false;
+    }
+
     state.email        = xml->getStringAttribute ("email");
     state.name         = xml->getStringAttribute ("name");
     state.plan         = xml->getStringAttribute ("plan", "none");
@@ -350,6 +370,153 @@ void AccountClient::fetchDevChannelAsync (std::function<void (juce::String)> don
 }
 
 // ============================================================================
+// Pending logouts (audit R126)
+// ============================================================================
+
+static juce::File pendingLogoutFile()
+{
+    return juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+               .getChildFile ("RonePlugins").getChildFile ("pending-logout.xml");
+}
+
+static juce::CriticalSection& pendingLogoutLock()
+{
+    static juce::CriticalSection l;
+    return l;
+}
+
+static juce::StringArray readPendingLogouts()
+{
+    juce::StringArray tokens;
+    if (auto xml = juce::parseXML (pendingLogoutFile()))
+        for (auto* t : xml->getChildWithTagNameIterator ("T"))
+        {
+           #if JUCE_WINDOWS
+            const auto tok = openToken (t->getStringAttribute ("sealed"));
+           #else
+            const auto tok = t->getStringAttribute ("token");
+           #endif
+            if (tok.isNotEmpty())
+                tokens.addIfNotAlreadyThere (tok);
+        }
+    return tokens;
+}
+
+static void writePendingLogouts (const juce::StringArray& tokens)
+{
+    const auto file = pendingLogoutFile();
+    if (tokens.isEmpty())
+    {
+        file.deleteFile();
+        return;
+    }
+
+    juce::XmlElement xml ("RonePendingLogout");
+    for (const auto& tok : tokens)
+    {
+       #if JUCE_WINDOWS
+        const auto sealed = sealToken (tok);
+        if (sealed.isEmpty())
+            continue;              // never in the clear on Windows; the slot is then released on the website
+        xml.createNewChildElement ("T")->setAttribute ("sealed", sealed);
+       #else
+        xml.createNewChildElement ("T")->setAttribute ("token", tok);
+       #endif
+    }
+    file.getParentDirectory().createDirectory();
+    xml.writeTo (file, {});
+   #if JUCE_MAC || JUCE_LINUX
+    std::system (("/bin/chmod 600 " + file.getFullPathName().quoted ('\'')).toRawUTF8());
+   #endif
+}
+
+static void forgetPendingLogout (const juce::String& oldToken)
+{
+    const juce::ScopedLock sl (pendingLogoutLock());
+    auto tokens = readPendingLogouts();
+    if (tokens.contains (oldToken))
+    {
+        tokens.removeString (oldToken);
+        writePendingLogouts (tokens);
+    }
+}
+
+void AccountClient::rememberPendingLogout (const juce::String& oldToken)
+{
+    if (oldToken.isEmpty())
+        return;
+    const juce::ScopedLock sl (pendingLogoutLock());
+    auto tokens = readPendingLogouts();
+    tokens.addIfNotAlreadyThere (oldToken);
+    while (tokens.size() > 5)      // a handful is plenty; the oldest is the one most likely gone already
+        tokens.remove (0);
+    writePendingLogouts (tokens);
+}
+
+void AccountClient::retryPendingLogoutsAsync()
+{
+    {
+        const juce::ScopedLock sl (pendingLogoutLock());
+        if (! pendingLogoutFile().existsAsFile())
+            return;
+    }
+    if (logoutRetrying.exchange (true))
+        return;
+
+    juce::Thread::launch ([this, flag = alive]
+    {
+        const InFlight scope (inFlight);
+
+        juce::StringArray tokens;
+        {
+            const juce::ScopedLock sl (pendingLogoutLock());
+            tokens = readPendingLogouts();
+        }
+
+        juce::String current;
+        {
+            const juce::ScopedLock sl (lock);
+            current = token;
+        }
+
+        juce::StringArray done;
+        for (const auto& tok : tokens)
+        {
+            if (tok == current)
+            {
+                done.add (tok);         // the token in use is never logged out - drop it from the list
+                continue;
+            }
+            int status = 0;
+            post ("/app/logout", juce::var (new juce::DynamicObject()), tok, status);
+            // 2xx: released. 401: the server no longer knows it - nothing left to release.
+            if ((status >= 200 && status < 300) || status == 401)
+                done.add (tok);
+            else if (status == 0)
+                break;                   // offline: the rest waits for the next try as well
+        }
+
+        {
+            const juce::ScopedLock sl (pendingLogoutLock());
+            auto left = readPendingLogouts();
+            for (const auto& d : done)
+                left.removeString (d);
+            writePendingLogouts (left);
+        }
+        if (flag->load())
+            logoutRetrying = false;
+    });
+}
+
+juce::String AccountClient::takeStartupNote()
+{
+    const juce::ScopedLock sl (lock);
+    const auto note = startupNote;
+    startupNote.clear();
+    return note;
+}
+
+// ============================================================================
 // State from a server response
 // ============================================================================
 
@@ -461,6 +628,7 @@ void AccountClient::signIn (const juce::String& email, const juce::String& passw
             success = true;
             message = signedInMessage (getState(), "Signed in —");
             startTimer (VALIDATION_INTERVAL_MS);
+            retryPendingLogoutsAsync();
         }
         else
         {
@@ -500,6 +668,15 @@ static const char* const kBrowserReply =
     "<body style=\"background:#14161A;color:#E8EAED;font-family:Segoe UI,Arial,sans-serif;text-align:center;padding:60px\">"
     "<h2 style=\"font-weight:800\">Signed in to the RONE Plugins Center</h2>"
     "<p style=\"color:#9AA0A8\">You can close this tab and go back to the Center.</p></body></html>";
+
+// A browser tab from an earlier attempt (another nonce) - audit R288: it used to
+// be told "Signed in" while the Center went on waiting and then gave up.
+static const char* const kStaleReply =
+    "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html; charset=utf-8\r\nConnection: close\r\n\r\n"
+    "<!doctype html><html><head><meta charset=\"utf-8\"><title>RONE Plugins Center</title></head>"
+    "<body style=\"background:#14161A;color:#E8EAED;font-family:Segoe UI,Arial,sans-serif;text-align:center;padding:60px\">"
+    "<h2 style=\"font-weight:800\">This sign-in link is from an earlier attempt</h2>"
+    "<p style=\"color:#9AA0A8\">Go back to the RONE Plugins Center and press Continue with Google again.</p></body></html>";
 
 void AccountClient::cancelGoogleSignIn()
 {
@@ -590,9 +767,13 @@ void AccountClient::signInWithGoogle (Callback cb)
                     if (names[i] == "code")  gotCode  = values[i];
                     if (names[i] == "nonce") gotNonce = values[i];
                 }
-                conn->write (kBrowserReply, (int) std::strlen (kBrowserReply));
                 if (gotNonce == nonce && gotCode.isNotEmpty())
+                {
+                    conn->write (kBrowserReply, (int) std::strlen (kBrowserReply));
                     code = gotCode;
+                }
+                else
+                    conn->write (kStaleReply, (int) std::strlen (kStaleReply));   // and keep waiting
             }
             else
             {
@@ -640,6 +821,7 @@ void AccountClient::signInWithGoogle (Callback cb)
 
         writeLicenseFile();
         startTimer (VALIDATION_INTERVAL_MS);
+        retryPendingLogoutsAsync();
 
         finish (true, signedInMessage (getState(), "Signed in with Google -"));
     });
@@ -656,9 +838,21 @@ void AccountClient::signOut (Callback cb)
     // Local state is cleared immediately: signing out must work offline too.
     // Everything goes, lifetime plugins included — they come back with the
     // next sign-in, and this machine is no longer claiming the account.
+    //
+    // The old token is written down first (audit R126): until roneaudio.com has
+    // taken the logout, the device slot is still held. It goes at once when the
+    // server is reachable, otherwise at the next start, sign-in or refresh.
+    rememberPendingLogout (current);
+
+    // Under the account lock (audit R124): a refresh already on its way checks
+    // the token under the same lock before it writes anything, so it can no
+    // longer bring the cleared files back.
     stopTimer();
-    clearAccountFile();
-    clearLicenseFile();
+    {
+        const juce::ScopedLock sl (lock);
+        clearAccountFile();
+        clearLicenseFile();
+    }
     notifyChanged();
 
     if (cb) cb (true, "Signed out");
@@ -667,9 +861,12 @@ void AccountClient::signOut (Callback cb)
     {
         juce::Thread::launch ([this, current]
         {
-        const InFlight scope (inFlight);
+            const InFlight scope (inFlight);
             int status = 0;
             post ("/app/logout", juce::var (new juce::DynamicObject()), current, status);
+            // Released (2xx), or unknown to the server (401): nothing left to retry.
+            if ((status >= 200 && status < 300) || status == 401)
+                forgetPendingLogout (current);
         });
     }
 }
@@ -680,8 +877,36 @@ void AccountClient::signOut (Callback cb)
 
 // Said to someone whose pass could not be confirmed but who owns plugins
 // outright: nothing of theirs stopped working, so nothing should sound alarming.
-static const char* const kOfflineOwnedMessage =
-    "Offline — your lifetime plugins keep working.";
+// Audit R287: but not forever - every plugin asks for one check-in in 90 days
+// (BundleLicenseChecker PERPETUAL_GRACE), so the line counts the days down.
+static juce::String offlineOwnedMessage (juce::int64 lastValidationTime)
+{
+    constexpr juce::int64 dayMs = 24LL * 60 * 60 * 1000;
+    const auto elapsed  = juce::Time::currentTimeMillis() - lastValidationTime;
+    const auto daysLeft = 90 - (int) (juce::jmax ((juce::int64) 0, elapsed) / dayMs);
+
+    if (lastValidationTime > 0 && daysLeft > 0)
+        return juce::String (juce::CharPointer_UTF8 ("Offline \xe2\x80\x94 your lifetime plugins keep working for "))
+             + juce::String (daysLeft) + (daysLeft == 1 ? " more day" : " more days") + ". Connect once to reset this.";
+
+    return juce::String (juce::CharPointer_UTF8 ("Offline for more than 90 days \xe2\x80\x94 connect to the internet once to unlock your plugins."));
+}
+
+// The lines the offline paths leave in the account panel (audit R286).
+static bool isOfflineMessage (const juce::String& m)
+{
+    return m.startsWith ("Offline")
+        || m == "Could not verify your pass. Connect to the internet."
+        || m == "Please connect to the internet to verify your pass.";
+}
+
+// Audit R204: only this answer signs a computer out. Any other 401 (an endpoint
+// saying "unauthenticated", a proxy) keeps the token, like a network failure.
+static bool isDeviceRevoked (int status, const juce::var& response)
+{
+    return status == 401 && response.isObject()
+        && response.getProperty ("error", "").toString() == "device_revoked";
+}
 
 void AccountClient::validateAsync (std::function<void (bool)> done)
 {
@@ -717,23 +942,38 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         auto response = post ("/app/refresh", juce::var (body), current, status);
 
         bool licensed = false;
+        bool refreshed = false;
 
         if (response.isObject() && (bool) response.getProperty ("ok", false))
         {
-            applyServerState (response);
-            licensed = getState().licensed;
-            saveAccountFile();
-            writeLicenseFile();
+            // Audit R124: the answer is for the token it was asked with. A sign-out
+            // (or a new sign-in) while it was on its way makes it nobody's answer:
+            // nothing is written, so the files a sign-out cleared stay cleared.
+            const juce::ScopedLock sl (lock);
+            if (token == current)
+            {
+                applyServerState (response);
+                licensed = state.licensed;
+
+                // Audit R286: back online, the offline line goes.
+                if (isOfflineMessage (state.message))
+                    state.message = signedInMessage (state, juce::String (juce::CharPointer_UTF8 ("Signed in \xe2\x80\x94")));
+
+                saveAccountFile();
+                writeLicenseFile();
+                refreshed = true;
+            }
         }
-        else if (status == 401)
+        else if (isDeviceRevoked (status, response))
         {
             // The server positively says this device is gone (released from the
             // account page, or the account was deleted). Only THIS answer
             // clears the token — a network failure must not.
-            clearAccountFile();
-            clearLicenseFile();
+            const juce::ScopedLock sl (lock);
+            if (token == current)
             {
-                const juce::ScopedLock sl (lock);
+                clearAccountFile();
+                clearLicenseFile();
                 state.message = "This computer was signed out. Please sign in again.";
             }
         }
@@ -749,8 +989,8 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
                     const juce::ScopedLock sl (lock);
                     state.licensed = false;
                     state.message  = state.ownedProducts.isEmpty()
-                                         ? "Could not verify your pass. Connect to the internet."
-                                         : kOfflineOwnedMessage;
+                                         ? juce::String ("Could not verify your pass. Connect to the internet.")
+                                         : offlineOwnedMessage (lastValidationTime);
                 }
 
                 // Rewritten, not deleted: this drops the pass and keeps every
@@ -762,6 +1002,9 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
 
         validating = false;
         notifyChanged();
+
+        if (refreshed)
+            retryPendingLogoutsAsync();
 
         if (done)
             postToMessageThread ([done, licensed] { done (licensed); });
@@ -779,7 +1022,13 @@ void AccountClient::timerCallback()
 
 void AccountClient::initialize()
 {
-    if (! loadAccountFile())
+    const bool haveAccount = loadAccountFile();
+
+    // A sign-out that never reached the server - also when nobody is signed in
+    // now. After the load, so the token in use is known (and never sent).
+    retryPendingLogoutsAsync();
+
+    if (! haveAccount)
         return;
 
     const auto elapsed = juce::Time::currentTimeMillis() - lastValidationTime;
@@ -790,6 +1039,17 @@ void AccountClient::initialize()
         // instantly, then confirm with the server in the background. The stamp
         // that goes out is still the last one the server gave us, so this
         // rewrite hands nobody a fresh grace period.
+        //
+        // Audit R285, stage 1 (observe): every answer the site gives carries its
+        // signed copy, so an Account.xml without one was not written from a
+        // server answer. It is reported, and - in this release - still trusted.
+        // Stage 2 writes BundleLicense.xml here only from a signed copy.
+        {
+            const juce::ScopedLock sl (lock);
+            if ((state.licensed || ! state.ownedProducts.isEmpty())
+                && (signedEntitlement.isEmpty() || signedEntitlementSig.isEmpty()))
+                startupNote = "Account.xml claims a licence but holds no signed entitlement (start-up, audit R285 stage 1)";
+        }
         writeLicenseFile();
     }
     else
@@ -803,8 +1063,8 @@ void AccountClient::initialize()
         const juce::ScopedLock sl (lock);
         state.licensed = false;
         state.message  = state.ownedProducts.isEmpty()
-                             ? "Please connect to the internet to verify your pass."
-                             : kOfflineOwnedMessage;
+                             ? juce::String ("Please connect to the internet to verify your pass.")
+                             : offlineOwnedMessage (lastValidationTime);
     }
 
     validateAsync();

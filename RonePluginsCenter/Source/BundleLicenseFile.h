@@ -255,6 +255,22 @@ namespace detail
     }
 }
 
+/** Audit R170: the stamp the two writers keep is the newest of the stored one
+    and the incoming one. A stamp from a clock that was once ahead stayed in the
+    future forever, and every plugin fails a future stamp closed. A value more
+    than five minutes ahead of now - stored or incoming - is not trusted: it
+    counts as no validation at all (which the plugins already treat it as), so
+    the next real answer from the server heals the file. A past stamp is never
+    lowered, and nothing here moves a stamp forward. */
+inline juce::int64 mergeValidationTime (juce::int64 stored, juce::int64 incoming,
+                                        juce::int64 now = juce::Time::currentTimeMillis())
+{
+    constexpr juce::int64 slack = 5LL * 60 * 1000;
+    if (stored > now + slack)   stored = 0;
+    if (incoming > now + slack) incoming = 0;
+    return juce::jmax (stored, incoming);
+}
+
 /** The whole file, for a caller that wants to read back its own group. */
 inline Contents load()
 {
@@ -277,7 +293,7 @@ inline void writeSerial (bool licensed,
     c.licenseKey         = licenseKey;
     c.instanceId         = instanceId;
     c.customerName       = customerName;
-    c.lastValidationTime = juce::jmax (c.lastValidationTime, validatedAt);
+    c.lastValidationTime = mergeValidationTime (c.lastValidationTime, validatedAt);
 
     detail::commitLocked (c);
 }
@@ -312,7 +328,7 @@ inline void writeAccount (bool licensed,
     auto c = detail::readLocked();
     c.accountLicensed    = licensed;
     c.products           = products;
-    c.lastValidationTime = juce::jmax (c.lastValidationTime, validatedAt);
+    c.lastValidationTime = mergeValidationTime (c.lastValidationTime, validatedAt);
     // Kept exactly as the server signed it: the plugins measure their grace from
     // the time inside it, so an offline Center rewriting the file changes nothing.
     c.entitlement        = entitlement;
