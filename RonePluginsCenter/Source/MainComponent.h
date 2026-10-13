@@ -50,6 +50,10 @@ public:
     // The tray icon shows how many updates wait (Main.cpp wires this up).
     std::function<void (int updates)> onUpdateCountChanged;
 
+    // A line for the tray's notification while the window is hidden (audit R120):
+    // a plugin waits for its DAW, or what a batch installed. Windows shows it.
+    std::function<void (const juce::String& text)> onTrayNotice;
+
     // NetworkManager::Listener
     void onManifestReady  (const juce::Array<PluginInfo>& plugins, bool fromCache) override;
     // The DEV CHANNEL: Liran's plug-ins in development, added after the public catalog (a released
@@ -225,6 +229,13 @@ private:
     bool                      pageReady = false;           // the live page has pulled getPlugins
     bool                      offlineSeen = false;         // "offline" was said; "back online" is owed
     juce::Array<juce::var>    pendingMessages;             // said before the page was up (start-up)
+    juce::Array<juce::var>    pendingInstalled;            // "installed" while there was no page: one summary if many (R120)
+    juce::StringArray         trayInstalled, trayFailed;   // results while hidden, told by the tray once the batch is done
+    juce::String              centerUpdateExpectedSha;     // the hash the Center update was asked for with (R025)
+    int                       timerTicks = 0;
+
+    void flushTrayNotice();
+    void forgetVersionsOfRemovedCopies (const juce::var& moveResult);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

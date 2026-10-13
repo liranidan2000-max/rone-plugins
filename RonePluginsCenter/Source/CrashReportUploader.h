@@ -10,12 +10,14 @@
 // Until Center 2.0 the GitHub token itself was compiled into the exe (CMake
 // RONE_CRASH_TOKEN), and anything compiled in can be pulled out: whoever did
 // could read every report - machine ids, file paths, stack traces - and flood
-// the tracker. Now the token lives only on the server (the website Worker's
-// CRASH_REPORT_TOKEN secret, worker/api/v1/crash.js), which also checks and
+// the tracker. Now the token lives only on the server: the website Worker's
+// GITHUB_CRASH_TOKEN + GITHUB_CRASH_REPO secrets (set with scripts\crash-secret.cmd
+// in WEBSITE RONE AUDIO), used by worker/api/v1/crash.js, which also checks and
 // rate-limits what it files. Reports wait on disk until the server takes them.
 // ============================================================================
 
 #include <juce_core/juce_core.h>
+#include <algorithm>
 #include "../../Shared/RoneCrashReporter.h"
 
 #ifndef RONE_API_BASE
@@ -25,7 +27,7 @@
 namespace CrashReportUploader
 {
 
-enum class Outcome { sent, drop, stop };
+enum class Outcome { sent, drop, stop, later };
 
 inline Outcome uploadOne (const juce::File& reportFile)
 {
@@ -46,7 +48,9 @@ inline Outcome uploadOne (const juce::File& reportFile)
         return Outcome::sent;                  // filed — delete the file
     if (status == 400 || status == 413 || status == 422)
         return Outcome::drop;                  // the server will never take this one
-    return Outcome::stop;                      // 429 / 5xx / not deployed yet: keep everything, try next pass
+    if (status >= 500 && status < 600)
+        return Outcome::later;                 // this one failed there: keep it, try the others (R283)
+    return Outcome::stop;                      // 429 / not deployed yet: keep everything, try next pass
 }
 
 // Drains the queue on a background thread. Throttled: at most one pass per
@@ -70,14 +74,29 @@ inline void uploadPendingAsync()
     {
         auto files = RoneCrashReporter::getQueueDir()
                          .findChildFiles (juce::File::findFiles, false, "*.json");
-        int sent = 0;
+
+        // Audit R283: oldest first, and a report the server failed on (5xx) goes
+        // to the back of the queue instead of blocking every report behind it on
+        // every pass. Never deleted on a 5xx - a missing server secret loses nothing.
+        std::sort (files.begin(), files.end(), [] (const juce::File& a, const juce::File& b)
+                   { return a.getLastModificationTime() < b.getLastModificationTime(); });
+
+        int sent = 0, failedInARow = 0;
         for (auto& f : files)
         {
             if (sent >= 20)
                 break;
             const auto outcome = uploadOne (f);
             if (outcome == Outcome::stop)
-                break;                          // network/server trouble — stop the pass
+                break;                          // network trouble or 429 — stop the pass
+            if (outcome == Outcome::later)
+            {
+                f.setLastModificationTime (juce::Time::getCurrentTime());
+                if (++failedInARow >= 2)
+                    break;                      // the server is struggling — next pass
+                continue;
+            }
+            failedInARow = 0;
             f.deleteFile();
             if (outcome == Outcome::sent)
                 ++sent;

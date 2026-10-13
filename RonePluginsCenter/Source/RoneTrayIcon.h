@@ -49,6 +49,33 @@ public:
         shownCount = n;
     }
 
+    // A line in the tray's notification while the window is hidden (audit R120).
+    // Windows only - the macOS menu bar has no balloon.
+    void notify (const juce::String& text)
+    {
+       #if JUCE_WINDOWS
+        if (text.isNotEmpty() && ! mainWindow.isVisible())
+            showInfoBubble ("RONE Plugins Center", text);
+       #else
+        juce::ignoreUnused (text);
+       #endif
+    }
+
+    // The X hides the Center to the tray. Said once, the first time (audit R120,
+    // R246): a user who closed it did not know it was still running.
+    void notifyHiddenOnce()
+    {
+       #if JUCE_WINDOWS
+        const auto marker = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                                .getChildFile ("RonePluginsCenter").getChildFile ("tray-notice-shown");
+        if (marker.existsAsFile())
+            return;
+        marker.getParentDirectory().createDirectory();
+        marker.replaceWithText ("1");
+        showInfoBubble ("RONE Plugins Center", "Still running in the tray - right-click the icon to quit.");
+       #endif
+    }
+
     void mouseDown (const juce::MouseEvent& e) override
     {
         juce::Process::makeForegroundProcess();
@@ -103,7 +130,7 @@ private:
         stopTimer();
 
         juce::PopupMenu menu;
-        menu.addItem (1, "Open RONE Center");
+        menu.addItem (1, "Open RONE Plugins Center");
         menu.addSeparator();
        #if JUCE_MAC
         menu.addItem (3, "Open at login", AutoStart::isSupported(), AutoStart::isEnabled());
