@@ -272,17 +272,40 @@ namespace PluginUninstaller
             if (path.containsAnyOf ("'\"\\")) { r.error = "Unexpected characters in " + path; return r; }
             quoted << " \\\"" << path << "\\\"";   // \"path\" inside the AppleScript string
         }
+        juce::String rmFailure;
         if (quoted.isNotEmpty())
         {
             // Same as the install: std::system, since a ChildProcess cannot show the
             // password dialog from a background thread.
+            //
+            // Audit R171: osascript's own words are kept, as InstallBatcher does -
+            // only -128 / "cancel" is the user saying no. Anything else (macOS
+            // protecting an app, a file in use) used to read as "password not
+            // given" and hid what was left behind.
+            const auto errFile = juce::File::getSpecialLocation (juce::File::tempDirectory)
+                                     .getChildFile ("rone-uninstall-" + juce::Uuid().toString().substring (0, 8) + ".err.txt");
+            errFile.getParentDirectory().createDirectory();
+            const bool canCapture = ! errFile.getFullPathName().containsAnyOf ("'\"\\$`");
             const auto cmd = juce::String ("osascript -e 'do shell script \"/bin/rm -rf")
-                           + quoted + "\" with administrator privileges'";
-            if (std::system (cmd.toRawUTF8()) != 0)
+                           + quoted + "\" with administrator privileges'"
+                           + (canCapture ? " 2>'" + errFile.getFullPathName() + "'" : juce::String());
+            const int status = std::system (cmd.toRawUTF8());
+            const auto err = errFile.loadFileAsString().trim();
+            errFile.deleteFile();
+
+            if (status != 0)
             {
-                r.declined = true;
-                r.error = "The administrator password was not given - nothing was removed.";
-                return r;
+                if (! canCapture || err.contains ("-128") || err.containsIgnoreCase ("cancel"))
+                {
+                    r.declined = true;
+                    r.error = "The administrator password was not given - nothing was removed.";
+                    return r;
+                }
+                rmFailure = err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
+                                             : "the removal could not start (code " + juce::String (status) + ")";
+                if (rmFailure.containsIgnoreCase ("not permitted"))
+                    rmFailure << " - allow RONE Plugins Center in System Settings > Privacy & Security > App Management,"
+                                 " then uninstall again";
             }
         }
         const bool entryGone = true;
@@ -299,6 +322,14 @@ namespace PluginUninstaller
             VersionChecker::clearInstalledVersion (p.registryKey);
 
         r.ok = entryGone && r.leftovers.isEmpty();
+       #if JUCE_MAC
+        if (rmFailure.isNotEmpty())
+        {
+            r.ok = false;
+            r.error = "Could not remove: " + rmFailure
+                    + (r.leftovers.isEmpty() ? juce::String() : ". Still there: " + r.leftovers.joinIntoString (", "));
+        }
+       #endif
         if (! r.ok && r.error.isEmpty())
             r.error = ! entryGone ? juce::String ("The uninstaller did not finish. Restart the computer and try again.")
                                   : "Some files could not be removed: " + r.leftovers.joinIntoString (", ");

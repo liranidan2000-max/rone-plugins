@@ -61,11 +61,23 @@ public:
         trayIcon = std::make_unique<RoneTrayIcon> (*mainWindow);
 
         if (auto* page = dynamic_cast<MainComponent*> (mainWindow->getContentComponent()))
+        {
             page->onUpdateCountChanged = [this] (int n)
             {
                 if (trayIcon != nullptr)
                     trayIcon->setUpdateCount (n);
             };
+            page->onTrayNotice = [this] (const juce::String& text)
+            {
+                if (trayIcon != nullptr)
+                    trayIcon->notify (text);
+            };
+        }
+        mainWindow->onClosedToTray = [this]
+        {
+            if (trayIcon != nullptr)
+                trayIcon->notifyHiddenOnce();
+        };
 
         AutoStart::applyDefaultOnce();   // on by default, once; the Settings toggle owns it afterwards
         AutoStart::refreshIfEnabled();   // an update may have moved the executable
@@ -168,7 +180,11 @@ private:
         void closeButtonPressed() override
         {
             setVisible (false);
+            if (onClosedToTray)
+                onClosedToTray();
         }
+
+        std::function<void()> onClosedToTray;   // the tray says it once (RoneTrayIcon::notifyHiddenOnce)
 
         // The page (WebView2) exists only while the window can be seen: hidden
         // in the tray or minimised, the Center keeps its backend and lets the
