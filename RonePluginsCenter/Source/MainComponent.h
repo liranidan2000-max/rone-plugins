@@ -52,6 +52,13 @@ public:
 
     // NetworkManager::Listener
     void onManifestReady  (const juce::Array<PluginInfo>& plugins, bool fromCache) override;
+    // The DEV CHANNEL: Liran's plug-ins in development, added after the public catalog (a released
+    // plug-in's public entry always wins). Fetched with every catalog refresh and on sign-in / out.
+    void applyCatalog (const juce::Array<PluginInfo>& plugins, bool fromCache);
+    void refreshDevChannel();
+    juce::Array<PluginInfo> withDevChannel (const juce::Array<PluginInfo>& publicPlugins) const;
+    juce::Array<PluginInfo> lastPublicPlugins, devPlugins;
+    bool lastPublicFromCache = false, devFetchInFlight = false;
     void onManifestError  (const juce::String& errorMessage) override;
     void onDownloadProgress (const juce::String& pluginId, double progress) override;
     void onDownloadStarted (const juce::String& pluginId) override;

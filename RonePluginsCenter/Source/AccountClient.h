@@ -75,6 +75,11 @@ public:
     /** True when a token exists, regardless of whether it is still valid. */
     bool hasStoredToken() const;
 
+    /** The DEV CHANNEL (/api/v1/app/dev): plug-ins in development, answered for Liran's accounts only.
+        `done` runs on the message thread with the raw JSON body, or an empty string for everyone else,
+        when signed out, offline, or on any error - the channel simply is not there. */
+    void fetchDevChannelAsync (std::function<void (juce::String body)> done);
+
 private:
     // Same 7-day offline tolerance as the license-key path: a working studio
     // must not go dark because the internet did. It gates the PASS only — a
@@ -113,6 +118,7 @@ private:
 
     juce::var post (const juce::String& path, const juce::var& body,
                     const juce::String& bearer, int& statusCodeOut);
+    juce::String getText (const juce::String& path, const juce::String& bearer, int& statusCodeOut);
 
     void applyServerState (const juce::var& response);
     void notifyChanged();

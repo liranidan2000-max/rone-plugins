@@ -150,6 +150,11 @@ private:
 
     // Parse the raw JSON body into PluginInfo structs.
     juce::Array<PluginInfo> parseManifest (const juce::String& jsonBody);
+public:
+    /** The DEV CHANNEL's answer (/api/v1/app/dev, same entry shape as versions.json) as cards marked dev.
+        Message thread or any thread: it only parses and reads the install state. */
+    juce::Array<PluginInfo> parseDevChannel (const juce::String& jsonBody);
+private:
     void captureManifestWide (const juce::var& root);
 
     static juce::File getManifestCacheFile();

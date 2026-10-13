@@ -64,6 +64,7 @@ struct PluginInfo
     // Center 2.0 catalog fields. All optional: an older manifest leaves them
     // empty and the page falls back to what it can say without them.
     bool              free = false;   // unlocked by any signed-in RONE account
+    bool              dev  = false;   // from the DEV CHANNEL: a plug-in in development, shown only to Liran's accounts
     juce::StringArray categories;     // "transitions", "space", "rhythm", "vocal", "mix"
     juce::StringArray tags;           // what a producer types: "riser", "vocal chop"
     juce::String      accent;         // the plugin's own neon, "#2BD9FF"

@@ -312,6 +312,43 @@ juce::var AccountClient::post (const juce::String& path, const juce::var& body,
     return parsed.isObject() ? parsed : juce::var();
 }
 
+juce::String AccountClient::getText (const juce::String& path, const juce::String& bearer, int& statusCodeOut)
+{
+    statusCodeOut = 0;
+    juce::URL url (juce::String (RONE_API_BASE) + path);
+    juce::String headers = "Accept: application/json";
+    if (bearer.isNotEmpty())
+        headers += "\r\nAuthorization: Bearer " + bearer;
+    auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
+                       .withConnectionTimeoutMs (15000)
+                       .withExtraHeaders (headers)
+                       .withStatusCode (&statusCodeOut);
+    auto stream = url.createInputStream (options);
+    return stream != nullptr ? stream->readEntireStreamAsString() : juce::String();
+}
+
+void AccountClient::fetchDevChannelAsync (std::function<void (juce::String)> done)
+{
+    juce::String current;
+    {
+        const juce::ScopedLock sl (lock);
+        current = token;
+    }
+    if (current.isEmpty())
+    {
+        postToMessageThread ([done] { done ({}); });
+        return;
+    }
+    juce::Thread::launch ([this, current, done]
+    {
+        const InFlight scope (inFlight);
+        int status = 0;
+        auto body = getText ("/app/dev", current, status);
+        if (status != 200) body.clear();          // 404 = not on the channel (every customer), anything else = no channel now
+        postToMessageThread ([done, body] { done (body); });
+    });
+}
+
 // ============================================================================
 // State from a server response
 // ============================================================================

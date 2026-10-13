@@ -330,6 +330,7 @@ MainComponent::MainComponent()
 
         emitToPage ("accountChanged", accountStatusVar());
         emitPluginsUpdated();
+        refreshDevChannel();      // signed in as Liran: the plug-ins in development appear; signed out: they go
     };
     accountClient.initialize();
     lastAccountCheckMs = juce::Time::currentTimeMillis();   // initialize() just asked the server
@@ -580,6 +581,7 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     // Free with any RONE account: before 2.0 the page never heard of it, and a
     // signed-out visitor saw RONE Clipper as LOCKED with no way in.
     if (info.free) obj->setProperty ("free", true);
+    if (info.dev)  obj->setProperty ("dev", true);    // a DEV CHANNEL card (Liran's own Center only)
 
     auto list = [] (const juce::StringArray& s)
     {
@@ -2311,6 +2313,48 @@ void MainComponent::reportCenterUpdateOutcome()
 // ============================================================================
 
 void MainComponent::onManifestReady (const juce::Array<PluginInfo>& plugins, bool fromCache)
+{
+    lastPublicPlugins = plugins;
+    lastPublicFromCache = fromCache;
+    applyCatalog (withDevChannel (plugins), fromCache);
+    refreshDevChannel();
+}
+
+juce::Array<PluginInfo> MainComponent::withDevChannel (const juce::Array<PluginInfo>& publicPlugins) const
+{
+    auto all = publicPlugins;
+    for (const auto& d : devPlugins)
+    {
+        bool released = false;
+        for (const auto& p : publicPlugins)
+            if (p.id == d.id) { released = true; break; }
+        if (! released) all.add (d);
+    }
+    return all;
+}
+
+void MainComponent::refreshDevChannel()
+{
+    if (devFetchInFlight) return;
+    devFetchInFlight = true;
+    accountClient.fetchDevChannelAsync ([safe = juce::Component::SafePointer<MainComponent> (this)] (juce::String body)
+    {
+        if (safe == nullptr) return;
+        safe->devFetchInFlight = false;
+        auto fresh = safe->networkManager.parseDevChannel (body);
+        // nothing changed (the usual answer, and every customer's): no second pass over the catalog
+        bool same = fresh.size() == safe->devPlugins.size();
+        for (int i = 0; same && i < fresh.size(); ++i)
+            same = fresh[i].id == safe->devPlugins[i].id && fresh[i].remoteVersion == safe->devPlugins[i].remoteVersion
+                && fresh[i].installedVersion == safe->devPlugins[i].installedVersion;
+        if (same) return;
+        safe->devPlugins = fresh;
+        if (safe->manifestEverLoaded)
+            safe->applyCatalog (safe->withDevChannel (safe->lastPublicPlugins), safe->lastPublicFromCache);
+    });
+}
+
+void MainComponent::applyCatalog (const juce::Array<PluginInfo>& plugins, bool fromCache)
 {
     // A refresh must not reset a card that is downloading, installing, waiting
     // for its DAW or uninstalling: before 2.0 it put them all back to "Update",

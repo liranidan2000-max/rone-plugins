@@ -160,6 +160,8 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .pill { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; padding: 2px 7px; border-radius: 6px; border: 1px solid rgb(var(--line2)); color: rgb(var(--tx3)); text-transform: uppercase; white-space: nowrap; }
 .pill-new { color: var(--acc); border-color: var(--acc); border-color: color-mix(in srgb, var(--acc) 50%, transparent); background: color-mix(in srgb, var(--acc) 10%, transparent); }
 .pill-free { color: #7DB2FF; border-color: rgba(61, 139, 255, .5); background: rgba(61, 139, 255, .1); }
+/* DEV CHANNEL: a plug-in in development, in Liran's own Center only */
+.pill-dev { color: #FFB45C; border-color: rgba(255, 166, 64, .55); background: rgba(255, 166, 64, .12); }
 .pill-own { color: #B18AFF; border-color: rgba(157, 107, 255, .4); }
 
 /* Nav item active highlight */

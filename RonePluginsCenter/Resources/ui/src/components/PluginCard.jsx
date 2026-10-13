@@ -112,6 +112,7 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
             <span className="font-mono text-[11px]">v{(plugin.remoteVersion || '').split('.').slice(0, 3).join('.')}</span>
             {categoriesOf(plugin)[0] && <><span aria-hidden="true">·</span><span>{catLabel(categoriesOf(plugin)[0])}</span></>}
             {isNew(plugin) && <span className="pill pill-new">{t('card.new')}</span>}
+            {plugin.dev && <span className="pill pill-dev" title="In development: only your account sees it">DEV</span>}
             {plugin.free && <span className="pill pill-free">{t('card.free')}</span>}
             {plugin.owned && !plugin.free && <span className="pill pill-own">{t('card.lifetime')}</span>}
           </div>

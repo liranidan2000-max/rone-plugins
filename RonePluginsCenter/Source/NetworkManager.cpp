@@ -747,6 +747,16 @@ static juce::StringArray stringList (const juce::var& v)
     return out;
 }
 
+juce::Array<PluginInfo> NetworkManager::parseDevChannel (const juce::String& jsonBody)
+{
+    const auto root = juce::JSON::parse (jsonBody);
+    if (! root.isObject() || ! (bool) root.getProperty ("ok", false) || ! root.getProperty ("plugins", {}).isArray())
+        return {};
+    auto list = parseManifest (jsonBody);
+    for (auto& p : list) p.dev = true;
+    return list;
+}
+
 juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonBody)
 {
     juce::Array<PluginInfo> result;
