@@ -53,9 +53,11 @@ Source: "..\RONEAnalyzer\build-ci\RONEAnalyzer_artefacts\Release\RONE Analyzer.e
   DestDir: "{app}"; \
   Flags: ignoreversion
 
-; The WebView2 loader has to sit beside the executable: JUCE loads it with
-; LoadLibrary at runtime, and without it the UI silently falls back to the
-; legacy IE control and shows an error page instead of the instrument.
+; Not needed by this build: the plugin and the standalone link WebView2's
+; loader statically (JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1 in the
+; product's CMakeLists.txt). The DLL is still installed for older builds on
+; disk that predate static linking and load it at runtime, and it is never
+; uninstalled because {app} is shared with them (audit R247).
 ; CI downloads the NuGet package to <workspace>\webview2 before compiling.
 Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebView2Loader.dll"; \
   DestDir: "{app}"; \
@@ -80,7 +82,7 @@ Source: "..\RONEAnalyzer\Resources\fonts\OFL-JetBrainsMono.txt"; DestDir: "{app}
 ; docs/manuals/tools). The Center's "Manual" menu entry opens it from here.
 Source: "..\docs\manuals\RONE Analyzer - User Manual.pdf"; \
   DestDir: "{app}\Manuals"; \
-  Flags: ignoreversion
+  Flags: ignoreversion restartreplace
 
 ; ============================================================================
 ; Shortcuts — a standalone application, unlike the plugins, is something you

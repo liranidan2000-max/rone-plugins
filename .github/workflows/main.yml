@@ -2,13 +2,25 @@ name: Smart Build & Release
 
 # ============================================================================
 # Smart Update — only build plugins that actually changed.
-# Commit-message tags: [win-only] or [mac-only] to skip a platform.
-# Tag pushes (v*) force-build everything + create a full bundled release.
+# Every product builds on BOTH platforms: [win-only] / [mac-only] are no longer
+# honoured (audit R127) - one version field covers both, so a one-platform
+# build left the other platform on its old installer under the new number.
+# No v* tag trigger (audit R132): a tag re-released every product. Never push
+# v* tags. A dry run of any branch is Actions > Run workflow (below).
 # ============================================================================
 on:
   push:
     branches: [main]
-    tags:     ['v*']
+  # Dry run (audit R128): builds, signs and packages the products named in
+  # 'products' on both platforms and keeps the installers as run artefacts,
+  # but never publishes - Release and Update versions.json run for a push only.
+  # Pick a branch in the Run workflow menu to try its main.yml before main.
+  workflow_dispatch:
+    inputs:
+      products:
+        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
+        required: true
+        default: stutter
 
 # Read-only by default. Only 'release' gets contents: write (gh release
 # upload/edit/create). update-manifest pushes versions.json with GH_PAT
@@ -35,6 +47,7 @@ jobs:
       has_windows:    ${{ steps.matrix.outputs.has_windows }}
       has_macos:      ${{ steps.matrix.outputs.has_macos }}
       changed:        ${{ steps.matrix.outputs.changed }}
+      skip_validate:  ${{ steps.matrix.outputs.skip_validate }}
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -42,74 +55,108 @@ jobs:
           fetch-depth: 2
           submodules: false
 
+      # Shared/tests/** and Shared/check-vendored-copies.sh never ship, so they
+      # rebuild nothing (Shared review, finding 4). dorny/paths-filter ORs a
+      # filter's patterns: a plain '!Shared/tests/**' line would match every
+      # other file of the push and rebuild every product. The exclusion is
+      # therefore written inside three positive patterns (picomatch extglobs,
+      # checked against picomatch 2.3 and 4.0 with dot: true):
+      #   'Shared/!(tests|check-vendored-copies.sh)'  a file directly in Shared/
+      #   'Shared/!(tests)/**/*'                      a file in a subfolder whose
+      #                                               name does not start with 'tests'
+      #   'Shared/tests?*/**/*'                       ...or is longer than 'tests'
+      # (picomatch's !(tests) before a '/' also refuses 'testsX', hence the third.)
+      # Every other Shared/ path matches exactly as 'Shared/**' did.
       - name: Path filter
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: github.event_name == 'push'
         uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # v3
         id: filter
         with:
           filters: |
             reverse_reverb:
               - 'ReverseReverbVST'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/ReverseReverb.iss'
               - 'docs/manuals/RONE Reverse Reverb - User Manual.pdf'
               - '.github/workflows/main.yml'
             stems_fixer:
               - 'RoneStemsFixer'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneStemsFixer.iss'
               - '.github/workflows/main.yml'
             stutter:
               - 'RoneStutter'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneStutter.iss'
               - 'docs/manuals/RONE Stutter - User Manual.pdf'
               - '.github/workflows/main.yml'
             stucker:
               - 'RoneStucker'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneStucker.iss'
               - 'docs/manuals/RONE Stucker - User Manual.pdf'
               - '.github/workflows/main.yml'
             throw:
               - 'RoneThrow'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneThrow.iss'
               - 'docs/manuals/RONE Throw - User Manual.pdf'
               - '.github/workflows/main.yml'
             clipper:
               - 'RoneClipper'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneClipper.iss'
               - 'docs/manuals/RONE Clipper - User Manual.pdf'
               - '.github/workflows/main.yml'
             rise:
               - 'RoneRise'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneRise.iss'
               - 'docs/manuals/RONE Rise - User Manual.pdf'
               - '.github/workflows/main.yml'
             iron:
               - 'RoneIron'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneIron.iss'
               - 'docs/manuals/RONE Iron - User Manual.pdf'
               - '.github/workflows/main.yml'
             flanger:
               - 'rone-flanger-'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneFlanger.iss'
               - 'docs/manuals/RONE Flanger - User Manual.pdf'
               - '.github/workflows/main.yml'
             sync_verb:
               - 'rone sync verb'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneSyncVerb.iss'
               - 'docs/manuals/RONE Sync Verb - User Manual.pdf'
               - '.github/workflows/main.yml'
             afterspace:
               - 'RONE AFTER SPACE/**'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RoneAfterspace.iss'
               - 'docs/manuals/RONE AFTERSPACE - User Manual.pdf'
               - '.github/workflows/main.yml'
@@ -120,7 +167,9 @@ jobs:
               - '.github/workflows/main.yml'
             plugins_center:
               - 'RonePluginsCenter/**'
-              - 'Shared/**'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests)/**/*'
+              - 'Shared/tests?*/**/*'
               - 'installer/RONE_Plugins.iss'
               - 'installer/mac/**'
               - 'scripts/ci/make-center-dmg.sh'
@@ -129,31 +178,55 @@ jobs:
       - name: Generate build matrices
         id: matrix
         shell: bash
+        env:
+          EVENT:             ${{ github.event_name }}
+          DISPATCH_PRODUCTS: ${{ github.event.inputs.products }}
         run: |
-          IS_TAG=${{ startsWith(github.ref, 'refs/tags/v') }}
           MSG=$(git log -1 --format=%s)
 
+          # [win-only] / [mac-only] are retired (audit R127): both platforms always
+          # build. Only a warning - failing here would drop this push's changes for
+          # good, because the path filter only diffs each push's own commits.
           SKIP_WIN=false; SKIP_MAC=false
-          [[ "$MSG" == *"[mac-only]"* ]] && SKIP_WIN=true
-          [[ "$MSG" == *"[win-only]"* ]] && SKIP_MAC=true
+          if [[ "$MSG" == *"[mac-only]"* || "$MSG" == *"[win-only]"* ]]; then
+            echo "::warning::[win-only]/[mac-only] is no longer honoured - one version field covers both platforms (audit R127); building both"
+          fi
 
-          # Change flags — tag push forces all
-          if [ "$IS_TAG" = "true" ]; then
-            RR=true; SF=true; ST=true; SK=true; FL=true; SV=true; PC=true; AN=true; AS=true; TH=true; CL=true; RI=true; IR=true
-          else
-            RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
-            SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
-            ST=${{ steps.filter.outputs.stutter         || 'false' }}
-            SK=${{ steps.filter.outputs.stucker         || 'false' }}
-            TH=${{ steps.filter.outputs.throw           || 'false' }}
-            CL=${{ steps.filter.outputs.clipper         || 'false' }}
-            RI=${{ steps.filter.outputs.rise            || 'false' }}
-            IR=${{ steps.filter.outputs.iron            || 'false' }}
-            FL=${{ steps.filter.outputs.flanger         || 'false' }}
-            SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
-            PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
-            AN=${{ steps.filter.outputs.analyzer        || 'false' }}
-            AS=${{ steps.filter.outputs.afterspace      || 'false' }}
+          # [skip-validate] in the subject: pluginval and auval do not run (audit
+          # R133). They only warn today; this is the way past them once they block.
+          SKIP_VALIDATE=false
+          if [[ "$MSG" == *"[skip-validate]"* ]]; then SKIP_VALIDATE=true; fi
+
+          # Change flags: what the path filter saw in this push...
+          RR=${{ steps.filter.outputs.reverse_reverb || 'false' }}
+          SF=${{ steps.filter.outputs.stems_fixer    || 'false' }}
+          ST=${{ steps.filter.outputs.stutter         || 'false' }}
+          SK=${{ steps.filter.outputs.stucker         || 'false' }}
+          TH=${{ steps.filter.outputs.throw           || 'false' }}
+          CL=${{ steps.filter.outputs.clipper         || 'false' }}
+          RI=${{ steps.filter.outputs.rise            || 'false' }}
+          IR=${{ steps.filter.outputs.iron            || 'false' }}
+          FL=${{ steps.filter.outputs.flanger         || 'false' }}
+          SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
+          PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
+          AN=${{ steps.filter.outputs.analyzer        || 'false' }}
+          AS=${{ steps.filter.outputs.afterspace      || 'false' }}
+
+          # ...or what a dry run names (workflow_dispatch, audit R128). Release and
+          # Update versions.json never run for one.
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            want=",$(printf '%s' "$DISPATCH_PRODUCTS" | tr -d ' ' | tr 'A-Z' 'a-z'),"
+            for p in $(printf '%s' "$want" | tr ',' ' '); do
+              case "$p" in
+                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
+                *) echo "::error::dry run: unknown product '$p'"; exit 1 ;;
+              esac
+            done
+            pick() { case "$want" in *,all,*|*",$1,"*) echo true ;; *) echo false ;; esac; }
+            RR=$(pick reverse_reverb); SF=$(pick stems_fixer); ST=$(pick stutter); SK=$(pick stucker)
+            TH=$(pick throw); CL=$(pick clipper); RI=$(pick rise); IR=$(pick iron); FL=$(pick flanger)
+            SV=$(pick sync_verb); PC=$(pick plugins_center); AN=$(pick analyzer); AS=$(pick afterspace)
+            echo "dry run, nothing is published: $DISPATCH_PRODUCTS"
           fi
 
           win='[]'; mac='[]'; changed='[]'
@@ -202,6 +275,7 @@ jobs:
           echo "has_windows=$([ "$win" != '[]' ] && echo true || echo false)" >> $GITHUB_OUTPUT
           echo "has_macos=$([ "$mac" != '[]' ] && echo true || echo false)"   >> $GITHUB_OUTPUT
           echo "changed=$changed" >> $GITHUB_OUTPUT
+          echo "skip_validate=$SKIP_VALIDATE" >> $GITHUB_OUTPUT
 
           # Summary
           echo "### Smart Build" >> $GITHUB_STEP_SUMMARY
@@ -233,25 +307,51 @@ jobs:
       ESIGNER_TOTP_SECRET:   ${{ secrets.ESIGNER_TOTP_SECRET }}
       WIN_SIGN_PFX_BASE64:   ${{ secrets.WIN_SIGN_PFX_BASE64 }}
       WIN_SIGN_PFX_PASSWORD: ${{ secrets.WIN_SIGN_PFX_PASSWORD }}
-      GITHUB_TOKEN:          ${{ secrets.GITHUB_TOKEN }}
+      # No GITHUB_TOKEN here (audit R051): only the two steps that run
+      # sign-windows.ps1 get it (it reads the CodeSignTool release with it).
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.detect-changes.outputs.matrix_windows) }}
 
     steps:
-      # --- Checkout ---
-      - name: Configure git PAT
-        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+      # Before the build cache is restored: anything in the artefacts folder
+      # older than this file did not come from this job's build (audit R129).
+      - name: Mark job start
+        shell: pwsh
+        run: New-Item -ItemType File -Force -Path (Join-Path $env:RUNNER_TEMP 'job-start') | Out-Null
 
+      # --- Checkout ---
+      # Audit R027: GH_PAT reaches only the submodule fetch below. The checkout
+      # runs with the job token and leaves no credential in .git/config, and the
+      # PAT's insteadOf rule is removed again before any third-party step
+      # (toolchain set-up, caches, downloads, pluginval, the build) runs.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: false
-          token: ${{ secrets.GH_PAT }}
+          persist-credentials: false
 
       - name: Init submodule — ${{ matrix.folder }}
-        # AFTERSPACE lives in-repo (not a submodule) — tolerate that case
-        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}" || echo "::notice::${{ matrix.folder }} is not a submodule (in-repo sources)"
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FOLDER: ${{ matrix.folder }}
+        run: |
+          # AFTERSPACE lives in-repo (not a submodule) - tolerate that case
+          if ! git ls-files --stage -- "$FOLDER" | awk '$1 == "160000" { s = 1 } END { exit !s }'; then
+            echo "::notice::$FOLDER is not a submodule (in-repo sources)"
+            exit 0
+          fi
+          rule="url.https://${GH_PAT}@github.com/.insteadOf"
+          trap 'git config --global --unset-all "$rule" || true' EXIT
+          git config --global "$rule" "https://github.com/"
+          for i in 1 2 3; do
+            if git submodule update --init --depth 1 -- "$FOLDER"; then exit 0; fi
+            echo "::warning::submodule $FOLDER could not be fetched (try $i)"
+            sleep $((10 * i))
+          done
+          echo "::error::submodule $FOLDER could not be fetched after 3 tries"
+          exit 1
 
       # --- MSVC ---
       - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
@@ -307,6 +407,32 @@ jobs:
           Expand-Archive asiosdk.zip -DestinationPath asiosdk_root -Force
           $common = Get-ChildItem asiosdk_root -Recurse -Directory -Filter common | Select-Object -First 1
           if (-not $common) { Write-Error "ASIO SDK layout unexpected"; exit 1 }
+          # Audit R130: the download is not pinned. The sources the analyzer
+          # compiles (common/) are compared with ASIO SDK 2.3.4 as last checked;
+          # a difference only warns for now - docs/CI-RELEASE.md has the step
+          # that makes it an error once a run shows they match.
+          Write-Host "asiosdk.zip sha256 $((Get-FileHash asiosdk.zip -Algorithm SHA256).Hash.ToLower())"
+          $asioExpected = [ordered]@{
+            'asio.cpp'        = '4ecee2bfaebd8b0777db96175d2b2ea8d0cd684dfaf9651480c44b0ebec0fd61'
+            'asio.h'          = '93d2f80d49b4ac9c963514e7c1307ab5111d8104246192233745beb058534ea1'
+            'asiodrvr.cpp'    = '47cf72e30cc04bc37fe609a467f833e85434f76b27b9cd19186358e4c50a6982'
+            'asiodrvr.h'      = 'ca2d65191d4914cb405b5c0b9e0af932195b2734e8781cd4d8c94e6526fb8926'
+            'asiosys.h'       = 'f44a1ed0fd7c056ff047aeebc4c05a8c185f0585a24d8debc55c70107777dbef'
+            'combase.cpp'     = '1f8ef8b79de26c0435ff6544352af36327643421491c353b059d86e0e344cd23'
+            'combase.h'       = '29d1ccf49c332fdcdc7abddb32f5adf9d475198eb0283b2ca19c450f35222b21'
+            'debugmessage.cpp'= '5f0d92d18695f4b7847aed3a2108bfb552ffa5e17dbd20440eac0fbf32a04d62'
+            'dllentry.cpp'    = 'f7b813e0d6191f0c973409780c3305e6ba1e72e3e6e5cf8f5125e7decdf589a2'
+            'iasiodrv.h'      = '86ad4788452c74823653cf57d4bd557c48bb6542d7e6eb7fff80102c705a066d'
+            'register.cpp'    = 'b1a09ddd5245f336ee9c1a0a38099cf146daff5212990a052245e14d5798e22d'
+            'wxdebug.h'       = 'b4c7293a3c7b8cdf6dd19ce7ae5766674d7f581522bd508dc6e6d6b0384785da'
+          }
+          $asioDiff = 0
+          foreach ($k in $asioExpected.Keys) {
+            $f = Join-Path $common.FullName $k
+            $h = if (Test-Path $f) { (Get-FileHash $f -Algorithm SHA256).Hash.ToLower() } else { 'missing' }
+            if ($h -ne $asioExpected[$k]) { $asioDiff++; Write-Host "::warning::ASIO SDK common/$k is $h, not the 2.3.4 file checked before ($($asioExpected[$k]))" }
+          }
+          if ($asioDiff -eq 0) { Write-Host "ASIO SDK common/ is the 2.3.4 checked before ($($asioExpected.Count) files)" }
           "RONE_ASIO_SDK_ROOT=$($common.Parent.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "ASIO common dir: $($common.FullName)"
 
@@ -363,9 +489,26 @@ jobs:
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel
 
+      # Log only (audit R129): a binary older than this job came out of the
+      # restored build cache, not this build - the suspected cause of #147.
+      # Nothing is deleted or failed yet; docs/CI-RELEASE.md has the next stage.
+      - name: Stale binary check (log only)
+        continue-on-error: true
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          $start = (Get-Item (Join-Path $env:RUNNER_TEMP 'job-start')).LastWriteTimeUtc
+          $dir = "${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
+          if (-not (Test-Path $dir)) { Write-Host "no $dir - nothing to check"; exit 0 }
+          $stale = @(Get-ChildItem $dir -Recurse -File -Include *.exe,*.vst3,*.dll | Where-Object { $_.LastWriteTimeUtc -lt $start })
+          foreach ($f in $stale) { Write-Host "::warning::stale binary, older than this job (build cache?): $($f.FullName) $($f.LastWriteTimeUtc.ToString('u'))" }
+          Write-Host "$($stale.Count) binaries older than this job in $dir"
+
       # --- Code signing (Authenticode) - a no-op until the secrets exist ---
       - name: Sign binaries
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           $backend = (& scripts/ci/sign-windows.ps1 -Status | Select-Object -Last 1)
           "RONE_SIGN_BACKEND=$backend" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -375,37 +518,94 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-      # --- pluginval (VST3 sanity check) ---
+      # --- pluginval (VST3 sanity check) - warns, never fails the build ---
+      # Audit R133: '&' on the GUI-subsystem pluginval.exe did not wait for it,
+      # so the step took 1-2 s and validated nothing. Start-Process waits (20
+      # minutes at most per bundle), every .vst3 is checked rather than the first
+      # one, and the log and the exit code are printed. [skip-validate] in the
+      # commit subject skips it.
       - name: Run pluginval
-        if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer'
+        if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer' && needs.detect-changes.outputs.skip_validate != 'true'
         continue-on-error: true
+        timeout-minutes: 45
         shell: pwsh
         run: |
           $ErrorActionPreference = "Continue"
-          Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_Windows.zip" -OutFile pluginval.zip
-          Expand-Archive pluginval.zip -DestinationPath pluginval_bin -Force
-          $vst3 = Get-ChildItem -Path "${{ matrix.folder }}/build-ci" -Recurse -Filter "*.vst3" -Directory | Select-Object -First 1
-          if ($vst3) {
-            Write-Host "Running pluginval on $($vst3.FullName)"
-            & ".\pluginval_bin\pluginval.exe" --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 60000 "$($vst3.FullName)"
-          } else {
-            Write-Host "::warning::No .vst3 found for pluginval"
+          $zip = "pluginval.zip"
+          for ($i = 1; $i -le 3; $i++) {
+            try { Invoke-WebRequest -Uri "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_Windows.zip" -OutFile $zip -ErrorAction Stop; break }
+            catch { Remove-Item $zip -ErrorAction SilentlyContinue; Write-Host "::warning::pluginval download failed (try $i): $_"; Start-Sleep -Seconds (5 * $i) }
+          }
+          if (-not (Test-Path $zip)) { Write-Host "::warning::pluginval could not be downloaded - not validated"; exit 0 }
+          # Audit R130: the tool runs on the build machine. Its hash is printed
+          # until it is pinned here (docs/CI-RELEASE.md); a pinned mismatch skips it.
+          $pinned = ""
+          $h = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          Write-Host "pluginval_Windows.zip v1.0.3 sha256 $h"
+          if ($pinned -and $h -ne $pinned) { Write-Host "::warning::pluginval_Windows.zip is $h, not the pinned $pinned - not run"; exit 0 }
+          Expand-Archive $zip -DestinationPath pluginval_bin -Force
+          $bundles = @(Get-ChildItem -Path "${{ matrix.folder }}/build-ci" -Recurse -Filter "*.vst3" -Directory)
+          if ($bundles.Count -eq 0) { Write-Host "::warning::No .vst3 found for pluginval"; exit 0 }
+          foreach ($v in $bundles) {
+            Write-Host "Running pluginval on $($v.FullName)"
+            $log = Join-Path $env:RUNNER_TEMP ("pluginval-" + $v.BaseName + ".log")
+            $p = Start-Process -FilePath ".\pluginval_bin\pluginval.exe" -NoNewWindow -PassThru `
+                   -ArgumentList @('--strictness-level', '5', '--validate-in-process', '--skip-gui-tests', '--timeout-ms', '60000', "`"$($v.FullName)`"") `
+                   -RedirectStandardOutput $log -RedirectStandardError "$log.err"
+            $null = $p.Handle   # keeps ExitCode readable once the process has gone
+            if (-not $p.WaitForExit(1200000)) {
+              Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+              Write-Host "::warning::pluginval did not finish within 20 minutes on $($v.Name)"
+              continue
+            }
+            Get-Content -Path $log, "$log.err" -ErrorAction SilentlyContinue
+            if ($p.ExitCode -ne 0) { Write-Host "::warning::pluginval failed for ${{ matrix.plugin_id }} ($($v.Name)), exit code $($p.ExitCode)" }
+            else { Write-Host "pluginval passed: $($v.Name)" }
           }
 
       # --- Package with Inno Setup ---
       - name: Install Inno Setup
-        run: choco install innosetup --yes --no-progress
+        run: |
+          choco install innosetup --yes --no-progress
+          $rc = $LASTEXITCODE
+          # Audit R130: not pinned yet. The version this runner got, for the pin
+          # (docs/CI-RELEASE.md); the path below is what Compile installer runs.
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (Test-Path $iscc) { Write-Host "Inno Setup in use: $((Get-Item $iscc).VersionInfo.ProductVersion)" }
+          else { Write-Host "::warning::no Inno Setup 6 at $iscc" }
+          exit $rc
 
       - name: Download WebView2 Runtime bootstrapper
         if: matrix.needs_webview2 == 'true'
         shell: pwsh
         run: |
-          Write-Host "Downloading Microsoft Edge WebView2 evergreen bootstrapper..."
-          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" `
-            -OutFile "installer\MicrosoftEdgeWebview2Setup.exe"
+          # Every installer ships this file and runs it on the customer's machine
+          # (audit R130): it must carry a valid Microsoft signature. Three tries,
+          # so a broken download is fetched again instead of shipped or fatal.
+          $out = "installer\MicrosoftEdgeWebview2Setup.exe"
+          $ok = $false
+          for ($i = 1; $i -le 3 -and -not $ok; $i++) {
+            Write-Host "Downloading Microsoft Edge WebView2 evergreen bootstrapper (try $i)..."
+            try {
+              Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $out -ErrorAction Stop
+              $sig = Get-AuthenticodeSignature $out
+              if ($sig.Status -eq 'Valid' -and $sig.SignerCertificate.Subject -match 'O=Microsoft Corporation') {
+                Write-Host "Signed: $($sig.SignerCertificate.Subject)"
+                $ok = $true
+              } else {
+                Write-Host "::warning::bootstrapper signature $($sig.Status) [$($sig.SignerCertificate.Subject)] (try $i)"
+              }
+            } catch {
+              Write-Host "::warning::bootstrapper download failed (try $i): $_"
+            }
+            if (-not $ok -and $i -lt 3) { Start-Sleep -Seconds (10 * $i) }
+          }
+          if (-not $ok) { Write-Host "::error::no validly Microsoft-signed WebView2 bootstrapper after 3 tries - not packaged"; exit 1 }
 
       - name: Compile installer
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Force -Path build-output
           # The exact string the manifest will carry: <CMake base>.<run>.
@@ -476,18 +676,75 @@ jobs:
         include: ${{ fromJson(needs.detect-changes.outputs.matrix_macos) }}
 
     steps:
-      # --- Checkout ---
-      - name: Configure git PAT
-        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+      # Before the build cache is restored (audit R129, see the Windows leg).
+      - name: Mark job start
+        run: touch "$RUNNER_TEMP/job-start"
 
+      # --- Checkout ---
+      # Audit R027: GH_PAT reaches only the submodule fetch below. The checkout
+      # runs with the job token and leaves no credential in .git/config, and the
+      # PAT's insteadOf rule is removed again before any third-party step
+      # (toolchain set-up, caches, downloads, pluginval, the build) runs.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           submodules: false
-          token: ${{ secrets.GH_PAT }}
+          persist-credentials: false
 
       - name: Init submodule — ${{ matrix.folder }}
-        # AFTERSPACE lives in-repo (not a submodule) — tolerate that case
-        run: git submodule update --init --depth 1 -- "${{ matrix.folder }}" || echo "::notice::${{ matrix.folder }} is not a submodule (in-repo sources)"
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FOLDER: ${{ matrix.folder }}
+        run: |
+          # AFTERSPACE lives in-repo (not a submodule) - tolerate that case
+          if ! git ls-files --stage -- "$FOLDER" | awk '$1 == "160000" { s = 1 } END { exit !s }'; then
+            echo "::notice::$FOLDER is not a submodule (in-repo sources)"
+            exit 0
+          fi
+          rule="url.https://${GH_PAT}@github.com/.insteadOf"
+          trap 'git config --global --unset-all "$rule" || true' EXIT
+          git config --global "$rule" "https://github.com/"
+          for i in 1 2 3; do
+            if git submodule update --init --depth 1 -- "$FOLDER"; then exit 0; fi
+            echo "::warning::submodule $FOLDER could not be fetched (try $i)"
+            sleep $((10 * i))
+          done
+          echo "::error::submodule $FOLDER could not be fetched after 3 tries"
+          exit 1
+
+      # --- The Center's page (audit R032/R197) ---
+      # CMake embeds the committed Resources/ui/dist as it is, so dist/ must be
+      # the build of the committed src/ (test/dist-fresh.test.mjs, once the
+      # Center carries it). Run once, on this leg: /bin/sh expands the test glob
+      # on any Node, and a failure here holds the Center back on both platforms
+      # (Release publishes a product only when every platform built).
+      - name: Center page tests (npm ci && npm test)
+        if: matrix.plugin_id == 'plugins_center'
+        working-directory: RonePluginsCenter/Resources/ui
+        run: |
+          echo "node $(node --version), npm $(npm --version)"
+          ok=0
+          for i in 1 2 3; do
+            if npm ci --no-audit --no-fund; then ok=1; break; fi
+            echo "::warning::npm ci failed (try $i)"
+            rm -rf node_modules
+            sleep $((15 * i))
+          done
+          if [ "$ok" != 1 ]; then echo "::error::npm ci failed 3 times - the page tests did not run"; exit 1; fi
+          npm test
+
+      # Audit R122: a Mac Center records no installed build, so a rebuild that
+      # keeps the base version the manifest already carries never reaches Macs.
+      - name: Center version check (warning only)
+        if: matrix.plugin_id == 'plugins_center'
+        continue-on-error: true
+        run: |
+          base=$(grep -oE 'VERSION +[0-9]+\.[0-9]+\.[0-9]+' RonePluginsCenter/CMakeLists.txt | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          live=$(jq -r '.center_installer.version // ""' versions.json 2>/dev/null || true)
+          echo "RonePluginsCenter project(VERSION) ${base:-?}, versions.json center_installer.version ${live:-?}"
+          if [ -n "$base" ] && [ "$base" = "$(printf '%s' "$live" | cut -d. -f1-3)" ]; then
+            echo "::warning::RonePluginsCenter changed but project(VERSION) is still $base, the base of the live $live - a Mac Center does not take a same-base rebuild (audit R122). Bump project(VERSION) in RonePluginsCenter/CMakeLists.txt."
+          fi
 
       # --- Caches ---
       - name: Build cache
@@ -540,6 +797,20 @@ jobs:
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel 3
 
+      # Log only (audit R129), as on Windows.
+      - name: Stale binary check (log only)
+        continue-on-error: true
+        timeout-minutes: 5
+        run: |
+          A="${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
+          if [ ! -d "$A" ]; then echo "no $A - nothing to check"; exit 0; fi
+          n=0
+          while IFS= read -r f; do
+            echo "::warning::stale binary, older than this job (build cache?): $f"
+            n=$((n + 1))
+          done < <(find "$A" -type f -perm -u+x ! -newer "$RUNNER_TEMP/job-start")
+          echo "$n binaries older than this job in $A"
+
       # --- Code signing (Developer ID) - a no-op until the secrets exist ---
       - name: Import signing identity
         run: bash scripts/ci/sign-macos.sh import
@@ -547,21 +818,69 @@ jobs:
       - name: Sign bundles
         run: bash scripts/ci/sign-macos.sh sign "${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
 
-      # --- pluginval (VST3 sanity check) ---
+      # --- pluginval (VST3 sanity check) - warns, never fails the build ---
+      # Every .vst3 now, not only the first (audit R133); [skip-validate] in the
+      # commit subject skips it. Stays warning-only until a log shows it really
+      # runs its tests on these runners (docs/CI-RELEASE.md).
       - name: Run pluginval
-        if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer'
+        if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer' && needs.detect-changes.outputs.skip_validate != 'true'
         continue-on-error: true
+        timeout-minutes: 45
         run: |
-          curl -L -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_macOS.zip
-          unzip -q pluginval.zip -d pluginval_bin
+          got=0
+          for i in 1 2 3; do
+            if curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_macOS.zip; then got=1; break; fi
+            echo "::warning::pluginval download failed (try $i)"; sleep $((5 * i))
+          done
+          if [ "$got" != 1 ]; then echo "::warning::pluginval could not be downloaded - not validated"; exit 0; fi
+          # Audit R130: printed until pinned here (docs/CI-RELEASE.md).
+          pinned=""
+          h=$(shasum -a 256 pluginval.zip | awk '{print $1}')
+          echo "pluginval_macOS.zip v1.0.3 sha256 $h"
+          if [ -n "$pinned" ] && [ "$h" != "$pinned" ]; then echo "::warning::pluginval_macOS.zip is $h, not the pinned $pinned - not run"; exit 0; fi
+          unzip -q -o pluginval.zip -d pluginval_bin
           chmod +x "pluginval_bin/pluginval.app/Contents/MacOS/pluginval"
-          VST3=$(find "${{ matrix.folder }}/build-ci" -name "*.vst3" -type d | head -1)
-          if [ -n "$VST3" ]; then
+          n=0
+          while IFS= read -r VST3; do
+            n=$((n + 1))
             echo "Running pluginval on $VST3"
-            "pluginval_bin/pluginval.app/Contents/MacOS/pluginval" --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 60000 "$VST3" || echo "::warning::pluginval reported issues for ${{ matrix.plugin_id }}"
-          else
-            echo "::warning::No .vst3 found for pluginval"
-          fi
+            "pluginval_bin/pluginval.app/Contents/MacOS/pluginval" --strictness-level 5 --validate-in-process --skip-gui-tests --timeout-ms 60000 "$VST3" </dev/null \
+              || echo "::warning::pluginval reported issues for ${{ matrix.plugin_id }} ($(basename "$VST3"))"
+          done < <(find "${{ matrix.folder }}/build-ci" -name "*.vst3" -type d -prune)
+          if [ "$n" -eq 0 ]; then echo "::warning::No .vst3 found for pluginval"; fi
+
+      # --- auval (Audio Unit validation) - warns only for now (audit R133) ---
+      # The AUs were packaged without ever being validated. Each .component is
+      # registered in this runner's user folder and checked with auval.
+      - name: Run auval
+        if: matrix.plugin_id != 'plugins_center' && matrix.plugin_id != 'stems_fixer' && needs.detect-changes.outputs.skip_validate != 'true'
+        continue-on-error: true
+        timeout-minutes: 20
+        run: |
+          A="${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
+          COMP="$HOME/Library/Audio/Plug-Ins/Components"
+          mkdir -p "$COMP"
+          n=0
+          while IFS= read -r c; do
+            n=$((n + 1)); name=$(basename "$c"); plist="$c/Contents/Info.plist"
+            type=$(/usr/libexec/PlistBuddy -c 'Print :AudioComponents:0:type' "$plist" 2>/dev/null || true)
+            sub=$(/usr/libexec/PlistBuddy -c 'Print :AudioComponents:0:subtype' "$plist" 2>/dev/null || true)
+            manu=$(/usr/libexec/PlistBuddy -c 'Print :AudioComponents:0:manufacturer' "$plist" 2>/dev/null || true)
+            if [ -z "$type" ] || [ -z "$sub" ] || [ -z "$manu" ]; then
+              echo "::warning::$name: no AudioComponents entry in its Info.plist - not validated"; continue
+            fi
+            rm -rf "$COMP/$name"; cp -R "$c" "$COMP/"
+            killall -9 AudioComponentRegistrar >/dev/null 2>&1 || true
+            echo "auval -v $type $sub $manu   ($name)"
+            rc=0; auval -v "$type" "$sub" "$manu" > "$RUNNER_TEMP/auval.log" 2>&1 </dev/null || rc=$?
+            if [ "$rc" -eq 0 ] && grep -q "AU VALIDATION SUCCEEDED" "$RUNNER_TEMP/auval.log"; then
+              tail -n 5 "$RUNNER_TEMP/auval.log"
+            else
+              cat "$RUNNER_TEMP/auval.log"
+              echo "::warning::auval failed for $name ($type $sub $manu), exit code $rc"
+            fi
+          done < <(find "$A" -name "*.component" -type d -prune 2>/dev/null)
+          if [ "$n" -eq 0 ]; then echo "no .component for ${{ matrix.plugin_id }} - nothing to validate"; fi
 
       # --- Package ---
       - name: Create macOS installer
@@ -681,6 +1000,57 @@ jobs:
             rm -rf staging
           fi
 
+      # --- What no Mac tester sees before a customer does (audit R077) ---
+      # Warnings only: both architectures in every binary, the minimum macOS
+      # each slice asks for (10.15 Intel, 11.0 Apple silicon), the .pkg's
+      # payload as macOS will install it, and that its preinstall parses.
+      - name: Check the Mac build (warnings only)
+        continue-on-error: true
+        timeout-minutes: 10
+        run: |
+          A="${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
+          ver_gt() { awk -v a="$1" -v b="$2" 'BEGIN { n = split(a, x, "."); m = split(b, y, "."); k = n > m ? n : m
+            for (i = 1; i <= k; i++) { if (x[i] + 0 > y[i] + 0) exit 0; if (x[i] + 0 < y[i] + 0) exit 1 } exit 1 }'; }
+          if [ -d "$A" ]; then
+            while IFS= read -r b; do
+              while IFS= read -r f; do
+                file -b "$f" | grep -q 'Mach-O' || continue
+                rel=${f#"$A"/}
+                archs=$(lipo -archs "$f" 2>/dev/null || true)
+                echo "$rel: [$archs]"
+                for want in x86_64 arm64; do
+                  case " $archs " in *" $want "*) ;; *) echo "::warning::$rel has no $want slice"; continue ;; esac
+                  minos=$(vtool -arch "$want" -show-build "$f" 2>/dev/null | awk '$1 == "minos" { print $2; exit }')
+                  if [ -z "$minos" ]; then
+                    minos=$(otool -arch "$want" -l "$f" 2>/dev/null | awk '/LC_VERSION_MIN_MACOSX/ { m = 1 } m && $1 == "version" { print $2; exit }')
+                  fi
+                  limit=10.15; if [ "$want" = arm64 ]; then limit=11.0; fi
+                  echo "  $want minos ${minos:-?}"
+                  if [ -z "$minos" ]; then echo "::warning::$rel ($want): no minimum macOS found"
+                  elif ver_gt "$minos" "$limit"; then echo "::warning::$rel ($want) asks for macOS $minos, above $limit - older Macs cannot load it"; fi
+                done
+              done < <(find "$b" -type f -perm -u+x)
+            done < <(find "$A" \( -name "*.vst3" -o -name "*.component" -o -name "*.app" \) -type d -prune)
+          else
+            echo "::warning::no $A - binaries not checked"
+          fi
+          for p in build-output/*.pkg; do
+            [ -f "$p" ] || continue
+            x="$RUNNER_TEMP/pkgcheck"; rm -rf "$x"
+            if ! pkgutil --expand-full "$p" "$x"; then echo "::warning::pkgutil could not expand $p"; continue; fi
+            echo "== $(basename "$p") installs:"
+            if [ -d "$x/Payload" ]; then
+              (cd "$x/Payload" && find . \( -name "*.vst3" -o -name "*.component" -o -name "*.app" -o -name "*.pdf" \) -prune -print)
+            else
+              echo "::warning::$(basename "$p") has no payload"
+            fi
+            if [ -f "$x/Scripts/preinstall" ]; then
+              if sh -n "$x/Scripts/preinstall"; then echo "preinstall parses"; else echo "::warning::the preinstall script of $(basename "$p") does not parse"; fi
+            else
+              echo "::warning::$(basename "$p") has no preinstall script"
+            fi
+          done
+
       # --- Upload ---
       - name: Upload installer
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -723,6 +1093,7 @@ jobs:
     # turns the run red so a partial release is still loud.
     if: >-
       !cancelled() &&
+      github.event_name == 'push' &&
       needs.detect-changes.outputs.changed != '[]'
     runs-on: ubuntu-latest
     permissions:
@@ -732,6 +1103,9 @@ jobs:
     outputs:
       published:     ${{ steps.publish.outputs.published }}
       guard_skipped: ${{ steps.publish.outputs.guard_skipped }}
+      upload_failed: ${{ steps.publish.outputs.upload_failed }}
+      alias_failed:  ${{ steps.publish.outputs.alias_failed }}
+      suffix:        ${{ steps.publish.outputs.suffix }}
 
     steps:
       # This run's commit: the release guard reads tree entries from it and
@@ -777,7 +1151,17 @@ jobs:
           changed='${{ needs.detect-changes.outputs.changed }}'
           matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
           matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
-          published='[]'; guard_skipped=''
+          published='[]'; guard_skipped=''; upload_failed=''; alias_failed=''
+
+          # Every installer also goes up under a name of its own (audit R028):
+          # <stem>-<run>.<attempt>.<ext>, e.g. RoneStutter_Installer-272.1.exe.
+          # Nothing ever replaces the bytes behind such a name, so a manifest
+          # that points at it can never pair a new file with an old sha256. A
+          # re-run of this job is a new attempt, so it never meets its own names.
+          SUFFIX="${{ github.run_number }}.${{ github.run_attempt }}"
+          echo "suffix=$SUFFIX" >> $GITHUB_OUTPUT
+          VDIR="${RUNNER_TEMP:-/tmp}/versioned"
+          versioned_name() { local n=$1; printf '%s-%s.%s' "${n%.*}" "$SUFFIX" "${n##*.}"; }
 
           # Version-regression guard (scripts/ci/release-guard.sh). Cannot read
           # origin/main -> fail here, before anything is uploaded.
@@ -791,9 +1175,57 @@ jobs:
           # accepts that - and the upload goes again. Never several files in one
           # call: #254's second try deleted the .exe, failed on the .dmg and
           # uploaded neither, so the Center could not be downloaded at all.
+          # On a versioned name the only thing --clobber can meet is this same
+          # attempt's own half-finished try, which nothing points at yet.
+          #
+          # The Center's alias (audit R090 part 2): the site's /download/center/*
+          # and older Centers fetch it by name, so that name must never 404 - and
+          # --clobber deletes the old file before the new one lands. On the
+          # Center tag an alias that is already there is swapped instead: the new
+          # file goes up as tmp-<run>-<name>, the old asset is renamed
+          # stale-<id>-<name> (the next run's stale- cleanup deletes it), then the
+          # tmp asset takes the name. Every other upload is unchanged.
+          asset_id() {
+            gh api "repos/$REPO/releases/tags/$1" --jq ".assets[] | select(.name == \"$2\") | .id" 2>/dev/null | head -1 || true
+          }
+          swap_one() {
+            local tag=$1 f=$2 name tmp tdir oid tid
+            name=$(basename "$f"); tmp="tmp-$RUN-$name"
+            tdir="${RUNNER_TEMP:-/tmp}/swap"
+            mkdir -p "$tdir" && cp "$f" "$tdir/$tmp" || return 1
+            if ! gh release upload "$tag" "$tdir/$tmp" --clobber -R "$REPO"; then
+              # a half-finished tmp goes aside, so the next try never meets it
+              tid=$(asset_id "$tag" "$tmp")
+              if [ -n "$tid" ]; then gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="stale-$tid-$tmp" >/dev/null 2>&1 || true; fi
+              return 1
+            fi
+            tid=$(asset_id "$tag" "$tmp")
+            if [ -z "$tid" ]; then return 1; fi
+            oid=$(asset_id "$tag" "$name")
+            if [ -n "$oid" ] && ! gh api -X PATCH "repos/$REPO/releases/assets/$oid" -f name="stale-$oid-$name" >/dev/null; then
+              gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="stale-$tid-$tmp" >/dev/null 2>&1 || true
+              return 1
+            fi
+            if ! gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="$name" >/dev/null; then
+              # the previous file takes its name back
+              if [ -n "$oid" ]; then gh api -X PATCH "repos/$REPO/releases/assets/$oid" -f name="$name" >/dev/null 2>&1 || true; fi
+              gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="stale-$tid-$tmp" >/dev/null 2>&1 || true
+              return 1
+            fi
+            echo "swapped $name on $tag (the previous file is stale-$oid-$name until the next run)"
+          }
           upload_one() {
             local tag=$1 f=$2 name i sid
             name=$(basename "$f")
+            if [ "$tag" = "PluginsCenter-latest" ] && [ -n "$(asset_id "$tag" "$name")" ]; then
+              for i in 1 2 3; do
+                if swap_one "$tag" "$f"; then return 0; fi
+                echo "::warning::swap of $name on $tag failed (try $i)"
+                sleep $((i * 15))
+              done
+              echo "::error::$name could not be replaced on $tag - the previous file keeps the name"
+              return 1
+            fi
             for i in 1 2 3; do
               if gh release upload "$tag" "$f" --clobber -R "$REPO"; then return 0; fi
               echo "::warning::upload of $name to $tag failed (try $i)"
@@ -876,52 +1308,70 @@ jobs:
               guard_skipped="$guard_skipped $id"; continue
             fi
 
-            # Replace assets in-place. The old delete+recreate wiped the OTHER
-            # platform's installer on [win-only]/[mac-only] builds, leaving the
-            # manifest pointing at dead download links.
             NOTES="Build #${{ github.run_number }} · $(date -u +%Y-%m-%d)"
             if gh release view "$tag" -R "$REPO" >/dev/null 2>&1; then
-              # leftovers a stuck upload moved aside: best effort, they harm nothing
-              for sid in $(gh api "repos/$REPO/releases/tags/$tag" --jq '.assets[] | select(.name | startswith("stale-")) | .id' 2>/dev/null || true); do
+              # Leftovers nothing points at, best effort: what a stuck upload moved
+              # aside (stale-*), and a hand-parked copy like the Center's
+              # RONE_Plugins_Center-stuck-<id>.dmg (audit R289).
+              for sid in $(gh api "repos/$REPO/releases/tags/$tag" --jq '.assets[] | select((.name | startswith("stale-")) or (.name | test("-stuck-"))) | .id' 2>/dev/null || true); do
                 gh api -X DELETE "repos/$REPO/releases/assets/$sid" >/dev/null 2>&1 || true
               done
-              for f in "${files[@]}"; do upload_one "$tag" "$f" || exit 1; done
-              gh release edit "$tag" --title "$title" --notes "$NOTES" -R "$REPO" || echo "::warning::release notes of $tag not updated"
-            else
-              gh release create "$tag" "${files[@]}" \
-                --title "$title" \
-                --notes "$NOTES" \
-                --latest=false \
-                -R "$REPO"
+            elif ! gh release create "$tag" --title "$title" --notes "$NOTES" --latest=false -R "$REPO"; then
+              # Created empty and filled one file at a time below, like every upload.
+              echo "::error::$id: could not create the release $tag - nothing of it is published"
+              upload_failed="$upload_failed $id"; continue
             fi
 
-            echo "✓ $tag — ${#files[@]} file(s)"
+            # 1. The versioned files, the ones versions.json will name. All of them
+            #    or the product is not published - and the loop goes on to the next
+            #    product instead of ending the step (audit R030): a failure used to
+            #    exit here, so every product uploaded before it kept the old sha256.
+            ok=1; vfiles=()
+            mkdir -p "$VDIR/$id"
+            for f in "${files[@]}"; do
+              v="$VDIR/$id/$(versioned_name "$(basename "$f")")"
+              cp "$f" "$v" && vfiles+=("$v") || ok=0
+            done
+            if [ "$ok" = 1 ]; then
+              for v in "${vfiles[@]}"; do
+                upload_one "$tag" "$v" || { ok=0; break; }
+              done
+            fi
+            if [ "$ok" != 1 ]; then
+              echo "::error::$id: not every installer reached $tag - not published, versions.json keeps the previous build"
+              upload_failed="$upload_failed $id"; continue
+            fi
+
+            # 2. The unversioned alias (RoneStutter_Installer.exe, ...): the site's
+            #    download buttons and older Centers' built-in catalogue use it,
+            #    versions.json does not. A failure warns and the Verdict turns the
+            #    run red, but the product is published - its versioned files are up.
+            for f in "${files[@]}"; do
+              if ! upload_one "$tag" "$f"; then
+                echo "::warning::$id: the alias $(basename "$f") on $tag was not refreshed (versions.json does not use it)"
+                alias_failed="$alias_failed $id:$(basename "$f")"
+              fi
+            done
+            gh release edit "$tag" --title "$title" --notes "$NOTES" -R "$REPO" || echo "::warning::release notes of $tag not updated"
+
+            echo "✓ $tag — ${#files[@]} file(s), versioned -$SUFFIX"
             published=$(echo "$published" | jq -c --arg id "$id" '. + [$id]')
           done
 
           # update-manifest bumps only what was really published here.
           echo "published=$published" >> $GITHUB_OUTPUT
           echo "guard_skipped=${guard_skipped# }" >> $GITHUB_OUTPUT
+          echo "upload_failed=${upload_failed# }" >> $GITHUB_OUTPUT
+          echo "alias_failed=${alias_failed# }" >> $GITHUB_OUTPUT
           if [ -n "$guard_skipped" ]; then
             echo "### Release guard skipped:$guard_skipped" >> $GITHUB_STEP_SUMMARY
           fi
-
-      # On tag push: also create a full versioned release
-      - name: Create version release (tag push)
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          REPO="${{ github.repository }}"
-          TAG="${{ github.ref_name }}"
-
-          files=()
-          for f in artifacts/installer-*/*; do
-            [ -f "$f" ] && files+=("$f")
-          done
-
-          gh release create "$TAG" "${files[@]}" \
-            --title "RONE Plugins $TAG" \
-            --generate-notes \
-            -R "$REPO"
+          if [ -n "$upload_failed" ]; then
+            echo "### Upload failed, not published:$upload_failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "$alias_failed" ]; then
+            echo "### Alias not refreshed:$alias_failed" >> $GITHUB_STEP_SUMMARY
+          fi
 
   # ================================================================
   # 5. UPDATE MANIFEST — auto-bump versions.json + commit
@@ -931,12 +1381,14 @@ jobs:
     needs: [detect-changes, release]
     if: >-
       !cancelled() &&
+      github.event_name == 'push' &&
       needs.detect-changes.outputs.changed != '[]' &&
       needs.release.result == 'success'
     runs-on: ubuntu-latest
     # contents: read is enough: the push below authenticates with GH_PAT.
     outputs:
       guard_skipped: ${{ steps.bump.outputs.guard_skipped }}
+      push_skipped:  ${{ steps.push.outputs.push_skipped }}
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -993,6 +1445,8 @@ jobs:
           matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
           RUN="${{ github.run_number }}"
           REPO="${{ github.repository }}"
+          # The versioned asset names Release uploaded (audit R028/R205).
+          SUFFIX='${{ needs.release.outputs.suffix }}'
           guard_skipped=''
 
           # Release already ran the full guard BEFORE uploading; every id in
@@ -1001,11 +1455,20 @@ jobs:
           # would pair the new installer with the old sha256). Skipped only
           # when origin/main's versions.json already has this version or newer,
           # or a newer build has since replaced the asset (guard_manifest_check).
-          # No --depth: this clone rebases onto main below. A failed fetch fails
-          # this job loudly; re-run it to write what Release published.
+          # A failed fetch fails this job loudly; re-run it to write what
+          # Release published.
           GUARD_FETCH_ARGS=""
           GUARD_NO_RUN_COMMIT=1
           source scripts/ci/release-guard.sh
+          # This step only writes the PLAN; Commit & push applies it on top of
+          # whatever main is when it pushes (audit R207, scripts/ci/manifest-plan.sh).
+          source scripts/ci/manifest-plan.sh
+          PLAN="$RUNNER_TEMP/bump-plan.txt"
+          : > "$PLAN"
+          if ! [[ "$SUFFIX" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release reported no asset suffix ('$SUFFIX') - versions.json left alone; re-run the workflow"
+            exit 1
+          fi
           if ! guard_fetch_main; then
             {
               echo "### versions.json NOT updated"
@@ -1050,8 +1513,7 @@ jobs:
             fi
 
             # Compute SHA256 for whatever we built this run (per-platform).
-            # Missing artifacts (e.g. [mac-only] / [win-only] commits) -> empty string,
-            # which is treated by the Plugins Center as "not verified".
+            # A platform that did not build -> empty string, and its fields stay.
             sha_win=""; sha_mac=""
             if [ "$jid" = "__center__" ]; then
               win_file=$(find artifacts -type f -name "${inst}_Installer.exe" 2>/dev/null | head -1)
@@ -1095,88 +1557,120 @@ jobs:
               guard_skipped="$guard_skipped $id"; continue
             fi
 
-            # Only touch a platform's url+sha when that platform was actually
-            # built this run — a [win-only]/[mac-only] build must never
-            # overwrite the other platform's still-valid hash with "".
+            # The versioned files Release uploaded (audit R028/R205): nothing ever
+            # replaces the bytes behind these URLs, so a Center can never pair
+            # them with another build's hash. Only a platform built this run
+            # gets a URL; the other keeps its fields.
             if [ "$jid" = "__center__" ]; then
-              jq --arg v "$ver" '.center_installer.version = $v' \
-                 versions.json > tmp && mv tmp versions.json
-              if [ -n "$sha_win" ]; then
-                jq --arg u  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
-                   --arg um "https://github.com/$REPO/releases/download/$tag/${inst}.dmg" \
-                   --arg sw "$sha_win" \
-                   '.center_installer.url      = $u
-                    | .center_installer.url_mac  = $um
-                    | .center_installer.sha256   = $sw' \
-                   versions.json > tmp && mv tmp versions.json
-              fi
-              # The Center's macOS self-update downloads the .dmg and checks it
-              # against this (MainComponent::applyCenterUpdate).
-              if [ -n "$sha_mac" ]; then
-                jq --arg sm "$sha_mac" '.center_installer.sha256_mac = $sm' \
-                   versions.json > tmp && mv tmp versions.json
-              fi
+              wname="${inst}_Installer-${SUFFIX}.exe"; mname="${inst}-${SUFFIX}.dmg"
             else
-              jq --arg id "$jid" --arg v "$ver" \
-                 '(.plugins[]|select(.id==$id)).version = $v' \
-                 versions.json > tmp && mv tmp versions.json
-              if [ -n "$sha_win" ]; then
-                jq --arg id "$jid" \
-                   --arg u  "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.exe" \
-                   --arg sw "$sha_win" \
-                   '(.plugins[]|select(.id==$id)).download_url = $u
-                    | (.plugins[]|select(.id==$id)).sha256       = $sw' \
-                   versions.json > tmp && mv tmp versions.json
-                jq --arg id "$jid" --argjson sz "$size_win" \
-                   '(.plugins[]|select(.id==$id)).size = $sz' \
-                   versions.json > tmp && mv tmp versions.json
-              fi
-              if [ -n "$sha_mac" ]; then
-                jq --arg id "$jid" \
-                   --arg um "https://github.com/$REPO/releases/download/$tag/${inst}_Installer.pkg" \
-                   --arg sm "$sha_mac" \
-                   '(.plugins[]|select(.id==$id)).download_url_mac = $um
-                    | (.plugins[]|select(.id==$id)).sha256_mac       = $sm' \
-                   versions.json > tmp && mv tmp versions.json
-                jq --arg id "$jid" --argjson sz "$size_mac" \
-                   '(.plugins[]|select(.id==$id)).size_mac = $sz' \
-                   versions.json > tmp && mv tmp versions.json
-              fi
+              wname="${inst}_Installer-${SUFFIX}.exe"; mname="${inst}_Installer-${SUFFIX}.pkg"
             fi
-          done
+            url=""; url_mac=""
+            [ -n "$sha_win" ] && url="https://github.com/$REPO/releases/download/$tag/$wname"
+            [ -n "$sha_mac" ] && url_mac="https://github.com/$REPO/releases/download/$tag/$mname"
 
-          # Timestamp - only when an entry above really changed, so a run that
-          # published nothing leaves no "auto-update" commit behind (Commit &
-          # push exits on an empty diff).
-          if ! git diff --quiet -- versions.json; then
-            jq --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.last_updated=$t' versions.json > tmp && mv tmp versions.json
-          else
-            echo "nothing published this run - versions.json left untouched"
-          fi
+            # Never write a URL that does not answer, or whose bytes GitHub hashes
+            # differently: the entry then stays on the previous build (which still
+            # matches its own hash) and the run goes red.
+            bad=""
+            if [ -n "$url" ]; then
+              plan_url_live "$url" || bad="$bad $wname (not downloadable)"
+              plan_asset_digest_ok "$REPO" "$tag" "$wname" "$sha_win" || bad="$bad $wname (sha256 differs)"
+            fi
+            if [ -n "$url_mac" ]; then
+              plan_url_live "$url_mac" || bad="$bad $mname (not downloadable)"
+              plan_asset_digest_ok "$REPO" "$tag" "$mname" "$sha_mac" || bad="$bad $mname (sha256 differs)"
+            fi
+            if [ -n "$bad" ]; then
+              echo "::error::$id:$bad - manifest left alone; re-run this job"
+              guard_skipped="$guard_skipped $id"; continue
+            fi
+
+            plan_add "$PLAN" "$id" "$jid" "$ver" "$tag" "$url" "$sha_win" "$size_win" "$url_mac" "$sha_mac" "$size_mac"
+            echo "  $jid: planned $ver"
+          done
 
           echo "guard_skipped=${guard_skipped# }" >> $GITHUB_OUTPUT
           if [ -n "$guard_skipped" ]; then
             echo "### Release guard left alone:$guard_skipped" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "### Updated versions.json" >> $GITHUB_STEP_SUMMARY
-          cat versions.json | jq '.' >> $GITHUB_STEP_SUMMARY
+          if [ -s "$PLAN" ]; then
+            {
+              echo "### Planned versions.json entries"
+              echo '```'
+              cat "$PLAN"
+              echo '```'
+            } >> $GITHUB_STEP_SUMMARY
+          else
+            echo "nothing published this run - versions.json left untouched"
+          fi
+
+          # Audit R027: every installer URL a Center will follow - the ones this
+          # run planned and the ones main already carries, which Commit & push
+          # writes back - must be a file on this repository's releases. Anything
+          # else (another host, another repository, a dot segment) stops the
+          # manifest here, before anything is written.
+          url_re='^https://github\.com/liranidan2000-max/rone-plugins/releases/download/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'
+          if ! main_urls=$(jq -r '.center_installer.url, .center_installer.url_mac, (.plugins[]? | .download_url, .download_url_mac) | select(. != null)' versions.json); then
+            echo "::error::versions.json on main does not parse - nothing written"
+            exit 1
+          fi
+          plan_urls=""
+          if [ -s "$PLAN" ]; then plan_urls=$(cut -d'|' -f5,8 "$PLAN" | tr '|' '\n'); fi
+          bad_urls=$(printf '%s\n%s\n' "$main_urls" "$plan_urls" | grep -v '^$' | grep -Ev "$url_re" || true)
+          dot_urls=$(printf '%s\n%s\n' "$main_urls" "$plan_urls" | grep -E '/\.\.?(/|$)' || true)
+          if [ -n "$bad_urls$dot_urls" ]; then
+            echo "::error::versions.json would name an installer that is not a file on this repository's releases - nothing written (audit R027):"
+            printf '%s\n%s\n' "$bad_urls" "$dot_urls" | grep -v '^$' | sed 's/^/  /' || true
+            {
+              echo "### versions.json NOT updated: a download URL failed the R027 check"
+              printf '%s\n%s\n' "$bad_urls" "$dot_urls" | grep -v '^$' | sed 's/^/- /' || true
+            } >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "R027: $(printf '%s\n%s\n' "$main_urls" "$plan_urls" | grep -c . || true) installer URLs checked"
 
       - name: Commit & push
+        id: push
+        env:
+          # guard_manifest_check reads each <Tag>-latest release's notes again.
+          GH_TOKEN: ${{ github.token }}
         run: |
+          RUN="${{ github.run_number }}"
+          REPO="${{ github.repository }}"
+          PLAN="$RUNNER_TEMP/bump-plan.txt"
+          if [ ! -s "$PLAN" ]; then
+            echo "push_skipped=" >> $GITHUB_OUTPUT
+            echo "No changes to commit"
+            exit 0
+          fi
+          GUARD_FETCH_ARGS=""
+          GUARD_NO_RUN_COMMIT=1
+          source scripts/ci/release-guard.sh
+          source scripts/ci/manifest-plan.sh
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add versions.json
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-          git commit -m "ci: auto-update versions.json (build #${{ github.run_number }}) [skip ci]"
-          # main may have moved while this run was building (a new push, or a
-          # parallel run's own auto-commit) - #148 lost exactly this race and
-          # left stale versions/hashes against already-replaced release assets.
-          for attempt in 1 2 3; do
-            git push && exit 0
-            echo "push rejected (attempt $attempt) - rebasing over new main"
-            git pull --rebase origin main
-          done
-          git push
+          # main may have moved while this run was building (a new push, a
+          # parallel run's own auto-commit, a hand edit) - #148 lost exactly this
+          # race. Each attempt starts from the newest main and writes this run's
+          # entries again, re-checking the guard against that main (audit R207).
+          PLAN_SKIPPED=''
+          if plan_commit_push "$PLAN" "$RUN" "$REPO" "ci: auto-update versions.json (build #$RUN) [skip ci]"; then
+            echo "push_skipped=${PLAN_SKIPPED# }" >> $GITHUB_OUTPUT
+            if [ -n "$PLAN_SKIPPED" ]; then
+              echo "### Left alone on the newest main:$PLAN_SKIPPED" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "### Updated versions.json" >> $GITHUB_STEP_SUMMARY
+            jq '.' versions.json >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          {
+            echo "### versions.json NOT updated"
+            echo "Release published: $(cut -d'|' -f1 "$PLAN" | tr '\n' ' ')- their versioned installers"
+            echo "are up, but versions.json still names the previous builds. Re-run this job."
+          } >> $GITHUB_STEP_SUMMARY
+          exit 1
 
   # ================================================================
   # 6. VERDICT — publish first, then tell the truth about the run
@@ -1199,11 +1693,24 @@ jobs:
           man='${{ needs.update-manifest.result }}'
           rel_skip='${{ needs.release.outputs.guard_skipped }}'
           man_skip='${{ needs.update-manifest.outputs.guard_skipped }}'
+          push_skip='${{ needs.update-manifest.outputs.push_skipped }}'
+          up_fail='${{ needs.release.outputs.upload_failed }}'
+          alias_fail='${{ needs.release.outputs.alias_failed }}'
           echo "windows=$win macos=$mac release=$rel manifest=$man"
 
           # Products the version-regression guard held back (scripts/ci/release-guard.sh)
-          if [ -n "$rel_skip$man_skip" ]; then
-            echo "::error::The release guard held back: ${rel_skip:-} ${man_skip:-} - see the Release / Update versions.json logs."
+          if [ -n "$rel_skip$man_skip$push_skip" ]; then
+            echo "::error::The release guard held back: ${rel_skip:-} ${man_skip:-} ${push_skip:-} - see the Release / Update versions.json logs."
+            exit 1
+          fi
+
+          # Release went on past these (audit R030), so they must turn the run red here.
+          if [ -n "$up_fail" ]; then
+            echo "::error::Not published, an upload failed: $up_fail - versions.json kept their previous build. Re-run ALL jobs of this run to publish them ('Re-run failed jobs' would only repeat this Verdict)."
+            exit 1
+          fi
+          if [ -n "$alias_fail" ]; then
+            echo "::error::Published, but the unversioned alias was not refreshed: $alias_fail - versions.json is right; the alias (the site's Center download button) may serve the previous build or nothing. Fix by hand: upload the installer from this run's artefacts under the alias name (gh release upload <tag> <file> --clobber), or let the next release of that product refresh it. A re-run would be held back by the release guard, since the version is already live."
             exit 1
           fi
 

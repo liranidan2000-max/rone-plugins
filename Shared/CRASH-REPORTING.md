@@ -1,7 +1,9 @@
 # RONE crash & error reporting
 
-> Activated 2026-09-01: private repo + CRASH_REPORT_TOKEN secret are live
-> (verified end-to-end — test issue #1 created and closed via the token).
+> Activated 2026-09-01: private repo + crash token are live (verified
+> end-to-end — test issue #1 created and closed via the token). Since Center
+> 2.0 the token is the website Worker's `GITHUB_CRASH_TOKEN` secret, and the
+> repo it files into is `GITHUB_CRASH_REPO` (a var in the site's wrangler.toml).
 
 One pipeline for the whole bundle: every product captures its own crashes and
 errors, everything lands in one private issue tracker, and fixes ship back
@@ -12,7 +14,10 @@ through the Plugins Center.
    │  crash or error
    ▼
  %APPDATA%\RonePlugins\CrashReports\pending\*.json     (local queue, offline-safe)
-   │  next time the Center runs (it is the ONLY uploader / token holder)
+   │  next time the Center runs (it is the ONLY uploader; it holds no token)
+   ▼
+ roneaudio.com/api/v1/crash                            (website Worker: checks, rate-limits, files)
+   │  with the Worker's GITHUB_CRASH_TOKEN secret
    ▼
  github.com/liranidan2000-max/rone-crash-reports       (private repo, one issue per report)
    │  Claude triages, Liran approves, fix ships via CI
@@ -38,17 +43,26 @@ through the Plugins Center.
 
 - **`RonePluginsCenter/Source/CrashReportUploader.h`** (upload side)
   - Drains the queue on Center launch and after any error, ≤20 reports/pass,
-    ≥60s between passes. Each report becomes one GitHub issue; the file is
-    deleted only on HTTP 201.
+    ≥60s between passes. Each report is POSTed to roneaudio.com/api/v1/crash,
+    and the Worker files it as one GitHub issue. What the answer does to the
+    queued file:
+    - 200 / 201: filed - the file is deleted.
+    - 400 / 413 / 422: the server will never take it - the file is dropped.
+    - 429 / 5xx (or no answer): the file is kept for a later pass; 429 ends
+      the pass. From Center 2.1.4 on, a report answered 5xx moves to the back
+      of the queue (oldest first; two 5xx in a row end the pass), so one report
+      the server keeps failing on never blocks the ones behind it.
   - The Center also auto-reports every user-visible error status it shows
     (the `emitStatusMessage(..., "error")` hook) — download failures, sha
     mismatches, install failures etc. arrive without the tester doing anything.
 
-- **Token**: CMake option `RONE_CRASH_TOKEN`, injected in CI from the
-  `CRASH_REPORT_TOKEN` Actions secret, Center target only — plugins never
-  hold it. Empty token (local builds / secret missing) = uploads silently
-  disabled, reports stay queued and upload retroactively once a token-carrying
-  Center runs.
+- **Token**: no binary holds one. The website Worker (WEBSITE RONE AUDIO,
+  worker/api/v1/crash.js) files the issues with its `GITHUB_CRASH_TOKEN`
+  secret into `GITHUB_CRASH_REPO`; Centers 2.0+ only POST the report to it.
+  Without the secret the Worker answers 503 and the reports stay queued on
+  each machine until it is set. (Historical, before Center 2.0 only: the CI
+  secret `CRASH_REPORT_TOKEN` was compiled into the Center through the CMake
+  option `RONE_CRASH_TOKEN`. Neither is used any more.)
 
 ## One-time setup (Liran, ~3 minutes)
 
@@ -58,19 +72,19 @@ through the Plugins Center.
    Generate new token → Resource owner: you → Only select repositories:
    `rone-crash-reports` → Repository permissions: **Issues: Read and write**
    (nothing else) → no expiry (or 1 year) → Generate, copy it.
-3. Add it to CI: repo `rone-plugins` → Settings → Secrets and variables →
-   Actions → New repository secret → name `CRASH_REPORT_TOKEN`, value = the
-   token.
-4. So Claude can read/triage the reports locally, also save it to
-   `D:\RONE PLUGINS\rone-plugins\.claude\crash-report-token.txt`
-   (`.claude/` is in the root `.gitignore`; never commit this file).
-5. Tell Claude "done" (historical, pre-2.0 flow: the release build baked the token into the
-   Center; since 2.0 the same secret is held by the website Worker instead).
+3. Save it to `D:\RONE PLUGINS\rone-plugins\.claude\crash-report-token.txt`
+   (`.claude/` is in the root `.gitignore`; never commit this file). Claude
+   reads and triages the reports locally with it.
+4. Put it on the Worker: double-click `scripts\crash-secret.cmd` in
+   `D:\RONE PLUGINS\WEBSITE RONE AUDIO`. It reads the file from step 3 and sets
+   it as the Worker secret `GITHUB_CRASH_TOKEN` (never printed; the log is
+   `scripts\crash-secret.log`). Nothing goes into CI.
+5. Tell Claude "done".
 
 ## Security honesty
 
 Since Center 2.0 the token no longer ships inside the Center binary: it lives
-only on the server (the website Worker's `CRASH_REPORT_TOKEN` secret), which
+only on the server (the website Worker's `GITHUB_CRASH_TOKEN` secret), which
 checks and rate-limits what it files. Builds made before 2.0 did embed it, so
 the old token should be rotated (it can ONLY read/create issues in the crash
 repo).
@@ -89,4 +103,6 @@ repo).
 - Stacks are module+offset only (Release builds without PDBs). Claude maps
   offsets by rebuilding the exact tag locally; shipping PDB artifacts from CI
   is a future improvement.
-- No server-side dedup — Claude dedupes during triage.
+- No dedup at intake - every report is its own issue. The admin console's
+  Crashes tab groups them (same product + code + message) and triages each
+  group; Claude dedupes the rest during triage.

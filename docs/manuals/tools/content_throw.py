@@ -58,7 +58,7 @@ def manual(G):
 </div>
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
- ("KILL", "cuts the tail now - delay and reverb emptied in 6 ms, the dry untouched (MIDI D2)"),
+ ("KILL", "cuts the tail now - delay and reverb emptied in 6 ms, the dry untouched (MIDI note 50: D2, or D4 in FL Studio)"),
  ("BYPASS", "hard bypass for A/B comparison; the tail keeps ringing"),
  ("Preset bar", "arrows step through the 26 factory presets, click the name for the menu"),
  ("Macro slots", "six quick-recall buttons: hold to store, tap to recall - lit = stored"),
@@ -87,7 +87,7 @@ def manual(G):
 {ctl("BYPASS", "", "<p>Hard bypass for A/B comparison. The engine keeps running with the knob at zero, so the tail that is already in the loop rings out instead of being cut, and coming back is click-free.</p>")}
 <h3>Kill</h3>
 {img("throw/note.png", "<b>PITCH in NOTE mode.</b> The chip reads NOTE, the knob steps in semitones, and the readout shows the note coming in and the note going out.", "w60")}
-{ctl("KILL", "momentary<br>automatable, MIDI D2", "<p>Cuts the tail now. A 6 ms fade, then the delay lines, the loop filter and the reverb are emptied; the dry keeps playing through untouched and the next throw starts from silence. It is for changing direction mid-set: without it, a new throw lands on top of whatever the old one was still doing and the two pile up.</p>", "KILL on the downbeat of the drop is the hard stop a long build sometimes needs; KILL a beat before a new phrase clears the room for it.")}
+{ctl("KILL", "momentary<br>automatable, MIDI note 50 (D2; D4 in FL Studio)", "<p>Cuts the tail now. A 6 ms fade, then the delay lines, the loop filter and the reverb are emptied; the dry keeps playing through untouched and the next throw starts from silence. It is for changing direction mid-set: without it, a new throw lands on top of whatever the old one was still doing and the two pile up.</p>", "KILL on the downbeat of the drop is the hard stop a long build sometimes needs; KILL a beat before a new phrase clears the room for it.")}
 {ctl("PITCH", "HZ: -200 to +200 Hz<br>NOTE: -12 to +12 semitones<br>default HZ, 0<br>automatable, smoothed", "<p>Shifts the whole delay up or down, in the footer. The <strong>HZ / NOTE</strong> chip beside the knob picks what it is.</p><p><strong>HZ</strong> is a <em>frequency</em> shifter, not a pitch shifter: every partial of the repeats moves by the same number of Hz, so the harmonics no longer line up and the tail turns metallic and bell-like - an atmosphere rather than a second voice singing the line a few notes away. It acts on the finished delay, before SPACE, so the reverb smooths the shifted repeats instead of being smeared by them. The dry is never touched, and at 0 the plugin is exactly as it was.</p><p><strong>NOTE</strong> is a musical shifter: the knob steps in whole semitones and every partial is multiplied, so the tail stays a note - a throw a fifth up is a harmony, an octave up is a shimmer. The readout shows the note the plugin hears in the throw and the note it will put out, <em>A3 &gt; E4</em>, so you can raise the knob to exactly the interval you want; when there is no single clear note (a chord, noise, an empty tail) it shows the semitones alone. The tracker is monophonic - leads, vocals, basses and plucks read cleanly - and it also keeps the shifter's grains locked to the note, so a shifted tail stays a clean tone rather than a warble.</p>", "Small values in HZ (10-40 Hz) detune the tail against the source and make it sit behind the mix; large ones (100 Hz and up) turn a vocal throw into a bell. Negative values fold the lowest partials, which is darker and stranger. In NOTE, +7 and +12 are the intervals that stay consonant in every Phrygian-family mode a psytrance track lives in. Double-click to snap back to 0.")}
 {ctl("GAIN", "0 to +18 dB<br>default 0<br>automatable, smoothed", "<p>In the footer between PITCH and MIX: the whole effect louder - the repeats and the reverb together - on top of MIX. The big knob keeps the wet at a roughly constant level by design (the send is normalised against the feedback, so more feedback means a longer tail, not a louder one); when the atmosphere needs to sit in front rather than behind, this is the knob. The dry is never touched.</p>", "Where MIX is the send level and never goes above unity, GAIN is the part above it: +6 dB doubles the effect, +12 dB is a delay that leads the mix. Watch the channel meter at the top of the range.")}
 {ctl("MIX", "0 to 100 %<br>default 100 %<br>automatable, smoothed", "<p>How much of the effect is added, in the bottom right corner. Throw is strictly additive, so this is a send level rather than a crossfade: the dry is never reduced. At 100 % you hear the plugin exactly as it was designed; at 0 % nothing is added at all.</p>", "At the top of the knob the output is louder than the input - that is the point of a send. Pull MIX down for gain staging rather than the knob. Double-click to snap back to 100 %.")}
@@ -131,7 +131,7 @@ def manual(G):
 {recipe("Hard stop into a drop", "Transitions",
  steps([
   "Tap slot 4 (INFINITE CLOUD), or push FEEDBACK to +100, and automate THROW up through the last bar of the build.",
-  "On the downbeat of the drop press KILL (or send MIDI D2): the cloud is gone in 6 ms and the drop lands on silence.",
+  "On the downbeat of the drop press KILL (or send MIDI note 50 - D2, or D4 in FL Studio): the cloud is gone in 6 ms and the drop lands on silence.",
   "For a softer landing skip KILL and let THROW fall back over the first bar instead - the tail carries the energy across.",
  ]))}
 {recipe("Six macros for a live set", "Controllers, DJ-style sets",
@@ -176,7 +176,7 @@ def manual(G):
         ("It gets loud at 100 %", "That is the send adding on top of the untouched dry - the source itself is never reduced. Pull MIX down to taste."),
         ("NOTE shows only semitones, no note names", "The tracker found no single clear note in the throw - a chord, noise or an empty tail. The shift still lands on the interval you set; the names appear the moment a lead or a vocal is thrown."),
         ("DUCK KEY says NO SIDECHAIN ROUTED", "The host has not connected anything to the plugin's sidechain input. Route the kick (or any signal) to Throw's sidechain in the DAW's plugin routing; until then DUCK falls back to the input."),
-        ("MIDI notes do nothing", "Route a MIDI track (or a pad) to the plugin. C1-F1 recall macro slots 1-6, D2 kills the tail."),
+        ("MIDI notes do nothing", "Route a MIDI track (or a pad) to the plugin. Notes 36-41 (C1-F1; C3-F3 in FL Studio) recall macro slots 1-6 and note 50 (D2; D4 in FL Studio) kills the tail. DAWs name the octaves differently; the note number is what counts."),
     ]))
 
     m["sections"] = S

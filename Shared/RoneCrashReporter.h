@@ -28,8 +28,37 @@
 
 #include <juce_core/juce_core.h>
 
+#if JUCE_MAC && JUCE_INTEL
+ // For runningArch(). Declared here rather than through <sys/sysctl.h>, which
+ // would bring <sys/param.h> (MIN, MAX, isset, roundup... macros) into every
+ // plugin processor that includes this header.
+ extern "C" int sysctlbyname (const char*, void*, size_t*, void*, size_t);
+#endif
+
 namespace RoneCrashReporter
 {
+
+// The code that is running, not the OS: "x64" (every Windows report has
+// always said so), "arm64" (Apple Silicon, native slice), or "x64-rosetta"
+// (the Intel slice of the universal build translated on Apple Silicon, e.g.
+// inside an Intel-only DAW). The site only prints it (audit R293).
+inline juce::String runningArch()
+{
+   #if JUCE_ARM && JUCE_64BIT
+    return "arm64";
+   #elif JUCE_ARM
+    return "arm";
+   #else
+    juce::String arch (juce::SystemStats::isOperatingSystem64Bit() ? "x64" : "x86");
+    #if JUCE_MAC
+     int translated = 0;
+     size_t size = sizeof (translated);
+     if (sysctlbyname ("sysctl.proc_translated", &translated, &size, nullptr, 0) == 0 && translated == 1)
+         arch << "-rosetta";
+    #endif
+    return arch;
+   #endif
+}
 
 inline juce::File getReportsRoot()
 {
@@ -79,7 +108,7 @@ inline void writeReport (const juce::String& type,     // "crash" | "error"
     obj->setProperty ("details",    details.substring (0, 8000));
     obj->setProperty ("stack",      stack.substring (0, 16000));
     obj->setProperty ("os",         juce::SystemStats::getOperatingSystemName());
-    obj->setProperty ("arch",       juce::SystemStats::isOperatingSystem64Bit() ? "x64" : "x86");
+    obj->setProperty ("arch",       runningArch());
     obj->setProperty ("locale",     juce::SystemStats::getUserLanguage() + "-" + juce::SystemStats::getUserRegion());
     obj->setProperty ("install_id", getInstallId());
     obj->setProperty ("time",       juce::Time::getCurrentTime().toISO8601 (true));

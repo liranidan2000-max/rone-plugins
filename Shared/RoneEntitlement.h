@@ -320,17 +320,94 @@ namespace RoneEntitlement
         return verify32 (sig, t) == 0;
     }
 
+    // ---- SHA-256, lowercase hex ----
+    // For the machine id below: plugins link juce_core only, and juce::SHA256
+    // lives in juce_cryptography. SHA-256's round constants and initial hash
+    // are the top 32 bits of SHA-512's (the same cube / square roots of the
+    // same primes), so it reuses detail::K and detail::iv above.
+    inline juce::String sha256Hex (const void* data, size_t length)
+    {
+        using namespace detail;
+        const auto rotr = [] (u32 x, int c) { return (x >> c) | (x << (32 - c)); };
+
+        u32 h[8];
+        for (int i = 0; i < 8; ++i) h[i] = (u32) (dl64 (iv + 8 * i) >> 32);
+
+        std::vector<u8> m (static_cast<const u8*> (data), static_cast<const u8*> (data) + length);
+        m.push_back (0x80);
+        while (m.size() % 64 != 56) m.push_back (0);
+        const u64 bits = (u64) length * 8;
+        for (int i = 7; i >= 0; --i) m.push_back ((u8) (bits >> (8 * i)));
+
+        for (size_t off = 0; off < m.size(); off += 64)
+        {
+            u32 w[64];
+            for (int i = 0; i < 16; ++i)
+                w[i] = (u32) m[off + 4 * (size_t) i] << 24 | (u32) m[off + 4 * (size_t) i + 1] << 16
+                     | (u32) m[off + 4 * (size_t) i + 2] << 8 | (u32) m[off + 4 * (size_t) i + 3];
+            for (int i = 16; i < 64; ++i)
+                w[i] = w[i - 16] + (rotr (w[i - 15], 7) ^ rotr (w[i - 15], 18) ^ (w[i - 15] >> 3))
+                     + w[i - 7] + (rotr (w[i - 2], 17) ^ rotr (w[i - 2], 19) ^ (w[i - 2] >> 10));
+
+            u32 a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+            for (int i = 0; i < 64; ++i)
+            {
+                const u32 t1 = hh + (rotr (e, 6) ^ rotr (e, 11) ^ rotr (e, 25)) + ((e & f) ^ (~e & g))
+                             + (u32) (K[i] >> 32) + w[i];
+                const u32 t2 = (rotr (a, 2) ^ rotr (a, 13) ^ rotr (a, 22)) + ((a & b) ^ (a & c) ^ (b & c));
+                hh = g; g = f; f = e; e = d + t1; d = c; c = b; b = a; a = t1 + t2;
+            }
+            h[0] += a; h[1] += b; h[2] += c; h[3] += d; h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
+        }
+
+        u8 out[32];
+        for (int i = 0; i < 8; ++i)
+            for (int j = 0; j < 4; ++j)
+                out[4 * i + j] = (u8) (h[i] >> (24 - 8 * j));
+        return juce::String::toHexString (out, 32, 0);
+    }
+
+    // ---- this computer's machine id, as the Center signs in with it ----
+    // AccountClient::getMachineId(): sha256 ("rone-device:" + JUCE's device
+    // id), or of the random id the Center keeps in machine-id.txt when the
+    // device id is empty. Both that this process can see (a match on either
+    // counts), read only - a plugin never creates machine-id.txt. Worked out
+    // once per module; empty when neither exists.
+    inline const juce::StringArray& localMachineIds()
+    {
+        static const juce::StringArray ids = []
+        {
+            juce::StringArray r;
+            const auto add = [&r] (const juce::String& raw)
+            {
+                if (raw.isEmpty()) return;
+                const juce::String keyed ("rone-device:" + raw);   // must outlive the UTF-8 pointer below
+                const auto utf8 = keyed.toUTF8();
+                r.addIfNotAlreadyThere (sha256Hex (utf8.getAddress(), utf8.sizeInBytes() - 1));
+            };
+            add (juce::SystemStats::getUniqueDeviceID());
+            const auto idFile = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                                    .getChildFile ("RonePlugins").getChildFile ("machine-id.txt");
+            if (idFile.existsAsFile())
+                add (idFile.loadFileAsString().trim());
+            return r;
+        }();
+        return ids;
+    }
+
     // ---- the entitlement itself ----
     struct Payload
     {
         bool pass = false;
         juce::StringArray owned;
         juce::int64 issuedAt = 0;   // ms: when the server said yes
-        juce::String machine;
+        juce::String machine;       // the Center's machine id (localMachineIds())
     };
 
-    // Decodes and verifies ent/sig as the Center wrote them. Nothing on any failure.
-    inline std::optional<Payload> read (const juce::String& entB64, const juce::String& sigB64)
+    // Decodes and verifies ent/sig as the Center wrote them. Nothing on any
+    // failure. (pk is the production key everywhere but Shared/tests.)
+    inline std::optional<Payload> read (const juce::String& entB64, const juce::String& sigB64,
+                                        const unsigned char* pk = kPublicKey)
     {
         juce::MemoryOutputStream ent, sig;
         if (! juce::Base64::convertFromBase64 (ent, entB64.trim()) || ! juce::Base64::convertFromBase64 (sig, sigB64.trim()))
@@ -338,7 +415,7 @@ namespace RoneEntitlement
         if (sig.getDataSize() != 64 || ent.getDataSize() == 0 || ent.getDataSize() > 8192)
             return std::nullopt;
 
-        if (! verify (ent.getData(), ent.getDataSize(), static_cast<const unsigned char*> (sig.getData())))
+        if (! verify (ent.getData(), ent.getDataSize(), static_cast<const unsigned char*> (sig.getData()), pk))
             return std::nullopt;
 
         const auto json = juce::JSON::parse (juce::String::fromUTF8 (static_cast<const char*> (ent.getData()), (int) ent.getDataSize()));

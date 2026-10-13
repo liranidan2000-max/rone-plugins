@@ -57,9 +57,11 @@ Source: "..\ReverseReverbVST\build-ci\ReverseReverb_artefacts\Release\Standalone
   DestDir: "{app}"; \
   Flags: ignoreversion
 
-; The WebView2 loader has to sit beside the standalone executable: JUCE loads
-; it with LoadLibrary at runtime, and without it the UI silently falls back
-; to the legacy IE control and shows an error page instead of the interface.
+; Not needed by this build: the plugin and the standalone link WebView2's
+; loader statically (JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1 in the
+; product's CMakeLists.txt). The DLL is still installed for older builds on
+; disk that predate static linking and load it at runtime, and it is never
+; uninstalled because {app} is shared with them (audit R247).
 ; CI downloads the NuGet package to <workspace>\webview2 before compiling.
 Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebView2Loader.dll"; \
   DestDir: "{app}"; \
@@ -70,7 +72,7 @@ Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebVie
 ; docs/manuals/tools). The Center's "Manual" menu entry opens it from here.
 Source: "..\docs\manuals\RONE Reverse Reverb - User Manual.pdf"; \
   DestDir: "{app}\Manuals"; \
-  Flags: ignoreversion
+  Flags: ignoreversion restartreplace
 
 ; ============================================================================
 ; Registry — write installed version for Center detection

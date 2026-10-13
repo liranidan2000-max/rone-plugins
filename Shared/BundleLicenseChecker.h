@@ -33,13 +33,16 @@
 // TWO WAYS TO OWN A PLUGIN
 // ----------------------------------------------------------------------------
 // RONE ALL ACCESS ($20/mo) covers every plugin — that is `licensed="1"` in
-// the file, and isBundleLicensed() answers it. A per-plugin LIFETIME licence
-// covers exactly one product and is listed in the `products` attribute.
+// the file. A per-plugin LIFETIME licence covers exactly one product and is
+// listed in the `products` attribute. isProductLicensed() answers both - it
+// is the only check a plugin should call.
 //
-// isBundleLicensed() deliberately stays ALL-ACCESS-only. A lifetime-only
-// customer gets `licensed="0"`, which is precisely what keeps every plugin
-// build shipped before lifetime licences existed locked: those builds only
-// know how to read `licensed`. New builds call isProductLicensed() instead.
+// isBundleLicensed() is ALL-ACCESS-only, so a lifetime buyer never passes it.
+// No product calls it any more; it is [[deprecated]] so that a new caller
+// shows up as a compiler warning, and it goes in a later Shared rebuild
+// (audit R267). A lifetime-only customer gets `licensed="0"`, which is what
+// keeps the builds shipped before lifetime licences existed locked: they only
+// know how to read `licensed`.
 //
 // ----------------------------------------------------------------------------
 // OPEN / LOCKED STATE
@@ -60,6 +63,7 @@ public:
     // ---- ALL ACCESS check: read the shared XML file ------------------------
     // True only while an ALL ACCESS subscription is active. Owning a plugin
     // outright does NOT make this true — see the note above.
+    [[deprecated ("ALL ACCESS only - a lifetime buyer is locked out. Use isProductLicensed (\"<id>\")")]]
     static bool isBundleLicensed()
     {
         const auto state = readLicenseState();
@@ -111,6 +115,9 @@ public:
     }
 
     // ---- Quick registry check (Windows only) -------------------------------
+    // Nothing reads it (the Center still writes BundleStatus); goes with
+    // isBundleLicensed() in a later Shared rebuild (audit R267).
+    [[deprecated ("unused - the licence lives in BundleLicense.xml")]]
     static juce::String getRegistryStatus()
     {
     #if JUCE_WINDOWS
@@ -139,6 +146,8 @@ public:
     }
 
 private:
+    friend struct BundleLicenseCheckerTest;   // Shared/tests/licence_sim
+
     // Accept if validated within 8 days (7-day grace + 1-day buffer)
     static constexpr juce::int64 BUNDLE_GRACE_MS    =  8LL * 24 * 60 * 60 * 1000;
     static constexpr juce::int64 PERPETUAL_GRACE_MS = 90LL * 24 * 60 * 60 * 1000;
@@ -195,7 +204,8 @@ private:
         return state;
     }
 
-    static LicenseState parseLicenseFile (const juce::File& file, bool signedRequired)
+    static LicenseState parseLicenseFile (const juce::File& file, bool signedRequired,
+                                          const unsigned char* publicKey = RoneEntitlement::kPublicKey)
     {
         LicenseState state;
 
@@ -246,12 +256,24 @@ private:
 
         if (ent.isNotEmpty() || sig.isNotEmpty())
         {
-            const auto signedState = RoneEntitlement::read (ent, sig);
+            const auto signedState = RoneEntitlement::read (ent, sig, publicKey);
             if (! signedState)
             {
                 DBG ("BundleLicenseChecker: signed entitlement does NOT verify — NOT licensed");
                 return state;   // edited: claims nothing
             }
+
+            // The payload names the machine the Center signed in on. A file
+            // copied to another computer still verifies, and it still counts:
+            // this only notes (at most once a month per computer, no ids in
+            // it) that the name is not this computer's, so the fleet shows how
+            // often a genuine owner's DAW disagrees with his Center before
+            // anything is ever enforced (audit R014, docs/LICENCE-CUTOVER.md).
+            if (isOtherMachine (signedState->machine, RoneEntitlement::localMachineIds()))
+                RemoteLicenseGate::observeOnce ("LICENCE_MACHINE_MISMATCH",
+                                                "A signed licence names another computer than this host's",
+                                                "host=" + RemoteLicenseGate::hostName()
+                                                  + "; local ids=" + juce::String (RoneEntitlement::localMachineIds().size()));
 
             state.valid          = true;
             state.bundle         = signedState->pass;
@@ -299,6 +321,14 @@ private:
         DBG ("BundleLicenseChecker: products = '" + state.products + "'");
 
         return state;
+    }
+
+    // A machine id is signed, and this computer has one, and they differ.
+    // An unknown on either side is not a difference.
+    static bool isOtherMachine (const juce::String& signedMachine, const juce::StringArray& localIds)
+    {
+        return signedMachine.trim().isNotEmpty() && ! localIds.isEmpty()
+            && ! localIds.contains (signedMachine.trim(), true);
     }
 
     // Whole-token, case-insensitive compare. A substring match here would be
