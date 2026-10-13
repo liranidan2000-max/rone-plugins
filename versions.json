@@ -23,7 +23,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "1.1.13 - No more DAW crash when you close the window or remove the plugin right after a change. Fade handles drag at any speed, the swell stops when the song stops, and on Retina Macs the knobs no longer start a file drag.",
+      "whats_new": "1.1.14 - A dropped file that is too long or cannot be read now tells you why, and saving a preset has its own SAVE button, so it works on a Mac and in every DAW.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
@@ -72,7 +72,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "1.5.7 - Maintenance: the same licence check as every other RONE plugin. Nothing changes in how Stutter sounds or works.",
+      "whats_new": "1.5.8 - A file that cannot be read now says so, the preview no longer cuts the channel when it ends, and the lock screen names a Stutter licence or ALL ACCESS.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
@@ -120,7 +120,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "1.3.2 - Stucker goes quiet when you stop the song: a loop or RIDE left up by automation no longer keeps playing into a stopped project.",
+      "whats_new": "1.3.3 - Opening a saved project no longer starts a RIDE by itself, and the lock screen says a Stucker licence or ALL ACCESS is required.",
       "standalone_exe": "RONE Stucker.exe",
       "vst3_bundle": "RONE Stucker.vst3",
       "au_bundle": "RONE Stucker.component",
@@ -169,7 +169,7 @@
         "Standalone"
       ],
       "description": "One knob that throws anything into a tempo-locked atmosphere - a dotted-8th ping-pong delay whose band-limited feedback loop stays clean at near-infinite feedback, so the wash sits behind the mix instead of muddying it",
-      "whats_new": "1.8.2 - Several Throws playing at once no longer disturb each other's NOTE read-out.",
+      "whats_new": "1.8.3 - The lock screen now says that a RONE Throw licence or RONE ALL ACCESS unlocks the plugin.",
       "standalone_exe": "RONE Throw.exe",
       "vst3_bundle": "RONE Throw.vst3",
       "au_bundle": "RONE Throw.component",
@@ -217,7 +217,7 @@
         "Standalone"
       ],
       "description": "FREE plugin - sign in to the Center with a free RONE account and it unlocks. A hard clipper that shows you exactly what it cut: the waveform after the clip stage with the removed peaks in blue, one CLIP knob, LOW CUT that keeps kick and bass out of the clipper, and integer-latency oversampling that nulls against the input at -100 dB",
-      "whats_new": "1.0.3 - Clipper no longer plays about 8 ms early against the rest of the project while it is signed out.",
+      "whats_new": "1.0.4 - The sign-in screen now says Clipper is free with any roneaudio.com account, instead of asking for ALL ACCESS.",
       "standalone_exe": "RONE Clipper.exe",
       "vst3_bundle": "RONE Clipper.vst3",
       "au_bundle": "RONE Clipper.component",
@@ -266,7 +266,7 @@
         "Standalone"
       ],
       "description": "One knob, the whole build-up: turn INTENSITY up over the phrase and the mix becomes a rise (a steep high-pass, a big reverb, echoes, noise, a barber-pole climb), snap it to zero and the drop hits with the reverb still spilling into it - or press GO and let it land on the bar by itself",
-      "whats_new": "1.0.4 - A stray bad sample from another plugin can no longer silence RONE Rise until you reload it.",
+      "whats_new": "1.0.5 - Opening a project saved with GO held no longer fires a build-up by itself, and the lock screen names the RONE Rise licence or RONE ALL ACCESS.",
       "standalone_exe": "RONE Rise.exe",
       "vst3_bundle": "RONE Rise.vst3",
       "au_bundle": "RONE Rise.component",
@@ -315,7 +315,7 @@
         "Standalone"
       ],
       "description": "Drop a vocal and it becomes a metallic chop instrument: Iron flattens it to the note you pick, slices it into chops on your MIDI keys, rings each chop through a comb tuned to that note and throws it left and right - play it from the piano roll or let the GROOVE engine write the pattern",
-      "whats_new": "1.0.4 - On a Mac every button answers the first click again inside your DAW - since 1.0.3 a click could only wake the plugin window. 1.0.3 - Mac standalone: OPTIONS opens again and the window can be dragged by its title bar - a click there used to be caught by the file-drop layer. 1.0.2 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.0.1 - GROOVE plays the moment you switch it on, even with your DAW stopped, at your project's tempo: press play and it follows your song, press stop and it stops (click RUN in the footer to run it again). The preset locks are always shown next to their controls. The chop read-out no longer jumps while the groove plays, and a macro's card stays open while the mouse rests on it. Drop any sample, not only vocals. 1.0.0 - first release. Drop any vocal (up to 60 s): it is flattened to one note with its formants kept, sliced into chops (AUTO SLICE small / medium / large) and mapped to your keys. IRON and RING tune a metallic comb to the note, every chop pans to its own side (manual per chop or AUTO), FADE shortens every chop, MIX keeps the dry vocal and MIX NOTE keeps the straight note without the metal. GROOVE writes a pattern from 16 researched presets, with per-step editing, on/off per step, rolls, history and lock, and DRAG MIDI into your piano roll. ARP gives each chop the next note of a chord or scale (FOLLOW snaps to it), OCTAVE +/- and MIDI NOTE let the keys under the chops change the note while the groove plays. 15 presets with four macros (METAL, CHOP, SPACE, MOTION), locks that keep a control when you switch presets, six MY SLOTS, TONE, LEVEL, LOW CUT and a SAFE limiter.",
+      "whats_new": "1.0.5 - Maintenance: clearer error reports when a project's saved vocal cannot be read. Nothing changes in how IRON sounds or works.",
       "standalone_exe": "RONE Iron.exe",
       "vst3_bundle": "RONE Iron.vst3",
       "au_bundle": "RONE Iron.component",
@@ -410,7 +410,7 @@
         "Standalone"
       ],
       "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
-      "whats_new": "1.0.3 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 1.0.2 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 1.0.1 - the About panel's texts are readable and its version line is real. Remote lock now bites within a minute: signing out of the Center, a revoked or expired pass locks the plugin even while it is open, and the window shows a sign-in screen with OPEN RONE PLUGINS CENTER. Also: the plugin is named RONE AFTERSPACE in your DAW and ships with a PDF manual.",
+      "whats_new": "1.0.4 - The lock screen names the RONE AFTER SPACE licence or RONE ALL ACCESS, and the installer removes an old stray copy that could hide the real one from your DAW.",
       "standalone_exe": "RONE AFTERSPACE.exe",
       "vst3_bundle": "RONE AFTERSPACE.vst3",
       "au_bundle": "RONE AFTERSPACE.component",

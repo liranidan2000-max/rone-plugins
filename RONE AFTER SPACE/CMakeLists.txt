@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RoneAfterspace VERSION 1.0.3)
+project(RoneAfterspace VERSION 1.0.4)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -50,7 +50,7 @@ juce_add_plugin(RoneAfterspace
     # macOS: without a usage description the system kills an app the moment it opens the microphone
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT "RONE AFTERSPACE needs your audio input to process live audio."
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    COPY_PLUGIN_AFTER_BUILD FALSE
     NEEDS_WEB_BROWSER      TRUE
     NEEDS_WEBVIEW2         TRUE
     ICON_BIG               "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_1024.png"

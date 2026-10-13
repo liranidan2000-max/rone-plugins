@@ -956,7 +956,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
 <body>
 <div class="rl-overlay rl-hidden" id="rlOverlay" style="display:none">
   <div class="rl-name">RONE <i>AFTERSPACE</i></div>
-  <span class="rl-prompt">RONE ALL ACCESS required</span>
+  <span class="rl-prompt">A RONE AFTER SPACE licence or RONE ALL ACCESS is required</span>
   <span class="rl-hint">Sign in with your roneaudio.com account in the RONE Plugins Center</span>
   <button class="rl-btn" id="rlLaunch">OPEN RONE PLUGINS CENTER</button>
   <span class="rl-sub">No account yet? 7-day free trial at roneaudio.com</span>
