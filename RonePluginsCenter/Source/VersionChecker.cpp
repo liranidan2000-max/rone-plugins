@@ -131,6 +131,7 @@ void VersionChecker::clearInstalledVersion (const juce::String& registryKey)
     // The installer's own [Registry] entry (uninsdeletekey) is this same key.
     const auto path = juce::String (RONE_REGISTRY_PATH) + "\\" + registryKey;
     RegDeleteKeyValueW (HKEY_CURRENT_USER, path.toWideCharPointer(), L"InstalledVersion");
+    RegDeleteKeyValueW (HKEY_CURRENT_USER, path.toWideCharPointer(), L"InstalledSha256");
 #else
     auto file = getVersionsXmlFile();
     if (! file.existsAsFile())
@@ -148,6 +149,86 @@ void VersionChecker::clearInstalledVersion (const juce::String& registryKey)
             return;
         }
 #endif
+}
+
+// "<sha256>@<installed version right after that install>" - see setInstalledSha.
+static juce::String readInstalledSha (const juce::String& registryKey)
+{
+    if (registryKey.isEmpty())
+        return {};
+#if JUCE_WINDOWS
+    return readRegString (HKEY_CURRENT_USER, juce::String (RONE_REGISTRY_PATH) + "\\" + registryKey, L"InstalledSha256");
+#else
+    auto file = getVersionsXmlFile();
+    if (! file.existsAsFile())
+        return {};
+    auto xml = juce::parseXML (file);
+    if (xml == nullptr)
+        return {};
+    for (auto* child : xml->getChildIterator())
+        if (child->getStringAttribute ("id") == registryKey)
+            return child->getStringAttribute ("sha");
+    return {};
+#endif
+}
+
+void VersionChecker::setInstalledSha (const juce::String& registryKey, const juce::String& sha256)
+{
+    if (registryKey.isEmpty())
+        return;
+
+    const auto sha = sha256.trim().toLowerCase();
+    const auto value = sha.length() == 64 && sha.containsOnly ("0123456789abcdef")
+                           ? sha + "@" + getInstalledVersion (registryKey)
+                           : juce::String();
+#if JUCE_WINDOWS
+    const auto path = juce::String (RONE_REGISTRY_PATH) + "\\" + registryKey;
+    if (value.isEmpty())
+    {
+        RegDeleteKeyValueW (HKEY_CURRENT_USER, path.toWideCharPointer(), L"InstalledSha256");
+        return;
+    }
+    HKEY hKey = nullptr;
+    if (RegCreateKeyExW (HKEY_CURRENT_USER, path.toWideCharPointer(), 0, nullptr, REG_OPTION_NON_VOLATILE,
+                         KEY_WRITE, nullptr, &hKey, nullptr) == ERROR_SUCCESS)
+    {
+        RegSetValueExW (hKey, L"InstalledSha256", 0, REG_SZ, reinterpret_cast<const BYTE*> (value.toWideCharPointer()),
+                        (DWORD) ((value.length() + 1) * sizeof (wchar_t)));
+        RegCloseKey (hKey);
+    }
+#else
+    auto file = getVersionsXmlFile();
+    std::unique_ptr<juce::XmlElement> xml;
+    if (file.existsAsFile())
+        xml = juce::parseXML (file);
+    if (xml == nullptr)
+        return;   // setInstalledVersion writes the file first; nothing to attach the hash to
+    for (auto* child : xml->getChildIterator())
+        if (child->getStringAttribute ("id") == registryKey)
+        {
+            if (value.isEmpty()) child->removeAttribute ("sha");
+            else                 child->setAttribute ("sha", value);
+            xml->writeTo (file, {});
+            return;
+        }
+#endif
+}
+
+// The manifest offers exactly the installer this Center last installed, and the
+// version that install left on disk is still the one there (audit R050).
+static bool isSameInstallerAsInstalled (const PluginInfo& info)
+{
+   #if JUCE_MAC
+    const auto want = info.sha256Mac.trim();
+   #else
+    const auto want = info.sha256.trim();
+   #endif
+    if (want.length() != 64 || info.installedVersion.isEmpty() || info.installedVersion == "?")
+        return false;
+
+    const auto stamp = readInstalledSha (info.registryKey);
+    return stamp.upToFirstOccurrenceOf ("@", false, false).equalsIgnoreCase (want)
+        && stamp.fromFirstOccurrenceOf ("@", false, false) == info.installedVersion;
 }
 
 void VersionChecker::registerInnoAppId (const juce::String& registryKey, const juce::String& appId)
@@ -199,6 +280,25 @@ void VersionChecker::refreshInstallState (PluginInfo& info)
 {
     info.installedVersion = getInstalledVersion (info.registryKey);
     info.status = determineStatus (info.installedVersion, info.remoteVersion);
+
+   #if JUCE_WINDOWS
+    // Audit R323: the HKCU stamp outlives an uninstall run by ANOTHER Windows
+    // account (Inno's uninsdeletekey clears only the uninstalling user's hive), and
+    // the card said Installed / Open for a plugin that is gone. Only when the
+    // installer's own record AND every file are gone - a copy on disk stays Installed.
+    if (info.status != PluginStatus::NotInstalled
+        && (info.standaloneExe.isNotEmpty() || info.vst3Bundle.isNotEmpty())
+        && innoInstalledVersion (info.registryKey).isEmpty()
+        && ! isStandaloneInstalled (info.standaloneExe) && ! isVst3Installed (info.vst3Bundle))
+    {
+        clearInstalledVersion (info.registryKey);
+        info.installedVersion = {};
+        info.status = PluginStatus::NotInstalled;
+    }
+   #endif
+
+    if (info.status == PluginStatus::UpdateAvailable && isSameInstallerAsInstalled (info))
+        info.status = PluginStatus::UpToDate;
 
     // Fallback: if registry says not installed but the files exist on disk,
     // treat as installed (handles manual installs / first run after existing install)

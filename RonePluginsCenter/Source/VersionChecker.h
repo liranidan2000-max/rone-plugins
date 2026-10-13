@@ -106,6 +106,13 @@ public:
     // Forget the version the Center stamped for this plugin (after an uninstall).
     static void clearInstalledVersion (const juce::String& registryKey);
 
+    // Audit R050: the SHA256 of the installer the Center last installed for this
+    // plugin, kept with the version that was on disk right after it. While the
+    // manifest still offers that very file and that version is still what is
+    // installed, a different version LABEL is not an update - before 2.1.4 a label
+    // that differed from the exe's own version was offered (and installed) forever.
+    static void setInstalledSha (const juce::String& registryKey, const juce::String& sha256);
+
     // The installer AppId the manifest names for a plugin (Windows). The built-in
     // table below stays the fallback for manifests written before the field.
     static void registerInnoAppId (const juce::String& registryKey, const juce::String& appId);

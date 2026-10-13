@@ -94,6 +94,13 @@ Root: HKCU; Subkey: "Software\RONE\Plugins"; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\RONE\Plugins\__center__"; ValueType: string;   ValueName: "InstalledVersion"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
 
 ; ============================================================================
+; Uninstall - the folder the elevated install batch stages installers in
+; (Center 2.1.4, audit R048), only when it is empty
+; ============================================================================
+[UninstallDelete]
+Type: dirifempty; Name: "{app}\InstallCache"
+
+; ============================================================================
 ; Post-install: install WebView2 Runtime (if needed), then launch the Center
 ; ============================================================================
 [Run]
