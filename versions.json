@@ -23,7 +23,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "1.1.14 - A dropped file that is too long or cannot be read now tells you why, and saving a preset has its own SAVE button, so it works on a Mac and in every DAW.",
+      "whats_new": "1.1.15 - With two Reverse Reverb windows open, closing one no longer stops drag and drop in the other, and the Default preset now recalls the settings a new instance opens with.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
@@ -72,7 +72,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "1.5.8 - A file that cannot be read now says so, the preview no longer cuts the channel when it ends, and the lock screen names a Stutter licence or ALL ACCESS.",
+      "whats_new": "1.5.9 - A project whose sample was moved or deleted now opens with SOURCE NOT FOUND and keeps the file's path, clips dragged in from Cubase are kept in a permanent folder so the project still opens later, and two Stutter windows open at once no longer break drag and drop.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
