@@ -9,7 +9,7 @@
 RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfterspaceAudioProcessor& p)
     : AudioProcessorEditor (&p),
       processorRef (p),
-      updatePrompt ("RoneAfterspace", "RONE Afterspace", JucePlugin_VersionString, "#FF8A3D", p.roneUpdatePending),
+      updatePrompt ("RoneAfterspace", "RONE AFTERSPACE", JucePlugin_VersionString, "#FF8A3D", p.roneUpdatePending),
       webView (updatePrompt.addTo (juce::WebBrowserComponent::Options{}
           .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
           .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}
@@ -138,6 +138,11 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
             holder->getMuteInputValue().setValue (false);
 
         customTitleBar = std::make_unique<CustomTitleBar>();
+        customTitleBar->onAudioSettings = []
+        {
+            if (auto* holder = juce::StandalonePluginHolder::getInstance())
+                holder->showAudioSettingsDialog();
+        };
         addAndMakeVisible (*customTitleBar);
         customTitleBar->toFront (false);
         // The app always opens at its natural size — the auto-restored session

@@ -1269,6 +1269,10 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
 function rlSetLicensed(ok){var o=document.getElementById('rlOverlay');if(!o)return;if(ok){o.classList.add('rl-hidden');setTimeout(function(){if(o.classList.contains('rl-hidden'))o.style.display='none';},400);}else{o.style.display='';void o.offsetWidth;o.classList.remove('rl-hidden');}}
 function emit(n,v){ if(window.__JUCE__ && window.__JUCE__.backend) window.__JUCE__.backend.emitEvent(n,v||{}); }
 function setParam(id,v){ emit("setParameter",{name:id,value:v}); }
+// One-shot write (a click, a menu pick, a preset, a reset): hosts in touch/latch/write only
+// record a change that arrives inside a gesture, so even a single value is wrapped (as in
+// RONE Flanger). Knob drags keep their own gesture from mousedown to mouseup.
+function setParamOnce(id,v){ emit("beginGesture",{name:id}); setParam(id,v); emit("endGesture",{name:id}); }
 
 // ============================================================================
 // Parameter registry
@@ -1356,11 +1360,15 @@ function mkKnob(holderId,cfg){
     e.preventDefault();
   });
   el.addEventListener("dblclick", function(){
+    emit("beginGesture",{name:cfg.id});
     setKnob(K, clamp01(toNorm(cfg, DEFAULTS[cfg.id])), true);
+    emit("endGesture",{name:cfg.id});
   });
   el.addEventListener("wheel", function(e){
     var step = e.shiftKey?0.005:0.03;
+    emit("beginGesture",{name:cfg.id});
     setKnob(K, clamp01(K.norm - Math.sign(e.deltaY)*step), true);
+    emit("endGesture",{name:cfg.id});
     e.preventDefault();
   },{passive:false});
   // Right-click = the host's parameter menu (FL: automation/link)
@@ -1475,11 +1483,11 @@ var ECHO_TIMES=["1/32","1/16T","1/16","1/16D","1/8T","1/8","1/8D","1/4T","1/4","
 var selTime=document.getElementById("sel-echotime");
 ECHO_TIMES.forEach(function(t){ var o=document.createElement("option"); o.textContent=t; selTime.appendChild(o); });
 selTime.selectedIndex=9;
-selTime.addEventListener("change",function(){ P["echo.time"]=selTime.selectedIndex; setParam("echo.time",selTime.selectedIndex); });
+selTime.addEventListener("change",function(){ P["echo.time"]=selTime.selectedIndex; setParamOnce("echo.time",selTime.selectedIndex); });
 
 var selMode=document.getElementById("sel-duckmode");
 selMode.addEventListener("change",function(){
-  P["duck.mode"]=selMode.selectedIndex; setParam("duck.mode",selMode.selectedIndex); updateDuckHint();
+  P["duck.mode"]=selMode.selectedIndex; setParamOnce("duck.mode",selMode.selectedIndex); updateDuckHint();
 });
 function updateDuckHint(){
   document.getElementById("duck-hint").style.opacity = (Math.round(P["duck.mode"])===4)?"0":"1";
@@ -1490,7 +1498,7 @@ var segRouting=document.getElementById("seg-routing");
 segRouting.querySelectorAll("span").forEach(function(s){
   s.addEventListener("click",function(){
     var i=parseInt(s.getAttribute("data-i"));
-    P["echo.routing"]=i; setParam("echo.routing",i); renderRouting();
+    P["echo.routing"]=i; setParamOnce("echo.routing",i); renderRouting();
   });
 });
 function renderRouting(){
@@ -1504,7 +1512,7 @@ function renderRouting(){
 function bindToggle(btnId,paramId,cls){
   var b=document.getElementById(btnId);
   b.addEventListener("click",function(){
-    var nv = P[paramId]>0.5?0:1; P[paramId]=nv; setParam(paramId,nv);
+    var nv = P[paramId]>0.5?0:1; P[paramId]=nv; setParamOnce(paramId,nv);
     b.classList.toggle(cls,nv>0.5);
   });
   return b;
@@ -1536,7 +1544,7 @@ function charFromEvent(e){
   P["main.character"]=v; setParam("main.character",v); renderChar();
 }
 charTrack.addEventListener("dblclick",function(){
-  P["main.character"]=DEFAULTS["main.character"]; setParam("main.character",P["main.character"]); renderChar();
+  P["main.character"]=DEFAULTS["main.character"]; setParamOnce("main.character",P["main.character"]); renderChar();
 });
 
 // Advanced drawer toggle
@@ -1654,7 +1662,7 @@ function applyPreset(i){
     if (lockMix && id==="main.mix") continue;
     if (PRESET_SKIP[id]) continue;
     var v = (pr.p[id]!==undefined)?pr.p[id]:DEFAULTS[id];
-    P[id]=v; setParam(id,v);
+    P[id]=v; setParamOnce(id,v);
   }
   emit("setPresetName",{name:pr.n});
   document.getElementById("preset-name").textContent=pr.n.toUpperCase();

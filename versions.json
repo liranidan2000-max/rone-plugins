@@ -120,7 +120,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "1.3.3 - Opening a saved project no longer starts a RIDE by itself, and the lock screen says a Stucker licence or ALL ACCESS is required.",
+      "whats_new": "1.3.4 - A RIDE started while the song is stopped now counts from the bar where playback starts, the lock screen's OPEN RONE PLUGINS CENTER button finds the Center wherever it is installed, and the plugin looks right without an internet connection.",
       "standalone_exe": "RONE Stucker.exe",
       "vst3_bundle": "RONE Stucker.vst3",
       "au_bundle": "RONE Stucker.component",
@@ -169,7 +169,7 @@
         "Standalone"
       ],
       "description": "One knob that throws anything into a tempo-locked atmosphere - a dotted-8th ping-pong delay whose band-limited feedback loop stays clean at near-infinite feedback, so the wash sits behind the mix instead of muddying it",
-      "whats_new": "1.8.3 - The lock screen now says that a RONE Throw licence or RONE ALL ACCESS unlocks the plugin.",
+      "whats_new": "1.8.4 - MIDI macro recall now sets only the controls a macro stores, hosts that send very large audio blocks no longer lose the effect, and the plugin looks right without an internet connection.",
       "standalone_exe": "RONE Throw.exe",
       "vst3_bundle": "RONE Throw.vst3",
       "au_bundle": "RONE Throw.component",
@@ -217,7 +217,7 @@
         "Standalone"
       ],
       "description": "FREE plugin - sign in to the Center with a free RONE account and it unlocks. A hard clipper that shows you exactly what it cut: the waveform after the clip stage with the removed peaks in blue, one CLIP knob, LOW CUT that keeps kick and bass out of the clipper, and integer-latency oversampling that nulls against the input at -100 dB",
-      "whats_new": "1.0.4 - The sign-in screen now says Clipper is free with any roneaudio.com account, instead of asking for ALL ACCESS.",
+      "whats_new": "1.0.5 - The Windows standalone has an AUDIO button for audio and MIDI settings, and the window is lighter on the CPU.",
       "standalone_exe": "RONE Clipper.exe",
       "vst3_bundle": "RONE Clipper.vst3",
       "au_bundle": "RONE Clipper.component",
@@ -266,7 +266,7 @@
         "Standalone"
       ],
       "description": "One knob, the whole build-up: turn INTENSITY up over the phrase and the mix becomes a rise (a steep high-pass, a big reverb, echoes, noise, a barber-pole climb), snap it to zero and the drop hits with the reverb still spilling into it - or press GO and let it land on the bar by itself",
-      "whats_new": "1.0.5 - Opening a project saved with GO held no longer fires a build-up by itself, and the lock screen names the RONE Rise licence or RONE ALL ACCESS.",
+      "whats_new": "1.0.6 - The Windows standalone has an AUDIO button for audio and MIDI settings, automating PRESET is handled more safely, and the window is lighter on the CPU.",
       "standalone_exe": "RONE Rise.exe",
       "vst3_bundle": "RONE Rise.vst3",
       "au_bundle": "RONE Rise.component",
@@ -315,7 +315,7 @@
         "Standalone"
       ],
       "description": "Drop a vocal and it becomes a metallic chop instrument: Iron flattens it to the note you pick, slices it into chops on your MIDI keys, rings each chop through a comb tuned to that note and throws it left and right - play it from the piano roll or let the GROOVE engine write the pattern",
-      "whats_new": "1.0.5 - Maintenance: clearer error reports when a project's saved vocal cannot be read. Nothing changes in how IRON sounds or works.",
+      "whats_new": "1.0.6 - Closing a project while a vocal is still loading is instant again, a project whose stored vocal is damaged loads the original file from its folder, and drags from Cubase, Nuendo or Logic no longer overwrite each other when two clips share a name.",
       "standalone_exe": "RONE Iron.exe",
       "vst3_bundle": "RONE Iron.vst3",
       "au_bundle": "RONE Iron.component",
@@ -362,7 +362,7 @@
         "Standalone"
       ],
       "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
-      "whats_new": "2.1.0 - INFINITE starts its sweep from the same point every time you switch it on - by hand, by automation, or when you press play with it already on - instead of wherever the song happened to be in the cycle, which could start a riser in the middle or at the end. Automate INFINITE on the bar where the rise should begin and it climbs the same way every time; the start lands on the nearest 1/16, so automation drawn on the bar line starts exactly there. A loop that jumps back before that point starts the sweep again. 2.0.9 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 2.0.8 - INFINITE has three new lengths: 32 BAR and 16 BAR for long builds, 1/4 (one beat) for a fast shimmer - eight in all, from 32 bars down to a quarter bar. Projects and presets saved with an older version open on the length they had; only automation drawn on the sweep length in an older project needs redrawing. 2.0.7 - FIX: OUTPUT works while you play. Turning it, or automating it, now changes the level at once (with a 20 ms ramp) instead of only after the audio restarted. GATE no longer clicks: the effect fades in and out over 5 ms right on the grid line, where it used to switch hard on the edge of the audio buffer (up to a whole buffer late), and the flanger keeps running while the gate is closed, so every pulse comes back clean. 2.0.6 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 2.0.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable. Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
+      "whats_new": "2.1.1 - AUTO GAIN keeps working in hosts that send empty audio blocks, at high FEEDBACK the ring now stops when you stop the song while bounces keep the real tail, a user preset saved under a factory preset's name now loads, and the Windows standalone has an AUDIO button for audio and MIDI settings. 2.1.0 - INFINITE starts its sweep from the same point every time you switch it on - by hand, by automation, or when you press play with it already on - instead of wherever the song happened to be in the cycle, which could start a riser in the middle or at the end. Automate INFINITE on the bar where the rise should begin and it climbs the same way every time; the start lands on the nearest 1/16, so automation drawn on the bar line starts exactly there. A loop that jumps back before that point starts the sweep again. 2.0.9 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 2.0.8 - INFINITE has three new lengths: 32 BAR and 16 BAR for long builds, 1/4 (one beat) for a fast shimmer - eight in all, from 32 bars down to a quarter bar. Projects and presets saved with an older version open on the length they had; only automation drawn on the sweep length in an older project needs redrawing. 2.0.7 - FIX: OUTPUT works while you play. Turning it, or automating it, now changes the level at once (with a 20 ms ramp) instead of only after the audio restarted. GATE no longer clicks: the effect fades in and out over 5 ms right on the grid line, where it used to switch hard on the edge of the audio buffer (up to a whole buffer late), and the flanger keeps running while the gate is closed, so every pulse comes back clean. 2.0.6 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 2.0.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable. Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
       "standalone_exe": "RONE Flanger.exe",
       "vst3_bundle": "RONE Flanger.vst3",
       "au_bundle": "",
@@ -410,7 +410,7 @@
         "Standalone"
       ],
       "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
-      "whats_new": "1.0.4 - The lock screen names the RONE AFTER SPACE licence or RONE ALL ACCESS, and the installer removes an old stray copy that could hide the real one from your DAW.",
+      "whats_new": "1.0.5 - Preset clicks and one-click controls are now recorded by DAW automation, and the standalone has an AUDIO button for audio and MIDI settings.",
       "standalone_exe": "RONE AFTERSPACE.exe",
       "vst3_bundle": "RONE AFTERSPACE.vst3",
       "au_bundle": "RONE AFTERSPACE.component",

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RoneAfterspace VERSION 1.0.4)
+project(RoneAfterspace VERSION 1.0.5)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -63,7 +63,7 @@ target_sources(RoneAfterspace
     PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
-        Source/dsp/ReverbEngine.cpp
+        ../Shared/RoneReverbEngine.cpp   # the FDN reverb (Source/dsp/ReverbEngine.h names it ReverbEngine)
         Source/dsp/EchoEngine.cpp
         Source/dsp/DuckProcessor.cpp
 )
@@ -111,7 +111,7 @@ juce_generate_juce_header(AfterspaceTests)
 target_sources(AfterspaceTests
     PRIVATE
         Source/tests/DSPTests.cpp
-        Source/dsp/ReverbEngine.cpp
+        ../Shared/RoneReverbEngine.cpp
         Source/dsp/EchoEngine.cpp
         Source/dsp/DuckProcessor.cpp
 )

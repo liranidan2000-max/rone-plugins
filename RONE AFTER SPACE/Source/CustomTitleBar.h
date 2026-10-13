@@ -10,6 +10,10 @@ public:
 
     CustomTitleBar() { setMouseCursor (juce::MouseCursor::NormalCursor); }
 
+    // AUDIO opens the standalone's audio/MIDI device settings: hiding the native title bar
+    // hid JUCE's own Options button. Set by the editor.
+    std::function<void()> onAudioSettings;
+
     void setWindowToDrag (juce::Component* w) { windowToDrag = w; }
     juce::Component* getWindowToDrag() const  { return windowToDrag; }
 
@@ -25,9 +29,10 @@ public:
 
         g.setColour (juce::Colour::fromFloatRGBA (1.0f, 1.0f, 1.0f, 0.85f));
         g.setFont (juce::FontOptions (13.0f).withStyle ("Bold"));
-        g.drawText ("RONE AFTERSPACE", 14, 0, getWidth() - 80, getHeight(),
+        g.drawText ("RONE AFTERSPACE", 14, 0, getAudioBounds().getX() - 22, getHeight(),
                      juce::Justification::centredLeft);
 
+        drawAudioButton (g, getAudioBounds(), audioHovered);
         drawButton (g, getMinimizeBounds(), minimizeHovered, false);
         drawButton (g, getCloseBounds(),    closeHovered,    true);
     }
@@ -48,6 +53,13 @@ public:
             return;
         }
 
+        if (getAudioBounds().contains (e.getPosition()))
+        {
+            if (onAudioSettings != nullptr)
+                onAudioSettings();
+            return;
+        }
+
         if (windowToDrag != nullptr)
             dragger.startDraggingComponent (windowToDrag, e.getEventRelativeTo (windowToDrag));
     }
@@ -56,7 +68,8 @@ public:
     {
         if (windowToDrag != nullptr
             && ! getCloseBounds().contains (e.getMouseDownPosition())
-            && ! getMinimizeBounds().contains (e.getMouseDownPosition()))
+            && ! getMinimizeBounds().contains (e.getMouseDownPosition())
+            && ! getAudioBounds().contains (e.getMouseDownPosition()))
             dragger.dragComponent (windowToDrag, e.getEventRelativeTo (windowToDrag), nullptr);
     }
 
@@ -64,17 +77,19 @@ public:
     {
         bool overClose = getCloseBounds().contains (e.getPosition());
         bool overMin   = getMinimizeBounds().contains (e.getPosition());
-        if (overClose != closeHovered || overMin != minimizeHovered)
+        bool overAudio = getAudioBounds().contains (e.getPosition());
+        if (overClose != closeHovered || overMin != minimizeHovered || overAudio != audioHovered)
         {
             closeHovered = overClose;
             minimizeHovered = overMin;
+            audioHovered = overAudio;
             repaint();
         }
     }
 
     void mouseExit (const juce::MouseEvent&) override
     {
-        closeHovered = minimizeHovered = false;
+        closeHovered = minimizeHovered = audioHovered = false;
         repaint();
     }
 
@@ -87,6 +102,26 @@ private:
     juce::Rectangle<int> getMinimizeBounds() const
     {
         return { getWidth() - kHeight * 2, 0, kHeight, kHeight };
+    }
+
+    static constexpr int kAudioWidth = 60;
+
+    juce::Rectangle<int> getAudioBounds() const
+    {
+        return { getWidth() - kHeight * 2 - kAudioWidth, 0, kAudioWidth, kHeight };
+    }
+
+    void drawAudioButton (juce::Graphics& g, juce::Rectangle<int> b, bool hovered)
+    {
+        if (hovered)
+        {
+            g.setColour (juce::Colour::fromFloatRGBA (1.0f, 1.0f, 1.0f, 0.08f));
+            g.fillRect (b);
+        }
+
+        g.setColour (juce::Colour::fromFloatRGBA (1.0f, 1.0f, 1.0f, hovered ? 0.95f : 0.6f));
+        g.setFont (juce::FontOptions (11.0f).withStyle ("Bold"));
+        g.drawText ("AUDIO", b, juce::Justification::centred);
     }
 
     void drawButton (juce::Graphics& g, juce::Rectangle<int> b, bool hovered, bool isClose)
@@ -114,7 +149,7 @@ private:
 
     juce::Component* windowToDrag = nullptr;
     juce::ComponentDragger dragger;
-    bool closeHovered = false, minimizeHovered = false;
+    bool closeHovered = false, minimizeHovered = false, audioHovered = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomTitleBar)
 };
