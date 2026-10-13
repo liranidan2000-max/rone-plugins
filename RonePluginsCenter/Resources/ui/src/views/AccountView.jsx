@@ -13,7 +13,7 @@ const card = 'rounded-[14px] border border-rone-border bg-rone-card p-5'
 const input = 'px-3 h-[40px] text-[13.5px] bg-[#101216] border border-rone-border-2 rounded-[10px] text-rone-text-primary placeholder:text-rone-text-faint outline-none focus:border-rone-purple/60'
 
 export default function AccountView ({ t, locale, license, account = {}, onSignIn, onSignOut, onGoogleSignIn, onGoogleCancel,
-                                       onActivate, onDeactivate, installedCount, ownedPlugins = [] }) {
+                                       onActivate, onDeactivate, installedCount, ownedPlugins = [], onOpenDetail }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -77,7 +77,9 @@ export default function AccountView ({ t, locale, license, account = {}, onSignI
               {license.licensed ? t('acc.badgeAll') : hasLifetime ? t('acc.badgeLife') : t('acc.badgeFree')}
             </span>
             <span className="text-[12.5px] text-rone-text-dim truncate">
-              {license.licensed ? passLine : hasLifetime ? t('acc.owned', { n: lifetime.length }) : t('acc.noPass')}
+              {license.licensed ? passLine
+                : hasLifetime ? (lifetime.length === 1 ? t('acc.ownedOne') : t('acc.owned', { n: lifetime.length }))
+                : t('acc.noPass')}
             </span>
           </div>
         </div>
@@ -91,12 +93,15 @@ export default function AccountView ({ t, locale, license, account = {}, onSignI
           <p className="m-0 text-[11px] font-extrabold text-rone-text-dim uppercase tracking-[0.14em]">{t('acc.installed')}</p>
           <p className="m-0 mt-1 font-display text-[26px] font-bold text-rone-text-primary num">{installedCount}</p>
         </div>
-        <div className={card}>
-          <p className="m-0 text-[11px] font-extrabold text-rone-text-dim uppercase tracking-[0.14em]">{t('acc.passStatus')}</p>
-          <p className={`m-0 mt-1 font-display text-[26px] font-bold ${license.licensed ? 'text-rone-green' : 'text-rone-text-dim'}`}>
-            {license.licensed ? t('acc.active') : t('acc.inactive')}
-          </p>
-        </div>
+        {/* Audit R071: a lifetime buyer was greeted with "Pass status: Inactive". */}
+        {(license.licensed || !hasLifetime) && (
+          <div className={card}>
+            <p className="m-0 text-[11px] font-extrabold text-rone-text-dim uppercase tracking-[0.14em]">{t('acc.passStatus')}</p>
+            <p className={`m-0 mt-1 font-display text-[26px] font-bold ${license.licensed ? 'text-rone-green' : 'text-rone-text-dim'}`}>
+              {license.licensed ? t('acc.active') : t('acc.inactive')}
+            </p>
+          </div>
+        )}
       </div>
 
       {(hasLifetime || (signedIn && !license.licensed)) && (
@@ -105,7 +110,10 @@ export default function AccountView ({ t, locale, license, account = {}, onSignI
           {hasLifetime ? (
             <>
               <div className="flex flex-wrap gap-2 mt-3">
-                {lifetime.map(p => <span key={p.id} className="pill pill-own normal-case tracking-normal text-[12px]">✓ {p.name}</span>)}
+                {lifetime.map(p => (
+                  <button key={p.id} type="button" onClick={() => onOpenDetail?.(p.id)}
+                          className="pill pill-own normal-case tracking-normal text-[12px] cursor-pointer hover:brightness-125">✓ {p.name}</button>
+                ))}
               </div>
               <p className="m-0 mt-3 text-[12px] text-rone-text-dim">{t('acc.lifetimeNote', { n: account.deviceLimit || 2 })}</p>
             </>

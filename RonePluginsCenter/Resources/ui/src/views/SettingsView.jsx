@@ -125,7 +125,7 @@ function MoveDialog ({ t, phase, items, result, onConfirm, onClose }) {
   )
 }
 
-export default function SettingsView ({ t, prefs, setPrefs, daws, platform, manifest, onRefresh, onShowOnboarding }) {
+export default function SettingsView ({ t, prefs, setPrefs, daws, platform, manifest, onRefresh, onShowOnboarding, addToast }) {
   const [center, setCenter] = useState({ backgroundDownload: true, autoStart: false, autoStartSupported: false })
   const [version, setVersion] = useState('')
   const [showBack, setShowBack] = useState(false)
@@ -190,7 +190,11 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
     } catch (e) { setMvPhase('idle'); setMvMsg(e.message || '') }
   }
 
-  const openFolder = (kind) => { if (!isDevMode()) api.openInstallFolder(kind).catch(() => {}) }
+  // Audit R243: the backend's "that folder does not exist yet" used to vanish here.
+  const openFolder = (kind) => {
+    if (isDevMode()) return
+    api.openInstallFolder(kind).catch(() => addToast?.({ text: t('set.noFolderYet'), type: 'info' }))
+  }
   const folderKinds = platform === 'mac' ? [['vst3', 'VST3'], ['au', 'AU'], ['standalone', 'Standalone']] : [['vst3', 'VST3'], ['standalone', 'Standalone']]
   const dawOptions = daws.length ? daws.map(d => [d.id, d.name]) : ALL_DAWS
   const dawValue = prefs.daw || dawOptions[0]?.[0]
@@ -263,7 +267,7 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
             </Row>
           )}
           <Row title={t('set.onboarding')}>
-            <button className="btn btn-ghost btn-sm" onClick={onShowOnboarding}>›</button>
+            <button className="btn btn-ghost btn-sm" onClick={onShowOnboarding}>{t('set.onboardingBtn')}</button>
           </Row>
         </Box>
 

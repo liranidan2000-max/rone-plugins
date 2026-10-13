@@ -18,7 +18,7 @@ function Title({ text, accent }) {
   return <>{m[1]} <span style={{ color: accent, textShadow: `0 0 26px ${accent}66` }}>{m[2]}</span></>
 }
 
-export default function AnnouncementModal({ item, onPrimary, onClose }) {
+export default function AnnouncementModal({ t, item, onPrimary, onClose }) {
   const { popup, plugin, primary, priceLine } = item
   const accent = /^#[0-9a-f]{6}$/i.test(popup.accent || '') ? popup.accent : '#9D6BFF'
   const image = popup.image
@@ -124,13 +124,13 @@ export default function AnnouncementModal({ item, onPrimary, onClose }) {
               className="px-4 py-3 rounded-lg text-[11px] font-extrabold uppercase tracking-[0.18em] text-rone-text-dim
                          border border-rone-border/60 hover:text-rone-text-primary transition-colors"
             >
-              Later
+              {t ? t('ann.later') : 'Later'}
             </button>
           </div>
         </div>
 
         <button
-          onClick={onClose} aria-label="Close"
+          onClick={onClose} aria-label={t ? t('ann.close') : 'Close'}
           className="absolute right-4 top-4 p-1.5 rounded-lg text-rone-text-dim hover:text-rone-text-primary
                      transition-colors focus:outline-none focus:ring-2 focus:ring-white/20"
         >

@@ -39,7 +39,7 @@ export default function InstallDock ({ t, plugins, platform, onCancelAll }) {
         </div>
         <div className={`prog ${pct === null ? 'indet' : ''}`} aria-hidden="true"><i style={{ width: `${pct || 0}%` }} /></div>
       </div>
-      <span className="hidden xl:flex items-center gap-1.5 text-[11.5px] text-rone-text-dim whitespace-nowrap">
+      <span className="hidden lg:flex items-center gap-1.5 text-[11.5px] text-rone-text-dim whitespace-nowrap">
         <Icon.shield className="w-3.5 h-3.5 text-rone-green" />{platform === 'mac' ? t('dock.shieldMac') : t('dock.shieldWin')}
       </span>
       {cancellable && <button className="btn btn-ghost btn-sm" onClick={onCancelAll}>{t('dock.cancel')}</button>}

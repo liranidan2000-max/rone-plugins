@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { srcHash } from './tools/src-hash.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const resources = path.resolve(here, '..')
@@ -27,9 +28,22 @@ function centerResources () {
   }
 }
 
+// dist/src-hash.txt: which src/ this build was made from. test/dist-fresh.test.mjs
+// fails when src/ changed and dist/ was not rebuilt (audit R032, R197). Not
+// embedded in the Center (CMake takes only the html, js, css and woff2).
+function srcHashStamp () {
+  return {
+    name: 'src-hash-stamp',
+    apply: 'build',
+    closeBundle () {
+      fs.writeFileSync(path.join(here, 'dist', 'src-hash.txt'), srcHash(here) + '\n')
+    },
+  }
+}
+
 export default defineConfig({
   root: here,
-  plugins: [react(), centerResources()],
+  plugins: [react(), centerResources(), srcHashStamp()],
   css: { postcss: path.join(here, 'postcss.config.js') },
   build: {
     // The Mac runs this page in the system WebKit - on macOS 10.15 that can be

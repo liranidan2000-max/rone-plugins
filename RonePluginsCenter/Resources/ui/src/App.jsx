@@ -22,6 +22,7 @@ import { playPowerOn } from './sounds'
 import { productKey, ownedProductIds } from './ownership'
 import { pickAnnouncement, rememberAnnouncement } from './announcements'
 import { isBusy, isInstalled, shortName, updatable, accentOf } from './catalog'
+import { translateStatus, installErrorText } from './messages'
 
 const DEV = isDevMode()
 
@@ -64,7 +65,8 @@ export default function App () {
     const x = typeof toast === 'string' ? { text: toast, type: 'info' } : toast
     // The same words twice in a row (a message repeated by the backend) show once.
     setToasts(prev => prev.some(y => y.text === x.text && y.title === x.title) ? prev : [...prev.slice(-3), { id, ...x }])
-    setTimeout(() => setToasts(prev => prev.filter(y => y.id !== id)), x.steps ? 12000 : x.type === 'error' ? 9000 : 5000)
+    // A "To fix it: ..." line stays until it is closed (audit R032).
+    if (!x.sticky) setTimeout(() => setToasts(prev => prev.filter(y => y.id !== id)), x.steps ? 12000 : x.type === 'error' ? 9000 : 5000)
   }, [])
   const removeToast = useCallback((id) => setToasts(prev => prev.filter(x => x.id !== id)), [])
 
@@ -85,6 +87,8 @@ export default function App () {
   const dawName = (daws.find(d => d.id === dawId) || {}).name || t('daw.generic')
 
   // ---- navigation ----
+  const viewRef = useRef(view)
+  viewRef.current = view
   const navigate = useCallback((v) => {
     setView(v)
     if (v !== 'detail') setReturnView(v)
@@ -157,29 +161,16 @@ export default function App () {
   const pluginsRef = useRef(plugins)
   pluginsRef.current = tagged
 
+  // The rules live in messages.js (tested there); an install that finished gets
+  // its own toast with the DAW steps.
   const translateMessage = useCallback((m) => {
-    if (!m?.code) return { text: m.text, type: m.type || 'info' }
-    const params = m.params || {}
-    const nameRaw = params.name ? String(params.name) : ''
-    const p = { ...params, name: nameRaw || params.id || '' }
-    if (m.code === 'installed') {
+    if (m?.code === 'installed') {
+      const params = m.params || {}
       const plugin = pluginsRef.current.find(x => x.id === params.id)
       announceInstalled(plugin, (params.version || '').split('.').slice(0, 3).join('.'))
       return null
     }
-    if (m.code === 'download_failed' || !t('msg.' + m.code) || t('msg.' + m.code) === 'msg.' + m.code) {
-      return { text: m.text, type: m.type || 'info' }
-    }
-    // 'failed' with no real installer exit code (0 or below) is a failure the Center
-    // explains itself - why, and often how to fix it. The template turned that into
-    // "installer code 0" (Andre, macOS, 12.10: "it says error 0"), so show the reason.
-    if (m.code === 'failed' && m.text && !(Number(params.exitCode) > 0)) {
-      return { text: m.text, type: m.type || 'error' }
-    }
-    if (m.code === 'declined' || m.code === 'center_update_declined') {
-      return { text: t('msg.' + m.code, p), type: 'info' }
-    }
-    return { text: t('msg.' + m.code, p), type: m.type || 'info' }
+    return translateStatus(m, t)
   }, [t, announceInstalled])
 
   const translateRef = useRef(translateMessage)
@@ -270,9 +261,7 @@ export default function App () {
       const r = await api.installPlugin(id)
       if (r && !r.started && r.error) {
         const plugin = pluginsRef.current.find(p => p.id === id)
-        addToast(r.error === 'License required'
-          ? { text: t('msg.license_required', { name: 'RONE ' + (plugin ? shortName(plugin) : id) }), type: 'error' }
-          : { text: r.error, type: 'error' })
+        addToast({ text: installErrorText(r.error, 'RONE ' + (plugin ? shortName(plugin) : id), t), type: 'error' })
       }
     } catch (e) { addToast({ text: e.message || 'Install failed', type: 'error' }) }
   }
@@ -329,7 +318,8 @@ export default function App () {
     }
     try {
       const r = await api.uninstallPlugin(plugin.id)
-      addToast(r?.ok ? { text: done, type: 'success' } : { text: r?.error || 'Could not uninstall', type: 'error' })
+      addToast(r?.ok ? { text: done, type: 'success' }
+                     : { text: r?.error || t('msg.uninstallFailed', { name: 'RONE ' + shortName(plugin) }), type: 'error' })
     } catch (e) { addToast({ text: e.message, type: 'error' }) }
   }
 
@@ -339,6 +329,9 @@ export default function App () {
     if (res?.ok) {
       setLicense(prev => ({ ...prev, licensed: !!res.account?.licensed, customerName: res.account?.name || res.account?.email || prev.customerName }))
       addToast({ text: res.message || fallback, type: 'success' })
+      // Audit R071: a first sign-in ended on the Account page with nothing to do
+      // there - My Rack shows what the account owns, with Install on each.
+      if (viewRef.current === 'account') navigate('rack')
     }
     return res
   }
@@ -378,7 +371,7 @@ export default function App () {
       if (DEV) feed = new URLSearchParams(location.search).has('announce') ? mockAnnouncements : null
       else { try { feed = await api.getAnnouncements() } catch {} }
       if (!feed?.popups?.length) return
-      const item = pickAnnouncement(feed.popups, { ...latest.current, ignoreMemory: DEV })
+      const item = pickAnnouncement(feed.popups, { ...latest.current, ignoreMemory: DEV, t })
       if (!item) return
       if (!DEV) rememberAnnouncement(item.popup.id)
       setAnnouncement(item)
@@ -447,12 +440,13 @@ export default function App () {
             {view === 'learn' && <LearnView t={t} plugins={tagged} tips={localTips} onManualPdf={manualPdf} onDetail={openDetail} />}
             {view === 'settings' && (
               <SettingsView t={t} prefs={prefs} setPrefs={setPrefs} daws={daws} platform={platform} manifest={manifest}
-                            onRefresh={refresh} onShowOnboarding={() => setOnboardingOpen(true)} />
+                            onRefresh={refresh} onShowOnboarding={() => setOnboardingOpen(true)} addToast={addToast} />
             )}
             {view === 'account' && (
               <AccountView t={t} locale={locale} license={license} account={account} onSignIn={signIn} onSignOut={signOut}
                            onGoogleSignIn={googleSignIn} onGoogleCancel={() => api.accountGoogleCancel().catch(() => {})}
-                           onActivate={activate} onDeactivate={deactivate} installedCount={installedCount} ownedPlugins={ownedPlugins} />
+                           onActivate={activate} onDeactivate={deactivate} installedCount={installedCount} ownedPlugins={ownedPlugins}
+                           onOpenDetail={openDetail} />
             )}
           </div>
 
@@ -472,7 +466,7 @@ export default function App () {
       </Dialog>
 
       {announcement && !onboardingOpen && (
-        <AnnouncementModal item={announcement} onPrimary={runAnnouncement} onClose={() => setAnnouncement(null)} />
+        <AnnouncementModal t={t} item={announcement} onPrimary={runAnnouncement} onClose={() => setAnnouncement(null)} />
       )}
 
       <Onboarding t={t} open={onboardingOpen} prefs={prefs} setPrefs={setPrefs} daws={daws}
