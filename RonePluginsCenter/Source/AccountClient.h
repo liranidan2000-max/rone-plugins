@@ -75,8 +75,8 @@ public:
     /** True when a token exists, regardless of whether it is still valid. */
     bool hasStoredToken() const;
 
-    /** Something about the start-up worth a diagnostic report (audit R285, logged
-        only), handed out once; empty when there is nothing to say. */
+    /** Something about the start-up worth a diagnostic report (audit R285, R125 -
+        logged only), handed out once; empty when there is nothing to say. */
     juce::String takeStartupNote();
 
     /** The DEV CHANNEL (/api/v1/app/dev): plug-ins in development, answered for Liran's accounts only.

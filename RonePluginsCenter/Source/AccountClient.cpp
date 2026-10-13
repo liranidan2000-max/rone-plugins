@@ -165,24 +165,19 @@ bool AccountClient::loadAccountFile()
     token              = xml->getStringAttribute ("token");
    #endif
 
-    // Audit R125: a sealed token this Windows account cannot open (the file came
-    // from another user or machine, or DPAPI failed) left `licensed` and the owned
-    // plugins read from the file with signedIn = false: the page hid the sign-in
-    // while it showed ALL ACCESS as active. Now only the e-mail stays, the page
-    // asks for a sign-in, and the file is left alone - a passing DPAPI failure
-    // must stay recoverable, and a fresh sign-in overwrites it anyway.
-    // BundleLicense.xml is not touched either, so the plugins keep their grace.
+    // Audit R125, stage 1 (observe only): a sealed token this Windows account
+    // cannot open (the file came from another user or machine, or DPAPI failed)
+    // leaves `licensed` and the owned plugins read from the file with
+    // signedIn = false - exactly as in 2.1.3, so the Center's install buttons keep
+    // working on the cached claim and nobody is locked out by a passing DPAPI
+    // failure. It is only reported (CENTER_NOTE, MainComponent) so the field shows
+    // how often it happens before anything stricter is decided. The files are
+    // left alone; a fresh sign-in (or DEACTIVATE, then sign in) overwrites them.
+   #if JUCE_WINDOWS
     if (token.isEmpty() && xml->getStringAttribute ("tokenSealed").isNotEmpty())
-    {
-        const auto email = xml->getStringAttribute ("email");
-        state = State{};
-        state.email = email;
-        state.message = "Your saved sign-in could not be read on this Windows account. Please sign in again.";
-        signedEntitlement = {};
-        signedEntitlementSig = {};
-        lastValidationTime = 0;
-        return false;
-    }
+        startupNote = "Account.xml holds a sealed sign-in this Windows account cannot open - the cached licence"
+                      " is still used (start-up, audit R125 stage 1, observe only)";
+   #endif
 
     state.email        = xml->getStringAttribute ("email");
     state.name         = xml->getStringAttribute ("name");
