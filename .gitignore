@@ -116,3 +116,6 @@ docs/manuals/work/
 
 # wrangler cache from running the site tooling out of this folder
 .wrangler/
+
+# Claude Code local state (holds the crash-report token; never commit)
+.claude/

@@ -1145,8 +1145,14 @@ jobs:
             fi
           done
 
-          # Timestamp
-          jq --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.last_updated=$t' versions.json > tmp && mv tmp versions.json
+          # Timestamp - only when an entry above really changed, so a run that
+          # published nothing leaves no "auto-update" commit behind (Commit &
+          # push exits on an empty diff).
+          if ! git diff --quiet -- versions.json; then
+            jq --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.last_updated=$t' versions.json > tmp && mv tmp versions.json
+          else
+            echo "nothing published this run - versions.json left untouched"
+          fi
 
           echo "guard_skipped=${guard_skipped# }" >> $GITHUB_OUTPUT
           if [ -n "$guard_skipped" ]; then

@@ -86,6 +86,10 @@ Root: HKCU; Subkey: "Software\RONE\Plugins\RoneSyncVerb"; ValueType: string; \
 ; saved the old name load the renamed plugin without a remap.
 ; ============================================================================
 [InstallDelete]
+; A copy of this plugin at the TOP of Common Files\VST3 (JUCE's default dev-build
+; target, or a hand-copied bundle) shadows the installed one in \RONE\ - a DAW
+; that sees both opens whichever it scanned first, usually the stale one.
+Type: filesandordirs; Name: "{commoncf}\VST3\RONE Sync Verb.vst3"
 Type: filesandordirs; Name: "{commoncf}\VST3\RONE\Rone Sync Verb.vst3"
 Type: files; Name: "{app}\Rone Sync Verb.exe"
 ; A moduleinfo.json from an older build (VST3_AUTO_MANIFEST was on until 2026-09) describes

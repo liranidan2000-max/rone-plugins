@@ -111,10 +111,12 @@ public:
         juce::Thread::launch ([]
         {
             // raw.githubusercontent caches this for five minutes at the CDN edge,
-            // so a plain fetch can hand back the PREVIOUS manifest. That is a
-            // five-minute delay on the kill-switch - the one thing that has to
-            // take effect the moment it is flipped. A unique query string makes
-            // every fetch miss the cache and reach origin.
+            // so a fetch can hand back the PREVIOUS manifest. The "?t=" below does
+            // NOT get past that cache: the CDN keys on the path alone (X-Cache: HIT
+            // with a fresh ?t=, measured 2026-09-11 and 2026-10-12 - see the
+            // Center's NetworkManager.cpp). So a flipped kill-switch reaches a
+            // plugin up to five minutes late, on top of the 6 h throttle above;
+            // the Center, which also writes LicenseMode.xml, is the fast path.
             juce::URL url (juce::String (kManifestUrl)
                              + "?t=" + juce::String (juce::Time::currentTimeMillis()));
             auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)

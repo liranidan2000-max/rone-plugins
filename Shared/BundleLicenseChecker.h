@@ -147,6 +147,10 @@ private:
     // correction, not a forgery — see withinGrace().
     static constexpr juce::int64 CLOCK_SKEW_SLACK_MS = 5LL * 60 * 1000;
 
+    // A signed stamp ahead of the local clock by up to this much is a slow PC
+    // (or a dual-boot RTC offset, <= 14 h) - not a clock wound back.
+    static constexpr juce::int64 SIGNED_CLOCK_BEHIND_MAX_MS = 24LL * 60 * 60 * 1000;
+
     // Everything both public checks need out of ONE parse. Two copies of this
     // parse would eventually drift, and a drifted copy is a free licence.
     struct LicenseState
@@ -252,7 +256,15 @@ private:
             state.valid          = true;
             state.bundle         = signedState->pass;
             state.products       = signedState->owned.joinIntoString (",");
-            state.lastValidation = signedState->issuedAt;   // signed: no endless grace by editing a number
+            // Signed: no endless grace by editing a number. The stamp is the
+            // server's clock, so on a PC running slow it lands in the local
+            // future - a signed stamp cannot be forged, so that only means the
+            // clock is behind: up to a day, count it from now instead of
+            // failing closed. Further ahead than that is a clock wound back, and
+            // withinGrace() still fails it closed.
+            const auto nowMs = juce::Time::currentTimeMillis();
+            const auto iat   = signedState->issuedAt;
+            state.lastValidation = (iat > nowMs && iat - nowMs <= SIGNED_CLOCK_BEHIND_MAX_MS) ? nowMs : iat;
 
             // A Lemon Squeezy serial is not part of the account and is never
             // signed; until signed licences are required it still counts.

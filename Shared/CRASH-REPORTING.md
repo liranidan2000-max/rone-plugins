@@ -63,17 +63,17 @@ through the Plugins Center.
    token.
 4. So Claude can read/triage the reports locally, also save it to
    `D:\RONE PLUGINS\rone-plugins\.claude\crash-report-token.txt`
-   (that folder is gitignored).
-5. Tell Claude "done" — the next release build bakes the token into the
-   Center and uploading goes live.
+   (`.claude/` is in the root `.gitignore`; never commit this file).
+5. Tell Claude "done" (historical, pre-2.0 flow: the release build baked the token into the
+   Center; since 2.0 the same secret is held by the website Worker instead).
 
 ## Security honesty
 
-The token ships inside the Center binary, so a determined person can extract
-it. It can ONLY read/create issues in the crash repo — worst case is spam
-there; revoke + rebuild rotates it. Fine for a private beta; before a public
-release move the upload behind a tiny serverless relay (open item, same
-bucket as code signing).
+Since Center 2.0 the token no longer ships inside the Center binary: it lives
+only on the server (the website Worker's `CRASH_REPORT_TOKEN` secret), which
+checks and rate-limits what it files. Builds made before 2.0 did embed it, so
+the old token should be rotated (it can ONLY read/create issues in the crash
+repo).
 
 ## Triage flow
 

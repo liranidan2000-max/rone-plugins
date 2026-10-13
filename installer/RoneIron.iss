@@ -69,7 +69,7 @@ Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebVie
 ; docs/manuals/tools). The Center's "Manual" menu entry opens it from here.
 Source: "..\docs\manuals\RONE Iron - User Manual.pdf"; \
   DestDir: "{app}\Manuals"; \
-  Flags: ignoreversion skipifsourcedoesntexist
+  Flags: ignoreversion
 
 ; ============================================================================
 ; Registry — write installed version for Center detection

@@ -19,7 +19,7 @@
 
 #define MyAppName     "RONE Plugins Center"
 #define MyAppPublisher "Liran Rone Kalifa"
-#define MyAppURL      "https://github.com/liranronekalifa"
+#define MyAppURL      "https://roneaudio.com"
 
 [Setup]
 #ifdef SIGN
@@ -170,4 +170,32 @@ begin
     WV2Installed(HKLM, 'SOFTWARE\' + Client) or
     WV2Installed(HKCU, 'SOFTWARE\' + Client)
   );
+end;
+
+
+// ---- Uninstall cleanup of the per-user entries the Center writes itself ----
+// The Center registers its login autostart (HKCU Run) and the ronecenter://
+// handler from inside the app. Remove them only when they point at THIS
+// install ({app}), so a dev build's entries are left alone.
+function PointsToThisInstall(const Cmd: String): Boolean;
+begin
+  Result := Pos(Lowercase(ExpandConstant('{app}')), Lowercase(Cmd)) > 0;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  Cmd: String;
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    if RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run',
+        'RONE Plugins Center', Cmd) then
+      if PointsToThisInstall(Cmd) then
+        RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run',
+          'RONE Plugins Center');
+    if RegQueryStringValue(HKCU, 'Software\Classes\ronecenter\shell\open\command',
+        '', Cmd) then
+      if PointsToThisInstall(Cmd) then
+        RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\ronecenter');
+  end;
 end;

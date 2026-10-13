@@ -1,0 +1,45 @@
+#!/bin/sh
+# commit-msg hook: refuse a CI skip token anywhere after the subject line.
+#
+# GitHub creates NO workflow run when the skip token appears anywhere in a
+# pushed commit message - subject or body - and the next push does not build
+# the skipped changes (the path filter only sees the new range). The token
+# belongs in the SUBJECT of CI-only / pointer / manifest commits; quoting it
+# in a body while explaining history silently cancelled two releases
+# (Center 1.3.0 on 2026-09-02, Center 1.6.0 on 2026-09-26).
+#
+# Activate once per clone (worktrees share it):
+#   git config core.hooksPath scripts/hooks
+# Bypass for one commit (you mean it): git commit --no-verify
+#
+# Tokens GitHub honours: [skip ci] [ci skip] [no ci] [skip actions]
+# [actions skip], and a "skip-checks: true" trailer. Matched case-blind.
+
+msg_file="$1"
+[ -n "$msg_file" ] && [ -f "$msg_file" ] || exit 0
+
+hits=$(awk '
+  { sub(/\r$/, "") }
+  /^# -+ >8 -+$/ { exit }          # git commit -v: the diff below is not the message
+  /^#/ { next }                     # comment lines are stripped by git
+  !seen_subject { if ($0 ~ /[^ \t]/) seen_subject = 1; next }
+  {
+    l = tolower($0)
+    if (l ~ /\[(skip ci|ci skip|no ci|skip actions|actions skip)\]/ \
+        || l ~ /^[ \t]*skip-checks:[ \t]*true/)
+      printf "  line %d: %s\n", NR, $0
+  }
+' "$msg_file")
+
+[ -z "$hits" ] && exit 0
+
+{
+  echo "commit-msg: the CI skip token is in the message body:"
+  echo "$hits"
+  echo
+  echo "GitHub would create NO run for this push and the change would never be"
+  echo "built. Keep the token only in the subject line (CI-only / pointer"
+  echo "commits), or reword the body, e.g. 'the skip-ci token'."
+  echo "Bypass if you really mean it: git commit --no-verify"
+} >&2
+exit 1

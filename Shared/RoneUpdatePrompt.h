@@ -250,8 +250,12 @@ private:
 
         if (type == "update" || type == "openCenter")
         {
-            pending.store (true);
-            if (! RoneUpdates::launchCenterFor (id))
+            // Grey and dry only while a Center is really on its way: without one
+            // nothing would install, so the plugin keeps playing and the user
+            // gets the download page instead.
+            const bool launched = RoneUpdates::launchCenterFor (id);
+            pending.store (launched);
+            if (! launched)
                 juce::URL ("https://roneaudio.com/account/").launchInDefaultBrowser();
         }
         else if (type == "later")
@@ -342,12 +346,35 @@ private:
     host.appendChild(bar); host.appendChild(lock);
   }
 
-  function render() {
-    if (!state) return;
-    if (!bar) build();
-    var titleBar = document.body && document.body.classList.contains('has-titlebar') ? 30 : 0;
+  // The standalone's own 30 px title bar: the Throw family marks it with
+  // body.has-titlebar, Reverse Reverb and Flanger just show their #title-bar.
+  var placedTop = -1;
+  function place() {
+    if (!bar) return;
+    var tb = document.getElementById('title-bar');
+    var shown = (document.body && document.body.classList.contains('has-titlebar'))
+             || (tb && window.getComputedStyle(tb).display !== 'none');
+    var titleBar = shown ? 30 : 0;
+    if (titleBar === placedTop) return;
+    placedTop = titleBar;
     bar.style.top = (titleBar + 10) + 'px';
     lock.style.top = titleBar + 'px';
+  }
+
+  // The page shows its title bar once it knows it is the standalone, which
+  // can be after our first render - follow it (two elements, no subtree).
+  function watchTitleBar() {
+    if (!window.MutationObserver) return;
+    var mo = new MutationObserver(place);
+    var tb = document.getElementById('title-bar');
+    if (tb) mo.observe(tb, { attributes: true, attributeFilter: ['style', 'class'] });
+    if (document.body) mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function render() {
+    if (!state) return;
+    if (!bar) { build(); watchTitleBar(); }
+    place();
     bar.querySelector('.ru-title').textContent = state.name + ' ' + state.latest + ' is available';
     bar.querySelector('.ru-sub').textContent = 'You have ' + state.current + '. The Plugins Center updates it for you.';
     // The Center installs the moment nothing holds the plugin's files: our own

@@ -80,6 +80,10 @@ Root: HKCU; Subkey: "Software\RONE\Plugins\RoneAfterspace"; ValueType: string; \
   ValueName: "InstalledVersion"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
 
 [InstallDelete]
+; A copy of this plugin at the TOP of Common Files\VST3 (JUCE's default dev-build
+; target, or a hand-copied bundle) shadows the installed one in \RONE\ - a DAW
+; that sees both opens whichever it scanned first, usually the stale one.
+Type: filesandordirs; Name: "{commoncf}\VST3\RONE AFTERSPACE.vst3"
 ; A moduleinfo.json from an older build (VST3_AUTO_MANIFEST was on until 2026-09) describes
 ; that build, not this one - RONE Reverse Reverb's said "Instrument|Synth", so FL Studio kept
 ; listing 1.1.7, an effect, as a synth. These builds ship no manifest: drop the old one first.
