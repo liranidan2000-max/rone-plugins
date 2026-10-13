@@ -348,6 +348,7 @@ MainComponent::MainComponent()
 
     // Audit R285 stage 1: an account file that claims a licence without the
     // server's signed copy is reported (and, in this release, still trusted).
+    // Audit R125 stage 1: so is a sealed sign-in this Windows account cannot open.
     if (const auto note = accountClient.takeStartupNote(); note.isNotEmpty())
         RoneCrashReporter::reportError ("RONE Plugins Center", JUCE_APPLICATION_VERSION_STRING, "Center", "CENTER_NOTE", note);
 
