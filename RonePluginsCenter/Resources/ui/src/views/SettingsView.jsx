@@ -93,7 +93,8 @@ function MoveDialog ({ t, phase, items, result, onConfirm, onClose }) {
         {phase === 'done'
           ? (result?.declined
               ? t('mv.declined')
-              : <>{t('mv.done', { n: moved })} {failed > 0 && t('mv.failedSome', { n: failed })} {moved > 0 && t('mv.rescan')}</>)
+              : <>{t('mv.done', { n: moved })} {failed > 0 && t('mv.failedSome', { n: failed })} {moved > 0 && t('mv.rescan')}
+                  {result?.error && <span className="block mt-1 text-rone-error">{result.error}</span>}</>)
           : busy ? t('mv.moving') : t('mv.body')}
       </p>
       <div className="max-h-[260px] overflow-y-auto scroll-y rounded-[10px] border border-rone-border divide-y divide-rone-border">

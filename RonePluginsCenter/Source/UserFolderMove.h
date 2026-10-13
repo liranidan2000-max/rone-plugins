@@ -196,15 +196,34 @@ namespace UserFolderMove
 
     /** The script the password runs, for the user `owner` ("uid:gid"). Empty
         when any path holds a character it cannot quote. Written with "\n" line
-        ends: a "\r" left the Mac's sh reading "fi\r" (InstallBatcher, 2.0.5). */
+        ends: a "\r" left the Mac's sh reading "fi\r" (InstallBatcher, 2.0.5).
+
+        All or nothing. The moves go first, each one recorded so it can be
+        undone; if one fails - macOS 13+ can refuse to move an app (App
+        Management), audit R228 - every move already made goes back and the
+        script exits 1 with the reason on stderr, which osascript hands to
+        runElevated(). A half-moved product (its VST3 in ~/Library, its app
+        still in /Applications) would send its updates back through the
+        password and leave two copies for a DAW to list (R196). The duplicates
+        are removed only after every move has worked, so a failure never
+        leaves fewer copies than there were. */
     inline juce::String moveScript (const juce::Array<Item>& items, const Roots& r, const juce::String& owner)
     {
-        auto bad = [] (const juce::File& f) { return f.getFullPathName().containsAnyOf ("'\n\r"); };
+        // Single-quoted in the script and embedded in the undo list inside
+        // double quotes: none of these may appear in a path. (A backslash is
+        // only the separator, in a --test-root run on Windows.)
+        auto bad = [] (const juce::File& f)
+        {
+            const auto path = f.getFullPathName();
+            return path.containsAnyOf ("'\"$`\n\r")
+                || (juce::File::getSeparatorChar() != '\\' && path.containsChar ('\\'));
+        };
         auto q   = [] (const juce::File& f) { return "'" + f.getFullPathName() + "'"; };
 
         juce::String sh;
         sh << "#!/bin/sh\n"
-           << "O=" << owner << "\n";
+           << "O=" << owner << "\n"
+           << "U=\n";
 
         // The user's folders, made if missing and given to the user: a folder
         // root just made - or one another vendor's installer left root's
@@ -219,22 +238,27 @@ namespace UserFolderMove
         for (const auto& it : items)
         {
             if (bad (it.from) || bad (it.to)) return {};
-
             if (it.kind == "remove")
-            {
-                sh << "/bin/rm -rf " << q (it.from) << "\n";
                 continue;
-            }
 
             // mv keeps the file (and a Dock item that points at it). Across
             // volumes it is a copy, and the original goes only once the copy is
-            // complete. Then the bundle is the user's, so the Center can replace
-            // it later with no password.
-            sh << "if [ ! -e " << q (it.to) << " ]; then /bin/mv " << q (it.from) << " " << q (it.to)
-               << " 2>/dev/null || { /usr/bin/ditto " << q (it.from) << " " << q (it.to)
-               << " && /bin/rm -rf " << q (it.from) << "; }; fi\n"
-               << "[ -e " << q (it.to) << " ] && /usr/sbin/chown -R \"$O\" " << q (it.to) << "\n";
+            // complete; a copy whose original cannot go is taken back out.
+            const auto name = it.from.getFileName();
+            sh << "if [ ! -e " << q (it.to) << " ]; then\n"
+               << "  /bin/mv " << q (it.from) << " " << q (it.to) << " 2>/dev/null"
+               << " || { /usr/bin/ditto " << q (it.from) << " " << q (it.to) << " && /bin/rm -rf " << q (it.from) << "; }"
+               << " || { E=$?; /bin/rm -rf " << q (it.to) << "; eval \"$U\"; echo \"could not move " << name
+               << " (Operation not permitted or in use, code $E)\" >&2; exit 1; }\n"
+               << "  U=\"/bin/mv " << q (it.to) << " " << q (it.from) << "; $U\"\n"
+               << "  /usr/sbin/chown -R \"$O\" " << q (it.to) << "\n"
+               << "fi\n";
         }
+
+        for (const auto& it : items)
+            if (it.kind == "remove")
+                sh << "/bin/rm -rf " << q (it.from) << "\n";
+
         sh << "exit 0\n";
         return sh;
     }
@@ -290,6 +314,10 @@ namespace UserFolderMove
             return false;
         failure = err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
                                    : "could not start (code " + juce::String (code) + ")";
+        // macOS 13+ guards apps (App Management): the Center needs the user's
+        // permission to move one, exactly as InstallBatcher says for EPERM.
+        if (failure.containsIgnoreCase ("not permitted"))
+            failure << " - allow RONE Plugins Center in System Settings > Privacy & Security > App Management, then press the button again";
         return true;
        #else
         juce::ignoreUnused (items, r);
