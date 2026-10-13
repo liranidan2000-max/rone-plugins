@@ -40,6 +40,15 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={commonpf}\RONE Plugins
 DefaultGroupName=RONE Plugins
 DisableProgramGroupPage=yes
+; Audit R091 (Center 2.1.4): fewer clicks for a new customer. The folder page
+; shows on a first install only (auto: an upgrade keeps the folder the Center
+; is in - UsePreviousAppDir, the default), and the Ready page is skipped. Inno
+; still shows the Ready page when no page came before it, so an interactive
+; upgrade keeps one click before it installs. The self-update runs
+; /VERYSILENT and shows no page either way. The Finish page and its
+; "Launch RONE Plugins Center" box ([Run] postinstall) stay.
+DisableDirPage=auto
+DisableReadyPage=yes
 OutputBaseFilename=RONE_Plugins_Center_Installer_v{#MyAppVersion}
 OutputDir=..\build-output
 Compression=lzma2
