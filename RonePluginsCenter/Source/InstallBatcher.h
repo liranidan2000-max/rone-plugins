@@ -35,11 +35,13 @@
 // Now a finished download waits here as "ready". Once nothing the user asked
 // for is still downloading, everything ready goes in one batch:
 //   Windows: the Center runs itself once, elevated, with --install-batch
-//            <job file>. That copy moves each installer into a folder only an
-//            administrator can write (ProgramData\RONE\InstallCache), hashes the
-//            copy against the manifest - the file that runs is the file that
-//            was checked - and runs the installers one after another, writing a
-//            result per plugin as it goes. No time limit while one is running.
+//            <job file> <job hash>. That copy moves each installer into a folder
+//            only an administrator can write (Program Files\RONE Plugins\
+//            InstallCache - audit R048: the ProgramData folder used before 2.1.4
+//            let every user write), hashes the copy against the manifest - the
+//            file that runs is the file that was checked - and runs the
+//            installers one after another, writing a result per plugin as it
+//            goes. An hour per installer at most (R280).
 //   macOS:   a plugin that is not on the Mac system-wide yet needs no password
 //            at all (Center 2.1): its .pkg is hashed and unpacked as the user
 //            and the bundles go into ~/Library/Audio/Plug-Ins and ~/Applications
@@ -67,11 +69,14 @@ public:
     {
         juce::String id;
         bool ok = false;
-        bool rebootNeeded = false;     // Inno exit 8: a file in use is replaced at the next restart
+        bool rebootNeeded = false;     // unused since 2.1.4: Inno's exit 8 means nothing was installed (R195)
         bool declined = false;         // the permission prompt was refused
         int  exitCode = 0;
-        juce::String code;             // for the page: "installed", "in_use", "declined", "hash", "failed"
+        juce::String code;             // for the page: "installed", "in_use", "declined", "hash", "failed",
+                                       // "restart_needed", "install_aborted"
         juce::String message;          // English, for the page's fallback and the error report
+        juce::String reason;           // what the installer itself said (its log / stderr), may be empty
+        juce::String integrityNote;    // audit R024 stage 1: the job file did not match its hash (logged only)
     };
 
     // All three are called on the message thread.
@@ -151,15 +156,45 @@ public:
 
        #if JUCE_WINDOWS
         const juce::File jobFile (tokens[at + 1].unquoted());
-        const auto job = juce::JSON::parse (jobFile.loadFileAsString());
+
+        // Audit R024, stage 1 (log only): the job sits in the user's %TEMP%, so it is
+        // read ONCE, as bytes, and the same bytes are hashed and parsed - no second
+        // read for a swap to slip into. The Center that wrote it passes the SHA256 of
+        // what it wrote; a job that does not match is marked in every result
+        // (jobHash) and reported by that Center, and - in this stage - still runs.
+        // Stage 2 (a later release, once no false alarm was seen) refuses it.
+        juce::MemoryBlock jobBytes;
+        jobFile.loadFileAsData (jobBytes);
+        const auto expectedJobHash = at + 2 < tokens.size() ? tokens[at + 2].unquoted().trim() : juce::String();
+        const auto actualJobHash   = juce::SHA256 (jobBytes.getData(), jobBytes.getSize()).toHexString();
+        const juce::String jobHashState = ! isSha256Hex (expectedJobHash)                 ? "absent"
+                                        : actualJobHash.equalsIgnoreCase (expectedJobHash) ? "ok"
+                                                                                           : "mismatch";
+
+        const auto job = juce::JSON::parse (juce::String::fromUTF8 ((const char*) jobBytes.getData(), (int) jobBytes.getSize()));
         const juce::File resultFile (job.getProperty ("results", "").toString());
         auto* items = job.getProperty ("items", {}).getArray();
         if (items == nullptr || resultFile.getParentDirectory() != jobFile.getParentDirectory())
             return true;
 
-        const auto cacheDir = juce::File::getSpecialLocation (juce::File::commonApplicationDataDirectory)
-                                  .getChildFile ("RONE").getChildFile ("InstallCache");
-        cacheDir.createDirectory();
+        // Audit R048: the installers are staged in the Center's own folder under
+        // Program Files, which standard users may only read. ProgramData\RONE
+        // (before 2.1.4) let any user write - and swap - what was about to run
+        // elevated. Only if that folder cannot be made does the old one serve,
+        // so an install never fails over where it waits. A reparse point there
+        // (made by an administrator) is reported, not refused, in this release.
+        auto cacheDir = juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
+                            .getChildFile (RONE_INSTALL_DIR).getChildFile ("InstallCache");
+        juce::String cacheNote;
+        if (! cacheDir.createDirectory().wasOk())
+        {
+            cacheNote = "InstallCache could not be made in Program Files - used ProgramData";
+            cacheDir = juce::File::getSpecialLocation (juce::File::commonApplicationDataDirectory)
+                           .getChildFile ("RONE").getChildFile ("InstallCache");
+            cacheDir.createDirectory();
+        }
+        else if (isReparsePoint (cacheDir) || isReparsePoint (cacheDir.getParentDirectory()))
+            cacheNote = "InstallCache or its parent is a reparse point";
 
         juce::Array<juce::var> results;
         auto writeResults = [&]
@@ -171,6 +206,7 @@ public:
             tmp.moveFileTo (resultFile);
         };
 
+        bool hung = false;
         for (auto& it : *items)
         {
             const auto id = it.getProperty ("id", "").toString();
@@ -179,6 +215,18 @@ public:
 
             auto* r = new juce::DynamicObject();
             r->setProperty ("id", id);
+            if (jobHashState != "ok")    r->setProperty ("jobHash", jobHashState);
+            if (cacheNote.isNotEmpty())  r->setProperty ("cacheNote", cacheNote);
+
+            // Audit R280: the installer before this one hung and may still be running -
+            // a second Inno setup must not start beside it.
+            if (hung)
+            {
+                r->setProperty ("exitCode", -6);
+                results.add (juce::var (r));
+                writeResults();
+                continue;
+            }
 
             // Only an installer the Center downloaded beside this job file.
             const bool sane = id.containsOnly ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
@@ -187,7 +235,9 @@ public:
                            && source.existsAsFile() && sha.length() == 64;
 
             const auto copy = cacheDir.getChildFile (id + "_Installer.exe");
+            const auto log  = cacheDir.getChildFile (id + "_Installer.log");
             copy.deleteFile();
+            log.deleteFile();
 
             if (! sane || ! source.copyFileTo (copy))
             {
@@ -202,21 +252,37 @@ public:
                     r->setProperty ("exitCode", -2);
                 else
                 {
+                    // /LOG (audit R195): what Inno itself says comes back with a failure.
                     juce::ChildProcess setup;
                     if (setup.start (juce::StringArray { copy.getFullPathName(), "/VERYSILENT", "/SUPPRESSMSGBOXES",
-                                                         "/NORESTART", "/SP-" }, 0))
+                                                         "/NORESTART", "/SP-", "/LOG=" + log.getFullPathName() }, 0))
                     {
                         // No time limit while setup runs; an hour is a hung installer, not a slow one.
-                        for (int waited = 0; setup.isRunning() && waited < 3600000; waited += 250)
+                        for (int waited = 0; setup.isRunning() && waited < kInstallerHangMs; waited += 250)
                             juce::Thread::sleep (250);
-                        r->setProperty ("exitCode", setup.isRunning() ? -4 : (int) setup.getExitCode());
+
+                        if (setup.isRunning())
+                        {
+                            // R280: end it, and install nothing more in this batch. (This ends
+                            // Inno's outer stub; a job object that ends its whole tree is stage 2.)
+                            setup.kill();
+                            hung = true;
+                            r->setProperty ("exitCode", -4);
+                        }
+                        else
+                            r->setProperty ("exitCode", (int) setup.getExitCode());
+
+                        const auto detail = installerLogDetail (log);
+                        if (detail.isNotEmpty())
+                            r->setProperty ("detail", detail);
                     }
                     else
-                        r->setProperty ("exitCode", -3);
+                        r->setProperty ("exitCode", -5);   // R202: Windows would not start it - usually antivirus
                 }
             }
 
             copy.deleteFile();
+            log.deleteFile();
             results.add (juce::var (r));
             writeResults();
         }
@@ -235,6 +301,7 @@ private:
         juce::Array<juce::uint32> holderPids;
         juce::String waitingFor;
         juce::uint32 waitStartMs = 0, lastCheckMs = 0;
+        bool forced = false;              // waited half a day and goes in regardless (not re-checked)
     };
 
     void post (std::function<void()> fn)
@@ -252,7 +319,39 @@ private:
         post ([this, r] { if (onResult) onResult (r); });
     }
 
+    static bool isSha256Hex (const juce::String& s)
+    {
+        return s.length() == 64 && s.containsOnly ("0123456789abcdefABCDEF");
+    }
+
    #if JUCE_WINDOWS
+    static constexpr int kInstallerHangMs = 3600000;   // an hour: a hung installer, not a slow one
+
+    static bool isReparsePoint (const juce::File& f)
+    {
+        const auto attrs = GetFileAttributesW (f.getFullPathName().toWideCharPointer());
+        return attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+    }
+
+    // The lines of an Inno /LOG that say why it stopped (audit R195), newest last,
+    // without their time stamps. Empty when it says nothing of the kind.
+    static juce::String installerLogDetail (const juce::File& log)
+    {
+        juce::StringArray why;
+        for (auto line : juce::StringArray::fromLines (log.loadFileAsString()))
+        {
+            line = line.trim();
+            // "2026-10-13 12:00:00.000   Message" -> "Message"
+            if (line.length() > 24 && juce::CharacterFunctions::isDigit (line[0]) && line[4] == '-' && line[10] == ' ')
+                line = line.substring (23).trim();
+            if (line.containsIgnoreCase ("error") || line.containsIgnoreCase ("abort") || line.containsIgnoreCase ("failed"))
+                why.add (line);
+        }
+        while (why.size() > 3)
+            why.remove (0);
+        return why.joinIntoString (" | ").substring (0, 400);
+    }
+
     static void holderFiles (const Item& item, juce::File& bundle, juce::File& exe)
     {
         // The Analyzer is an app, but its installer also replaces the VST3
@@ -263,6 +362,15 @@ private:
                                               : juce::File();
         exe = item.standaloneExe.isNotEmpty() ? VersionChecker::getStandaloneInstallDir().getChildFile (item.standaloneExe)
                                               : juce::File();
+    }
+
+    // Exit 5 with a program still holding the files = "close the DAW"; without
+    // one it was something else (audit R195).
+    static bool isHeldNow (const Item& item)
+    {
+        juce::File bundle, exe;
+        holderFiles (item, bundle, exe);
+        return ! PluginInUse::find (bundle, exe).isEmpty();
     }
    #endif
 
@@ -316,6 +424,7 @@ private:
                     if (holders.isEmpty() || giveUp)
                     {
                         nowReady = live.state == State::waiting;
+                        live.forced = live.forced || (giveUp && ! holders.isEmpty());
                         live.state = State::ready;
                         live.holderPids.clear();
                         live.waitingFor.clear();
@@ -363,6 +472,22 @@ private:
             if (juce::Time::getMillisecondCounter() - lastAddMs.load() < kGatherMs)
                 continue;
 
+           #if JUCE_WINDOWS
+            // Audit R118: a ready plugin was checked once, maybe minutes ago, while
+            // the rest of the batch downloaded. A DAW or the standalone opened since
+            // would make its installer roll back (exit 5, "Failed"). One fresh look
+            // now: what is held waits for its program again, and stays out of this
+            // batch. One that already waited half a day goes in regardless.
+            {
+                const juce::ScopedLock sl (lock);
+                const auto now = juce::Time::getMillisecondCounter();
+                for (auto& e : entries)
+                    if (e.state == State::ready && e.inUseChecked && ! e.forced && now - e.lastCheckMs > 3000)
+                        e.inUseChecked = false;
+            }
+            checkInUse();
+           #endif
+
             juce::Array<Item> batch;
             {
                 const juce::ScopedLock sl (lock);
@@ -403,34 +528,51 @@ private:
     }
 
     // ---- one batch ----------------------------------------------------------
-    static Result describe (const Item& item, int exitCode)
+    // heldNow: for exit 5, whether a program still holds the plugin's files right
+    // after the batch (Windows; audit R195).
+    static Result describe (const Item& item, int exitCode, bool heldNow = false)
     {
         Result r;
         r.id = item.id;
         r.exitCode = exitCode;
 
        #if JUCE_WINDOWS
-        // Inno Setup exit codes: 0 = installed; 8 = installed, but a file in use is
-        // replaced at the next reboot (/NORESTART); 5 = a plugin file was open in a
-        // DAW and setup rolled everything back; 2 = cancelled before installing.
-        r.ok = exitCode == 0 || exitCode == 8;
-        r.rebootNeeded = exitCode == 8;
-        if (r.ok)                 { r.code = r.rebootNeeded ? "installed_reboot" : "installed";
-                                    r.message = item.name + (r.rebootNeeded ? " installed - restart Windows to finish replacing a file that was in use."
-                                                                            : " installed successfully!"); }
-        else if (exitCode == 5)   { r.code = "in_use";
+        // Inno Setup exit codes: 0 = installed; 5 = stopped while installing (a file
+        // in use with /SUPPRESSMSGBOXES answers Abort) and everything rolled back;
+        // 8 = the Preparing to Install step found Windows must restart first - and
+        // installed NOTHING (before 2.1.4 it counted as installed, R195); 2 =
+        // cancelled before installing. Below zero: the Center's own codes.
+        r.ok = exitCode == 0;
+        if (r.ok)                 { r.code = "installed";
+                                    r.message = item.name + " installed successfully!"; }
+        else if (exitCode == 8)   { r.code = "restart_needed";
+                                    r.message = item.name + ": Windows needs a restart before this can be installed. Restart, then update again."; }
+        else if (exitCode == 5 && heldNow)
+                                  { r.code = "in_use";
                                     r.message = "Install cancelled - a file was in use. Close the DAW or standalone that has "
                                                 + item.name + " open, then update again."; }
+        else if (exitCode == 5)   { r.code = "install_aborted";
+                                    r.message = item.name + ": the installer stopped before it finished and nothing was changed."
+                                                " Often antivirus, its manual PDF open in a reader, or a full disk."; }
         else if (exitCode == -2)  { r.code = "hash";
                                     r.message = item.name + ": the installer changed after it was checked - nothing was installed. Try again."; }
+        else if (exitCode == -3)  { r.code = "failed";
+                                    r.message = item.name + ": the installer could not be copied into Program Files\\RONE Plugins\\InstallCache"
+                                                " (antivirus?) - nothing was installed. Try again."; }
         else if (exitCode == -4)  { r.code = "failed";
                                     r.message = item.name + ": the installer stopped responding."; }
+        else if (exitCode == -5)  { r.code = "failed";
+                                    r.message = item.name + ": Windows could not start the installer (often antivirus). Try again,"
+                                                " or download it from roneaudio.com/account."; }
+        else if (exitCode == -6)  { r.code = "failed";
+                                    r.message = item.name + " was not installed - the installer before it stopped responding."
+                                                " Restart the computer and update again."; }
         else if (exitCode == -1)  { r.code = "failed";
                                     r.message = item.name + ": the installer did not finish."; }
         else                      { r.code = "failed";
                                     r.message = "Install failed (installer code " + juce::String (exitCode) + ")."; }
        #else
-        juce::ignoreUnused (item);
+        juce::ignoreUnused (item, heldNow);
        #endif
         return r;
     }
@@ -445,7 +587,13 @@ private:
     void finishItem (const Item& item, Result r)
     {
         if (r.ok)
+        {
             VersionChecker::setInstalledVersion (item.registryKey, item.version);
+            // Audit R050: which installer this was. The same file offered again under
+            // another label (a manifest version that differs from the exe's own) is
+            // then not an update - it was offered and installed forever before.
+            VersionChecker::setInstalledSha (item.registryKey, item.sha256);
+        }
         postResult (r);
     }
 
@@ -552,6 +700,27 @@ private:
             || (i.standaloneExe.isNotEmpty() && VersionChecker::getUserAppsDir().getChildFile (app).exists());
     }
 
+    // Every format of this plugin sits in the system folders (the .pkg just put it there).
+    static bool systemCopiesInPlace (const Item& i)
+    {
+        const auto app = i.standaloneExe.replace (".exe", "") + ".app";
+        return (i.vst3Bundle.isEmpty() || VersionChecker::getVst3InstallDir().getChildFile (i.vst3Bundle).exists())
+            && (i.auBundle.isEmpty()   || VersionChecker::getAUInstallDir().getChildFile (i.auBundle).exists())
+            && (i.standaloneExe.isEmpty() || juce::File ("/Applications").getChildFile (app).exists()
+                                          || juce::File ("/Applications/RONE Plugins").getChildFile (app).exists());
+    }
+
+    // Audit R196: the user-folder copies of a plugin the .pkg has just installed
+    // system-wide. They are the user's own files, so no password; called only
+    // after every system copy was found on disk, never before.
+    static void removeUserCopies (const Item& i)
+    {
+        const auto app = i.standaloneExe.replace (".exe", "") + ".app";
+        if (i.vst3Bundle.isNotEmpty())    VersionChecker::getUserVst3Dir().getChildFile (i.vst3Bundle).deleteRecursively();
+        if (i.auBundle.isNotEmpty())      VersionChecker::getUserAUDir().getChildFile (i.auBundle).deleteRecursively();
+        if (i.standaloneExe.isNotEmpty()) VersionChecker::getUserAppsDir().getChildFile (app).deleteRecursively();
+    }
+
     // Every bundle is copied beside its place first (hidden), then swapped in by
     // renaming; a rename that fails puts back what was there. Empty = installed.
     // A copy that cannot even be written beside its place names that folder in
@@ -589,9 +758,15 @@ private:
             if (error.isEmpty())
                 error = "macOS did not let the Center replace " + bundle.getFileName()
                       + " (" + juce::String (juce::CharPointer_UTF8 (std::strerror (e))) + ")"
-                      // EPERM is macOS protecting an app (App Management, macOS 13+), not the folder
+                      // EPERM is macOS protecting an app (App Management, macOS 13+), not the folder.
+                      // An app can also simply be moved to the Trash in Finder - Finder is always
+                      // allowed - and the update then places a fresh one (audit R229, stage 1).
                       + (e == EPERM ? juce::String (" - allow RONE Plugins Center in System Settings > Privacy & Security"
-                                                    " > App Management, then update again")
+                                                    " > App Management")
+                                        + (bundle.hasFileExtension ("app") ? ", or move " + bundle.getFileName()
+                                                                               + " to the Trash in Finder"
+                                                                           : juce::String())
+                                        + ", then update again"
                                     : juce::String());
             return false;
         };
@@ -763,10 +938,17 @@ private:
         auto* job = new juce::DynamicObject();
         job->setProperty ("items", items);
         job->setProperty ("results", resultFile.getFullPathName());
-        jobFile.replaceWithText (juce::JSON::toString (juce::var (job)));
+
+        // Audit R024 stage 1: written as exact bytes (replaceWithText would turn
+        // "\n" into "\r\n"), and the hash of those bytes travels on the command
+        // line, which the user cannot change once the elevated copy runs.
+        const auto jobText = juce::JSON::toString (juce::var (job));
+        const juce::MemoryBlock jobBytes (jobText.toRawUTF8(), jobText.getNumBytesAsUTF8());
+        jobFile.replaceWithData (jobBytes.getData(), jobBytes.getSize());
+        const auto jobHash = juce::SHA256 (jobBytes.getData(), jobBytes.getSize()).toHexString();
 
         const auto self = juce::File::getSpecialLocation (juce::File::currentExecutableFile).getFullPathName();
-        const auto params = juce::String (kFlag) + " \"" + jobFile.getFullPathName() + "\"";
+        const auto params = juce::String (kFlag) + " \"" + jobFile.getFullPathName() + "\" " + jobHash;
 
         SHELLEXECUTEINFOW info {};
         info.cbSize = sizeof (info);
@@ -807,7 +989,19 @@ private:
                         if (i.id == id)
                         {
                             reported.add (id);
-                            finishItem (i, describe (i, (int) r.getProperty ("exitCode", -1)));
+                            const int exitCode = (int) r.getProperty ("exitCode", -1);
+                            auto res = describe (i, exitCode, exitCode == 5 && isHeldNow (i));
+                            if (! res.ok)
+                                res.reason = r.getProperty ("detail", "").toString().trim();
+
+                            const auto jobHashState = r.getProperty ("jobHash", "ok").toString();
+                            const auto cacheNote    = r.getProperty ("cacheNote", "").toString();
+                            if (jobHashState != "ok")
+                                res.integrityNote = "install job hash " + jobHashState;
+                            if (cacheNote.isNotEmpty())
+                                res.integrityNote << (res.integrityNote.isNotEmpty() ? "; " : "") << cacheNote;
+
+                            finishItem (i, res);
                         }
                 }
         };
@@ -868,8 +1062,11 @@ private:
             sh << "/bin/cp " << q (pkg) << " \"$W/" << i.id << ".pkg\" && "
                << "A=$(/usr/bin/shasum -a 256 \"$W/" << i.id << ".pkg\" | /usr/bin/awk '{print $1}')\n"
                << "if [ \"$A\" = \"" << i.sha256.toLowerCase() << "\" ]; then "
-               << "/usr/sbin/installer -pkg \"$W/" << i.id << ".pkg\" -target / >/dev/null 2>&1; "
-               << "echo \"" << i.id << " $?\" >> \"$R\"; "
+               // Audit R281: installer's last words go on the result line, after the code
+               // ("<id> <code> <reason>"): before 2.1.4 a failed .pkg said only its number.
+               // Both streams: it says why on either, depending on the macOS version.
+               << "/usr/sbin/installer -pkg \"$W/" << i.id << ".pkg\" -target / >\"$W/" << i.id << ".err\" 2>&1; "
+               << "C=$?; echo \"" << i.id << " $C $(/usr/bin/tail -n 2 \"$W/" << i.id << ".err\" | /usr/bin/tr '\\n\\r' '  ')\" >> \"$R\"; "
                << "else echo \"" << i.id << " -2\" >> \"$R\"; fi\n";
         }
         sh << "/bin/rm -rf \"$W\"\n";
@@ -910,10 +1107,12 @@ private:
         }
 
         juce::StringArray reported;
+        const auto home = juce::File::getSpecialLocation (juce::File::userHomeDirectory).getFullPathName();
         for (auto& line : juce::StringArray::fromLines (resultFile.loadFileAsString()))
         {
-            const auto id = line.upToFirstOccurrenceOf (" ", false, false).trim();
-            const int code = line.fromFirstOccurrenceOf (" ", false, false).trim().getIntValue();
+            const auto id   = line.upToFirstOccurrenceOf (" ", false, false).trim();
+            const auto rest = line.fromFirstOccurrenceOf (" ", false, false).trim();
+            const int code  = rest.getIntValue();
             for (auto& i : adminBatch)
                 if (i.id == id && ! reported.contains (id))
                 {
@@ -927,6 +1126,14 @@ private:
                               : code == -2 ? i.name + ": the installer changed after it was checked - nothing was installed. Try again."
                               : code == 0 ? juce::String ("Install verification failed - components not found.")
                                           : "Install failed (installer code " + juce::String (code) + ").";
+                    if (! r.ok && code != -2)
+                        r.reason = rest.fromFirstOccurrenceOf (" ", false, false).trim().replace (home, "~");
+
+                    // Audit R196: the .pkg put the new version in /Library; a copy an
+                    // earlier Center placed in the user's folders is the old one now.
+                    if (r.ok && hasUserCopy (i) && systemCopiesInPlace (i))
+                        removeUserCopies (i);
+
                     finishItem (i, r);
                 }
         }
