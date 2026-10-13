@@ -183,14 +183,15 @@ public:
         // elevated. Only if that folder cannot be made does the old one serve,
         // so an install never fails over where it waits. A reparse point there
         // (made by an administrator) is reported, not refused, in this release.
+        const auto legacyCacheDir = juce::File::getSpecialLocation (juce::File::commonApplicationDataDirectory)
+                                        .getChildFile ("RONE").getChildFile ("InstallCache");
         auto cacheDir = juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
                             .getChildFile (RONE_INSTALL_DIR).getChildFile ("InstallCache");
         juce::String cacheNote;
         if (! cacheDir.createDirectory().wasOk())
         {
             cacheNote = "InstallCache could not be made in Program Files - used ProgramData";
-            cacheDir = juce::File::getSpecialLocation (juce::File::commonApplicationDataDirectory)
-                           .getChildFile ("RONE").getChildFile ("InstallCache");
+            cacheDir = legacyCacheDir;
             cacheDir.createDirectory();
         }
         else if (isReparsePoint (cacheDir) || isReparsePoint (cacheDir.getParentDirectory()))
@@ -234,14 +235,33 @@ public:
                            && source.getFileName().endsWithIgnoreCase ("_Installer.exe")
                            && source.existsAsFile() && sha.length() == 64;
 
+            auto stageDir = cacheDir;
+            auto copy = stageDir.getChildFile (id + "_Installer.exe");
+            copy.deleteFile();
+            bool copied = sane && source.copyFileTo (copy);
+
+            // Audit R048 (review): staging in Program Files must never be why an install
+            // fails where 2.1.3, which staged in ProgramData, would have run it - an
+            // antivirus that will not let an unsigned .exe be written there, say. One more
+            // try in the old folder, reported like the other staging notes.
+            if (sane && ! copied && stageDir != legacyCacheDir)
+            {
+                copy.deleteFile();
+                stageDir = legacyCacheDir;
+                stageDir.createDirectory();
+                copy = stageDir.getChildFile (id + "_Installer.exe");
+                copy.deleteFile();
+                copied = source.copyFileTo (copy);
+                r->setProperty ("cacheNote", (cacheNote.isNotEmpty() ? cacheNote + "; " : juce::String())
+                                                + "the copy into Program Files failed - used ProgramData");
+            }
+
             // The log gets a fresh name every run: a hung installer from an earlier
             // batch may still hold the old one open, and Inno aborts Setup (installs
             // nothing) when it cannot create its /LOG file.
-            const auto copy = cacheDir.getChildFile (id + "_Installer.exe");
-            const auto log  = cacheDir.getChildFile (id + "_" + juce::Uuid().toString().substring (0, 8) + "_Installer.log");
-            copy.deleteFile();
+            const auto log = stageDir.getChildFile (id + "_" + juce::Uuid().toString().substring (0, 8) + "_Installer.log");
 
-            if (! sane || ! source.copyFileTo (copy))
+            if (! copied)
             {
                 r->setProperty ("exitCode", -3);
             }

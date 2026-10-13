@@ -15,6 +15,9 @@ const ROOT_FILES = ['index.html', 'vite.config.js', 'tailwind.config.js', 'postc
 
 function listFiles (dir, base, out) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    // A Finder .DS_Store (or any dotfile) is not a source: on a Mac checkout it
+    // would fail the freshness test (review of R032/R197).
+    if (e.name.startsWith('.')) continue
     const full = path.join(dir, e.name)
     if (e.isDirectory()) listFiles(full, base, out)
     else out.push(path.relative(base, full).split(path.sep).join('/'))

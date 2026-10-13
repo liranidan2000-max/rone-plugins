@@ -396,6 +396,13 @@ void MainComponent::timerCallback()
     if (++timerTicks % 10 == 0)
         CrashReportUploader::uploadPendingAsync();
 
+    // Audit R026 (review): a Center update parked behind busy plugins is woken by
+    // the batch going idle or a failed download - not by an uninstall finishing.
+    // Once a minute, a parked update that nothing woke goes ahead as soon as
+    // nothing is working any more (applyCenterUpdateWhenIdle checks that).
+    if (centerUpdateWanted)
+        applyCenterUpdateWhenIdle();
+
     const auto now = juce::Time::currentTimeMillis();
     const auto sinceAttempt = now - lastManifestAttemptMs;
 
@@ -772,11 +779,15 @@ void MainComponent::emitStatusMessage (const juce::String& text, const juce::Str
     // could not replace a file a DAW still had open, the macOS password prompt
     // dismissed. 33 of the first 49 reports in the tracker were "Offline" -
     // that is noise that buries a real crash (1.3.8).
+    //
+    // The report carries the home folder as "~" (review of R195/R202): 2.1.4's
+    // messages name the download folder and quote the installer's own log, and a
+    // Windows user name has no place in the tracker. The page shows the full text.
     if (type == "error" && ! isEnvironmentalStatus (text))
     {
         RoneCrashReporter::reportError ("RONE Plugins Center",
                                         JUCE_APPLICATION_VERSION_STRING,
-                                        "Center", "CENTER_ERROR", text);
+                                        "Center", "CENTER_ERROR", withoutHome (text));
         CrashReportUploader::uploadPendingAsync();
     }
 }
