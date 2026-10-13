@@ -1,4 +1,7 @@
 import { productKey } from './ownership.js'
+import { makeT } from './i18n.js'
+
+const enT = makeT('en')
 
 // ---- Announcements: the website's popups, in the Center ----
 // roneaudio.com/api/v1/popup is managed in the admin console, and a plugin added
@@ -49,7 +52,8 @@ export const isGiftPass = (passSource) => productKey(passSource) === 'comp'
 // (which the server fills with the free plugins for every account). A deal is
 // skipped for a gift pass - not remembered, so it could still greet the same
 // person once the gift is over. Plugin and free popups show to a gift as before.
-export function pickAnnouncement (popups, { plugins, ownedKeys, licensed, passSource, ignoreMemory = false }) {
+// `t` says the button and the price line in the user's language (audit R244).
+export function pickAnnouncement (popups, { plugins, ownedKeys, licensed, passSource, ignoreMemory = false, t = enT }) {
   if (!ignoreMemory) {
     let last = 0
     try { last = Number(localStorage.getItem(LAST_KEY)) || 0 } catch {}
@@ -72,14 +76,14 @@ export function pickAnnouncement (popups, { plugins, ownedKeys, licensed, passSo
       if (canInstall) {
         return {
           popup, plugin,
-          primary: { kind: 'install', label: plugin.status === 'update_available' ? 'Update now' : 'Install now' },
+          primary: { kind: 'install', label: plugin.status === 'update_available' ? t('ann.updateNow') : t('ann.installNow') },
           priceLine: popup.kind === 'free' ? (popup.price || '')
-                   : licensed ? 'Included in your ALL ACCESS pass' : 'In your account',
+                   : licensed ? t('ann.inPass') : t('ann.inAccount'),
         }
       }
       return {
         popup, plugin,
-        primary: { kind: 'url', label: popup.cta?.label || 'See it', url: siteUrl(popup.cta?.url, productId) },
+        primary: { kind: 'url', label: popup.cta?.label || t('ann.seeIt'), url: siteUrl(popup.cta?.url, productId) },
         priceLine: popup.price || '',
       }
     }
@@ -87,7 +91,7 @@ export function pickAnnouncement (popups, { plugins, ownedKeys, licensed, passSo
     if (popup.cta?.url) {
       return {
         popup, plugin: null,
-        primary: { kind: 'url', label: popup.cta.label || 'See it', url: siteUrl(popup.cta.url, productId || popup.kind) },
+        primary: { kind: 'url', label: popup.cta.label || t('ann.seeIt'), url: siteUrl(popup.cta.url, productId || popup.kind) },
         priceLine: popup.price || '',
       }
     }

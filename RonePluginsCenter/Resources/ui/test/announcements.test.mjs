@@ -4,6 +4,7 @@
 import { test, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { pickAnnouncement, rememberAnnouncement, isGiftPass } from '../src/announcements.js'
+import { makeT } from '../src/i18n.js'
 
 // The page's localStorage, in memory (node has none).
 const store = new Map()
@@ -48,6 +49,14 @@ test('a gift pass still sees plugin popups', () => {
   const item = pickAnnouncement([deal, plugin], pass('comp'))
   assert.equal(item.popup.id, plugin.id)
   assert.equal(item.priceLine, 'Included in your ALL ACCESS pass')
+})
+
+test('the button and the price line speak the user language (audit R244)', () => {
+  const item = pickAnnouncement([plugin], { ...pass('paddle'), t: makeT('pt') })
+  assert.equal(item.primary.label, 'Instalar agora')
+  assert.equal(item.priceLine, 'Incluído no seu passe ALL ACCESS')
+  const es = pickAnnouncement([plugin], { plugins, ownedKeys: new Set(['ronerise']), licensed: false, ignoreMemory: true, t: makeT('es') })
+  assert.equal(es.priceLine, 'En tu cuenta')
 })
 
 test('the compare is the ownership one: casing and padding do not hide a gift', () => {
