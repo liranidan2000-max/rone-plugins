@@ -86,14 +86,14 @@ def manual(G):
 {img("reversereverb/tour_knobs.png", "<b>LOW CUT, WIDTH, TAIL LENGTH, ROOM SIZE, DRY/WET.</b>")}
 {ctl("TAIL LENGTH", "8 BAR &middot; 4 BAR &middot; 2 BAR &middot; 1 BAR &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32<br>default 1/2", "<p>The total length of the rendered result at the current tempo. This is what makes the swell land: an 8 BAR tail dropped eight bars before the downbeat arrives exactly on it.</p>", "Use short values (1/4, 1/8) on drums for tight pre-hits; long values (2-8 BAR) on vocals and chords for cinematic entries.")}
 {ctl("ROOM SIZE", "0 to 100 %<br>default 80 %", "<p>The size of the reverb used to create the tail. Larger rooms give denser, smoother swells; small rooms give short, grainy pre-echoes that still stretch to the chosen length.</p>")}
-{ctl("LOW CUT", "20 to 500 Hz<br>default 20 Hz", "<p>A high-pass filter on the result. Reversed tails carry a lot of low-mid rumble; 100-200 Hz keeps the swell out of the way of bass and kick.</p>")}
+{ctl("LOW CUT", "20 to 500 Hz<br>default 200 Hz", "<p>A high-pass filter on the result. Reversed tails carry a lot of low-mid rumble; 100-200 Hz keeps the swell out of the way of bass and kick.</p>")}
 {ctl("WIDTH", "0 to 100 %<br>default 50 %", "<p>Stereo width of the result. 0 % is mono, 50 % is the natural reverb width, 100 % is as wide as it goes.</p>", "Check the mix in mono above 80 %.")}
 {ctl("HI CUT", "1 kHz to OFF<br>default OFF", "<p>A low-pass filter on the result. Reversed tails are bright by nature; 4-8 kHz makes a dark, cinematic swell that sits behind a lead instead of fighting it.</p>")}
 {ctl("OUTPUT", "0 to 200 %<br>default 100 %<br>automatable", "<p>The level of the result. Above 100 % a soft limiter takes over: the loud end of a swell rounds off instead of clipping, so a hot OUTPUT is a colour, not a fault.</p>")}
 <h3>Tremolo</h3>
 {img("reversereverb/tremolo_panel.png", "<b>The tremolo section.</b>")}
 {ctl("TREMOLO on/off", "power button", "<p>Enables a rhythmic amplitude gate on the result - the difference between a swell and a riser.</p>")}
-{ctl("DEPTH", "0 to 100 %<br>default 50 %", "<p>How deep the tremolo cuts. 100 % is a hard gate.</p>")}
+{ctl("DEPTH", "0 to 100 %<br>default 100 %", "<p>How deep the tremolo cuts. 100 % is a hard gate.</p>")}
 {ctl("PAN", "0 to 100 %<br>default 0 %", "<p>Turns the tremolo into an auto-pan: alternate pulses lean left and right by this amount.</p>")}
 {ctl("RATE", "0.1 to 20 Hz<br>default 4 Hz", "<p>Speed of the tremolo in FREE mode. In RAMP and SYNC modes the speed comes from the tempo and this knob is inactive.</p><p><strong>REC</strong> (the small red dot on the knob, 1.1.7) records the knob into the sample: click it (it blinks), press PLAY and turn RATE while the swell plays. The movement is recorded across the whole sample, and from then on the tremolo follows the take in the preview, in the waveform and in the dragged file; the knob turns red and follows the take while it plays. Click REC again to record a new take. Turning RATE by hand replaces the take with a plain knob again. The take is saved with the project.</p>")}
 {ctl("SHAPE", "sine &middot; triangle &middot; square<br>default sine", "<p>The shape of the pulse. Sine is smooth, triangle is sharper, square is a hard gate.</p>")}
