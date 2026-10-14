@@ -23,7 +23,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "1.1.14 - A dropped file that is too long or cannot be read now tells you why, and saving a preset has its own SAVE button, so it works on a Mac and in every DAW.",
+      "whats_new": "1.1.15 - The sound you drop in can now be up to 30 seconds long (it was 8). With two Reverse Reverb windows open, closing one no longer stops drag and drop in the other, and the Default preset now recalls the settings a new instance opens with.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",

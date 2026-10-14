@@ -26,7 +26,7 @@ def manual(G):
 <div>
 <h3>The 10-second version</h3>
 {steps([
- "Drop a short sound (up to 8 seconds) on the waveform.",
+ "Drop a short sound (up to 30 seconds) on the waveform.",
  "Set TAIL LENGTH to the number of bars the swell should take.",
  "Press PLAY.",
  "Drag the result to your DAW, or leave the plugin on the channel: the file is saved with the project."])}
@@ -43,7 +43,7 @@ def manual(G):
 </div>
 {steps([
  "<strong>Insert</strong> the plugin on a channel (an empty channel is ideal, since the plugin plays its result through it). In the standalone app just open it.",
- "<strong>Load a sound.</strong> Drag a WAV, AIFF, FLAC or MP3 of up to 8 seconds onto the waveform. Short, distinct sounds - a word, a snare, a chord stab - give the clearest swells.",
+ "<strong>Load a sound.</strong> Drag a WAV, AIFF, FLAC or MP3 of up to 30 seconds onto the waveform. Short, distinct sounds - a word, a snare, a chord stab - give the clearest swells.",
  "<strong>Choose the length.</strong> TAIL LENGTH runs from 1/32 to 8 BAR. It is the total length of the result at the current tempo (host tempo in a DAW; the BPM slider in the standalone app).",
  "<strong>Set the room.</strong> ROOM SIZE controls how dense and long the reverb is inside that length; LOW CUT removes rumble from the tail; WIDTH sets how wide the swell is.",
  "<strong>Listen.</strong> Press <span class='pill'>PLAY</span>. In a DAW you can also trigger playback with any MIDI note routed to the plugin - note on starts, note off stops.",
@@ -143,7 +143,7 @@ def manual(G):
 <li>Try TRANSITION mode on drum hits; the shared reverb makes the hit sound like it belongs to the swell.</li>
 </ul></div>
 <div><h4>Avoid</h4><ul>
-<li>Files longer than 8 seconds; the plugin refuses them. Trim in your DAW first.</li>
+<li>Files longer than 30 seconds; the plugin refuses them. Trim in your DAW first.</li>
 <li>WIDTH at 100 % on low-frequency material; it can cancel in mono.</li>
 <li>Deep square tremolo on soft pads; sine or triangle keeps the swell musical.</li>
 </ul></div>
@@ -159,7 +159,7 @@ def manual(G):
     S.append(G["conventions_section"](m, note("MIDI", "Route a MIDI track to the plugin to trigger playback: note on plays the result from the start, note off stops it. This works in the VST3 and AU versions.")))
 
     S.append(G["support_section"](m, [
-        ("The file does not load", "Files longer than 8 seconds are rejected. Trim the sound in your DAW and try again. WAV, AIFF, FLAC and MP3 are supported."),
+        ("The file does not load", "Files longer than 30 seconds are rejected. Trim the sound in your DAW and try again. WAV, AIFF, FLAC and MP3 are supported."),
         ("The swell does not land on the beat", "Check the tempo shown next to the status line. In the standalone app set the BPM slider; in a DAW the host tempo is used - re-render if you changed it."),
         ("PLAY is greyed out", "No sound is loaded yet, or the render is still running (very long tails take a moment)."),
         ("The swell sounds a semitone or so too high or too low", "Fixed in 1.0.1: files are now resampled to the session's sample rate. If an old project still sounds off, re-drop the source file once."),
