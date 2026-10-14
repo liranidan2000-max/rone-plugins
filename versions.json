@@ -2,13 +2,13 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-14T00:53:20Z",
+  "last_updated": "2026-10-14T01:10:07Z",
   "center_installer": {
-    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer.exe",
-    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center.dmg",
-    "version": "2.1.2.264",
-    "sha256": "e8be80c37341331be4241d18f36e8615cc6ed486ed158cfb46fa9b8885ba3bc5",
-    "sha256_mac": "975b3690b5dd6271a35ace7620b9fa42ab3822b9ce2bd502f561b3adbbe927fd",
+    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-276.1.exe",
+    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-276.1.dmg",
+    "version": "2.1.3.276",
+    "sha256": "b02b18b18ccf65d64ac1e5257169011e1d29057f637f085d98db4911dde37599",
+    "sha256_mac": "b8e8246f8fdc290f7d0fa8eb6292ed39e02ea8692701fb594b1d11186500bb3a",
     "whats_new": "2.1.3 (Mac): Settings > Updates without a password. One button moves your RONE plugins from the system folders into your own (one last password), and from then on every update installs with no password. 2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
   },
   "plugins": [
@@ -450,7 +450,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.3.14.272",
+      "version": "1.3.15.276",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -461,11 +461,11 @@
       "vst3_bundle": "",
       "au_bundle": "",
       "manual": "RONE Analyzer - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer.pkg",
-      "sha256": "f9e61920cd81e2706841a535d466bbb4de5beb8e81dde4f418eae747e5bb0645",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-276.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-276.1.pkg",
+      "sha256": "8a4201057821358cd6066785e1978cfa9412fd89870f468d6599d9c9c9013c5b",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "6a4ae279501e60d8b2feba30c9971aa1fd0599811211791cfc6a559b1cb78703",
+      "sha256_mac": "2bfee81e8531ce0264b8c768ff88d1d2453622447e5c06724178b9125e944b73",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html",
@@ -489,8 +489,8 @@
           "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
         }
       },
-      "size": 5823138,
-      "size_mac": 27870657
+      "size": 5854141,
+      "size_mac": 27941670
     }
   ],
   "tips": [
