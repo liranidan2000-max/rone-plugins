@@ -54,11 +54,13 @@ jobs:
           sleep 20; screencapture -x shots/after-20s.png || true
           sleep 25; screencapture -x shots/after-45s.png || true
           if kill -0 $PID 2>/dev/null; then echo "ALIVE after 45 s"; else echo "DIED"; wait $PID; echo "exit=$?"; exit 1; fi
-          ls -la "$HOME/Library/Application Support/RonePluginsCenter" || true
+          # JUCE's userApplicationDataDirectory is ~/Library on macOS (not Application Support)
+          ls -la "$HOME/Library/RonePluginsCenter" "$HOME/Library/RonePluginsCenter" 2>/dev/null || true
           python3 - <<'EOF'
-          import json, os
-          p = os.path.expanduser('~/Library/Application Support/RonePluginsCenter/manifest-cache.json')
-          d = json.load(open(p))
+          import glob, json, os
+          hits = glob.glob(os.path.expanduser('~/Library/**/RonePluginsCenter/manifest-cache.json'), recursive=True)
+          print('manifest cache:', hits)
+          d = json.load(open(hits[0]))
           print('manifest center', d['center_installer']['version'], '| plugins', len(d['plugins']))
           EOF
           kill $PID; sleep 3; kill -9 $PID 2>/dev/null || true
@@ -79,12 +81,12 @@ jobs:
           "$BIN" --list-user-folder-move --test-root "$T"; echo "list exit=$?"
           "$BIN" --move-to-user-folders --test-root "$T"; echo "move exit=$?"
           find "$T" | sort
-          ls -la "$HOME/Library/Application Support/RonePlugins" || true
-          cat "$HOME/Library/Application Support/RonePlugins/user-folder-move.json" || true
-          head -40 "$HOME/Library/Application Support/RonePlugins/user-folder-move.sh" || true
+          ls -la "$HOME/Library/RonePlugins" || true
+          cat "$HOME/Library/RonePlugins/user-folder-move.json" || true
+          head -40 "$HOME/Library/RonePlugins/user-folder-move.sh" || true
           O=$(mktemp -d)
           "$BIN" --list-old-versions --test-root "$O"; echo "old-versions exit=$?"
-          cat "$HOME/Library/Application Support/RonePlugins/old-versions.json" || true
+          cat "$HOME/Library/RonePlugins/old-versions.json" || true
 
       - name: Keep the screenshots and logs
         if: always()
