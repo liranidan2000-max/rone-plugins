@@ -1,0 +1,95 @@
+# TEMPORARY (audit 2026-10-14): smoke-test the Center 2.1.4 dry-run dmg on real macOS runners
+# before it is released. Lives only on branch audit/mac-smoke; never merged to main.
+name: Mac Center smoke
+
+on:
+  push:
+    branches: [audit/mac-smoke]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-13]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - name: Get the 2.1.4 dry-run dmg
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: installer-plugins_center-macos
+          run-id: 38494406014
+          github-token: ${{ github.token }}
+          path: dmg
+
+      - name: Install the app from the dmg
+        run: |
+          set -x
+          uname -m; sw_vers
+          ls -la dmg
+          DMG=$(ls dmg/*.dmg | head -1)
+          MNT=$(hdiutil attach -nobrowse -readonly "$DMG" | awk -F'\t' '/\/Volumes\//{print $NF}' | tail -1)
+          echo "mounted at $MNT"; ls -la "$MNT"
+          APP=$(ls -d "$MNT"/*.app | head -1)
+          sudo ditto "$APP" "/Applications/$(basename "$APP")"
+          hdiutil detach "$MNT" || true
+          sudo xattr -cr "/Applications/$(basename "$APP")"
+          echo "APP=/Applications/$(basename "$APP")" >> "$GITHUB_ENV"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "/Applications/$(basename "$APP")/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "/Applications/$(basename "$APP")/Contents/Info.plist" || true
+          file "/Applications/$(basename "$APP")/Contents/MacOS/"*
+
+      - name: Launch, stay up 45 s, read the manifest
+        run: |
+          set -x
+          mkdir -p shots
+          BIN=$(ls "$APP/Contents/MacOS/"* | head -1)
+          "$BIN" > shots/stdout.txt 2> shots/stderr.txt &
+          PID=$!
+          sleep 20; screencapture -x shots/after-20s.png || true
+          sleep 25; screencapture -x shots/after-45s.png || true
+          if kill -0 $PID 2>/dev/null; then echo "ALIVE after 45 s"; else echo "DIED"; wait $PID; echo "exit=$?"; exit 1; fi
+          ls -la "$HOME/Library/Application Support/RonePluginsCenter" || true
+          python3 - <<'EOF'
+          import json, os
+          p = os.path.expanduser('~/Library/Application Support/RonePluginsCenter/manifest-cache.json')
+          d = json.load(open(p))
+          print('manifest center', d['center_installer']['version'], '| plugins', len(d['plugins']))
+          EOF
+          kill $PID; sleep 3; kill -9 $PID 2>/dev/null || true
+          ls -la ~/Library/Logs/DiagnosticReports 2>/dev/null | grep -i rone && { echo "CRASH REPORT FOUND"; exit 1; } || echo "no crash reports"
+
+      - name: Folder-move and old-version harnesses on a fake tree
+        run: |
+          set -x
+          BIN=$(ls "$APP/Contents/MacOS/"* | head -1)
+          T=$(mktemp -d)
+          # a fake system-domain tree with one RONE plugin of each kind
+          # (layout of UserFolderMove::testRoots: System/{VST3,Components,Applications} -> User/...)
+          mkdir -p "$T/System/VST3/RONE Stutter.vst3/Contents" "$T/System/Components/RONE Stutter.component/Contents" "$T/System/Applications/RONE Stutter.app/Contents" "$T/User/VST3" "$T/User/Components" "$T/User/Applications"
+          for b in "$T/System/VST3/RONE Stutter.vst3" "$T/System/Components/RONE Stutter.component" "$T/System/Applications/RONE Stutter.app"; do
+            printf '<?xml version="1.0"?><plist version="1.0"><dict><key>CFBundleShortVersionString</key><string>1.5.9</string></dict></plist>' > "$b/Contents/Info.plist"
+          done
+          find "$T" | sort
+          "$BIN" --list-user-folder-move --test-root "$T"; echo "list exit=$?"
+          "$BIN" --move-to-user-folders --test-root "$T"; echo "move exit=$?"
+          find "$T" | sort
+          ls -la "$HOME/Library/Application Support/RonePlugins" || true
+          cat "$HOME/Library/Application Support/RonePlugins/user-folder-move.json" || true
+          head -40 "$HOME/Library/Application Support/RonePlugins/user-folder-move.sh" || true
+          O=$(mktemp -d)
+          "$BIN" --list-old-versions --test-root "$O"; echo "old-versions exit=$?"
+          cat "$HOME/Library/Application Support/RonePlugins/old-versions.json" || true
+
+      - name: Keep the screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mac-smoke-${{ matrix.os }}
+          path: shots
+          if-no-files-found: warn
