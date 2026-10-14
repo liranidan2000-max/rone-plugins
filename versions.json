@@ -2,13 +2,13 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-14T01:56:30Z",
+  "last_updated": "2026-10-14T03:21:55Z",
   "center_installer": {
-    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-276.1.exe",
-    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-276.1.dmg",
-    "version": "2.1.3.276",
-    "sha256": "b02b18b18ccf65d64ac1e5257169011e1d29057f637f085d98db4911dde37599",
-    "sha256_mac": "b8e8246f8fdc290f7d0fa8eb6292ed39e02ea8692701fb594b1d11186500bb3a",
+    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-280.1.exe",
+    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-280.1.dmg",
+    "version": "2.1.4.280",
+    "sha256": "ee52c876938e5b417de870af2605a533a892c30dc804243c13c2bca5187253fe",
+    "sha256_mac": "7992dcb1b05088cc94f8facd19ba42f51bef8e66552f1d96b9bc7d3f7fed0023",
     "whats_new": "2.1.3 (Mac): Settings > Updates without a password. One button moves your RONE plugins from the system folders into your own (one last password), and from then on every update installs with no password. 2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
   },
   "plugins": [
