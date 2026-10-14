@@ -125,7 +125,7 @@ function MoveDialog ({ t, phase, items, result, onConfirm, onClose }) {
   )
 }
 
-export default function SettingsView ({ t, prefs, setPrefs, daws, platform, manifest, onRefresh, onShowOnboarding, addToast }) {
+export default function SettingsView ({ t, prefs, setPrefs, daws, platform, manifest, optin, onOptin, onRefresh, onShowOnboarding, addToast }) {
   const [center, setCenter] = useState({ backgroundDownload: true, autoStart: false, autoStartSupported: false })
   const [version, setVersion] = useState('')
   const [showBack, setShowBack] = useState(false)
@@ -245,6 +245,11 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
             <Row title={t('set.checkNow')} desc={manifest.syncedAt ? t('set.lastCheck', { ago: timeAgo(manifest.syncedAt, t) }) : ''}>
               <button className="btn btn-out btn-sm" onClick={onRefresh}>{t('set.checkNow')}</button>
             </Row>
+            {optin && onOptin && (
+              <Row title={t('set.deals')} desc={t('set.dealsSub')}>
+                <Switch label={t('set.deals')} checked={!!optin.on} onChange={onOptin} />
+              </Row>
+            )}
           </Box>
         </div>
 

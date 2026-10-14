@@ -73,6 +73,30 @@ std::function<juce::var()> AccountClient::authorizedGet (const juce::String& pat
     };
 }
 
+std::function<juce::var()> AccountClient::authorizedPost (const juce::String& path, const juce::var& body) const
+{
+    juce::String bearer;
+    {
+        const juce::ScopedLock sl (lock);
+        bearer = token;
+    }
+    const auto json = juce::JSON::toString (body, true);
+    return [bearer, path, json]() -> juce::var
+    {
+        if (bearer.isEmpty())
+            return {};
+        auto url = juce::URL (juce::String (RONE_API_BASE) + path).withPOSTData (json);
+        auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inPostData)
+                           .withConnectionTimeoutMs (10000)
+                           .withExtraHeaders ("Content-Type: application/json\r\nAccept: application/json\r\nAuthorization: Bearer " + bearer);
+        auto stream = url.createInputStream (options);
+        if (stream == nullptr)
+            return {};                                  // offline / unreachable
+        auto parsed = juce::JSON::parse (stream->readEntireStreamAsString());
+        return parsed.isObject() ? parsed : juce::var();
+    };
+}
+
 // ============================================================================
 // The device token at rest (Center 2.0)
 //

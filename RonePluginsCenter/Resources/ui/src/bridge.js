@@ -132,6 +132,9 @@ export const api = {
   getAnnouncements:  createNativeFunction('getAnnouncements'),
   // roneaudio.com/api/v1/upsell with the device token: the 24-hour $19 offer, owner prices, signed /owner links
   getUpsell:         createNativeFunction('getUpsell'),
+  // the deals list (roneaudio.com/api/v1/optin): {on}; setOptin(true|false) joins / leaves
+  getOptin:          createNativeFunction('getOptin'),
+  setOptin:          createNativeFunction('setOptin'),
   scanOldVersions:   createNativeFunction('scanOldVersions'),
   // may wait for the OS permission prompt (an elevated copy of the Center deletes)
   deleteOldVersions: createNativeFunction('deleteOldVersions', 150000),
@@ -226,9 +229,18 @@ export const mockAnnouncements = {
   ],
 };
 
-// ?upsell=1 in dev mode (with ?as=lifetime): a Stucker bought 2 hours ago - the $19 Stutter day and the owner prices.
-export function mockUpsell () {
+// ?upsell=1 in dev mode (with ?as=lifetime): a Stutter bought 2 hours ago - the $19 Stucker day and the owner prices.
+// With ?as=free: the first-plugin offer (RONE Stucker $15 for 48 hours) a Clipper-only account gets.
+export function mockUpsell (scenario = devScenario()) {
   const link = (id) => 'https://roneaudio.com/owner?k=dev.' + id
+  if (scenario === 'free') {
+    return {
+      ok: true, offer: null, owner: null, links: { RoneStucker: link('RoneStucker') },
+      first: { kind: 'first', product: 'RoneStucker', name: 'RONE Stucker', slug: 'products/rone-stucker.html', price: 15, regular: 29,
+               endsAt: new Date(Date.now() + 47.5 * 3600000).toISOString(), line: 'The classic roll-up, back on the beat',
+               video: '/media/shorts/RoneStucker.mp4', poster: '/media/shorts/RoneStucker.jpg' },
+    }
+  }
   const prices = { RoneThrow: 29, RoneRise: 29, RoneIron: 29, ReverseReverb: 37, RoneAfterspace: 44, RONEAnalyzer: 37 }
   return {
     ok: true,

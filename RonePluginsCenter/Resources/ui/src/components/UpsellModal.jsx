@@ -80,7 +80,7 @@ export default function UpsellModal ({ t, offer, plugin, accent, reduced, onBuy,
         <div className="flex-1 min-w-0 flex flex-col px-8 py-8">
           <div className="self-start flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10">
             <span className="w-[7px] h-[7px] rounded-full" style={{ background: accent, boxShadow: `0 0 10px ${accent}` }} />
-            <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-rone-text-primary">{t('hero.because', { name: offer.becauseName || '' })}</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-rone-text-primary">{offer.kind === 'first' ? t('hero.first') : t('hero.because', { name: offer.becauseName || '' })}</span>
           </div>
           <h2 className="mt-5 font-display text-[32px] leading-[1.1] font-extrabold tracking-tight text-rone-text-primary">
             <Title text={offer.name} accent={accent} />

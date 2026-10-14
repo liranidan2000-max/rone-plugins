@@ -89,6 +89,9 @@ public:
         signed out, offline, or with anything but a JSON object. (The "one more" offer: /upsell.) */
     std::function<juce::var()> authorizedGet (const juce::String& path) const;
 
+    /** The same for a JSON POST (the deals list: /optin with {on, source}). */
+    std::function<juce::var()> authorizedPost (const juce::String& path, const juce::var& body) const;
+
 private:
     // Same 7-day offline tolerance as the license-key path: a working studio
     // must not go dark because the internet did. It gates the PASS only — a

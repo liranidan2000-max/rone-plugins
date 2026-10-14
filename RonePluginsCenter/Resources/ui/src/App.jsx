@@ -84,8 +84,10 @@ export default function App () {
     const m = new Map()
     if (!upsell) return m
     for (const [id, x] of Object.entries(upsell.owner?.prices || {})) m.set(productKey(id), { ownerPrice: x.price })
-    const o = upsell.offer
-    if (o && Date.parse(o.endsAt) > Date.now()) m.set(productKey(o.product), { ...(m.get(productKey(o.product)) || {}), offerPrice: o.price, offerEndsAt: o.endsAt })
+    // the $19 "one more" after a purchase, or the first-plugin offer of an account that owns nothing yet
+    for (const o of [upsell.offer, upsell.first]) {
+      if (o && Date.parse(o.endsAt) > Date.now()) m.set(productKey(o.product), { ...(m.get(productKey(o.product)) || {}), offerPrice: o.price, offerEndsAt: o.endsAt })
+    }
     return m
   }, [upsell, upsellTick])
   const tagged = useMemo(() => plugins.map(p => {
@@ -392,7 +394,7 @@ export default function App () {
       else { try { r = await api.getUpsell() } catch {} }
       if (!alive) return
       setUpsell(r && r.ok ? r : null)
-      const ms = r?.offer ? Date.parse(r.offer.endsAt) - Date.now() : 0
+      const ms = (r?.offer || r?.first) ? Date.parse((r.offer || r.first).endsAt) - Date.now() : 0
       if (ms > 0 && ms < 2 ** 31) timer = setTimeout(() => setUpsellTick(n => n + 1), ms + 3000)
     })()
     return () => { alive = false; if (timer) clearTimeout(timer) }
@@ -402,12 +404,14 @@ export default function App () {
   // installed when this window loaded), never over an install or another popup.
   const installedAtStart = useRef(null)
   useEffect(() => { if (!loading && plugins.length && !installedAtStart.current) installedAtStart.current = new Set(plugins.filter(isInstalled).map(p => productKey(p.id))) }, [loading, plugins])
+  // The first-plugin offer (an account with nothing of its own yet) pops the same way, at an open of the Center.
   useEffect(() => {
-    const o = upsell?.offer
+    const live = (x) => (x && Date.parse(x.endsAt) > Date.now() ? x : null)
+    const o = live(upsell?.offer) || live(upsell?.first)
     if (!o || loading || onboardingOpen || announcement || upsellShown || !installedAtStart.current) return
-    if (!(Date.parse(o.endsAt) > Date.now())) return
-    if (!installedAtStart.current.has(productKey(o.because)) || tagged.some(isBusy)) return
-    const key = 'rone_center_upsell_seen:' + o.because + ':' + o.endsAt
+    if (tagged.some(isBusy)) return
+    if (o.kind !== 'first' && !installedAtStart.current.has(productKey(o.because))) return
+    const key = 'rone_center_upsell_seen:' + (o.kind === 'first' ? 'first' : o.because) + ':' + o.endsAt
     let seen = false
     try { seen = localStorage.getItem(key) === '1' } catch {}
     if (seen && !DEV) return
@@ -419,12 +423,43 @@ export default function App () {
   // The banner's personal slide: the $19 plugin while that day runs, else the owner pick.
   const personal = useMemo(() => {
     if (!upsell) return null
+    const f = upsell.first && Date.parse(upsell.first.endsAt) > Date.now() ? upsell.first : null
+    if (f) {
+      const plugin = tagged.find(p => productKey(p.id) === productKey(f.product))
+      return plugin && !plugin.owned ? { plugin, kind: 'first', line: f.line || '', endsAt: f.endsAt } : null
+    }
     const o = upsell.offer && Date.parse(upsell.offer.endsAt) > Date.now() ? upsell.offer : null
     const id = o ? o.product : upsell.owner?.pick
     const plugin = id && tagged.find(p => productKey(p.id) === productKey(id))
     if (!plugin || plugin.owned) return null
     return { plugin, becauseName: (o ? o.becauseName : upsell.owner?.becauseName) || '', line: o?.line || '' }
   }, [upsell, tagged])
+
+  // ---- the deals list (roneaudio.com/api/v1/optin; Liran's sales plan 14.10, Black Friday early access) ----
+  // A switch in Settings for every signed-in account, and ONE banner ask - never to a gift pass.
+  const [optin, setOptin] = useState(null)
+  useEffect(() => {
+    if (loading || !account.signedIn) { setOptin(null); return }
+    if (DEV) { setOptin({ on: new URLSearchParams(location.search).get('optin') === '1' }); return }
+    let alive = true
+    api.getOptin().then(r => { if (alive) setOptin(r && typeof r.on === 'boolean' ? { on: r.on } : null) }).catch(() => {})
+    return () => { alive = false }
+  }, [loading, account.signedIn])
+  const changeOptin = async (on) => {
+    setOptin({ on })
+    if (DEV) { addToast({ text: t(on ? 'msg.optinOn' : 'msg.optinOff'), type: 'success' }); return }
+    let r = null
+    try { r = await api.setOptin(on) } catch {}
+    if (r && typeof r.on === 'boolean') { setOptin({ on: r.on }); addToast({ text: t(r.on ? 'msg.optinOn' : 'msg.optinOff'), type: 'success' }) }
+    else { setOptin({ on: !on }); addToast({ text: t('msg.optinFail'), type: 'error' }) }
+  }
+  const [optinAsked, setOptinAsked] = useState(() => { try { return localStorage.getItem('rone_center_optin_asked') === '1' } catch { return false } })
+  const answerOptin = (yes) => {
+    try { localStorage.setItem('rone_center_optin_asked', '1') } catch {}
+    setOptinAsked(true)
+    if (yes) changeOptin(true)
+  }
+  const optinAsk = optin && !optin.on && !optinAsked && account.passSource !== 'comp' ? answerOptin : null
 
   // ---- announcements (the website's popups), once per page after the catalog is in ----
   const announceAsked = useRef(false)
@@ -491,7 +526,7 @@ export default function App () {
 
           <div ref={scroller} className="flex-1 min-h-0 overflow-y-auto scroll-y px-6 pt-5 pb-24">
             {view === 'library' && (
-              <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} preview={preview} personal={personal}
+              <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} preview={preview} personal={personal} optinAsk={optinAsk}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
                            catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} />
             )}
@@ -507,7 +542,7 @@ export default function App () {
             {view === 'rack' && <RackView t={t} plugins={tagged} access={access} onDetail={openDetail} />}
             {view === 'learn' && <LearnView t={t} plugins={tagged} tips={localTips} onManualPdf={manualPdf} onDetail={openDetail} />}
             {view === 'settings' && (
-              <SettingsView t={t} prefs={prefs} setPrefs={setPrefs} daws={daws} platform={platform} manifest={manifest}
+              <SettingsView t={t} prefs={prefs} setPrefs={setPrefs} daws={daws} platform={platform} manifest={manifest} optin={optin} onOptin={changeOptin}
                             onRefresh={refresh} onShowOnboarding={() => setOnboardingOpen(true)} addToast={addToast} />
             )}
             {view === 'account' && (

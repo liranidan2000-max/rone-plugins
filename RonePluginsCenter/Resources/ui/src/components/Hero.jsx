@@ -6,7 +6,7 @@ import { openExternal } from '../bridge'
 // The banner: the newest plugin with its real 3D unit, the free plugin, and the
 // tip of the week - instead of a status banner. A guest or a lapsed pass sees
 // what unlocks things first. Slides change every 8 s unless motion is reduced.
-export default function Hero ({ t, plugins, access, account, license, preview, personal, onBuy, tips, reduced, onInstall, onDetail, onAccount }) {
+export default function Hero ({ t, plugins, access, account, license, preview, personal, optinAsk, onBuy, tips, reduced, onInstall, onDetail, onAccount }) {
   const slides = useMemo(() => {
     const out = []
     const signedIn = !!account.signedIn
@@ -52,8 +52,12 @@ export default function Hero ({ t, plugins, access, account, license, preview, p
     if (personal?.plugin && onBuy) {
       const p = personal.plugin
       const price = priceOf(p)
-      out.unshift({ key: 'mine', color: accentOf(p), eyebrow: t('hero.because', { name: personal.becauseName }),
-                    title: 'RONE ' + shortName(p), body: personal.line ? personal.line + '.' : descriptionOf(p), unit: p.unitUrl || p.logoUrl,
+      const hours = personal.kind === 'first' ? Math.max(1, Math.ceil((Date.parse(personal.endsAt) - Date.now()) / 3600000)) : 0
+      out.unshift({ key: 'mine', color: accentOf(p),
+                    eyebrow: personal.kind === 'first' ? t('hero.first') : t('hero.because', { name: personal.becauseName }),
+                    title: 'RONE ' + shortName(p),
+                    body: (personal.line ? personal.line + '.' : descriptionOf(p)) + (hours ? ' ' + t('hero.hoursLeft', { n: hours }) + '.' : ''),
+                    unit: p.unitUrl || p.logoUrl,
                     actions: [
                       price && { label: price.kind === 'owner' ? t('hero.ownerPrice', { price: usd(price.live) }) : t('hero.getIt', { price: usd(price.live) }),
                                  primary: true, onClick: () => onBuy(p, 'hero') },
@@ -61,12 +65,18 @@ export default function Hero ({ t, plugins, access, account, license, preview, p
                     ].filter(Boolean) })
     }
 
+    // The deals list, asked once (App.jsx decides who: signed in, not on it, never a gift pass).
+    if (optinAsk) {
+      out.splice(Math.min(1, out.length), 0, { key: 'optin', color: '#9D6BFF', eyebrow: t('hero.optinEyebrow'), title: t('hero.optinTitle'), body: t('hero.optinBody'),
+        actions: [{ label: t('hero.optinYes'), primary: true, onClick: () => optinAsk(true) }, { label: t('hero.optinNo'), ghost: true, onClick: () => optinAsk(false) }] })
+    }
+
     if (signedIn && !license.licensed && account.plan === 'all-access') {
       out.unshift({ key: 'pass', color: '#9D6BFF', eyebrow: 'ALL ACCESS', title: t('hero.passTitle'), body: t('hero.passBody'),
                     actions: [{ label: t('plan.accountGo'), primary: true, onClick: onAccount }] })
     }
     return out
-  }, [plugins, access, account, license, preview.id, preview.status, tips, t, personal, onBuy])
+  }, [plugins, access, account, license, preview.id, preview.status, tips, t, personal, optinAsk, onBuy])
 
   const [i, setI] = useState(0)
   useEffect(() => { if (i >= slides.length) setI(0) }, [slides.length])
@@ -88,7 +98,7 @@ export default function Hero ({ t, plugins, access, account, license, preview, p
              className="absolute right-[4%] top-[12px] h-[300px] w-auto -rotate-2 pointer-events-none"
              style={{ filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.6))' }} />
       )}
-      <div className="relative h-full px-7 py-6 flex flex-col gap-1.5 max-w-[60%]" aria-live="polite">
+      <div className={`relative h-full px-7 py-6 flex flex-col gap-1.5 ${s.unit ? 'max-w-[60%]' : 'max-w-[86%]'}`} aria-live="polite">
         <div className="text-[11px] font-extrabold tracking-[0.2em] uppercase" style={{ color: s.color }}>{s.eyebrow}</div>
         {s.title && <h2 className="m-0 font-display font-extrabold text-[26px] leading-[1.12] text-rone-text-primary text-balance">{s.title}</h2>}
         <p className={`m-0 text-rone-text-secondary ${s.title ? 'text-[13.5px] line-clamp-2' : 'text-[16px] font-semibold leading-snug text-rone-text-primary line-clamp-3'}`}>{s.body}</p>

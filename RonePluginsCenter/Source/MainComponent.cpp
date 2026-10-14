@@ -236,6 +236,12 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         .withNativeFunction ("getUpsell", [this] (NativeArgs args, NativeCompletion complete) {
             handleGetUpsell (args, guarded (std::move (complete)));
         })
+        .withNativeFunction ("getOptin", [this] (NativeArgs args, NativeCompletion complete) {
+            handleOptin (args, guarded (std::move (complete)), false);
+        })
+        .withNativeFunction ("setOptin", [this] (NativeArgs args, NativeCompletion complete) {
+            handleOptin (args, guarded (std::move (complete)), true);
+        })
         .withNativeFunction ("scanOldVersions", [this] (NativeArgs args, NativeCompletion complete) {
             handleScanOldVersions (args, guarded (std::move (complete)));
         })
@@ -1887,6 +1893,36 @@ void MainComponent::handleGetUpsell (NativeArgs, NativeCompletion complete)
     // each. Asked with the device token, off the message thread. Signed out, offline or a bad answer =
     // {"ok": false}: the page shows the ordinary prices.
     juce::Thread::launch ([job = accountClient.authorizedGet ("/upsell"), complete = std::move (complete)]() mutable
+    {
+        auto result = job();
+        if (! result.isObject())
+        {
+            auto* none = new juce::DynamicObject();
+            none->setProperty ("ok", false);
+            result = juce::var (none);
+        }
+        complete (result);
+    });
+}
+
+void MainComponent::handleOptin (NativeArgs args, NativeCompletion complete, bool write)
+{
+    // The deals list (roneaudio.com/api/v1/optin, Liran's sales plan 14.10: Black Friday early access): read it, or
+    // join / leave with this machine's device token - the switch in Settings and the one-time banner ask.
+    // Signed out, offline or a bad answer = {"ok": false}.
+    std::function<juce::var()> job;
+    if (write)
+    {
+        auto* body = new juce::DynamicObject();
+        body->setProperty ("on", args.size() > 0 && (bool) args[0]);
+        body->setProperty ("source", "center");
+        job = accountClient.authorizedPost ("/optin", juce::var (body));
+    }
+    else
+    {
+        job = accountClient.authorizedGet ("/optin");
+    }
+    juce::Thread::launch ([job = std::move (job), complete = std::move (complete)]() mutable
     {
         auto result = job();
         if (! result.isObject())
