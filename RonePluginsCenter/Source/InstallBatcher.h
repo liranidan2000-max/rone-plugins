@@ -433,6 +433,11 @@ private:
             if (e.state == State::waiting && holders.isEmpty())
                 holders = PluginInUse::find (bundle, exe);
 
+            // 2.1.6: an FL Studio helper left holding the files after FL itself
+            // closed (a crash, a stuck shutdown) would keep this waiting for good.
+            if (PluginInUse::endOrphanedFlHelpers (holders) > 0)
+                holders = PluginInUse::find (bundle, exe);
+
             // Half a day: try anyway, the installer reports the lock.
             const bool giveUp = e.state == State::waiting && now - e.waitStartMs > 12u * 3600u * 1000u;
 
