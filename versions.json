@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-18T21:40:02Z",
+  "last_updated": "2026-10-20T14:14:57Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-281.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-281.1.dmg",
@@ -450,7 +450,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.3.20.286",
+      "version": "1.3.21.287",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -461,11 +461,11 @@
       "vst3_bundle": "",
       "au_bundle": "",
       "manual": "RONE Analyzer - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-286.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-286.1.pkg",
-      "sha256": "df3532d16072aff3d7a660f1b05713a441f3ee609e85fd1eecb57dbbd6c848ab",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-287.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-287.1.pkg",
+      "sha256": "afafbfe6c17eddd7cf80a9046aab4c4c9239c68b4b9bd9928c17417fbe2b63ff",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "c362f5d91b70454f9c4f2a5c198f601a702c306a462e7a8692afb9401d90fb32",
+      "sha256_mac": "bc91a76a24ab31fa17c9b0e27d2c3c69d69cb874d120f85d845844c5c08b82cb",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html",
@@ -489,8 +489,8 @@
           "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
         }
       },
-      "size": 5877899,
-      "size_mac": 28025766
+      "size": 5882265,
+      "size_mac": 28029524
     }
   ],
   "tips": [
