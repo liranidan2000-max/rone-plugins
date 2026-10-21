@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-21T15:51:06Z",
+  "last_updated": "2026-10-21T20:07:58Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-288.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-288.1.dmg",
@@ -15,7 +15,7 @@
     {
       "id": "ReverseReverb",
       "name": "RONE Reverse Reverb",
-      "version": "1.1.15.279",
+      "version": "1.2.0.300",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -29,11 +29,11 @@
       "au_bundle": "RONE Reverse Reverb.component",
       "manual": "RONE Reverse Reverb - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=gNoltmk77DM",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-279.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-279.1.pkg",
-      "sha256": "65525b238112fa056ff58c4a94965195f24164c1997a9232a6a16f83d9f3defa",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-300.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-300.1.pkg",
+      "sha256": "d9aa3ea1e556290cfb242d30a88077a5869c5a157c562368d5a332e776dc0ec8",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "7602456a161156944d64e8cadd42ef7dd5f6bba5c52e0e345ac319c8d05a88a1",
+      "sha256_mac": "8e6d9849c88c668d988dfbcf9aed590b6f8081d448f3a6f4ee64f842560205fd",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/reverse-reverb.html",
@@ -58,8 +58,8 @@
           "description": "Reverb inverso sincronizado al tempo para risers, swells de voz y transiciones sin cortes - colas de 1/32 a 8 compases, moldeadas con fades, filtros y anchura estéreo"
         }
       },
-      "size": 5543155,
-      "size_mac": 16454757
+      "size": 5558191,
+      "size_mac": 16534441
     },
     {
       "id": "RoneStutter",
