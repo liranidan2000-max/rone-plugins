@@ -466,8 +466,9 @@
       "sha256": "fe3f9b6f3b23f7824668d0911b06c26305714d9fb659852fc0f7cf7c87aa41c5",
       "registry_key": "RONEAnalyzer",
       "sha256_mac": "9696a04490da6910a05ab6d8a7055ad86734171571ff7cf1700f4fb180e36405",
-      "price": 49,
-      "launch_price": 49,
+      "price": 80,
+      "video": "https://www.youtube.com/watch?v=P-_F4gYPY9E",
+      "launch_price": 80,
       "store_url": "https://roneaudio.com/products/rone-analyzer.html",
       "category": [
         "mix"
