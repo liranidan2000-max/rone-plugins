@@ -15,7 +15,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # Rise Pink #FF5FB8 is too light for white paper badges; the manual uses a deeper pink
           "rise": "#E0449A",
           # Iron's UV Orchid #E552FF glows on graphite but is thin on paper; a deeper orchid for badges
-          "iron": "#B530D6"}
+          "iron": "#B530D6",
+          # the compressors' neons (#FF8C2E, #FF6F59) are thin on paper; deeper shades for the badges
+          "c1176": "#E0701A", "c2a": "#E04E38"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -223,6 +225,33 @@ def main():
         ("#landSeg", "LAND ON BAR"), ("#curveSeg", "CURVE"), ("#tailBar", "TAIL"), ("#macros", "Macros"), ("#chain", "Chain strip")], A,
         crops=[("panel", "#drawer", 8)])
     plain("rise_about", "rise/about.png")
+    # ------------------------------------------------------------ RONE 1176 / RONE 2A (1080 wide at DPR 2)
+    # The faces are drawn by face_kit.js and their knobs carry no ids, so the boxes are image pixels
+    # measured on the shots (296 tall without the scope, 718 with the scope + ADVANCED open).
+    # Order here IS the legend order in content_1176.py / content_2a.py - keep the lists in step.
+    # boxes sit a little inside the header so the badges are not cut by the top edge
+    LOGO, SCOPE_BTN, BYPASS_BTN = [86, 50, 300, 40], [1756, 46, 90, 38], [2028, 46, 90, 38]
+    BARS, DISPLAY, HOLD, MORE = [221, 621, 481, 113], [743, 621, 270, 113], [1091, 621, 135, 113], [1972, 621, 139, 76]
+    A = ACCENT["c1176"]
+    annotate("c1176", "1176/tour.png", [
+        (LOGO, "Header logo"), (SCOPE_BTN, "SCOPE"), (BYPASS_BTN, "BYPASS"), ([119, 162, 313, 421], "INPUT"),
+        ([583, 162, 313, 421], "OUTPUT"), ([1021, 113, 151, 200], "ATTACK"), ([1021, 356, 151, 221], "RELEASE"),
+        ([1226, 130, 167, 416], "RATIO"), ([1436, 151, 464, 394], "VU meter"), ([1949, 130, 184, 372], "METER")], A)
+    annotate("c1176_adv", "1176/scope.png", [
+        (BARS, "BARS"), (DISPLAY, "MATCH / IN"), (HOLD, "HOLD"), ("#graph", "Scope"), (MORE, "ADVANCED"),
+        ([184, 1280, 270, 97], "HEADROOM"), ([605, 1280, 227, 97], "MIX"), ([1026, 1280, 243, 97], "IN TRIM"),
+        ([1447, 1280, 254, 97], "OUT TRIM"), ([1744, 1301, 286, 77], "SC FILTER")], A)
+    plain("c1176", "1176/main.png"); plain("c1176_about", "1176/about.png")
+    A = ACCENT["c2a"]
+    annotate("c2a", "2a/tour.png", [
+        (LOGO, "Header logo"), (SCOPE_BTN, "SCOPE"), (BYPASS_BTN, "BYPASS"), ([140, 140, 168, 330], "LIMIT / COMPRESS"),
+        ([443, 162, 313, 421], "GAIN"), ([837, 138, 486, 356], "VU meter"), ([1404, 162, 313, 421], "PEAK REDUCTION"),
+        ([1836, 205, 216, 313], "METER")], A)
+    annotate("c2a_adv", "2a/scope.png", [
+        (BARS, "BARS"), (DISPLAY, "MATCH / IN"), (HOLD, "HOLD"), ("#graph", "Scope"), (MORE, "ADVANCED"),
+        ([173, 1280, 254, 97], "EMPHASIS"), ([567, 1280, 221, 97], "MIX"), ([972, 1280, 238, 97], "IN TRIM"),
+        ([1372, 1280, 248, 97], "OUT TRIM"), ([1728, 1285, 394, 119], "CELL")], A)
+    plain("c2a", "2a/main.png"); plain("c2a_about", "2a/about.png")
     # ------------------------------------------------------------ IRON (1000x684, demo page posed by shoot_iron.py)
     A = ACCENT["iron"]
     # #chopCv is one canvas: the waveform, the pan lane and the keys are boxes in image pixels (DPR 2).
