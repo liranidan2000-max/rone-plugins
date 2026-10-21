@@ -61,12 +61,16 @@ Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebVie
   DestDir: "{app}"; \
   Flags: onlyifdoesntexist uninsneveruninstall
 
-; restartreplace: a Bridge a running DAW holds open is swapped at the next
-; reboot instead of failing the install (1.3.31); until then the analyser keeps
-; talking to the old one (BridgeProtocol.h, kSharedNameV2).
 Source: "..\RONEAnalyzer\build-ci\RONEBridge_artefacts\Release\VST3\RONE Analyzer Bridge.vst3\*"; \
   DestDir: "{commoncf64}\VST3\RONE Analyzer Bridge.vst3"; \
-  Flags: ignoreversion recursesubdirs createallsubdirs restartreplace uninsrestartdelete
+  Flags: ignoreversion recursesubdirs createallsubdirs
+
+; RONE Analyzer Channel (1.3.32): the small plugin for a mixer channel - KICK,
+; BASS, VOX - whose spectrum the analyzer draws over the master's. Built from
+; the same CMake project as the Bridge, installed beside it.
+Source: "..\RONEAnalyzer\build-ci\RONEChannel_artefacts\Release\VST3\RONE Analyzer Channel.vst3\*"; \
+  DestDir: "{commoncf64}\VST3\RONE Analyzer Channel.vst3"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; The licence and the third-party notices travel with the binary. The JUCE
 ; Starter tier and the absent ASIO SDK are both licence conditions, and a
@@ -111,3 +115,4 @@ Type: filesandordirs; Name: "{commoncf64}\VST3\RONE Bridge.vst3"
 ; that build, not this one - RONE Reverse Reverb's said "Instrument|Synth", so FL Studio kept
 ; listing 1.1.7, an effect, as a synth. These builds ship no manifest: drop the old one first.
 Type: files; Name: "{commoncf64}\VST3\RONE Analyzer Bridge.vst3\Contents\Resources\moduleinfo.json"
+Type: files; Name: "{commoncf64}\VST3\RONE Analyzer Channel.vst3\Contents\Resources\moduleinfo.json"
