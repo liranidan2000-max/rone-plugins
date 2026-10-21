@@ -230,12 +230,6 @@ jobs:
           AN=${{ steps.filter.outputs.analyzer        || 'false' }}
           AS=${{ steps.filter.outputs.afterspace      || 'false' }}
 
-          # HELD - RONE 1176 + RONE 2A (ALL ACCESS only) are wired in but not released yet:
-          # a push never builds or publishes them (every Shared/** or main.yml push would
-          # otherwise put them on Releases), a dry run below still can. To release them,
-          # delete this line in the same commit that adds their versions.json entries.
-          C76=false; C2A=false
-
           # ...or what a dry run names (workflow_dispatch, audit R128). Release and
           # Update versions.json never run for one.
           if [ "$EVENT" = "workflow_dispatch" ]; then

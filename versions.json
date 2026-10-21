@@ -492,6 +492,78 @@
       },
       "size": 9143955,
       "size_mac": 51436451
+    },
+    {
+      "id": "Rone1176",
+      "name": "RONE 1176",
+      "version": "0.9.4.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "The 1176 FET limiter, modelled on the Rev E and fitted to its measurements, with a SCOPE that shows the output wave and the gain reduction locked to the bar. Included in ALL ACCESS.",
+      "whats_new": "First release.",
+      "standalone_exe": "RONE 1176.exe",
+      "vst3_bundle": "RONE 1176.vst3",
+      "au_bundle": "RONE 1176.component",
+      "manual": "RONE 1176 - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer.pkg",
+      "sha256": "",
+      "registry_key": "Rone1176",
+      "sha256_mac": "",
+      "store_url": "https://roneaudio.com/products/rone-1176.html",
+      "subscription_only": true,
+      "category": [
+        "mix"
+      ],
+      "tags": [
+        "compressor",
+        "limiter",
+        "1176",
+        "fet",
+        "scope"
+      ],
+      "accent": "#FF8C2E",
+      "inno_app_id": "{3C6B2F8A-9D41-4E7B-A0C5-7E1176C0DE01}"
+    },
+    {
+      "id": "Rone2A",
+      "name": "RONE 2A",
+      "version": "0.9.5.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "The LA-2A optical leveler, modelled on the silver unit and fitted to its measurements, with a SCOPE that shows the output wave and the gain reduction locked to the bar. Included in ALL ACCESS.",
+      "whats_new": "First release.",
+      "standalone_exe": "RONE 2A.exe",
+      "vst3_bundle": "RONE 2A.vst3",
+      "au_bundle": "RONE 2A.component",
+      "manual": "RONE 2A - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer.pkg",
+      "sha256": "",
+      "registry_key": "Rone2A",
+      "sha256_mac": "",
+      "store_url": "https://roneaudio.com/products/rone-2a.html",
+      "subscription_only": true,
+      "category": [
+        "mix"
+      ],
+      "tags": [
+        "compressor",
+        "la-2a",
+        "optical",
+        "leveler",
+        "scope"
+      ],
+      "accent": "#FF6F59",
+      "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}"
     }
   ],
   "tips": [
