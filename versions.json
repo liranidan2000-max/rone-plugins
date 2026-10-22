@@ -72,7 +72,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "1.5.9 - A project whose sample was moved or deleted now opens with SOURCE NOT FOUND and keeps the file's path, clips dragged in from Cubase are kept in a permanent folder so the project still opens later, and two Stutter windows open at once no longer break drag and drop.",
+      "whats_new": "1.6.0 - FILTER: a HIGH PASS and a LOW PASS in EXTRAS, baked into the rendered fill (24 dB/oct, all the way to the end = off). Saved with the project and the presets. Double-click on PITCH now resets it to 0.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
