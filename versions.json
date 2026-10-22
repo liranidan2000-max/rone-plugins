@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
-  "last_updated": "2026-10-22T11:31:21Z",
+  "last_updated": "2026-10-22T11:46:47Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-303.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-303.1.dmg",
@@ -450,7 +450,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.3.38.308",
+      "version": "1.3.39.309",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -461,11 +461,11 @@
       "vst3_bundle": "",
       "au_bundle": "",
       "manual": "RONE Analyzer - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-308.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-308.1.pkg",
-      "sha256": "de1e34af5dc82f57f3c9193dd5b35cc796329363d1997d1bdf09b65ff25abeef",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-309.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-309.1.pkg",
+      "sha256": "a7345d56ec4adf7c9c8083d52440daa6d7fea2f956236e82afea0fa919b19662",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "5b991fea10f932de122e5de4d8ea146d6cebcdfde47adcfaf30f646e8f2e7eed",
+      "sha256_mac": "3880fe73fe2bee69fe969015d5565600873dd82e9a8aa17f7ae0e17f9f1d3653",
       "price": 80,
       "video": "https://www.youtube.com/watch?v=P-_F4gYPY9E",
       "launch_price": 80,
@@ -490,8 +490,8 @@
           "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
         }
       },
-      "size": 9132266,
-      "size_mac": 51270008
+      "size": 9131770,
+      "size_mac": 51289127
     },
     {
       "id": "Rone1176",
