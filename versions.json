@@ -23,7 +23,7 @@
         "Standalone"
       ],
       "description": "Tempo-synced reverse reverb for risers, vocal swells and seamless transitions - tail lengths from 1/32 to 8 bars, shaped with fades, filters and stereo width",
-      "whats_new": "1.2.0 - LIVE: no file to drop in. Turn LIVE on, play the song and stop after the phrase you want - Reverse Reverb makes the riser from what the channel just played. Click another word on the new strip to use it instead, then drag the riser out, named with its length, tempo and bar.",
+      "whats_new": "1.2.2 - LIVE now catches every take: press LIVE again after the phrase (or stop the song) and the riser is made from what the channel just played. A stop that heard nothing says so on the screen instead of doing nothing.",
       "standalone_exe": "RONE Reverse Reverb.exe",
       "vst3_bundle": "RONE Reverse Reverb.vst3",
       "au_bundle": "RONE Reverse Reverb.component",
