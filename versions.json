@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "license_mode": "enforced",
-  "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? 7-day free trial at roneaudio.com.",
+  "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
   "last_updated": "2026-10-23T10:44:20Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-303.1.exe",
@@ -496,6 +496,7 @@
     },
     {
       "id": "Rone1176",
+      "released": "2026-10-24",
       "name": "RONE 1176",
       "version": "0.9.4.301",
       "type": "plugin",
@@ -534,6 +535,7 @@
     },
     {
       "id": "Rone2A",
+      "released": "2026-10-24",
       "name": "RONE 2A",
       "version": "0.9.5.301",
       "type": "plugin",
