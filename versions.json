@@ -320,6 +320,7 @@
       "vst3_bundle": "RONE Iron.vst3",
       "au_bundle": "RONE Iron.component",
       "manual": "RONE Iron - User Manual.pdf",
+      "video": "https://www.youtube.com/watch?v=tZ-BhB5T5Os",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-301.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-301.1.pkg",
       "sha256": "247b934dbbcdcffa92a1e69d08badc1a5e3d02d30ccbbe55c238acabe9cfc95a",
