@@ -44,6 +44,7 @@
 #endif
 #include "RemoteLicenseGate.h"
 #include "RoneWebCompat.h"
+#include "RoneWindowFit.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -190,15 +191,17 @@ public:
     // Adds the script and the event listener to the editor's WebView options.
     // RoneWebCompat rides along: every plugin's page lays out on an old macOS
     // WebKit too (no inset / flex gap before Safari 14.1 - Zanon, 2026-10-05).
+    // So does RoneWindowFit: the page fills the window in Ableton Live's
+    // stretched plug-in windows and after a monitor move (2026-10-24).
     juce::WebBrowserComponent::Options addTo (juce::WebBrowserComponent::Options options)
     {
-        return options
+        return windowFit.addTo (options)
             .withUserScript (RoneWebCompat::script())
             .withUserScript (script())
             .withEventListener ("roneUpdateAction", [this] (const juce::var& payload) { onAction (payload); });
     }
 
-    void attachBrowser (juce::WebBrowserComponent& b) { browser = &b; }
+    void attachBrowser (juce::WebBrowserComponent& b) { browser = &b; windowFit.attach (b); }
 
 private:
     juce::String latest() const { return RemoteLicenseGate::latestVersionFor (id); }
@@ -281,6 +284,7 @@ private:
     std::atomic<bool>& pending;
     const juce::String mode;   // "pass" | "silent" | "app" - picks the grey card's sentence
     juce::WebBrowserComponent* browser = nullptr;
+    RoneWindowFit windowFit;   // the WebView fills the window (Live's stretched windows, monitor moves)
 
     // The page side. Plain ES5, one IIFE, its own prefixed ids and styles, no
     // dependency on the plugin's page. Kept well under MSVC's 16 KB literal limit.
