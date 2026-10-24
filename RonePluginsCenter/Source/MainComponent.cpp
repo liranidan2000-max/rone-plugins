@@ -689,6 +689,19 @@ void MainComponent::emitPluginsUpdated()
 
     emitToPage ("pluginsUpdated", allPluginsToVar());
     publishUpdateCount();
+
+    // Who runs which version, for the admin console: the installed plug-ins ride along with /app/refresh.
+    if (manifestEverLoaded)
+    {
+        auto* installed = new juce::DynamicObject();
+        {
+            juce::ScopedLock sl (pluginDataLock);
+            for (auto& p : pluginData)
+                if (p.installedVersion.isNotEmpty())
+                    installed->setProperty (p.id, p.installedVersion);
+        }
+        accountClient.setInstalledVersions (juce::var (installed), JUCE_APPLICATION_VERSION_STRING);
+    }
 }
 
 juce::var MainComponent::manifestStateVar() const

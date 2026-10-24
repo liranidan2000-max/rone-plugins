@@ -981,6 +981,16 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         // is signed out there (worker/api/v1/app/refresh.js).
         auto* body = new juce::DynamicObject();
         body->setProperty ("machineId", getMachineId());
+        juce::String installedJson;
+        {
+            const juce::ScopedLock sl (lock);
+            if (installedVersions.isObject())
+            {
+                body->setProperty ("installed", installedVersions);
+                body->setProperty ("center", centerVersion);
+                installedJson = juce::JSON::toString (installedVersions, true) + centerVersion;
+            }
+        }
         auto response = post ("/app/refresh", juce::var (body), current, status);
 
         bool licensed = false;
@@ -1004,6 +1014,8 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
                 saveAccountFile();
                 writeLicenseFile();
                 refreshed = true;
+                if (installedJson.isNotEmpty())
+                    installedSent = installedJson;
             }
         }
         else if (isDeviceRevoked (status, response))
@@ -1046,11 +1058,37 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         notifyChanged();
 
         if (refreshed)
+        {
             retryPendingLogoutsAsync();
+
+            // The catalog changed what is installed while this check was on its way: one more, with the new list.
+            bool stale = false;
+            {
+                const juce::ScopedLock sl (lock);
+                stale = installedVersions.isObject()
+                     && installedSent != juce::JSON::toString (installedVersions, true) + centerVersion;
+            }
+            if (stale)
+                postToMessageThread ([this] { validateAsync(); });
+        }
 
         if (done)
             postToMessageThread ([done, licensed] { done (licensed); });
     });
+}
+
+void AccountClient::setInstalledVersions (const juce::var& installed, const juce::String& center)
+{
+    bool changed = false;
+    {
+        const juce::ScopedLock sl (lock);
+        installedVersions = installed;
+        centerVersion = center;
+        changed = token.isNotEmpty() && installedSent != juce::JSON::toString (installed, true) + center;
+    }
+    // A check already on its way picks the new list up when it lands (validateAsync).
+    if (changed && ! validating)
+        validateAsync();
 }
 
 void AccountClient::timerCallback()

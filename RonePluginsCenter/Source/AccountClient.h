@@ -69,6 +69,12 @@ public:
     /** Re-checks the token with the server; also called every 24h by the timer. */
     void validateAsync (std::function<void (bool licensed)> done = nullptr);
 
+    /** What is installed on this computer, { "RoneFlanger": "2.1.1.301", ... } plus the Center's own version:
+        it rides along with the next /app/refresh, so the admin console knows who runs what (Liran 24.10: a
+        reviewer filmed a Flanger from before INFINITE had 32 BAR). A change from what the server last got
+        asks for a refresh of its own. Message thread. */
+    void setInstalledVersions (const juce::var& installed, const juce::String& centerVersion);
+
     /** Fired on the message thread whenever signedIn/licensed changes. */
     std::function<void()> onStateChanged;
 
@@ -174,6 +180,9 @@ private:
     std::atomic<bool> googleCancel { false };
     std::atomic<bool> logoutRetrying { false };
     juce::String startupNote;            // under `lock`
+    juce::var installedVersions;         // under `lock`: the last setInstalledVersions() map, void until the catalog has one
+    juce::String centerVersion;          // under `lock`
+    juce::String installedSent;          // under `lock`: the JSON the server last acknowledged
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AccountClient)
 };
