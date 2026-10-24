@@ -4,6 +4,7 @@
 // Brings the guarded <windows.h> with it; the registry mirror this file used
 // to own now lives there, next to the file it describes.
 #include "BundleLicenseFile.h"
+#include "DawDetector.h"
 
 #ifndef RONE_API_BASE
  #define RONE_API_BASE "https://roneaudio.com/api/v1"
@@ -981,6 +982,7 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         // is signed out there (worker/api/v1/app/refresh.js).
         auto* body = new juce::DynamicObject();
         body->setProperty ("machineId", getMachineId());
+        body->setProperty ("system", systemInfo());
         juce::String installedJson;
         {
             const juce::ScopedLock sl (lock);
@@ -1075,6 +1077,22 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
         if (done)
             postToMessageThread ([done, licensed] { done (licensed); });
     });
+}
+
+juce::var AccountClient::systemInfo()
+{
+    // Which DAWs and which OS, for the admin console (how many customers a DAW or macOS bug reaches). Read once:
+    // DawDetector walks folders and the registry, and none of it changes while the Center runs.
+    static const juce::var info = []
+    {
+        auto* o = new juce::DynamicObject();
+        o->setProperty ("os", juce::SystemStats::getOperatingSystemName());
+        o->setProperty ("arch", juce::SystemStats::getCpuModel().containsIgnoreCase ("Apple") ? "arm64"
+                                  : (juce::SystemStats::isOperatingSystem64Bit() ? "x64" : "x86"));
+        o->setProperty ("daws", DawDetector::toVar (DawDetector::find()));
+        return juce::var (o);
+    }();
+    return info;
 }
 
 void AccountClient::setInstalledVersions (const juce::var& installed, const juce::String& center)

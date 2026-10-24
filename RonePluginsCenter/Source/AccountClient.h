@@ -180,6 +180,7 @@ private:
     std::atomic<bool> googleCancel { false };
     std::atomic<bool> logoutRetrying { false };
     juce::String startupNote;            // under `lock`
+    static juce::var systemInfo();      // { os, arch, daws: [{id, name}] }, sent with every /app/refresh
     juce::var installedVersions;         // under `lock`: the last setInstalledVersions() map, void until the catalog has one
     juce::String centerVersion;          // under `lock`
     juce::String installedSent;          // under `lock`: the JSON the server last acknowledged
