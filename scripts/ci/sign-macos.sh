@@ -9,8 +9,11 @@
 #   bash scripts/ci/sign-macos.sh cleanup           # delete the temp keychain and the notary key
 #
 # Secrets (GitHub -> job env):
-#   MAC_CERT_P12_BASE64      .p12 holding "Developer ID Application" (+ "Developer ID Installer") + key
-#   MAC_CERT_PASSWORD        its password
+#   MAC_CERT_P12_BASE64      .p12 holding "Developer ID Application" + its key
+#   MAC_INST_P12_BASE64      optional second .p12: "Developer ID Installer" + its key (Apple issues each
+#                            Developer ID certificate against its own key pair - a CSR's public key cannot be
+#                            reused, 2026-10-25), same password
+#   MAC_CERT_PASSWORD        the password of both
 #   APPLE_API_KEY_ID         App Store Connect API key (for notarytool)
 #   APPLE_API_ISSUER_ID
 #   APPLE_API_KEY_P8_BASE64  the .p8 file, base64
@@ -72,6 +75,12 @@ case "$cmd" in
     curl -fsSL -o "$TMP/DeveloperIDG2CA.cer" https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer \
         && security import "$TMP/DeveloperIDG2CA.cer" -k "$KEYCHAIN" -T /usr/bin/codesign -T /usr/bin/productsign >/dev/null 2>&1 || true
     security import "$P12" -k "$KEYCHAIN" -P "${MAC_CERT_PASSWORD:-}" -T /usr/bin/codesign -T /usr/bin/productsign -T /usr/bin/security
+    if [ -n "${MAC_INST_P12_BASE64:-}" ]; then
+        P12I="$TMP/rone-inst.p12"
+        echo "$MAC_INST_P12_BASE64" | base64 --decode > "$P12I"
+        security import "$P12I" -k "$KEYCHAIN" -P "${MAC_CERT_PASSWORD:-}" -T /usr/bin/codesign -T /usr/bin/productsign -T /usr/bin/security
+        rm -f "$P12I"
+    fi
     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KEYCHAIN" >/dev/null
     # shellcheck disable=SC2046
     security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')

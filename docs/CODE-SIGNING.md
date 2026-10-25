@@ -30,28 +30,42 @@ Apple verifies your identity; that can take a few days.
 
 ### 2. Create the two Developer ID certificates (no Mac needed)
 
-You need a key pair and a certificate request. Git's OpenSSL on Windows does it
-(run in `D:\RONE PLUGINS\rone-secrets\`):
+Apple issues every Developer ID certificate against its **own key pair**: a CSR whose public key was already
+used is refused ("The uploaded CSR file has already been used to generate another certificate"). So make TWO
+keys and TWO requests. Git's OpenSSL on Windows does it (run in `D:\RONE PLUGINS\rone-secrets\`; under Git Bash
+prefix each `req` with `MSYS_NO_PATHCONV=1`, or the `-subj` is turned into a path):
 
 ```bash
 "C:\Program Files\Git\mingw64\bin\openssl.exe" genrsa -out apple-devid.key 2048
 "C:\Program Files\Git\mingw64\bin\openssl.exe" req -new -key apple-devid.key -out apple-devid.csr -subj "/emailAddress=liranidan2000@gmail.com/CN=Liran Rone Kalifa/C=IL"
+"C:\Program Files\Git\mingw64\bin\openssl.exe" genrsa -out apple-devid-installer.key 2048
+"C:\Program Files\Git\mingw64\bin\openssl.exe" req -new -key apple-devid-installer.key -out apple-devid-installer2.csr -subj "/emailAddress=liranidan2000@gmail.com/CN=Liran Rone Kalifa/C=IL"
 ```
 
 Then at <https://developer.apple.com/account/resources/certificates/add>:
 
-1. Choose **Developer ID Application** → upload `apple-devid.csr` → download the `.cer` (call it `devid-application.cer`).
-2. Repeat with **Developer ID Installer** using the same `.csr` → `devid-installer.cer`.
+1. Choose **Developer ID Application** → Continue → on the "Select a Developer ID Certificate Intermediary"
+   page **click G2 Sub-CA yourself**: the page preselects *Previous Sub-CA*, whose certificates expire on
+   2027-02-01 (one went out that way on 2026-10-25; Developer ID certificates have no Revoke button, only
+   Apple support can revoke, so it just stays unused) → upload `apple-devid.csr` → Download → save as
+   `devid-application.cer`.
+2. Repeat with **Developer ID Installer**, G2 again, upload `apple-devid-installer2.csr` → `devid-installer.cer`.
 
-Combine both certificates with the key into one `.p12` (pick a password, you
-will store it as a secret):
+Done 2026-10-25: Application W9RQVYQ98S and Installer WKS8N86Z62, both G2, both valid to 2027-11-24,
+Team ID **AN9FQN75QW**. Then one `.p12` per identity, the same password for both (kept in
+`apple-devid.p12.password.txt` next to them, never in the repo):
 
 ```bash
 "C:\Program Files\Git\mingw64\bin\openssl.exe" x509 -inform der -in devid-application.cer -out devid-application.pem
 "C:\Program Files\Git\mingw64\bin\openssl.exe" x509 -inform der -in devid-installer.cer -out devid-installer.pem
-cat devid-application.pem devid-installer.pem > devid-both.pem
-"C:\Program Files\Git\mingw64\bin\openssl.exe" pkcs12 -export -inkey apple-devid.key -in devid-both.pem -out apple-devid.p12 -name "RONE Developer ID"
+"C:\Program Files\Git\mingw64\bin\openssl.exe" pkcs12 -export -legacy -inkey apple-devid.key -in devid-application.pem -out apple-devid-app.p12 -name "Developer ID Application: Liran rone Kalifa (AN9FQN75QW)"
+"C:\Program Files\Git\mingw64\bin\openssl.exe" pkcs12 -export -legacy -inkey apple-devid-installer.key -in devid-installer.pem -out apple-devid-installer.p12 -name "Developer ID Installer: Liran rone Kalifa (AN9FQN75QW)"
 ```
+
+`-legacy` matters: OpenSSL 3 writes AES-256 / SHA-256 PKCS#12 by default, and macOS `security import` rejects that
+with "SecKeychainItemImport: One or more parameters passed to a function were not valid" (that is how the Rise 1.0.8
+Mac build failed on 2026-10-25, the first run with real secrets). Legacy = 3DES key, RC2-40 certificate, SHA-1 MAC,
+which every macOS reads. Check a file with `openssl pkcs12 -legacy -info -in <file>.p12 -nokeys -nocerts`.
 
 ### 3. Create an App Store Connect API key (for notarization)
 
@@ -62,17 +76,22 @@ and the **Issuer ID** shown on that page, and download the `AuthKey_XXXX.p8`
 
 ### 4. Add the secrets
 
-PowerShell one-liners to produce the base64 values:
+How it is actually done (since 2026-10-25): the files above live in 1Password (vault RONE, item "Apple Code
+Signing") and `python "D:\RONE PLUGINS\tools\1password\apple_signing_vault.py" sync` writes all six GitHub secrets
+from that item in one go (`store --replace --issuer <uuid>` first whenever a file changed; `gh auth login --web`
+once per computer). The manual way, if ever needed - PowerShell one-liners to produce the base64 values:
 
 ```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("D:\RONE PLUGINS\rone-secrets\apple-devid.p12")) | Set-Clipboard
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("D:\RONE PLUGINS\rone-secrets\apple-devid-app.p12")) | Set-Clipboard
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("D:\RONE PLUGINS\rone-secrets\apple-devid-installer.p12")) | Set-Clipboard
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("D:\RONE PLUGINS\rone-secrets\AuthKey_XXXX.p8")) | Set-Clipboard
 ```
 
 | Secret | Value |
 |---|---|
-| `MAC_CERT_P12_BASE64` | base64 of `apple-devid.p12` |
-| `MAC_CERT_PASSWORD` | the password you chose for the `.p12` |
+| `MAC_CERT_P12_BASE64` | base64 of `apple-devid-app.p12` (Developer ID Application) |
+| `MAC_INST_P12_BASE64` | base64 of `apple-devid-installer.p12` (Developer ID Installer) |
+| `MAC_CERT_PASSWORD` | the one password of both `.p12` files |
 | `APPLE_API_KEY_ID` | the Key ID (10 characters) |
 | `APPLE_API_ISSUER_ID` | the Issuer ID (UUID) |
 | `APPLE_API_KEY_P8_BASE64` | base64 of the `.p8` file |

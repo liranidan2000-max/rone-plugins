@@ -687,6 +687,7 @@ jobs:
       # Code signing + notarization (docs/CODE-SIGNING.md). All optional:
       # without them the build is produced unsigned. See scripts/ci/sign-macos.sh.
       MAC_CERT_P12_BASE64:     ${{ secrets.MAC_CERT_P12_BASE64 }}
+      MAC_INST_P12_BASE64:     ${{ secrets.MAC_INST_P12_BASE64 }}
       MAC_CERT_PASSWORD:       ${{ secrets.MAC_CERT_PASSWORD }}
       APPLE_API_KEY_ID:        ${{ secrets.APPLE_API_KEY_ID }}
       APPLE_API_ISSUER_ID:     ${{ secrets.APPLE_API_ISSUER_ID }}
