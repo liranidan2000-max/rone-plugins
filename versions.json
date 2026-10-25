@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-25T11:16:42Z",
+  "last_updated": "2026-10-25T11:52:07Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-316.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-316.1.dmg",
@@ -64,7 +64,7 @@
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.6.3.317",
+      "version": "1.6.4.318",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -78,11 +78,11 @@
       "au_bundle": "RONE Stutter.component",
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-317.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-317.1.pkg",
-      "sha256": "e7a2bcb0f345d86f37c81bfeda159edcb9971ab51ca7572714ab3fd6f5a0ec2e",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-318.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-318.1.pkg",
+      "sha256": "ed132b33fd08703368fb4e94aaca747157a97ba8958c62cc10de52d8b9c36420",
       "registry_key": "RoneStutter",
-      "sha256_mac": "f3a907c3c56089c381854670305f78f732a90ea0ef496c1cbc427f3fa46a42a3",
+      "sha256_mac": "8d6f62587c19cb406dabe2b73c594e3cd66a698bd87496c18e575377c0eab959",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
@@ -106,8 +106,8 @@
           "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
         }
       },
-      "size": 6479661,
-      "size_mac": 18131482
+      "size": 6479781,
+      "size_mac": 18132721
     },
     {
       "id": "RoneStucker",
