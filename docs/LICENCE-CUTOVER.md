@@ -9,6 +9,21 @@ The rule throughout: **measure first, then switch one thing at a time, each
 with a rollback.** Nothing in this document has been switched. The Shared
 branch `audit/w8-shared` adds measurement only; no access becomes stricter.
 
+**Progress (2026-10-25, still nothing switched):**
+
+- Stage 0, site 19ea31a, live: the console Overview card "סגירת דליפת הרישיון (R004)"
+  (`worker/_lib/licence-cutover.js`, `GET /api/v1/admin/licence`) shows 0a, 0b, 0c, 0e,
+  the signing run and the `LICENCE_*` reports as green/red gates. 0e is a new counter,
+  `system_state 'unsigned_refresh'`; the heartbeat now carries `okSince` (its unbroken run).
+- Stage 1c, Center 2.1.9: `centerVersion` was already sent since 2.1.8. 2.1.9 adds the other two:
+  while signed licences are required, an unsigned "ok" keeps the previous signed copy unless
+  the claim narrowed (`AccountClient::applyServerState`), and a claim that does not verify
+  shows "Sign in again to keep your plugins unlocked on this computer." (`signatureNoticeLocked`).
+  Both are inert until the switch.
+- Stage 1d: `scripts/set-license-mode.ps1 -SignedLicences required|off`. The same change fixes
+  a read in the ANSI code page that garbled the i18n descriptions on every run.
+- R112 (always-licensed beta releases on GitHub): gone (404, 2026-10-25).
+
 ---
 
 ## 1. Where things stand (2026-10-13)

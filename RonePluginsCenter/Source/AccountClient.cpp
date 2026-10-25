@@ -5,6 +5,8 @@
 // to own now lives there, next to the file it describes.
 #include "BundleLicenseFile.h"
 #include "DawDetector.h"
+#include "../../Shared/RemoteLicenseGate.h"   // signedLicencesRequired() (R004 Stage 1c)
+#include "../../Shared/RoneEntitlement.h"     // verifies the signed copy this computer holds
 
 #ifndef RONE_API_BASE
  #define RONE_API_BASE "https://roneaudio.com/api/v1"
@@ -570,6 +572,10 @@ void AccountClient::applyServerState (const juce::var& response)
     auto owned = ent.getProperty ("owned", juce::var());
 
     const juce::ScopedLock sl (lock);
+
+    // What this computer held before the answer, for the R004 Stage 1c check below.
+    const bool previousPass = state.licensed;
+    const auto previousOwned = state.ownedProducts;
     state.signedIn    = true;
     state.email       = user.getProperty ("email", state.email).toString();
     state.name        = user.getProperty ("name", "").toString();
@@ -600,8 +606,44 @@ void AccountClient::applyServerState (const juce::var& response)
     // Replaced on every answer, like `owned`: a server that stopped signing must
     // not leave an old signed copy behind (its time would outlive a refund).
     const auto signedEnt = response.getProperty ("signedEntitlement", juce::var());
-    signedEntitlement    = signedEnt.getProperty ("payload", "").toString();
-    signedEntitlementSig = signedEnt.getProperty ("sig", "").toString();
+    const auto newEnt = signedEnt.getProperty ("payload", "").toString();
+    const auto newSig = signedEnt.getProperty ("sig", "").toString();
+
+    // Licence cut-over R004, Stage 1c (docs/LICENCE-CUTOVER.md). Once only a
+    // signed licence unlocks a plugin, an "ok" that arrives UNSIGNED (a signing
+    // hiccup on the site) would replace the last signed copy with one no plugin
+    // accepts, and lock a paying customer for nothing. So, while signed licences
+    // are required, the previous signed copy stays - unless the answer took
+    // something away (the pass ended, a plugin was refunded): then the old copy
+    // would claim more than the server now says, and it goes like before.
+    // Before the switch nothing changes: every answer replaces the copy.
+    const bool unsignedAnswer = newEnt.isEmpty() || newSig.isEmpty();
+    bool narrowed = previousPass && ! state.licensed;
+    for (const auto& id : previousOwned)
+        if (! state.ownedProducts.contains (id))
+            narrowed = true;
+
+    if (unsignedAnswer && ! narrowed && RemoteLicenseGate::signedLicencesRequired()
+        && signedEntitlement.isNotEmpty() && signedEntitlementSig.isNotEmpty())
+        return;   // keep the signed copy this computer already has
+
+    signedEntitlement    = newEnt;
+    signedEntitlementSig = newSig;
+}
+
+// R004 Stage 1c: while signed licences are required, a licence this computer
+// claims but cannot prove (no signed copy, or one that does not verify) unlocks
+// no plugin. Say so, without blocking anything: signing in again fetches a
+// fresh signed copy. Empty when there is nothing to say. Caller holds `lock`.
+juce::String AccountClient::signatureNoticeLocked() const
+{
+    if (! (state.licensed || ! state.ownedProducts.isEmpty()))
+        return {};
+    if (! RemoteLicenseGate::signedLicencesRequired())
+        return {};
+    if (RoneEntitlement::read (signedEntitlement, signedEntitlementSig).has_value())
+        return {};
+    return "Sign in again to keep your plugins unlocked on this computer.";
 }
 
 void AccountClient::notifyChanged()
@@ -1013,6 +1055,13 @@ void AccountClient::validateAsync (std::function<void (bool)> done)
                 if (isOfflineMessage (state.message))
                     state.message = signedInMessage (state, juce::String (juce::CharPointer_UTF8 ("Signed in \xe2\x80\x94")));
 
+                // R004 Stage 1c: a licence that cannot be proven says so (and the line goes once it can).
+                const auto notice = signatureNoticeLocked();
+                if (notice.isNotEmpty())
+                    state.message = notice;
+                else if (state.message == "Sign in again to keep your plugins unlocked on this computer.")
+                    state.message = signedInMessage (state, juce::String (juce::CharPointer_UTF8 ("Signed in \xe2\x80\x94")));
+
                 saveAccountFile();
                 writeLicenseFile();
                 refreshed = true;
@@ -1147,6 +1196,10 @@ void AccountClient::initialize()
             if ((state.licensed || ! state.ownedProducts.isEmpty())
                 && (signedEntitlement.isEmpty() || signedEntitlementSig.isEmpty()))
                 startupNote = "Account.xml claims a licence but holds no signed entitlement (start-up, audit R285 stage 1)";
+
+            const auto notice = signatureNoticeLocked();   // R004 Stage 1c
+            if (notice.isNotEmpty())
+                state.message = notice;
         }
         writeLicenseFile();
     }

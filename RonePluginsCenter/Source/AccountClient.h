@@ -169,6 +169,7 @@ private:
     // The server's signed copy of the entitlements (Center 2.0), written into
     // BundleLicense.xml untouched. Empty from a server that does not sign.
     juce::String signedEntitlement, signedEntitlementSig;
+    juce::String signatureNoticeLocked() const;   // R004 Stage 1c: "sign in again" while a claim cannot be proven
 
     // Guards against two overlapping network calls stomping on each other.
     std::atomic<bool> busy { false };
