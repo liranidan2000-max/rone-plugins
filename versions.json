@@ -72,7 +72,7 @@
         "Standalone"
       ],
       "description": "Tempo-locked stutter engine - beat divisions, sculpted fade curves and stereo movement for instant fills, edits and glitch builds",
-      "whats_new": "1.6.1 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.6.0 - FILTER: a HIGH PASS and a LOW PASS in EXTRAS, baked into the rendered fill (24 dB/oct, all the way to the end = off). Saved with the project and the presets. Double-click on PITCH now resets it to 0.",
+      "whats_new": "1.6.2 - FILTER AUTO: HIGH PASS and LOW PASS can now sweep across the fill, like FADE OUT and STEREO AUTO - the knob is where it starts, UP / DOWN sweep it to the end. A new FILTER LIN / EXP switch in EXTRAS shapes the sweep. 1.6.1 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.6.0 - FILTER: a HIGH PASS and a LOW PASS in EXTRAS, baked into the rendered fill (24 dB/oct, all the way to the end = off). Saved with the project and the presets. Double-click on PITCH now resets it to 0.",
       "standalone_exe": "RONE Stutter.exe",
       "vst3_bundle": "RONE Stutter.vst3",
       "au_bundle": "RONE Stutter.component",
