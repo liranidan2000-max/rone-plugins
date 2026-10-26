@@ -43,8 +43,21 @@ sees Sora / Manrope / IBM Plex Mono instead of Segoe UI:
 4. Labels: nothing under 9 px on the design canvas, and `--faint` never colours
    text anyone has to read (2.3:1) - use `--dim` (4.5:1) or lighter.
 
+Steps 1-3 are mechanical: `python brand/apply_fonts.py <Plugin> --target <CMake
+target> --page <page file>` does them as text (in a WebUI.h the CSS goes into a
+raw string of its own, under MSVC's 16 KB literal limit), then regenerate the
+page (`tools/build_webui.py`). A hardware face that also needs Archivo Narrow,
+Roboto or Roboto Condensed adds `--hardware` (pastes
+`Shared/fonts/rone-fonts-hardware.css`) and names those files after the target:
+`rone_add_fonts(Rone2A roboto-latin-wght-normal.woff2 roboto-condensed-latin-wght-normal.woff2)`.
+Step 4 stays a judgement: the About back panel (`.bp-*`) and the 1176/2A faces
+are silkscreen print and keep their small type.
+
 `python brand/ui_check.py [Plugin]` shows where each plugin stands. RONE
-Clipper was the first (26.10); the rest take it with their next release.
+Clipper was the first (26.10, 1.0.7); every released plugin followed the same
+day, and Throw and Stucker dropped their own older copies for this one.
+RONE Analyzer is the exception: it already ships its own Inter + JetBrains Mono
+(Resources/fonts), so it works offline; moving it to the house type is phase D.
 
 Decisions behind it (26.10.2026): master brand = neutral (white R on graphite;
 violet belongs to Stucker only), name = RONE PLUGINS, Throw = ice `#D8E4EC`

@@ -1,0 +1,6 @@
+/* The extra faces of the hardware units (2A's 3D panel), served by the plugin like rone-fonts.css.
+   Only the files a plugin names in rone_add_fonts(<target> <files>) are in its binary; a face
+   nobody uses is never requested. @fontsource 5.3.0 latin subsets, SIL OFL 1.1, variable. */
+@font-face{font-family:'Archivo Narrow';font-style:normal;font-weight:400 700;font-display:swap;src:url('fonts/archivo-narrow-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/archivo-narrow-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Roboto';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/roboto-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/roboto-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Roboto Condensed';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/roboto-condensed-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/roboto-condensed-latin-wght-normal.woff2') format('woff2')}

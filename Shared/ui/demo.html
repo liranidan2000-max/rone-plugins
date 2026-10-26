@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RONE UI kit</title>
+<link rel="stylesheet" href="rone-ui.css">
+<style>
+  /* the brand fonts from beside this folder (a plugin pastes Shared/fonts/rone-fonts.css instead) */
+  @font-face{font-family:'Sora';font-weight:100 800;src:url('../fonts/sora-latin-wght-normal.woff2') format('woff2')}
+  @font-face{font-family:'Manrope';font-weight:200 800;src:url('../fonts/manrope-latin-wght-normal.woff2') format('woff2')}
+  @font-face{font-family:'IBM Plex Mono';font-weight:500;src:url('../fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2')}
+  :root { --neon:#FF5FB8; --neon-rgb:255,95,184; }
+  body { margin:0; padding:32px; background:var(--ground); color:var(--text); font-family:var(--font-ui); }
+  .row { display:flex; flex-wrap:wrap; gap:18px; align-items:center; margin:0 0 26px; }
+  h1 { font-size:20px; margin:0 0 6px; } p { color:var(--text2); font-size:13px; margin:0 0 26px; max-width:620px; }
+  .knobcell { display:grid; justify-items:center; gap:8px; }
+  .swatches button { width:26px; height:26px; border-radius:50%; border:2px solid var(--line3); cursor:pointer; }
+</style>
+</head>
+<body>
+<h1 class="rone-display">RONE UI kit</h1>
+<p>The house pieces from RONE Rise in one stylesheet (Shared/ui/rone-ui.css + rone-ui.js). One neon per plugin: pick one below and every part follows.</p>
+
+<div class="row swatches" id="sw"></div>
+<div class="row">
+  <button class="rone-btn">ADVANCED</button>
+  <button class="rone-btn on">BYPASS</button>
+  <button class="rone-btn" disabled>LOCKED</button>
+</div>
+<div class="row">
+  <div class="rone-seg" role="radiogroup"><button>1/4</button><button class="on">1/8</button><button>1/16</button><button>FREE</button></div>
+  <span class="rone-chip"><span class="k">BPM</span><span class="v">142</span></span>
+  <span class="rone-chip"><span class="k">Tail</span><span class="v">2.3 s</span></span>
+</div>
+<div class="row">
+  <div class="knobcell"><div id="k1"></div><span class="rone-label">Intensity</span><span class="rone-value" id="v1">50%</span></div>
+  <div class="knobcell"><div id="k2"></div><span class="rone-label">Mix</span><span class="rone-value" id="v2">100%</span></div>
+</div>
+<script src="rone-ui.js"></script>
+<script>
+  const big = RoneUI.knob(document.getElementById('k1'), { size: 120, stroke: 6, value: .5, onChange: v => v1.textContent = Math.round(v * 100) + '%' });
+  RoneUI.knob(document.getElementById('k2'), { size: 64, stroke: 4, value: 1, onChange: v => v2.textContent = Math.round(v * 100) + '%' });
+  document.querySelectorAll('.rone-seg').forEach(s => s.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') return; s.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === e.target)); }));
+  const neons = { rise: '#FF5FB8', reverb: '#2BD9FF', stutter: '#FFD02B', stucker: '#9D6BFF', flanger: '#FF3E6C', grain: '#2EE6C8' };
+  for (const [k, hex] of Object.entries(neons)) {
+    const b = document.createElement('button'); b.title = k; b.style.background = hex;
+    b.onclick = () => { const n = parseInt(hex.slice(1), 16); document.documentElement.style.setProperty('--neon', hex); document.documentElement.style.setProperty('--neon-rgb', `${n >> 16},${(n >> 8) & 255},${n & 255}`); };
+    sw.appendChild(b);
+  }
+</script>
+</body>
+</html>

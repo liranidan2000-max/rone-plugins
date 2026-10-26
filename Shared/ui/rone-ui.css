@@ -1,0 +1,83 @@
+/* ============================================================================
+   RONE UI kit (brand phase D, 26.10.2026) - the graphite house language as one
+   stylesheet, lifted from RONE Rise (the bundle standard) so a new plugin starts
+   from it instead of re-drawing its buttons, segments, arcs and glows.
+
+   Use: paste after Shared/fonts/rone-fonts.css, then set the plugin's neon once:
+       :root { --neon:#FF5FB8; --neon-rgb:255,95,184; }
+   Everything else follows. Colours come from brand/brand.json (neutrals); type
+   from the brand fonts. Existing plugins move to it with their own next release,
+   not all at once. Demo: Shared/ui/demo.html.
+   ============================================================================ */
+
+:root {
+    /* neutrals (brand.json) */
+    --ground:#14161A; --panel:#17191E; --card:#101216; --drawer:#1B1E23;
+    --line:#23262C; --line2:#2A2E35; --line3:#383D45;
+    --text:#E8EAED; --text2:#B9BDC4;
+    --dim:#7A7F88;      /* the lowest colour for a label anyone has to read (4.5:1) */
+    --faint:#4E535B;    /* decoration only: ticks, dividers, disabled - never a label */
+    --hot:#FF3B3B; --hot-rgb:255,59,59;
+    --ink:#0F1114;      /* text on a lit neon surface */
+    /* the plugin's one neon (set per plugin) */
+    --neon:#E8EAED; --neon-rgb:232,234,237;
+    /* three glow strengths: a mark, a control, a hero */
+    --glow-1:0 0 6px rgba(var(--neon-rgb),.45);
+    --glow-2:0 0 14px rgba(var(--neon-rgb),.5);
+    --glow-3:0 0 24px rgba(var(--neon-rgb),.55);
+    /* type */
+    --font-display:'Sora','Segoe UI',-apple-system,sans-serif;
+    --font-ui:'Manrope','Segoe UI',-apple-system,sans-serif;
+    --font-mono:'IBM Plex Mono','Consolas',monospace;
+}
+
+/* ---- type roles: nothing under 9 px on the design canvas ---- */
+.rone-display { font-family:var(--font-display); font-weight:800; letter-spacing:.02em; color:var(--text); }
+.rone-label   { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.14em;
+                text-transform:uppercase; color:var(--dim); }
+.rone-value   { font-family:var(--font-display); font-weight:700; color:var(--text);
+                font-variant-numeric:tabular-nums; }
+.rone-mono    { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
+
+/* ---- button ---- */
+.rone-btn { font-family:var(--font-ui); font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+            color:var(--text2); background:var(--card); border:1px solid var(--line2); border-radius:8px;
+            padding:8px 14px; cursor:pointer; transition:color .15s, border-color .15s, box-shadow .15s, background .15s; }
+.rone-btn:hover { color:var(--text); border-color:var(--line3); }
+.rone-btn.on, .rone-btn[aria-pressed="true"] { color:var(--ink); background:var(--neon); border-color:transparent; box-shadow:var(--glow-2); }
+.rone-btn:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+.rone-btn:disabled { color:var(--faint); cursor:default; box-shadow:none; }
+
+/* ---- segment (one of N) ---- */
+.rone-seg { display:flex; width:fit-content; background:var(--card); border:1px solid var(--line2); border-radius:8px; overflow:hidden; }
+.rone-seg > * { font-family:var(--font-ui); font-size:10px; font-weight:800; letter-spacing:.12em; padding:7px 11px;
+                color:var(--dim); cursor:pointer; white-space:nowrap; transition:all .15s; background:none; border:0; }
+.rone-seg > *:hover { color:var(--text); }
+.rone-seg > .on, .rone-seg > [aria-checked="true"] { color:var(--ink); background:var(--neon); box-shadow:var(--glow-2); }
+
+/* ---- chip (a read-out: label + value) ---- */
+.rone-chip { display:inline-flex; align-items:baseline; gap:8px; background:var(--card); border:1px solid var(--line2);
+             border-radius:8px; padding:6px 10px; }
+.rone-chip .k { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
+.rone-chip .v { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--neon); font-variant-numeric:tabular-nums; }
+
+/* ---- arc knob (svg drawn by rone-ui.js: track + lit, a charcoal cap, a white dot) ---- */
+.rone-knob { position:relative; cursor:grab; touch-action:none; }
+.rone-knob:active { cursor:grabbing; }
+.rone-knob svg { position:absolute; inset:0; overflow:visible; pointer-events:none; }
+.rone-knob .track { fill:none; stroke:var(--line2); stroke-linecap:round; }
+.rone-knob .lit   { fill:none; stroke:var(--neon); stroke-linecap:round; filter:drop-shadow(0 0 6px rgba(var(--neon-rgb),.8)); }
+.rone-knob .cap   { position:absolute; border-radius:50%;
+                    background:radial-gradient(circle at 35% 30%, #2C3038 0%, #1C1F24 55%, #121418 100%);
+                    box-shadow:0 6px 18px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); }
+.rone-knob .dot   { position:absolute; left:50%; top:0; width:7px; height:7px; margin-left:-3.5px; border-radius:50%;
+                    background:#fff; box-shadow:0 0 6px rgba(255,255,255,.7); }
+.rone-knob .pivot { position:absolute; inset:0; }
+
+/* ---- glows as utilities ---- */
+.rone-glow-1 { box-shadow:var(--glow-1); }
+.rone-glow-2 { box-shadow:var(--glow-2); }
+.rone-glow-3 { box-shadow:var(--glow-3); }
+
+/* ---- panel ---- */
+.rone-panel { background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); border:1px solid var(--line); border-radius:12px; }
