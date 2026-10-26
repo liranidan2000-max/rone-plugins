@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-26T11:16:32Z",
+  "last_updated": "2026-10-26T11:27:42Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-316.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-316.1.dmg",
@@ -112,7 +112,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.3.8.323",
+      "version": "1.4.0.325",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -126,11 +126,11 @@
       "au_bundle": "RONE Stucker.component",
       "manual": "RONE Stucker - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=l6_cvuOajI4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-323.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-323.1.pkg",
-      "sha256": "ff515cccd25d43bd0f7ad9f09a5e98bc92d5da2fcbecee1734f76883f7d6ad46",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-325.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-325.1.pkg",
+      "sha256": "c307616c20729dba4ccb018d0bf5449f16e339321c73af51c2541a3564a7e8ad",
       "registry_key": "RoneStucker",
-      "sha256_mac": "fb7ce1e0e4c2d44afcef41d2120c83477d1946ebd484f7660cad70ac0d7213d6",
+      "sha256_mac": "103ef0f420e320b973a53bae9d4b54f9a01e13083b0ed0807d1eaedeec50cd79",
       "price": 29,
       "launch_price": 29,
       "store_url": "https://roneaudio.com/products/rone-stucker.html",
@@ -155,8 +155,8 @@
           "description": "Un knob que atrapa el loop y lo enrolla - la porción capturada se encoge cada vez más hasta gritar, y luego suelta de vuelta al beat"
         }
       },
-      "size": 5186754,
-      "size_mac": 14274143
+      "size": 5197671,
+      "size_mac": 14293278
     },
     {
       "id": "RoneThrow",
