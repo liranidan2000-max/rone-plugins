@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-26T13:18:51Z",
+  "last_updated": "2026-10-26T14:39:46Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-327.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-327.1.dmg",
@@ -112,7 +112,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.4.0.325",
+      "version": "1.4.1.328",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -126,9 +126,9 @@
       "au_bundle": "RONE Stucker.component",
       "manual": "RONE Stucker - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=l6_cvuOajI4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-325.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-328.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-325.1.pkg",
-      "sha256": "c307616c20729dba4ccb018d0bf5449f16e339321c73af51c2541a3564a7e8ad",
+      "sha256": "ac5d85d3dccf5565f2a62ca153f7865c4c3fa367d29c47bd339478fd7ff11a47",
       "registry_key": "RoneStucker",
       "sha256_mac": "103ef0f420e320b973a53bae9d4b54f9a01e13083b0ed0807d1eaedeec50cd79",
       "price": 29,
@@ -155,8 +155,9 @@
           "description": "Un knob que atrapa el loop y lo enrolla - la porción capturada se encoge cada vez más hasta gritar, y luego suelta de vuelta al beat"
         }
       },
-      "size": 5197671,
-      "size_mac": 14293278
+      "size": 5199378,
+      "size_mac": 14293278,
+      "version_mac": "1.4.0.325"
     },
     {
       "id": "RoneThrow",
