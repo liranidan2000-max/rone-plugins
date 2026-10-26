@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-26T10:29:28Z",
+  "last_updated": "2026-10-26T11:16:32Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-316.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-316.1.dmg",
@@ -209,7 +209,7 @@
     {
       "id": "RoneClipper",
       "name": "RONE Clipper",
-      "version": "1.0.6.323",
+      "version": "1.0.7.324",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -223,11 +223,11 @@
       "au_bundle": "RONE Clipper.component",
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-323.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-323.1.pkg",
-      "sha256": "96573c0543f86d7606cd3d057bb3bf57b44f6b3bc8ade69b0e6fc8a0c6ef1a5c",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-324.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-324.1.pkg",
+      "sha256": "66c08db2955d6ae2d9d16dc2469b27d641c4f614e827fa792f0dff0855d0d130",
       "registry_key": "RoneClipper",
-      "sha256_mac": "5ff53460e42f51d64ec8dd86137a4ad6082913d8156ab94f36f415b392b8be4c",
+      "sha256_mac": "8573bb3b6165dd5616dc75bd9e4d51ed3251287b624c31531a419d4a56583910",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
       "price": 0,
       "launch_price": 0,
@@ -252,8 +252,8 @@
           "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que deja el kick y el bajo fuera del clipper, y oversampling que se anula contra la entrada a -100 dB"
         }
       },
-      "size": 5032879,
-      "size_mac": 12810036
+      "size": 5174865,
+      "size_mac": 13660907
     },
     {
       "id": "RoneRise",
