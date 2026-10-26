@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       products:
-        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
+        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,control,rone1176,rone2a,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
         required: true
         default: stutter
 
@@ -151,6 +151,17 @@ jobs:
               - 'installer/RoneIron.iss'
               - 'docs/manuals/RONE Iron - User Manual.pdf'
               - '.github/workflows/main.yml'
+            control:
+              - 'RoneControl'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests|RoneControlRack)/**/*'
+              - 'Shared/tests?*/**/*'
+              - 'Shared/RoneControlRack?*/**/*'
+              # RONE Control compiles its hands layer from Shared/RoneControlRack (the only product that does, until a rack ships)
+              - 'Shared/RoneControlRack/**'
+              - 'installer/RoneControl.iss'
+              - 'docs/manuals/RONE Control - User Manual.pdf'
+              - '.github/workflows/main.yml'
             rone1176:
               - 'Rone1176'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -243,6 +254,7 @@ jobs:
           CL=${{ steps.filter.outputs.clipper         || 'false' }}
           RI=${{ steps.filter.outputs.rise            || 'false' }}
           IR=${{ steps.filter.outputs.iron            || 'false' }}
+          CT=${{ steps.filter.outputs.control         || 'false' }}
           C76=${{ steps.filter.outputs.rone1176       || 'false' }}
           C2A=${{ steps.filter.outputs.rone2a         || 'false' }}
           FL=${{ steps.filter.outputs.flanger         || 'false' }}
@@ -257,13 +269,13 @@ jobs:
             want=",$(printf '%s' "$DISPATCH_PRODUCTS" | tr -d ' ' | tr 'A-Z' 'a-z'),"
             for p in $(printf '%s' "$want" | tr ',' ' '); do
               case "$p" in
-                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
+                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|control|rone1176|rone2a|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
                 *) echo "::error::dry run: unknown product '$p'"; exit 1 ;;
               esac
             done
             pick() { case "$want" in *,all,*|*",$1,"*) echo true ;; *) echo false ;; esac; }
             RR=$(pick reverse_reverb); SF=$(pick stems_fixer); ST=$(pick stutter); SK=$(pick stucker)
-            TH=$(pick throw); CL=$(pick clipper); RI=$(pick rise); IR=$(pick iron); FL=$(pick flanger)
+            TH=$(pick throw); CL=$(pick clipper); RI=$(pick rise); IR=$(pick iron); CT=$(pick control); FL=$(pick flanger)
             C76=$(pick rone1176); C2A=$(pick rone2a)
             SV=$(pick sync_verb); PC=$(pick plugins_center); AN=$(pick analyzer); AS=$(pick afterspace)
             echo "dry run, nothing is published: $DISPATCH_PRODUCTS"
@@ -303,6 +315,7 @@ jobs:
           add "$CL" clipper         RoneClipper        RoneClipper       RoneClipper-latest         RoneClipper               true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneClipper.iss     "RONE Clipper - User Manual.pdf"        ""
           add "$RI" rise            RoneRise           RoneRise          RoneRise-latest            RoneRise                  true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneRise.iss        "RONE Rise - User Manual.pdf"           ""
           add "$IR" iron            RoneIron           RoneIron          RoneIron-latest            RoneIron                  true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneIron.iss        "RONE Iron - User Manual.pdf"           ""
+          add "$CT" control         RoneControl        RoneControl       RoneControl-latest         RoneControl               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneControl.iss     "RONE Control - User Manual.pdf"        ""
           add "$C76" rone1176       Rone1176           Rone1176          Rone1176-latest            Rone1176                  true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    Rone1176.iss        "RONE 1176 - User Manual.pdf"           ""
           add "$C2A" rone2a         Rone2A             Rone2A            Rone2A-latest              Rone2A                    true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    Rone2A.iss          "RONE 2A - User Manual.pdf"             ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
@@ -394,6 +407,14 @@ jobs:
           done
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
           exit 1
+
+      # RONE Control carries Google's MediaPipe hand model as Windows resources (RoneControl/CMakeLists.txt
+      # fails without the files; they are not in git). SHA-256 checked by the script.
+      - name: Hand model — RONE Control
+        if: matrix.plugin_id == 'control'
+        working-directory: ${{ matrix.folder }}
+        shell: bash
+        run: python tools/fetch_mediapipe.py
 
       # --- MSVC ---
       - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
@@ -1293,6 +1314,7 @@ jobs:
               clipper)        tag=RoneClipper-latest;       title="RONE Clipper (Latest)";        folder=RoneClipper;        jid=RoneClipper ;;
               rise)           tag=RoneRise-latest;          title="RONE Rise (Latest)";           folder=RoneRise;           jid=RoneRise ;;
               iron)           tag=RoneIron-latest;          title="RONE Iron (Latest)";           folder=RoneIron;           jid=RoneIron ;;
+              control)        tag=RoneControl-latest;       title="RONE Control (Latest)";        folder=RoneControl;        jid=RoneControl ;;
               rone1176)       tag=Rone1176-latest;          title="RONE 1176 (Latest)";           folder=Rone1176;           jid=Rone1176 ;;
               rone2a)         tag=Rone2A-latest;            title="RONE 2A (Latest)";             folder=Rone2A;             jid=Rone2A ;;
               flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)";        folder=rone-flanger-;      jid=RoneFlanger ;;
@@ -1468,6 +1490,7 @@ jobs:
               clipper)        f=RoneClipper ;;
               rise)           f=RoneRise ;;
               iron)           f=RoneIron ;;
+              control)        f=RoneControl ;;
               rone1176)       f=Rone1176 ;;
               rone2a)         f=Rone2A ;;
               flanger)        f=rone-flanger- ;;
@@ -1535,6 +1558,7 @@ jobs:
               clipper)        folder=RoneClipper;        jid=RoneClipper;     tag=RoneClipper-latest;     inst=RoneClipper ;;
               rise)           folder=RoneRise;           jid=RoneRise;        tag=RoneRise-latest;        inst=RoneRise ;;
               iron)           folder=RoneIron;           jid=RoneIron;        tag=RoneIron-latest;        inst=RoneIron ;;
+              control)        folder=RoneControl;        jid=RoneControl;     tag=RoneControl-latest;     inst=RoneControl ;;
               rone1176)       folder=Rone1176;           jid=Rone1176;        tag=Rone1176-latest;        inst=Rone1176 ;;
               rone2a)         folder=Rone2A;             jid=Rone2A;          tag=Rone2A-latest;          inst=Rone2A ;;
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;

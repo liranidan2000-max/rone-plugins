@@ -37,3 +37,6 @@
 [submodule "Rone2A"]
 	path = Rone2A
 	url = https://github.com/liranidan2000-max/Rone2A.git
+[submodule "RoneControl"]
+	path = RoneControl
+	url = https://github.com/liranidan2000-max/RoneControl.git

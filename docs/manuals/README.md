@@ -19,6 +19,7 @@ Plugins/Manuals/`) and the Plugins Center opens it from the card menu
 | RONE Iron | `RONE Iron - User Manual.pdf` |
 | RONE 1176 | `RONE 1176 - User Manual.pdf` |
 | RONE 2A | `RONE 2A - User Manual.pdf` |
+| RONE Control | `RONE Control - User Manual.pdf` |
 
 Changing a PDF triggers that plugin's CI build (see the path filters in
 `.github/workflows/main.yml`), so a manual update ships on its own.

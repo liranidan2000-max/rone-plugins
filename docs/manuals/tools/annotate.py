@@ -17,7 +17,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # Iron's UV Orchid #E552FF glows on graphite but is thin on paper; a deeper orchid for badges
           "iron": "#B530D6",
           # the compressors' neons (#FF8C2E, #FF6F59) are thin on paper; deeper shades for the badges
-          "c1176": "#E0701A", "c2a": "#E04E38"}
+          "c1176": "#E0701A", "c2a": "#E04E38",
+          # Control's laser green #52FF45 is unreadable on paper; a deeper green for the badges
+          "control": "#2EA81E"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -148,6 +150,28 @@ def plain(img_name, out_name):
     (DOCIMG / out_name).parent.mkdir(parents=True, exist_ok=True)
     Image.open(src).convert("RGB").save(DOCIMG / out_name, optimize=True)
 
+def control():
+    """RONE Control (860x580): the states come from _control_mock.js. Order here IS the legend order in
+    content_control.py - keep the lists in step."""
+    A = ACCENT["control"]
+    annotate("control", "control/tour.png", [
+        ("#pLogo", "Header logo"), ("#cStatus", "Status"), ("#cSrc", "PHONE / CAMERA / SIM"), ("#cLive", "LIVE"),
+        ("#cStage", "The stage"), ("#cRack", "Slots"), ("#cAdv", "ADVANCED"), ("#cPresets", "Presets"),
+        ("#cPhoneBtn", "PHONE"), ("#resize-handle", "Resize grip")], A,
+        crops=[("stage", "#cStage", 4), ("rack", "#cRack", 6)])
+    annotate("control_adv", "control/adv.png", [
+        ("#dName", "Slot name"), ("#dUndo", "UNDO MOVE"), ("#dLink", "LINK"), ("#dRemove", "REMOVE"),
+        ("#dDemo", "The demo"), ("#dSrc", "MOVE"), ("#dEng", "HOLD THE KNOB WITH"), ("#dRel", "WHEN YOU LET GO"),
+        ("#dSay", "In one sentence"), ("#dFineBtn", "FINE TUNE")], A,
+        crops=[("drawer", "#cDrawer", 6)])
+    annotate("control_fine", "control/fine.png", [
+        ("#dHand", "HAND"), ("#dMode", "MODE"), ("#dCurve", "CURVE"), ("#dKnobs", "The fine knobs")], A,
+        crops=[("fine", "#cDrawer", 6)])
+    plain("control_phone", "control/phone.png")
+    plain("control_camera", "control/camera.png")
+    plain("control_link", "control/link.png")
+    plain("control_about", "control/about.png")
+
 def main():
     ensure()
     # ------------------------------------------------------------ STUTTER
@@ -252,6 +276,7 @@ def main():
         ([173, 1280, 254, 97], "EMPHASIS"), ([567, 1280, 221, 97], "MIX"), ([972, 1280, 238, 97], "IN TRIM"),
         ([1372, 1280, 248, 97], "OUT TRIM"), ([1728, 1285, 394, 119], "CELL")], A)
     plain("c2a", "2a/main.png"); plain("c2a_about", "2a/about.png")
+    control()
     # ------------------------------------------------------------ IRON (1000x684, demo page posed by shoot_iron.py)
     A = ACCENT["iron"]
     # #chopCv is one canvas: the waveform, the pan lane and the keys are boxes in image pixels (DPR 2).

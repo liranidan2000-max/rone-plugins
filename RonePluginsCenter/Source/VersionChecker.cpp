@@ -43,6 +43,7 @@ static const std::map<juce::String, juce::String>& innoAppIds()
         { "RoneClipper",    "{E02BE7CD-F957-43CC-81A5-950AC7AE62B0}" },   // installer/RoneClipper.iss
         { "RoneRise",       "{E4F73C6B-63EB-4D37-9E02-0C6E91F7E9CE}" },   // installer/RoneRise.iss
         { "RoneIron",       "{DAFDABED-2E84-4166-86BB-EC4810E01F1F}" },   // installer/RoneIron.iss
+        { "RoneControl",    "{7FDE9D3D-91AC-4CD5-9F45-48D4E9673B57}" },   // installer/RoneControl.iss
         { "RoneFlanger",    "{E5F6A7B8-C9D0-1234-EFAB-345678901234}" },
         { "RoneAfterspace", "{A1B2C3D4-E5F6-7890-ABCD-AFTERSPACE01}" },
         { "RONEAnalyzer",   "{E7F8A9B0-C1D2-3456-EF01-6789ABCDEF01}" },

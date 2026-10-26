@@ -31,6 +31,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "rise":       ROOT / "RoneRise" / "Source" / "WebUI.h",
     "c1176":      ROOT / "Rone1176" / "Source" / "WebUI.h",
     "c2a":        ROOT / "Rone2A" / "Source" / "WebUI.h",
+    "control":    ROOT / "RoneControl" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -82,6 +83,15 @@ STATES = [
     ("c2a", "_scope", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);ui.scope=true;renderScope()", (1080, 626)),
     ("c2a", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);ui.scope=true;ui.adv=true;renderScope()", (1080, 718)),
     ("c2a", "_about", "click:pLogo", (1080, 296)),
+    # RONE Control: the page draws only what the plugin pushes (ctlState), so _control_mock.js feeds one scenario
+    # per shot through the fake bridge. The drawer's demo hand is frozen mid-move (__demo.seek) for a still frame.
+    ("control", "", "js:window.__scn_control('tour')", None),
+    ("control", "_phone", "js:window.__scn_control('phone')", None),
+    ("control", "_camera", "js:window.__scn_control('camera')", None),
+    ("control", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_control('idle'),click:cAdv,js:window.__demo.seek(1.3)", None),
+    ("control", "_fine", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_control('idle'),click:cAdv,click:dFineBtn,js:window.__demo.seek(1.3)", None),
+    ("control", "_link", "js:window.__scn_control('link')", None),
+    ("control", "_about", "js:window.__scn_control('tour'),click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power", None), ("reversereverb_m", "_about", "click:p-logo", None),
@@ -106,7 +116,7 @@ def prepare_ui():
         else:
             log(f"  (no source for {name}: {src})"); continue
         log(f"  ui {name}")
-    for f in ("harness.html", "_shot.js", "_mock.js"):
+    for f in ("harness.html", "_shot.js", "_mock.js", "_control_mock.js"):
         shutil.copy(TOOLS / f, UI / f)
     # the Center: built React bundle + real plugin data from versions.json
     center = UI / "center"; center.mkdir()
@@ -148,6 +158,10 @@ def prepare_ui():
     # the Clipper only draws what the host pushes as `frame` events, so its manual states feed them through the fake bridge (in place, no copy)
     f = UI / "clipper" / "index.html"
     f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
+    # RONE Control: the same fake bridge + its scenarios (the page shows nothing until a ctlState arrives)
+    f = UI / "control" / "index.html"
+    if f.exists():
+        f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>\n<script src="/_control_mock.js"></script>', 1), encoding="utf-8")
 
 class Server:
     def __enter__(self):

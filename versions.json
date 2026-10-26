@@ -571,6 +571,44 @@
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
       "size": 5238553,
       "size_mac": 13723502
+    },
+    {
+      "id": "RoneControl",
+      "name": "RONE Control",
+      "version": "1.0.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU"
+      ],
+      "description": "Move any knob in your DAW with your hand: the plug-in shows a QR, your phone (or the computer's camera on Windows) becomes the eye, and a pinch, a lift or a twist of the hand draws the automation - eight slots, each linked to a knob in your DAW, with LINK for FL Studio, Ableton Live, REAPER and Bitwig",
+      "whats_new": "1.0.0 - First release: hands from your phone or the computer's camera, eight slots with pinch / lift / twist moves and a glide home, LINK for FL Studio, Ableton Live, REAPER and Bitwig (the plug-in installs its own script), the RONE Control MIDI port for every other DAW, and the phone paired once for every RONE plugin.",
+      "vst3_bundle": "RONE Control.vst3",
+      "au_bundle": "RONE Control.component",
+      "manual": "RONE Control - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneControl-latest/RoneControl_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneControl-latest/RoneControl_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneControl",
+      "sha256_mac": "",
+      "store_url": "https://roneaudio.com/products/rone-control.html",
+      "price": 59,
+      "launch_price": 49,
+      "category": [
+        "utility"
+      ],
+      "tags": [
+        "controller",
+        "gesture",
+        "hand",
+        "camera",
+        "phone",
+        "midi",
+        "automation"
+      ],
+      "accent": "#52FF45",
+      "inno_app_id": "{7FDE9D3D-91AC-4CD5-9F45-48D4E9673B57}",
+      "released": "2026-10-26"
     }
   ],
   "tips": [
