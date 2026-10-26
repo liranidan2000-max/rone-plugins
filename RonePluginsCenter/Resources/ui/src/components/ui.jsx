@@ -32,7 +32,7 @@ export const Icon = {
 }
 
 // R mark (canonical path, memory r-glyph-header-logo)
-export function RGlyph ({ color = '#9D6BFF', className = '' }) {
+export function RGlyph ({ color = '#E8EAED', className = '' }) {
   return (
     <svg className={className} viewBox="0 0 100 52" aria-hidden="true">
       <path d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z" fill={color} />

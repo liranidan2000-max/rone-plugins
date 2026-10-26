@@ -17,9 +17,9 @@
   --line: 35 38 44;        /* #23262C */
   --line2: 42 46 53;       /* #2A2E35 */
   --line3: 56 61 69;       /* #383D45 */
-  --purple: 157 107 255;   /* #9D6BFF */
-  --purple-light: 196 173 255;
-  --neon-dark: 22 15 33;   /* #160F21 */
+  --purple: 232 234 237;   /* the master brand is neutral white on graphite (brand/brand.json, 26.10); the name stays for the classes */
+  --purple-light: 255 255 255;
+  --neon-dark: 22 15 33;   /* #101216 */
   --ok: 62 255 139;
   --err: 244 63 94;
   --amber: 255 208 43;
@@ -68,8 +68,8 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .scroll-y { overflow-y: auto; }
 .scroll-y::-webkit-scrollbar { width: 8px; }
 .scroll-y::-webkit-scrollbar-track { background: transparent; }
-.scroll-y::-webkit-scrollbar-thumb { background: rgba(157, 107, 255, 0.2); border-radius: 4px; }
-.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(157, 107, 255, 0.36); }
+.scroll-y::-webkit-scrollbar-thumb { background: rgba(232, 234, 237, 0.2); border-radius: 4px; }
+.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(232, 234, 237, 0.36); }
 
 /* Surfaces */
 .pro-card {
@@ -92,10 +92,10 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .btn:active:not(:disabled) { transform: scale(0.97); }
 .btn:disabled { opacity: .5; cursor: default; }
 /* Each color-mix() below has a plain line before it: a WebKit older than Safari 16.2 (old Macs) drops color-mix and keeps that. */
-.btn-pri { background: var(--acc, #9D6BFF); color: #101216; box-shadow: 0 0 14px rgba(0, 0, 0, .35); box-shadow: 0 0 14px color-mix(in srgb, var(--acc, #9D6BFF) 32%, transparent); }
+.btn-pri { background: var(--acc, #E8EAED); color: #101216; box-shadow: 0 0 14px rgba(0, 0, 0, .35); box-shadow: 0 0 14px color-mix(in srgb, var(--acc, #E8EAED) 32%, transparent); }
 .btn-pri:hover:not(:disabled) { filter: brightness(1.08); }
 .btn-out { border: 1px solid rgb(var(--line3)); color: rgb(var(--tx2)); }
-.btn-out:hover:not(:disabled) { border-color: var(--acc, #9D6BFF); color: rgb(var(--tx)); }
+.btn-out:hover:not(:disabled) { border-color: var(--acc, #E8EAED); color: rgb(var(--tx)); }
 .btn-ghost { color: rgb(var(--tx3)); padding: 0 10px; }
 .btn-ghost:hover { color: rgb(var(--tx)); }
 .btn-busy { background: rgb(var(--drawer)); color: rgb(var(--tx3)); cursor: default; }
@@ -103,14 +103,14 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .btn-sm { height: 30px; padding: 0 11px; font-size: 11.5px; }
 
 /* Legacy names some kept components still use */
-.btn-gradient { background: #9D6BFF; color: #160F21; box-shadow: 0 0 12px rgba(157, 107, 255, 0.28); }
+.btn-gradient { background: #E8EAED; color: #101216; box-shadow: 0 0 12px rgba(232, 234, 237, 0.28); }
 .btn-gradient:hover { filter: brightness(1.08); }
 .btn-outline { border: 1px solid rgb(var(--line3)); color: rgb(var(--tx2)); }
-.btn-outline:hover { border-color: rgba(157, 107, 255, 0.5); color: #9D6BFF; }
+.btn-outline:hover { border-color: rgba(232, 234, 237, 0.5); color: #E8EAED; }
 
 /* Plugin cards */
 .card {
-  --acc: #9D6BFF;
+  --acc: #E8EAED;
   background: rgb(var(--card));
   border: 1px solid rgb(var(--line));
   transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
@@ -162,13 +162,13 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .pill-free { color: #7DB2FF; border-color: rgba(61, 139, 255, .5); background: rgba(61, 139, 255, .1); }
 /* DEV CHANNEL: a plug-in in development, in Liran's own Center only */
 .pill-dev { color: #FFB45C; border-color: rgba(255, 166, 64, .55); background: rgba(255, 166, 64, .12); }
-.pill-own { color: #B18AFF; border-color: rgba(157, 107, 255, .4); }
+.pill-own { color: #E8EAED; border-color: rgba(232, 234, 237, .4); }
 
 /* Nav item active highlight */
 .nav-active { background: rgb(var(--drawer)); color: rgb(var(--tx)); }
 .nav-active::before {
   content: ''; position: absolute; left: 0; top: 24%; bottom: 24%; width: 3px;
-  border-radius: 0 3px 3px 0; background: #9D6BFF; box-shadow: 0 0 10px rgba(157, 107, 255, 0.5);
+  border-radius: 0 3px 3px 0; background: #E8EAED; box-shadow: 0 0 10px rgba(232, 234, 237, 0.5);
 }
 
 /* Skeleton shimmer */

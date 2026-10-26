@@ -12,7 +12,7 @@ export default function Hero ({ t, plugins, access, account, license, preview, p
     const signedIn = !!account.signedIn
 
     if (!signedIn && !license.licensed) {
-      out.push({ key: 'signin', color: '#9D6BFF', eyebrow: 'RONE PLUGINS', title: t('hero.signInTitle'), body: t('hero.signInBody'),
+      out.push({ key: 'signin', color: '#E8EAED', eyebrow: 'RONE PLUGINS', title: t('hero.signInTitle'), body: t('hero.signInBody'),
                  unit: plugins.find(p => p.free)?.unitUrl, actions: [{ label: t('top.signIn'), primary: true, onClick: onAccount }] })
     }
 
@@ -67,12 +67,12 @@ export default function Hero ({ t, plugins, access, account, license, preview, p
 
     // The deals list, asked once (App.jsx decides who: signed in, not on it, never a gift pass).
     if (optinAsk) {
-      out.splice(Math.min(1, out.length), 0, { key: 'optin', color: '#9D6BFF', eyebrow: t('hero.optinEyebrow'), title: t('hero.optinTitle'), body: t('hero.optinBody'),
+      out.splice(Math.min(1, out.length), 0, { key: 'optin', color: '#E8EAED', eyebrow: t('hero.optinEyebrow'), title: t('hero.optinTitle'), body: t('hero.optinBody'),
         actions: [{ label: t('hero.optinYes'), primary: true, onClick: () => optinAsk(true) }, { label: t('hero.optinNo'), ghost: true, onClick: () => optinAsk(false) }] })
     }
 
     if (signedIn && !license.licensed && account.plan === 'all-access') {
-      out.unshift({ key: 'pass', color: '#9D6BFF', eyebrow: 'ALL ACCESS', title: t('hero.passTitle'), body: t('hero.passBody'),
+      out.unshift({ key: 'pass', color: '#E8EAED', eyebrow: 'ALL ACCESS', title: t('hero.passTitle'), body: t('hero.passBody'),
                     actions: [{ label: t('plan.accountGo'), primary: true, onClick: onAccount }] })
     }
     return out

@@ -10,7 +10,7 @@ const RR_WHATS_NEW = '1.1.10 - Mac standalone: OPTIONS opens again and the windo
 test('accent: manifest wins, registry falls back, purple last', () => {
   assert.equal(accentOf({ id: 'RoneThrow', accent: '#123456' }), '#123456')
   assert.equal(accentOf({ id: 'RoneThrow' }), '#D8E4EC')
-  assert.equal(accentOf({ id: 'Unknown', accent: 'red' }), '#9D6BFF')
+  assert.equal(accentOf({ id: 'Unknown', accent: 'red' }), '#E8EAED')
 })
 
 test('categories: manifest wins and is filtered to known keys', () => {

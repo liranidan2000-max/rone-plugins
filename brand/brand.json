@@ -15,10 +15,12 @@
     "dim": "#7A7F88",
     "faint": "#4E535B",
     "hot": "#FF3B3B",
-    "ink_on_neon": "#0B0C0E"
+    "ink_on_neon": "#0B0C0E",
+    "master": "#E8EAED"
   },
   "roles": {
     "mark": "text",
+    "master": "the RONE PLUGINS brand colour on the site and in the Center: neutral white on graphite (26.10 decision); violet #9D6BFF is Stucker's only",
     "faint": "decoration only - never a label anyone must read (2.3:1 on ground)",
     "dim": "lowest colour for readable labels (4.5:1 on ground)"
   },

@@ -569,7 +569,7 @@ export default function App () {
       </Dialog>
 
       {upsellShown && !onboardingOpen && (
-        <UpsellModal t={t} offer={upsellShown} plugin={upsellPlugin} accent={upsellPlugin ? accentOf(upsellPlugin) : '#9D6BFF'} reduced={reduced}
+        <UpsellModal t={t} offer={upsellShown} plugin={upsellPlugin} accent={upsellPlugin ? accentOf(upsellPlugin) : '#E8EAED'} reduced={reduced}
                      onBuy={() => { const p = upsellPlugin; setUpsellShown(null); if (p) buy(p, 'popup') }} onClose={() => setUpsellShown(null)} />
       )}
 

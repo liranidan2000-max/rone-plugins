@@ -14,7 +14,7 @@ export const ACCENTS = {
   Rone1176: '#FF8C2E', Rone2A: '#FF6F59', RoneMotion: '#3DE8A0', RoneControl: '#52FF45',
   RoneGrain: '#2EE6C8', RoneChoir: '#F2A93B', RoneBassline: '#5B54E8', RoneDelay: '#E9D6A6',
 }
-export const CENTER_PURPLE = '#9D6BFF'
+export const CENTER_PURPLE = '#E8EAED'
 
 export function accentOf (plugin) {
   const a = typeof plugin?.accent === 'string' ? plugin.accent.trim() : ''

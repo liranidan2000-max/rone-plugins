@@ -67,9 +67,9 @@ export default function Sidebar ({ t, view, onNavigate, updatesCount, account, l
     <aside className="sidebar-panel flex-shrink-0 w-[224px] h-full flex flex-col" aria-label="RONE Plugins Center">
       <button onClick={() => onNavigate('library')} className="group px-5 pt-5 pb-4 text-left" aria-label={t('nav.library')}>
         <div className="font-display font-extrabold text-[19px] tracking-[0.01em] text-rone-text-primary whitespace-nowrap transition-transform duration-200 group-hover:scale-[1.03] origin-left">
-          RONE<span className="ml-1.5 text-rone-purple" style={{ textShadow: '0 0 12px rgba(157,107,255,0.35)' }}>PLUGINS</span>
+          RONE<span className="ml-1.5 text-rone-text-secondary font-semibold">PLUGINS</span>
         </div>
-        <div className="mt-0.5 text-[10px] font-extrabold tracking-[0.32em] text-rone-text-faint uppercase">Center</div>
+        <div className="mt-0.5 text-[10px] font-extrabold tracking-[0.32em] text-rone-text-dim uppercase">Center</div>
       </button>
 
       <nav className="px-2.5 flex flex-col gap-0.5" aria-label="Main">

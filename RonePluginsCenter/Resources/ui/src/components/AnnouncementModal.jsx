@@ -20,7 +20,7 @@ function Title({ text, accent }) {
 
 export default function AnnouncementModal({ t, item, onPrimary, onClose }) {
   const { popup, plugin, primary, priceLine } = item
-  const accent = /^#[0-9a-f]{6}$/i.test(popup.accent || '') ? popup.accent : '#9D6BFF'
+  const accent = /^#[0-9a-f]{6}$/i.test(popup.accent || '') ? popup.accent : '#E8EAED'
   const image = popup.image
     ? (/^https:\/\//.test(popup.image) ? popup.image : SITE + String(popup.image).replace(/^\/+/, ''))
     : null
