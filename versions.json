@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-26T16:05:14Z",
+  "last_updated": "2026-10-26T16:10:15Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-330.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-330.1.dmg",
@@ -426,10 +426,10 @@
       "manual": "RONE AFTERSPACE - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=lbKXq6iuctM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-330.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-326.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-330.2.pkg",
       "sha256": "45c43775fe2f51d0b2c8850b372e3fe5e270cef1ade4cd4f44a11a7fe214c0f3",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "5d33baffd8002e66c221cd3c14fad559d98e643ac56feaf2baa18b939f37fb7c",
+      "sha256_mac": "0f46b15d2a39cf73d965d33061eebfb3333130e5843840a72b627f2c3e497e32",
       "price": 59,
       "launch_price": 59,
       "store_url": "https://roneaudio.com/products/afterspace.html",
@@ -454,8 +454,8 @@
         }
       },
       "size": 5618063,
-      "size_mac": 14737233,
-      "version_mac": "1.0.6.326"
+      "size_mac": 15590054,
+      "version_mac": "1.0.7.330"
     },
     {
       "id": "RONEAnalyzer",
