@@ -217,7 +217,7 @@
         "Standalone"
       ],
       "description": "FREE plugin - sign in to the Center with a free RONE account and it unlocks. A hard clipper that shows you exactly what it cut: the waveform after the clip stage with the removed peaks in blue, one CLIP knob, LOW CUT that keeps kick and bass out of the clipper, and integer-latency oversampling that nulls against the input at -100 dB",
-      "whats_new": "1.0.6 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.0.5 - The Windows standalone has an AUDIO button for audio and MIDI settings, and the window is lighter on the CPU.",
+      "whats_new": "1.0.7 - The plugin carries its own fonts, so it looks the same with no internet connection, and the small labels (meter scale, LOW CUT, the state chip) are larger and easier to read. 1.0.6 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.0.5 - The Windows standalone has an AUDIO button for audio and MIDI settings, and the window is lighter on the CPU.",
       "standalone_exe": "RONE Clipper.exe",
       "vst3_bundle": "RONE Clipper.vst3",
       "au_bundle": "RONE Clipper.component",
