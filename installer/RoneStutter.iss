@@ -1,3 +1,4 @@
+; 2026-10-26: rebuilt for the macOS .pkg - run #323 lost it to Apple notarization timeouts (fixed in b9db578)
 ; ============================================================================
 ; Rone Stutter — Silent Plugin Installer
 ; Designed to be invoked by RONE Plugins Center with /VERYSILENT flag
