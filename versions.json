@@ -120,7 +120,7 @@
         "Standalone"
       ],
       "description": "One knob that grabs the loop and rolls it up - the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat",
-      "whats_new": "1.3.6 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.3.4 - A RIDE started while the song is stopped now counts from the bar where playback starts, the lock screen's OPEN RONE PLUGINS CENTER button finds the Center wherever it is installed, and the plugin looks right without an internet connection.",
+      "whats_new": "1.4.0 - RIDE gets 1/4 and 1/2 bar lengths, and a MIDI C2 that arrives while a ride is climbing restarts it from that note: C2 on every beat with RIDE at 1/4 is a chain of short roll-ups. 1.3.8 - A C2 on the bar line where the previous ride lands starts the next ride, and every pass of a DAW loop rides again. 1.3.7 - A C2 or GO on the bar line rides from that bar, not the bar before. 1.3.6 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.3.4 - A RIDE started while the song is stopped now counts from the bar where playback starts, the lock screen's OPEN RONE PLUGINS CENTER button finds the Center wherever it is installed, and the plugin looks right without an internet connection.",
       "standalone_exe": "RONE Stucker.exe",
       "vst3_bundle": "RONE Stucker.vst3",
       "au_bundle": "RONE Stucker.component",
