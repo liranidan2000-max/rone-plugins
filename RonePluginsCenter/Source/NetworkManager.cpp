@@ -857,6 +857,12 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.id            = entry.getProperty ("id",           {}).toString();
         info.name          = entry.getProperty ("name",         {}).toString();
         info.remoteVersion = entry.getProperty ("version",      {}).toString();
+       #if JUCE_MAC
+        // Windows goes out first (CI, 2026-10-26): 'version' moves with the Windows
+        // installer, and the Mac build carries its own number until Apple is done.
+        if (const auto macVersion = entry.getProperty ("version_mac", {}).toString(); macVersion.isNotEmpty())
+            info.remoteVersion = macVersion;
+       #endif
         info.description   = entry.getProperty ("description",  {}).toString();
         info.whatsNew      = entry.getProperty ("whats_new",    {}).toString();
         info.downloadUrl    = entry.getProperty ("download_url",     {}).toString();

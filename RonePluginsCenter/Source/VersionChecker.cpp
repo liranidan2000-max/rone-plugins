@@ -300,6 +300,21 @@ void VersionChecker::refreshInstallState (PluginInfo& info)
     if (info.status == PluginStatus::UpdateAvailable && isSameInstallerAsInstalled (info))
         info.status = PluginStatus::UpToDate;
 
+   #if JUCE_MAC
+    // A Center before 2.1.11 read only 'version', so in the hour between the Windows
+    // and the Mac release it could install the previous .pkg under the new number
+    // and then call it current. This Center last installed other bytes for this
+    // very version than the manifest offers now: the real build is still to come.
+    if (info.status == PluginStatus::UpToDate && info.sha256Mac.trim().length() == 64)
+    {
+        const auto stamp = readInstalledSha (info.registryKey);
+        if (stamp.fromFirstOccurrenceOf ("@", false, false) == info.installedVersion
+            && stamp.upToFirstOccurrenceOf ("@", false, false).length() == 64
+            && ! stamp.upToFirstOccurrenceOf ("@", false, false).equalsIgnoreCase (info.sha256Mac.trim()))
+            info.status = PluginStatus::UpdateAvailable;
+    }
+   #endif
+
     // Fallback: if registry says not installed but the files exist on disk,
     // treat as installed (handles manual installs / first run after existing install)
     if (info.status == PluginStatus::NotInstalled)
