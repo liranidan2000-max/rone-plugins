@@ -576,7 +576,7 @@
       "id": "RoneSidechain",
       "released": "2026-10-26",
       "name": "RONE Sidechain",
-      "version": "1.0.0.0",
+      "version": "1.0.0.323",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -591,7 +591,7 @@
       "manual": "RONE Sidechain - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer.pkg",
-      "sha256": "",
+      "sha256": "f7a2e6bf2feed10d34fd8be28b6cd5b15369e849fc4c311ebabbed21a07d418a",
       "registry_key": "RoneSidechain",
       "sha256_mac": "",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
@@ -606,7 +606,8 @@
         "phase"
       ],
       "accent": "#7B8CFF",
-      "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}"
+      "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
+      "size": 6513600
     }
   ],
   "tips": [
