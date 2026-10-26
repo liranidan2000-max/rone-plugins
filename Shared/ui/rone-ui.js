@@ -58,7 +58,7 @@
     const o = Object.assign({ onClass: 'on' }, opt || {});
     s.classList.add('rone-seg');
     let pill = s.querySelector(':scope > .pill');
-    if (!pill) { pill = el('i', 'pill'); s.insertBefore(pill, s.firstChild); }
+    if (!pill) { pill = el('i', 'pill'); s.appendChild(pill); }   // LAST child: index-based plugin code (children[i]) keeps its indices
     const isOn = b => b.classList.contains(o.onClass) || b.getAttribute('aria-checked') === 'true' || b.getAttribute('aria-pressed') === 'true';
     function current() { return Array.from(s.children).find(b => b !== pill && isOn(b)); }
     function place(anim) {
