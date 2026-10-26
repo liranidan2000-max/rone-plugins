@@ -20,8 +20,18 @@ inline const std::string& getIndexHTML()
 <head>
 <meta charset="UTF-8">
 <title>RONE AFTERSPACE</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@500;600;700;800&family=Archivo:wght@300;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<style>
+)rawhtml") + std::string (R"rawhtml(<style>
+/* RONE UI fonts, served by the plugin itself (Shared/fonts, roneFontResource):
+   the page has its type with no network. Latin subsets from @fontsource 5.3.0,
+   SIL OFL 1.1. Sora / Manrope / Archivo are variable: one file, every weight. */
+@font-face{font-family:'Sora';font-style:normal;font-weight:100 800;font-display:swap;src:url('fonts/sora-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/sora-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:200 800;font-display:swap;src:url('fonts/manrope-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/manrope-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/archivo-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/archivo-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2')}
+</style>
+)rawhtml") + std::string (R"rawhtml(<style>
 /* ============================================
    AFTERSPACE — RONE graphite design language - violet neon
    ============================================ */
@@ -148,7 +158,7 @@ body {
 #logo-banner .subtitle {
     font-size: 9px;
     font-weight: 700;
-    color: var(--faint);
+    color: var(--dim);
     letter-spacing: 0.3em;
     margin-top: 2px;
 }
@@ -212,7 +222,7 @@ body {
 }
 #preset-menu.open { display: block; }
 #preset-menu .p-cat {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.22em;
     color: var(--neon);
@@ -309,7 +319,7 @@ body {
     color: var(--neon);
     text-shadow: 0 0 10px var(--neon-glow);
 }
-.chip small { font-size: 8px; color: var(--dim); }
+.chip small { font-size: 9px; color: var(--dim); }
 #chip-spatial { top: 10px; left: 10px; }
 #chip-bpm     { top: 10px; right: 10px; }
 #chip-engine  { bottom: 10px; right: 10px; }
@@ -480,7 +490,7 @@ body {
 /* ---- Select group (family) ---- */
 .select-group { display: flex; flex-direction: column; gap: 2px; }
 .select-group label {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.16em;
@@ -502,10 +512,10 @@ body {
 .select-group select:focus, .select-group select:hover { border-color: var(--neon); }
 .select-group select option { background: var(--drawer); color: var(--text); }
 .side-note {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.1em;
-    color: var(--faint);
+    color: var(--dim);
     font-variant-numeric: tabular-nums;
 }
 
@@ -833,7 +843,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.24em;
-    color: var(--faint);
+    color: var(--dim);
     position: absolute;
     top: -8px; left: 50%;
     transform: translateX(-50%);
@@ -872,7 +882,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     gap: 7px;
 }
 .adv-sec .sec-title {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.22em;
@@ -884,7 +894,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     justify-content: center;
     gap: 6px 12px;
 }
-.adv-grid .knob-group label { font-size: 8px; letter-spacing: 0.14em; }
+.adv-grid .knob-group label { font-size: 9px; letter-spacing: 0.14em; }
 .adv-foot {
     display: flex;
     flex-direction: column;
@@ -899,7 +909,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     background: transparent;
     color: var(--dim);
     font-family: 'Manrope', 'Segoe UI', sans-serif;
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.16em;
     cursor: pointer;
@@ -913,10 +923,10 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     box-shadow: 0 0 10px var(--neon-glow);
 }
 .custom-hint {
-    font-size: 7px;
+    font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.16em;
-    color: var(--faint);
+    color: var(--dim);
     transition: opacity 0.2s;
 }
 

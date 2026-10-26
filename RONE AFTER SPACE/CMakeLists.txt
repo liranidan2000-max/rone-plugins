@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RoneAfterspace VERSION 1.0.6)
+project(RoneAfterspace VERSION 1.0.7)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,6 +78,10 @@ target_compile_definitions(RoneAfterspace
         JUCE_STRICT_REFCOUNTEDPOINTER=1
         JUCE_DISPLAY_SPLASH_SCREEN=0
 )
+
+# The RONE UI fonts built into the binary (brand phase B, Shared/fonts)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../Shared/fonts/RoneFonts.cmake)
+rone_add_fonts(RoneAfterspace)
 
 target_link_libraries(RoneAfterspace
     PRIVATE

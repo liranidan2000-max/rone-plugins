@@ -2,6 +2,7 @@
 #include "WebUI.h"
 
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
+#include "../../Shared/RoneFonts.h"
 
 // =============================================================================
 // Editor Construction
@@ -176,6 +177,9 @@ RoneAfterspaceAudioProcessorEditor::~RoneAfterspaceAudioProcessorEditor()
 std::optional<juce::WebBrowserComponent::Resource>
 RoneAfterspaceAudioProcessorEditor::getResource (const juce::String& url)
 {
+    if (auto font = roneFontResource (url))   // the bundled UI fonts (Shared/fonts)
+        return font;
+
     if (url == "/" || url.isEmpty() || url == "/index.html")
     {
         juce::String html (WebUI::getIndexHTML());
