@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       products:
-        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
+        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,sidechain,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
         required: true
         default: stutter
 
@@ -169,6 +169,15 @@ jobs:
               - 'installer/Rone2A.iss'
               - 'docs/manuals/RONE 2A - User Manual.pdf'
               - '.github/workflows/main.yml'
+            sidechain:
+              - 'RoneSidechain'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests|RoneControlRack)/**/*'
+              - 'Shared/tests?*/**/*'
+              - 'Shared/RoneControlRack?*/**/*'
+              - 'installer/RoneSidechain.iss'
+              - 'docs/manuals/RONE Sidechain - User Manual.pdf'
+              - '.github/workflows/main.yml'
             flanger:
               - 'rone-flanger-'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -245,6 +254,7 @@ jobs:
           IR=${{ steps.filter.outputs.iron            || 'false' }}
           C76=${{ steps.filter.outputs.rone1176       || 'false' }}
           C2A=${{ steps.filter.outputs.rone2a         || 'false' }}
+          SC=${{ steps.filter.outputs.sidechain       || 'false' }}
           FL=${{ steps.filter.outputs.flanger         || 'false' }}
           SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
           PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
@@ -257,14 +267,14 @@ jobs:
             want=",$(printf '%s' "$DISPATCH_PRODUCTS" | tr -d ' ' | tr 'A-Z' 'a-z'),"
             for p in $(printf '%s' "$want" | tr ',' ' '); do
               case "$p" in
-                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
+                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|sidechain|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
                 *) echo "::error::dry run: unknown product '$p'"; exit 1 ;;
               esac
             done
             pick() { case "$want" in *,all,*|*",$1,"*) echo true ;; *) echo false ;; esac; }
             RR=$(pick reverse_reverb); SF=$(pick stems_fixer); ST=$(pick stutter); SK=$(pick stucker)
             TH=$(pick throw); CL=$(pick clipper); RI=$(pick rise); IR=$(pick iron); FL=$(pick flanger)
-            C76=$(pick rone1176); C2A=$(pick rone2a)
+            C76=$(pick rone1176); C2A=$(pick rone2a); SC=$(pick sidechain)
             SV=$(pick sync_verb); PC=$(pick plugins_center); AN=$(pick analyzer); AS=$(pick afterspace)
             echo "dry run, nothing is published: $DISPATCH_PRODUCTS"
           fi
@@ -305,6 +315,7 @@ jobs:
           add "$IR" iron            RoneIron           RoneIron          RoneIron-latest            RoneIron                  true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneIron.iss        "RONE Iron - User Manual.pdf"           ""
           add "$C76" rone1176       Rone1176           Rone1176          Rone1176-latest            Rone1176                  true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    Rone1176.iss        "RONE 1176 - User Manual.pdf"           ""
           add "$C2A" rone2a         Rone2A             Rone2A            Rone2A-latest              Rone2A                    true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    Rone2A.iss          "RONE 2A - User Manual.pdf"             ""
+          add "$SC" sidechain      RoneSidechain      RoneSidechain     RoneSidechain-latest       RoneSidechain             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneSidechain.iss   "RONE Sidechain - User Manual.pdf"      ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
@@ -1295,6 +1306,7 @@ jobs:
               iron)           tag=RoneIron-latest;          title="RONE Iron (Latest)";           folder=RoneIron;           jid=RoneIron ;;
               rone1176)       tag=Rone1176-latest;          title="RONE 1176 (Latest)";           folder=Rone1176;           jid=Rone1176 ;;
               rone2a)         tag=Rone2A-latest;            title="RONE 2A (Latest)";             folder=Rone2A;             jid=Rone2A ;;
+              sidechain)      tag=RoneSidechain-latest;     title="RONE Sidechain (Latest)";      folder=RoneSidechain;      jid=RoneSidechain ;;
               flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)";        folder=rone-flanger-;      jid=RoneFlanger ;;
               sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)";      folder="rone sync verb";   jid=RoneSyncVerb ;;
               afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)";     folder="RONE AFTER SPACE"; jid=RoneAfterspace ;;
@@ -1470,6 +1482,7 @@ jobs:
               iron)           f=RoneIron ;;
               rone1176)       f=Rone1176 ;;
               rone2a)         f=Rone2A ;;
+              sidechain)      f=RoneSidechain ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;
@@ -1537,6 +1550,7 @@ jobs:
               iron)           folder=RoneIron;           jid=RoneIron;        tag=RoneIron-latest;        inst=RoneIron ;;
               rone1176)       folder=Rone1176;           jid=Rone1176;        tag=Rone1176-latest;        inst=Rone1176 ;;
               rone2a)         folder=Rone2A;             jid=Rone2A;          tag=Rone2A-latest;          inst=Rone2A ;;
+              sidechain)      folder=RoneSidechain;      jid=RoneSidechain;   tag=RoneSidechain-latest;   inst=RoneSidechain ;;
               flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
               sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
               afterspace)     folder="RONE AFTER SPACE"; jid=RoneAfterspace; tag=RoneAfterspace-latest;  inst=RoneAfterspace ;;

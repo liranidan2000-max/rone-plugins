@@ -17,7 +17,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # Iron's UV Orchid #E552FF glows on graphite but is thin on paper; a deeper orchid for badges
           "iron": "#B530D6",
           # the compressors' neons (#FF8C2E, #FF6F59) are thin on paper; deeper shades for the badges
-          "c1176": "#E0701A", "c2a": "#E04E38"}
+          "c1176": "#E0701A", "c2a": "#E04E38",
+          # Sidechain's periwinkle prints as it is
+          "sidechain": "#7B8CFF"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -252,6 +254,47 @@ def main():
         ([173, 1280, 254, 97], "EMPHASIS"), ([567, 1280, 221, 97], "MIX"), ([972, 1280, 238, 97], "IN TRIM"),
         ([1372, 1280, 248, 97], "OUT TRIM"), ([1728, 1285, 394, 119], "CELL")], A)
     plain("c2a", "2a/main.png"); plain("c2a_about", "2a/about.png")
+    # ------------------------------------------------------------ RONE SIDECHAIN (960x560 at DPR 2)
+    # The knobs (.k[data-k]) and the canvas lanes carry no ids, so those boxes are image pixels measured
+    # on the shots (the demo clock is frozen 300 ms after a kick, 125 ms on SPACE - see pipeline.STATES).
+    # Order here IS the legend order in content_sidechain.py - keep the lists in step.
+    A = ACCENT["sidechain"]
+    K1, K2 = [80, 900, 122, 192], [262, 900, 122, 192]           # the first two knobs of a page's control row
+    annotate("sidechain", "sidechain/tour.png", [
+        ("#pLogo", "Header logo"), ("#presetBtn", "PRESET"), ("#rateSeg", "RATE"), ("#kickBox", "KICK chip"), ("#bypassBtn", "BYPASS"),
+        ("#tabSeg", "Pages"), ("#undoBtn+#redoBtn", "UNDO / REDO"), ([60, 262, 1800, 136], "Kick lane"), ([60, 416, 1800, 330], "Bass lane + curve"),
+        ("#drawSeg", "FREE / QUANTIZE"), ("#gridSeg", "GRID"),
+        ("#cvRead", "Readout"), ("#viewSeg", "LANES / OVERLAY"), ("#shapes", "SHAPES"), ("#saveShape", "+ SAVE"),
+        (K1, "DEPTH"), (K2, "CLICK"), ("#rangeSeg+#dkStrip", "DUCK"), ("#loadKick+#dropBox", "LOAD KICK / DROP"),
+        ("#resize-handle", "Resize grip")], A)
+    # the curve's parts on STEP: the kick's point, a vertical step, a flat level, a point, the playhead
+    annotate("sidechain", "sidechain/draw_full.png", [
+        ([50, 726, 24, 24], "Kick's point"), ([492, 600, 24, 140], "Step"), ([640, 566, 290, 20], "Level"),
+        ([948, 402, 24, 24], "Point"), ([1332, 300, 20, 430], "Playhead")], A)
+    annotate("sidechain_shape", "sidechain/bend_full.png", [([454, 454, 24, 24], "Bend circle"), ([858, 402, 24, 24], "Point")], A)
+    annotate("sidechain_phase", "sidechain/phase.png", [
+        ("#phCv", "Handover scope"), ("#phOnBtn", "ON / OFF"), ([180, 900, 170, 192], "PHASE"), ([388, 900, 124, 192], "SPLIT"),
+        ("#modeSeg+#polBtn", "MODE / FLIP"), ("#phState", "Status"), ("#phRead", "Readout")], A)
+    annotate("sidechain_space", "sidechain/space.png", [
+        ("#spCv", "The bells"), ([236, 300, 120, 80], "Cut now"), ([706, 238, 24, 350], "LOW / HIGH"), ([1800, 262, 64, 270], "dB scale"),
+        ("#stCv", "WHEN THEY WORK"), ("#spOnBtn", "SPACE ON / OFF"), ([860, 900, 140, 192], "AMOUNT"), ([1090, 900, 130, 192], "RELEASE")], A)
+    annotate("sidechain_psave", "sidechain/psave_full.png", [
+        ("#presetList", "Genre presets"), ("pico[14]", "Star"), ("#myPresetsH+#myPresetList", "MY PRESETS"),
+        ("#psaveRow", "Name + SAVE"), ("#psaveBtn", "+ SAVE PRESET AS")], A)
+    annotate("sidechain_hover", "sidechain/hover_full.png", [], A)            # no badge: it would cover the x
+    annotate("sidechain_setup", "sidechain/setup_full.png", [
+        ("#kickBox", "KICK chip"), ("#mIn+#mSc", "IN / SC meters"), ("#setupMe", "Your DAW"), ("#setupMore", "OTHER DAWS")], A)
+    annotate("sidechain_band", "sidechain/band.png", [], A, crops=[("duck", "#rangeSeg+#dkStrip", 12)])
+    # crops of the annotated images (annotate()'s own crops come from the clean shot)
+    for full, out, box in (("draw_full", "draw", [0, 190, 1900, 600]), ("bend_full", "bend", [0, 190, 1900, 600]),
+                           ("setup_full", "setup", [940, 0, 980, 660]),
+                           ("psave_full", "psave", [690, 90, 670, 890]), ("hover_full", "hover", [0, 790, 1920, 92])):
+        p = DOCIMG / "sidechain" / f"{full}.png"
+        if p.exists():
+            x, y, w, h = box
+            Image.open(p).crop((x, y, x + w, y + h)).save(DOCIMG / "sidechain" / f"{out}.png", optimize=True)
+    plain("sidechain", "sidechain/main.png"); plain("sidechain_overlay", "sidechain/overlay.png")
+    plain("sidechain_presets", "sidechain/presets.png"); plain("sidechain_about", "sidechain/about.png")
     # ------------------------------------------------------------ IRON (1000x684, demo page posed by shoot_iron.py)
     A = ACCENT["iron"]
     # #chopCv is one canvas: the waveform, the pan lane and the keys are boxes in image pixels (DPR 2).

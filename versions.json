@@ -571,6 +571,42 @@
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
       "size": 5238553,
       "size_mac": 13723502
+    },
+    {
+      "id": "RoneSidechain",
+      "released": "2026-10-26",
+      "name": "RONE Sidechain",
+      "version": "1.0.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "A drawn sidechain that restarts on every kick and is silent at its first sample, with the bass's sub turned to meet the kick (PHASE) and bells that cut the bass only where the kick plays (SPACE). Duck the whole bass, its sub or a band you drag.",
+      "whats_new": "1.0.0 - First release: draw the curve or pick one of 13 shapes (drag them into your own order, save your own), 1/16 to 1 bar with a clear GRID, DEPTH and CLICK, DUCK = FULL / SUB / BAND, a routed or dropped kick (the last kick heard plays on through a render), PHASE AUTO / MANUAL, SPACE as a live dynamic EQ with ON / OFF, genre presets plus your own with a default, and UNDO / REDO.",
+      "standalone_exe": "RONE Sidechain.exe",
+      "vst3_bundle": "RONE Sidechain.vst3",
+      "au_bundle": "RONE Sidechain.component",
+      "manual": "RONE Sidechain - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneSidechain",
+      "sha256_mac": "",
+      "store_url": "https://roneaudio.com/products/rone-sidechain.html",
+      "category": [
+        "mix"
+      ],
+      "tags": [
+        "sidechain",
+        "ducking",
+        "kick",
+        "bass",
+        "phase"
+      ],
+      "accent": "#7B8CFF",
+      "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}"
     }
   ],
   "tips": [

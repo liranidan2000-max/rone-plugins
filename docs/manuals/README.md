@@ -19,6 +19,7 @@ Plugins/Manuals/`) and the Plugins Center opens it from the card menu
 | RONE Iron | `RONE Iron - User Manual.pdf` |
 | RONE 1176 | `RONE 1176 - User Manual.pdf` |
 | RONE 2A | `RONE 2A - User Manual.pdf` |
+| RONE Sidechain | `RONE Sidechain - User Manual.pdf` |
 
 Changing a PDF triggers that plugin's CI build (see the path filters in
 `.github/workflows/main.yml`), so a manual update ships on its own.
@@ -77,3 +78,11 @@ module, which swaps the lifetime-licence wording of the shared install section) 
 from their WebUI.h like the others: 296 px tall without the scope, 718 with the scope and
 ADVANCED open. Their faces' knobs carry no DOM ids, so `annotate.py` places those callouts
 as image-pixel boxes - re-measure them if the face layout changes.
+
+RONE Sidechain (960x560) runs its own demo kick and bass when there is no host, so its states
+freeze the page clock a set time after a kick (the KICK chip flashes at every cycle start) to get
+the same picture on every run. Its knobs and canvas lanes carry no DOM ids: `annotate.py` places
+those callouts as image-pixel boxes. The Center's tour image is not re-shot for it - the current
+Center bundle opens on a welcome wizard that the hand-placed Center boxes do not fit.
+A state whose look is a CSS :hover rule (Sidechain's shape tile x) gets a real mouse hover over
+DevTools: list the shot in `shoot.HOVER` with the editor-pixel point to move the mouse to.
