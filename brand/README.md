@@ -29,6 +29,23 @@ A new product: add it to `brand.json` first, then run `--write`.
 A colour change: change it here, run `--write`, and the next PDF / site /
 Center release carries it. Never type a product hex by hand anywhere else.
 
+## Fonts and readable labels (phase B)
+
+Every plugin page should carry its own type, so a studio with no network still
+sees Sora / Manrope / IBM Plex Mono instead of Segoe UI:
+
+1. `CMakeLists.txt`: `include(${CMAKE_CURRENT_SOURCE_DIR}/../Shared/fonts/RoneFonts.cmake)`
+   and `rone_add_fonts(<Target>)`.
+2. Editor `getResource()`: `#include "../../Shared/RoneFonts.h"`, then
+   `if (auto font = roneFontResource (url)) return font;`.
+3. The page: replace the `fonts.googleapis.com` link with a `<style>` holding
+   `Shared/fonts/rone-fonts.css` verbatim.
+4. Labels: nothing under 9 px on the design canvas, and `--faint` never colours
+   text anyone has to read (2.3:1) - use `--dim` (4.5:1) or lighter.
+
+`python brand/ui_check.py [Plugin]` shows where each plugin stands. RONE
+Clipper was the first (26.10); the rest take it with their next release.
+
 Decisions behind it (26.10.2026): master brand = neutral (white R on graphite;
 violet belongs to Stucker only), name = RONE PLUGINS, Throw = ice `#D8E4EC`
 (print `#9FB3C4`), Bassline = indigo `#5B54E8`, 1176 keeps `#FF8C2E`.

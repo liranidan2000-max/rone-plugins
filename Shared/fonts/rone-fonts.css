@@ -1,0 +1,9 @@
+/* RONE UI fonts, served by the plugin itself (Shared/fonts, roneFontResource):
+   the page has its type with no network. Latin subsets from @fontsource 5.3.0,
+   SIL OFL 1.1. Sora / Manrope / Archivo are variable: one file, every weight. */
+@font-face{font-family:'Sora';font-style:normal;font-weight:100 800;font-display:swap;src:url('fonts/sora-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/sora-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:200 800;font-display:swap;src:url('fonts/manrope-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/manrope-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/archivo-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/archivo-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2')}
