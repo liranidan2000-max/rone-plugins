@@ -1,6 +1,9 @@
 """Tests for the versions.json update (audit R207, R028/R205):
-  - main.yml's 'Bump versions.json' step writes a plan with the versioned URLs,
-    and leaves a product alone when its file does not answer or GitHub's digest differs;
+  - main.yml's 'Bump versions.json' steps (Windows pass, macOS pass) write a plan with
+    the versioned URLs of their own platform, and leave a product alone when its file
+    does not answer or GitHub's digest differs; the Center waits for both platforms;
+  - Windows first (2026-10-26): the Windows pass moves 'version' and keeps the old
+    Mac build's number in version_mac; the macOS pass writes version_mac only;
   - scripts/ci/manifest-plan.sh's plan_commit_push writes the plan onto the newest
     main: a concurrent bot commit, a hand edit and a newer live version all survive.
 
@@ -36,7 +39,7 @@ LIVE = {
          'sha256': 'b0', 'size': 3, 'download_url_mac': REL + 'RoneThrow-latest/RoneThrow_Installer.pkg', 'sha256_mac': 'b1', 'size_mac': 4},
     ],
 }
-SCRIPTS = ['release-guard.sh', 'manifest-plan.sh']
+SCRIPTS = ['release-guard.sh', 'manifest-plan.sh', 'manifest-bump.sh']
 
 
 def repo(base, live=LIVE):
@@ -104,7 +107,7 @@ echo "SKIPPED=${PLAN_SKIPPED# }"
 '''
 
 
-def run_push(case, plan_lines, race_sh=None, race_on='', live=LIVE, notes=None):
+def run_push(case, plan_lines, race_sh=None, race_on='', live=LIVE, notes=None, platform=''):
     print('\n== ' + case)
     base = tempfile.mkdtemp(prefix='mplan-')
     origin, ci, other = repo(base, live)
@@ -120,7 +123,8 @@ def run_push(case, plan_lines, race_sh=None, race_on='', live=LIVE, notes=None):
     drv = os.path.join(base, 'drv.sh')
     write(drv, PUSH_DRIVER)
     env = {'PLAN': posix(plan), 'T': posix(base), 'OTHER': posix(other), 'RACE_ON': race_on,
-           'GH_STATE': posix(st), 'GH_LOG': posix(os.path.join(base, 'gh.log'))}
+           'GH_STATE': posix(st), 'GH_LOG': posix(os.path.join(base, 'gh.log')),
+           'MANIFEST_PLATFORM': platform, 'GUARD_PLATFORM': platform}
     r = run_bash(drv, ci, env, bindir, flags='')
     out = r.stdout + r.stderr
     rc = int(out.split('RC=')[1].split()[0]) if 'RC=' in out else -1
@@ -209,13 +213,48 @@ rc, sk, m, commits = run_push('newer build owns the asset', [STUTTER],
                               notes={'RoneStutter-latest': ('Build #1001 · x', [])})
 check(rc == 0 and sk == 'stutter' and len(commits) == 1, 'left alone and flagged')
 
+# A9: Windows first - the Windows pass moves version + the Windows fields, and the Mac
+#     build it no longer describes keeps its number in version_mac.
+STUTTER_W = 'stutter|RoneStutter|1.5.6.999|RoneStutter-latest|https://g/RoneStutter-latest/RoneStutter_Installer-999.1.exe|w999|111|||'
+STUTTER_M = 'stutter|RoneStutter|1.5.6.999|RoneStutter-latest||||https://g/RoneStutter-latest/RoneStutter_Installer-999.1.pkg|m999|222'
+rc, sk, m, commits = run_push('Windows pass', [STUTTER_W], platform='windows')
+p = plug(m, 'RoneStutter')
+check(rc == 0 and sk == '' and p['version'] == '1.5.6.999' and p['sha256'] == 'w999' and p['size'] == 111, 'version + Windows fields written')
+check(p.get('version_mac') == '1.5.5.268' and p['sha256_mac'] == 'a1' and p['download_url_mac'].endswith('RoneStutter_Installer.pkg'),
+      'the Mac fields stay, version_mac keeps the old number')
+
+# A10: the macOS pass after it: version_mac + the Mac fields, version left alone.
+after_win = json.loads(json.dumps(LIVE))
+plug(after_win, 'RoneStutter').update(version='1.5.6.999', sha256='w999', version_mac='1.5.5.268')
+rc, sk, m, commits = run_push('macOS pass', [STUTTER_M], live=after_win, platform='macos')
+p = plug(m, 'RoneStutter')
+check(rc == 0 and sk == '' and p['version_mac'] == '1.5.6.999' and p['sha256_mac'] == 'm999' and p['size_mac'] == 222
+      and p['download_url_mac'].endswith('-999.1.pkg'), 'version_mac + Mac fields written')
+check(p['version'] == '1.5.6.999' and p['sha256'] == 'w999', 'the Windows fields untouched')
+
+# A11: the macOS pass first (Windows failed): no version_mac yet - compared with version, written.
+rc, sk, m, commits = run_push('macOS pass, Windows not out', [STUTTER_M], platform='macos')
+p = plug(m, 'RoneStutter')
+check(rc == 0 and p['version_mac'] == '1.5.6.999' and p['version'] == '1.5.5.268' and p['sha256'] == 'a0', 'Mac out, Windows entry as it was')
+
+# A12: a macOS re-run: version_mac already this version - nothing to commit.
+done = json.loads(json.dumps(after_win))
+plug(done, 'RoneStutter').update(version_mac='1.5.6.999', sha256_mac='m999')
+rc, sk, m, commits = run_push('macOS pass, already live', [STUTTER_M], live=done, platform='macos')
+check(rc == 0 and sk == '' and len(commits) == 1, 'no commit, nothing flagged')
+
+# A13: the Windows pass on an entry that already has version_mac: it is not touched.
+rc, sk, m, commits = run_push('Windows pass keeps a version_mac', [STUTTER_W.replace('1.5.6.999', '1.5.7.1000')], live=done, platform='windows')
+p = plug(m, 'RoneStutter')
+check(rc == 0 and p['version'] == '1.5.7.1000' and p['version_mac'] == '1.5.6.999', 'version_mac stays the Mac build')
+
 # ---------------------------------------------------------------------------
 # B: the 'Bump versions.json' step itself
 # ---------------------------------------------------------------------------
 FAKE_CURL = '#!/bin/bash\nfor a in "$@"; do u="$a"; done\necho "curl $u" >> "$GH_LOG"\ncase " $CURL_FAIL " in *" $u "*) exit 22 ;; esac\nexit 0\n'
 
 
-def run_bump(case, published, built, digests=None, curl_fail='', suffix='999.1', live=None):
+def run_bump(case, published, built, digests=None, curl_fail='', suffix='999.1', live=None, platform='windows', published_win=None):
     print('\n== ' + case)
     base = tempfile.mkdtemp(prefix='mbump-')
     origin, ci, other = repo(base, live or LIVE)
@@ -234,10 +273,14 @@ def run_bump(case, published, built, digests=None, curl_fail='', suffix='999.1',
             write(os.path.join(ci, 'artifacts', 'installer-%s-%s' % (pid, plat), fn), pid + plat)
             write(os.path.join(ci, 'buildinfo', 'buildinfo-%s-%s' % (pid, plat), 'version.txt'), ver)
     mat = json.dumps([{'plugin_id': i} for i in built], separators=(',', ':'))
-    script = fill(step_script('update-manifest', 'Bump versions.json'), {
-        "needs.release.outputs.published || '[]'": json.dumps(published, separators=(',', ':')),
-        'needs.detect-changes.outputs.matrix_windows': mat, 'needs.detect-changes.outputs.matrix_macos': mat,
-        'github.run_number': '999', 'github.repository': 'liranidan2000-max/rone-plugins', 'needs.release.outputs.suffix': suffix})
+    vals = {"needs.release-%s.outputs.published || '[]'" % platform: json.dumps(published, separators=(',', ':')),
+            'needs.detect-changes.outputs.matrix_windows': mat, 'needs.detect-changes.outputs.matrix_macos': mat,
+            'github.run_number': '999', 'github.repository': 'liranidan2000-max/rone-plugins',
+            'needs.release-%s.outputs.suffix' % platform: suffix}
+    if platform == 'macos':
+        vals["needs.release-windows.outputs.published || '[]'"] = json.dumps(published if published_win is None else published_win,
+                                                                             separators=(',', ':'))
+    script = fill(step_script('update-manifest-' + platform, 'Bump versions.json'), vals)
     sp = os.path.join(base, 'bump.sh')
     write(sp, script)
     rt = os.path.join(base, 'rt')
@@ -258,34 +301,49 @@ def run_bump(case, published, built, digests=None, curl_fail='', suffix='999.1',
 
 import hashlib
 sha = lambda s: hashlib.sha256(s.encode()).hexdigest()
-rc, plan, outs = run_bump('bump: two products', ['stutter', 'plugins_center'], ['stutter', 'plugins_center'])
+rc, plan, outs = run_bump('bump, Windows pass: two products', ['stutter', 'plugins_center'], ['stutter', 'plugins_center'])
+check(rc == 0 and outs.get('guard_skipped') == '', 'step ok, nothing held back')
+check(plan is not None and len(plan) == 1, 'one plan line: the Center waits for the macOS pass')
+if plan and len(plan) == 1:
+    f = plan[0].split('|')
+    check(f[:4] == ['stutter', 'RoneStutter', '1.5.6.999', 'RoneStutter-latest'], 'stutter: id, jid, version, tag')
+    check(f[4] == REL + 'RoneStutter-latest/RoneStutter_Installer-999.1.exe' and f[7:] == ['', '', '0'],
+          'stutter: the versioned exe URL, no Mac fields')
+    check(f[5] == sha('stutterwindows') and f[6] == str(len('stutterwindows')), 'stutter: hash and size of the exe')
+
+rc, plan, outs = run_bump('bump, macOS pass: two products', ['stutter', 'plugins_center'], ['stutter', 'plugins_center'], platform='macos')
 check(rc == 0 and outs.get('guard_skipped') == '', 'step ok, nothing held back')
 check(plan is not None and len(plan) == 2, 'two plan lines')
 if plan and len(plan) == 2:
     f = plan[0].split('|')
-    check(f[:4] == ['stutter', 'RoneStutter', '1.5.6.999', 'RoneStutter-latest'], 'stutter: id, jid, version, tag')
-    check(f[4] == REL + 'RoneStutter-latest/RoneStutter_Installer-999.1.exe'
-          and f[7] == REL + 'RoneStutter-latest/RoneStutter_Installer-999.1.pkg',
-          'stutter: versioned exe + pkg URLs')
-    check(f[5] == sha('stutterwindows') and f[8] == sha('stuttermacos') and f[6] == str(len('stutterwindows')), 'stutter: hashes and size of the artefacts')
+    check(f[4:7] == ['', '', '0'] and f[7] == REL + 'RoneStutter-latest/RoneStutter_Installer-999.1.pkg' and f[8] == sha('stuttermacos'),
+          'stutter: the versioned pkg only')
     g = plan[1].split('|')
     check(g[4].endswith('/PluginsCenter-latest/RONE_Plugins_Center_Installer-999.1.exe')
-          and g[7].endswith('/PluginsCenter-latest/RONE_Plugins_Center-999.1.dmg'), 'Center: versioned exe + dmg URLs')
+          and g[7].endswith('/PluginsCenter-latest/RONE_Plugins_Center-999.1.dmg'), 'Center: versioned exe + dmg URLs, both platforms')
 
-rc, plan, outs = run_bump('bump: a URL does not answer', ['stutter', 'throw'], ['stutter', 'throw'],
+rc, plan, outs = run_bump('bump, macOS pass: the Windows Center did not go out', ['plugins_center'], ['plugins_center'],
+                          platform='macos', published_win=[])
+check(rc == 0 and outs.get('guard_skipped') == 'plugins_center' and plan == [], 'Center entry left alone, flagged')
+
+rc, plan, outs = run_bump('bump, macOS pass: a URL does not answer', ['stutter', 'throw'], ['stutter', 'throw'], platform='macos',
                           curl_fail=REL + 'RoneThrow-latest/RoneThrow_Installer-999.1.pkg')
 check(rc == 0 and outs.get('guard_skipped') == 'throw', 'throw held back (Verdict goes red)')
 check(plan is not None and len(plan) == 1 and plan[0].startswith('stutter|'), 'only stutter planned')
+rc, plan, outs = run_bump('bump, Windows pass: the Mac URL is not its business', ['stutter', 'throw'], ['stutter', 'throw'],
+                          curl_fail=REL + 'RoneThrow-latest/RoneThrow_Installer-999.1.pkg')
+check(rc == 0 and outs.get('guard_skipped') == '' and plan and len(plan) == 2, 'both planned on Windows')
 
 rc, plan, outs = run_bump('bump: GitHub digest differs', ['stutter'], ['stutter'],
                           digests={'RoneStutter-latest': {'RoneStutter_Installer-999.1.exe': 'sha256:' + '0' * 64,
                                                           'RoneStutter_Installer-999.1.pkg': 'sha256:' + sha('stuttermacos')}})
 check(rc == 0 and outs.get('guard_skipped') == 'stutter' and plan == [], 'held back on a digest mismatch')
 
-rc, plan, outs = run_bump('bump: digest matches', ['stutter'], ['stutter'],
-                          digests={'RoneStutter-latest': {'RoneStutter_Installer-999.1.exe': 'sha256:' + sha('stutterwindows'),
-                                                          'RoneStutter_Installer-999.1.pkg': 'sha256:' + sha('stuttermacos')}})
-check(rc == 0 and outs.get('guard_skipped') == '' and plan and len(plan) == 1, 'planned when the digests agree')
+for plat in ('windows', 'macos'):
+    rc, plan, outs = run_bump('bump: digest matches (%s)' % plat, ['stutter'], ['stutter'], platform=plat,
+                              digests={'RoneStutter-latest': {'RoneStutter_Installer-999.1.exe': 'sha256:' + sha('stutterwindows'),
+                                                              'RoneStutter_Installer-999.1.pkg': 'sha256:' + sha('stuttermacos')}})
+    check(rc == 0 and outs.get('guard_skipped') == '' and plan and len(plan) == 1, 'planned when the digests agree')
 
 rc, plan, outs = run_bump('bump: no suffix from Release', ['stutter'], ['stutter'], suffix='')
 check(rc != 0 and plan == [], 'fails loudly, nothing planned')

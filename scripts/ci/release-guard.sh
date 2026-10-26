@@ -43,9 +43,14 @@ guard_fetch_main() {
 }
 
 # $1 = manifest id (__center__ for the Center). Prints "" when the product is not listed yet.
+# GUARD_PLATFORM=macos: a plugin's live Mac build - version_mac, written by the macOS
+# pass since Windows goes out first (2026-10-26); an entry without it has one version
+# for both. The Center always goes out on both platforms together: one version.
 guard_live_version() {
   if [ "$1" = "__center__" ]; then
     jq -r '.center_installer.version // ""' <<<"$GUARD_LIVE_MANIFEST"
+  elif [ "${GUARD_PLATFORM:-}" = macos ]; then
+    jq -r --arg id "$1" '[.plugins[]? | select(.id == $id) | (.version_mac // .version)][0] // ""' <<<"$GUARD_LIVE_MANIFEST"
   else
     jq -r --arg id "$1" '[.plugins[]? | select(.id == $id) | .version][0] // ""' <<<"$GUARD_LIVE_MANIFEST"
   fi

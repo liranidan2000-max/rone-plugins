@@ -15,6 +15,11 @@
 #   id|jid|ver|tag|url|sha|size|url_mac|sha_mac|size_mac
 # An empty sha (url, size) means that platform was not built: its fields stay.
 #
+# MANIFEST_PLATFORM (windows | macos | unset): which pass of Update versions.json
+# writes the plan. Windows goes out first and moves 'version'; macOS writes
+# 'version_mac' and leaves 'version' alone. The Center always carries both
+# platforms in one entry, whatever the pass.
+#
 # Needs: jq, git, curl; gh (GH_TOKEN) for guard_manifest_check and the digest
 # check; release-guard.sh sourced first.
 
@@ -51,8 +56,20 @@ plan_apply_entry() {
         '.center_installer.url_mac = $um | .center_installer.sha256_mac = $sm' || return 1
     fi
   else
-    _plan_jq "$w" --arg id "$jid" --arg v "$ver" \
-      '(.plugins[]|select(.id==$id)).version = $v' || return 1
+    if [ "${MANIFEST_PLATFORM:-}" = macos ]; then
+      # Windows goes out first (2026-10-26): the Mac build has its own version_mac,
+      # which Centers from 2.1.11 read on a Mac; 'version' stays the Windows one.
+      _plan_jq "$w" --arg id "$jid" --arg v "$ver" \
+        '(.plugins[]|select(.id==$id)).version_mac = $v' || return 1
+    else
+      if [ "${MANIFEST_PLATFORM:-}" = windows ]; then
+        # Before 'version' moves on, the Mac build it described keeps its number.
+        _plan_jq "$w" --arg id "$jid" \
+          '(.plugins[]|select(.id==$id)) |= (if .version_mac == null and (.sha256_mac // "") != "" then .version_mac = .version else . end)' || return 1
+      fi
+      _plan_jq "$w" --arg id "$jid" --arg v "$ver" \
+        '(.plugins[]|select(.id==$id)).version = $v' || return 1
+    fi
     if [ -n "$sha" ]; then
       _plan_jq "$w" --arg id "$jid" --arg u "$url" --arg sw "$sha" \
         '(.plugins[]|select(.id==$id)).download_url = $u | (.plugins[]|select(.id==$id)).sha256 = $sw' || return 1

@@ -12,13 +12,41 @@
 2. **Win / Mac legs** - build, sign (when the secrets exist), validate
    (warnings only), package. Each leg stamps `<CMake base>.<run>` into the
    installer and into a `buildinfo-*` artefact.
-3. **Release** - per product, after the release guard
-   (`scripts/ci/release-guard.sh`): uploads every installer twice to its
-   `<Tag>-latest` release (see *Asset names*).
-4. **Update versions.json** - writes this run's entries onto the newest `main`
-   and pushes (`scripts/ci/manifest-plan.sh`).
+3. **Release (Windows)** / **Release (macOS)** - one job per platform, each
+   waiting only for its own legs (`scripts/ci/release-publish.sh`): per
+   product, after the release guard (`scripts/ci/release-guard.sh`), uploads
+   that platform's installer twice to its `<Tag>-latest` release (see *Asset
+   names*).
+4. **Update versions.json (Windows)** / **(macOS)** - writes that platform's
+   entries onto the newest `main` and pushes (`scripts/ci/manifest-bump.sh`,
+   `scripts/ci/manifest-plan.sh`).
 5. **Verdict** - red when anything was held back, failed or only half done,
    even though whatever could go out went out.
+
+### Windows first (2026-10-26)
+
+Apple's notarization queue can take an hour. Windows no longer waits for it:
+Release (Windows) and the Windows pass of versions.json run as soon as the
+Windows legs are done, and the Mac follows when its legs are.
+
+| Field | Written by | Read by |
+|---|---|---|
+| `version`, `download_url`, `sha256`, `size` | Windows pass | every Center on Windows; Mac Centers before 2.1.11 |
+| `version_mac`, `download_url_mac`, `sha256_mac`, `size_mac` | macOS pass | Mac Centers from 2.1.11 (`version_mac` over `version`) |
+
+The Windows pass first copies the old `version` into `version_mac` when the
+entry has none, so the Mac build keeps its own number. The guard compares a
+Mac build with `version_mac` (or `version` when absent).
+
+The **Center** keeps one entry for both platforms: its installers go up per
+platform, but its `center_installer` entry is written once, by the macOS pass,
+and only when the Windows Release published it too.
+
+Between the two passes a Mac Center older than 2.1.11 sees the new `version`
+with the previous `.pkg` behind `download_url_mac`. If it installs then, it
+stamps the old bytes with the new number; Center 2.1.11 notices that the bytes
+it last installed are not the ones `sha256_mac` names for that version and
+offers the update again.
 
 ## Asset names (audit R028)
 
@@ -54,7 +82,7 @@ keep the five newest, and never a file the current `versions.json` names.
 ### Holding a release back or rolling it back
 
 Restore a product's **version, download_url, sha256, size and the `_mac`
-twins together** (the Center: `version`, `url`, `url_mac`, `sha256`,
+twins together** (`version_mac` included, when the entry has it; the Center: `version`, `url`, `url_mac`, `sha256`,
 `sha256_mac`) from an earlier `versions.json` commit (edit `versions.json` by
 hand, the CI skip token in the commit subject). Never change one of those
 fields alone.

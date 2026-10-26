@@ -1129,9 +1129,13 @@ jobs:
   # ================================================================
   # 4. RELEASE — per-plugin rolling releases with stable download URLs
   # ================================================================
-  release:
-    name: Release
-    needs: [detect-changes, build-windows, build-macos]
+  release-windows:
+    name: Release (Windows)
+    needs: [detect-changes, build-windows]
+    # Windows goes out first (Liran, 2026-10-26): Release (Windows) waits only for
+    # the Windows builds and Release (macOS) only for the Mac ones, so Apple's
+    # notarization queue never holds the Windows installers back.
+    #
     # Deliberately not gated on the build results.
     #
     # It used to require both matrices to have come out 'success', and a matrix
@@ -1170,7 +1174,7 @@ jobs:
           submodules: false
 
       - name: Note a partial build
-        if: needs.build-windows.result != 'success' || needs.build-macos.result != 'success'
+        if: needs.build-windows.result != 'success'
         run: |
           {
             echo "### Partial release"
@@ -1178,7 +1182,6 @@ jobs:
             echo "| leg | result |"
             echo "|---|---|"
             echo "| windows | ${{ needs.build-windows.result }} |"
-            echo "| macos   | ${{ needs.build-macos.result }} |"
             echo ""
             echo "Only the plugins whose installers were actually produced have been"
             echo "published. Anything missing kept its previous release asset and its"
@@ -1186,6 +1189,118 @@ jobs:
           } >> $GITHUB_STEP_SUMMARY
 
       - name: Download all installer artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts/
+          pattern: installer-*-windows
+
+      - name: Download build versions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: buildinfo/
+          pattern: buildinfo-*-windows
+
+      - name: Create per-plugin releases
+        id: publish
+        run: |
+          PLATFORM=windows
+          REPO="${{ github.repository }}"
+          RUN="${{ github.run_number }}"
+          ATTEMPT="${{ github.run_attempt }}"
+          changed='${{ needs.detect-changes.outputs.changed }}'
+          source scripts/ci/release-publish.sh
+
+  release-macos:
+    name: Release (macOS)
+    needs: [detect-changes, build-macos]
+    # The Mac half of Release (Windows) above - same rules, its own legs only.
+    if: >-
+      !cancelled() &&
+      github.event_name == 'push' &&
+      needs.detect-changes.outputs.changed != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      published:     ${{ steps.publish.outputs.published }}
+      guard_skipped: ${{ steps.publish.outputs.guard_skipped }}
+      upload_failed: ${{ steps.publish.outputs.upload_failed }}
+      alias_failed:  ${{ steps.publish.outputs.alias_failed }}
+      suffix:        ${{ steps.publish.outputs.suffix }}
+
+    steps:
+      # This run's commit: the release guard reads tree entries from it and
+      # compares them with a fresh origin/main.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          submodules: false
+
+      - name: Note a partial build
+        if: needs.build-macos.result != 'success'
+        run: |
+          {
+            echo "### Partial release"
+            echo ""
+            echo "| leg | result |"
+            echo "|---|---|"
+            echo "| macos | ${{ needs.build-macos.result }} |"
+            echo ""
+            echo "Only the plugins whose installers were actually produced have been"
+            echo "published. Anything missing kept its previous release asset and its"
+            echo "previous entry in versions.json."
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Download all installer artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts/
+          pattern: installer-*-macos
+
+      - name: Download build versions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: buildinfo/
+          pattern: buildinfo-*-macos
+
+      - name: Create per-plugin releases
+        id: publish
+        run: |
+          PLATFORM=macos
+          REPO="${{ github.repository }}"
+          RUN="${{ github.run_number }}"
+          ATTEMPT="${{ github.run_attempt }}"
+          changed='${{ needs.detect-changes.outputs.changed }}'
+          source scripts/ci/release-publish.sh
+
+  # ================================================================
+  # 5. UPDATE MANIFEST — auto-bump versions.json + commit
+  # ================================================================
+  update-manifest-windows:
+    name: Update versions.json (Windows)
+    needs: [detect-changes, release-windows]
+    if: >-
+      !cancelled() &&
+      github.event_name == 'push' &&
+      needs.detect-changes.outputs.changed != '[]' &&
+      needs.release-windows.result == 'success'
+    runs-on: ubuntu-latest
+    # Windows first: the Mac pass (below) writes version_mac later, once Apple is done.
+    # contents: read is enough: the push below authenticates with GH_PAT.
+    outputs:
+      guard_skipped: ${{ steps.bump.outputs.guard_skipped }}
+      push_skipped:  ${{ steps.push.outputs.push_skipped }}
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          submodules: false
+          ref: main
+
+      - name: Download installer artifacts (for sha256)
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts/
@@ -1197,250 +1312,100 @@ jobs:
           path: buildinfo/
           pattern: buildinfo-*
 
-      - name: Create per-plugin releases
-        id: publish
+      - name: Init changed submodules
         run: |
-          REPO="${{ github.repository }}"
-          RUN="${{ github.run_number }}"
+          git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
           changed='${{ needs.detect-changes.outputs.changed }}'
-          matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
-          matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
-          published='[]'; guard_skipped=''; upload_failed=''; alias_failed=''
-
-          # Every installer also goes up under a name of its own (audit R028):
-          # <stem>-<run>.<attempt>.<ext>, e.g. RoneStutter_Installer-272.1.exe.
-          # Nothing ever replaces the bytes behind such a name, so a manifest
-          # that points at it can never pair a new file with an old sha256. A
-          # re-run of this job is a new attempt, so it never meets its own names.
-          SUFFIX="${{ github.run_number }}.${{ github.run_attempt }}"
-          echo "suffix=$SUFFIX" >> $GITHUB_OUTPUT
-          VDIR="${RUNNER_TEMP:-/tmp}/versioned"
-          versioned_name() { local n=$1; printf '%s-%s.%s' "${n%.*}" "$SUFFIX" "${n##*.}"; }
-
-          # Version-regression guard (scripts/ci/release-guard.sh). Cannot read
-          # origin/main -> fail here, before anything is uploaded.
-          GUARD_FETCH_ARGS="--depth 1"
-          source scripts/ci/release-guard.sh
-          guard_fetch_main || exit 1
-
-          # One file at a time, three tries each. --clobber deletes the old asset
-          # before the upload; when GitHub answers 500 to that delete (a stuck
-          # asset, #254 on 2026-10-06) the old one is renamed aside - GitHub
-          # accepts that - and the upload goes again. Never several files in one
-          # call: #254's second try deleted the .exe, failed on the .dmg and
-          # uploaded neither, so the Center could not be downloaded at all.
-          # On a versioned name the only thing --clobber can meet is this same
-          # attempt's own half-finished try, which nothing points at yet.
-          #
-          # The Center's alias (audit R090 part 2): the site's /download/center/*
-          # and older Centers fetch it by name, so that name must never 404 - and
-          # --clobber deletes the old file before the new one lands. On the
-          # Center tag an alias that is already there is swapped instead: the new
-          # file goes up as tmp-<run>-<name>, the old asset is renamed
-          # stale-<id>-<name> (the next run's stale- cleanup deletes it), then the
-          # tmp asset takes the name. Every other upload is unchanged.
-          asset_id() {
-            gh api "repos/$REPO/releases/tags/$1" --jq ".assets[] | select(.name == \"$2\") | .id" 2>/dev/null | head -1 || true
-          }
-          swap_one() {
-            local tag=$1 f=$2 name tmp tdir oid tid
-            name=$(basename "$f"); tmp="tmp-$RUN-$name"
-            tdir="${RUNNER_TEMP:-/tmp}/swap"
-            mkdir -p "$tdir" && cp "$f" "$tdir/$tmp" || return 1
-            if ! gh release upload "$tag" "$tdir/$tmp" --clobber -R "$REPO"; then
-              # a half-finished tmp goes aside, so the next try never meets it
-              tid=$(asset_id "$tag" "$tmp")
-              if [ -n "$tid" ]; then gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="stale-$tid-$tmp" >/dev/null 2>&1 || true; fi
-              return 1
-            fi
-            tid=$(asset_id "$tag" "$tmp")
-            if [ -z "$tid" ]; then return 1; fi
-            oid=$(asset_id "$tag" "$name")
-            if [ -n "$oid" ] && ! gh api -X PATCH "repos/$REPO/releases/assets/$oid" -f name="stale-$oid-$name" >/dev/null; then
-              gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="stale-$tid-$tmp" >/dev/null 2>&1 || true
-              return 1
-            fi
-            if ! gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="$name" >/dev/null; then
-              # the previous file takes its name back
-              if [ -n "$oid" ]; then gh api -X PATCH "repos/$REPO/releases/assets/$oid" -f name="$name" >/dev/null 2>&1 || true; fi
-              gh api -X PATCH "repos/$REPO/releases/assets/$tid" -f name="stale-$tid-$tmp" >/dev/null 2>&1 || true
-              return 1
-            fi
-            echo "swapped $name on $tag (the previous file is stale-$oid-$name until the next run)"
-          }
-          upload_one() {
-            local tag=$1 f=$2 name i sid
-            name=$(basename "$f")
-            if [ "$tag" = "PluginsCenter-latest" ] && [ -n "$(asset_id "$tag" "$name")" ]; then
-              for i in 1 2 3; do
-                if swap_one "$tag" "$f"; then return 0; fi
-                echo "::warning::swap of $name on $tag failed (try $i)"
-                sleep $((i * 15))
-              done
-              echo "::error::$name could not be replaced on $tag - the previous file keeps the name"
-              return 1
-            fi
-            for i in 1 2 3; do
-              if gh release upload "$tag" "$f" --clobber -R "$REPO"; then return 0; fi
-              echo "::warning::upload of $name to $tag failed (try $i)"
-              sid=$(gh api "repos/$REPO/releases/tags/$tag" --jq ".assets[] | select(.name == \"$name\") | .id" 2>/dev/null || true)
-              if [ -n "$sid" ]; then
-                gh api -X PATCH "repos/$REPO/releases/assets/$sid" -f name="stale-$sid-$name" >/dev/null \
-                  && echo "moved a stuck $name aside (asset $sid)"
-              fi
-              sleep $((i * 15))
-            done
-            echo "::error::$name could not be uploaded to $tag"
-            return 1
-          }
-
           for id in $(echo "$changed" | jq -r '.[]'); do
             case "$id" in
-              reverse_reverb) tag=ReverseReverb-latest;    title="RONE Reverse Reverb (Latest)";  folder=ReverseReverbVST;   jid=ReverseReverb ;;
-              stems_fixer)    tag=RoneStemsFixer-latest;    title="RONE Stems Fixer (Latest)";    folder=RoneStemsFixer;     jid=RoneStemsFixer ;;
-              stutter)        tag=RoneStutter-latest;       title="RONE Stutter (Latest)";        folder=RoneStutter;        jid=RoneStutter ;;
-              stucker)        tag=RoneStucker-latest;       title="RONE Stucker (Latest)";        folder=RoneStucker;        jid=RoneStucker ;;
-              throw)          tag=RoneThrow-latest;         title="RONE Throw (Latest)";          folder=RoneThrow;          jid=RoneThrow ;;
-              clipper)        tag=RoneClipper-latest;       title="RONE Clipper (Latest)";        folder=RoneClipper;        jid=RoneClipper ;;
-              rise)           tag=RoneRise-latest;          title="RONE Rise (Latest)";           folder=RoneRise;           jid=RoneRise ;;
-              iron)           tag=RoneIron-latest;          title="RONE Iron (Latest)";           folder=RoneIron;           jid=RoneIron ;;
-              rone1176)       tag=Rone1176-latest;          title="RONE 1176 (Latest)";           folder=Rone1176;           jid=Rone1176 ;;
-              rone2a)         tag=Rone2A-latest;            title="RONE 2A (Latest)";             folder=Rone2A;             jid=Rone2A ;;
-              sidechain)      tag=RoneSidechain-latest;     title="RONE Sidechain (Latest)";      folder=RoneSidechain;      jid=RoneSidechain ;;
-              flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)";        folder=rone-flanger-;      jid=RoneFlanger ;;
-              sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)";      folder="rone sync verb";   jid=RoneSyncVerb ;;
-              afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)";     folder="RONE AFTER SPACE"; jid=RoneAfterspace ;;
-              plugins_center) tag=PluginsCenter-latest;     title="RONE Plugins Center (Latest)"; folder=RonePluginsCenter;  jid=__center__ ;;
-              analyzer)       tag=RONEAnalyzer-latest;      title="RONE Analyzer (Latest)";       folder=RONEAnalyzer;       jid=RONEAnalyzer ;;
-              *) echo "::error::$id: unknown product - skipped"; continue ;;
+              reverse_reverb) f=ReverseReverbVST ;;
+              stems_fixer)    f=RoneStemsFixer ;;
+              stutter)        f=RoneStutter ;;
+              stucker)        f=RoneStucker ;;
+              throw)          f=RoneThrow ;;
+              clipper)        f=RoneClipper ;;
+              rise)           f=RoneRise ;;
+              iron)           f=RoneIron ;;
+              rone1176)       f=Rone1176 ;;
+              rone2a)         f=Rone2A ;;
+              sidechain)      f=RoneSidechain ;;
+              flanger)        f=rone-flanger- ;;
+              sync_verb)      f="rone sync verb" ;;
+              afterspace)     f="RONE AFTER SPACE" ;;
+              plugins_center) f=RonePluginsCenter ;;
+              analyzer)       f=RONEAnalyzer ;;
             esac
-
-            # Collect all installer files for this plugin
-            files=()
-            for dir in artifacts/installer-${id}-*/; do
-              [ -d "$dir" ] || continue
-              for f in "$dir"*; do
-                [ -f "$f" ] && files+=("$f")
-              done
-            done
-
-            if [ ${#files[@]} -eq 0 ]; then
-              echo "⚠ No artifacts for $id — skipping"
-              continue
-            fi
-
-            # Every platform it was built for, or nothing (2026-10-06, #253: the
-            # Mac Center failed, Windows went out alone, and the manifest then
-            # called the old Mac .dmg the new version). Update versions.json
-            # applies the same rule, so the release and the manifest stay as
-            # they were and the red run says why.
-            missing=""
-            if [ "$(echo "$matrix_win" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] \
-               && ! ls artifacts/installer-${id}-windows/* >/dev/null 2>&1; then missing="$missing windows"; fi
-            if [ "$(echo "$matrix_mac" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] \
-               && ! ls artifacts/installer-${id}-macos/* >/dev/null 2>&1; then missing="$missing macos"; fi
-            if [ -n "$missing" ]; then
-              echo "::error::$id did not build on:$missing - nothing of it is published this run"
-              continue
-            fi
-
-            # Version-regression guard, before any upload: the version the legs
-            # stamped (buildinfo-*), both platforms agreeing, newer than live,
-            # built from the folder that is on main now.
-            # One line per file: version.txt has no trailing newline, so a plain cat glued
-            # the Win and Mac stamps into one string ("1.3.10.2671.3.10.267", run #267).
-            vers=$(for f in buildinfo/buildinfo-${id}-*/version.txt; do [ -f "$f" ] && { tr -d '\r\n' < "$f"; echo; }; done | sort -u)
-            if [ -z "$vers" ] || [ "$(printf '%s\n' "$vers" | wc -l)" -ne 1 ] || ! printf '%s' "$vers" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
-              echo "::error::$id: build version missing or different per platform ('$(echo $vers)') - not published"
-              guard_skipped="$guard_skipped $id"; continue
-            fi
-            if ! guard_check "$id" "$folder" "$jid" "$vers"; then
-              guard_skipped="$guard_skipped $id"; continue
-            fi
-            # A newer run already put its build on this release (its versions.json
-            # commit may still be on the way): never overwrite it with an older one.
-            cur=$(gh release view "$tag" -R "$REPO" --json body -q .body 2>/dev/null | grep -oE 'Build #[0-9]+' | head -1 | tr -dc '0-9' || true)
-            if [ -n "$cur" ] && [ "$cur" -gt "$RUN" ]; then
-              echo "::error::$id: $tag already carries build #$cur, newer than this run #$RUN - not published"
-              guard_skipped="$guard_skipped $id"; continue
-            fi
-
-            NOTES="Build #${{ github.run_number }} · $(date -u +%Y-%m-%d)"
-            if gh release view "$tag" -R "$REPO" >/dev/null 2>&1; then
-              # Leftovers nothing points at, best effort: what a stuck upload moved
-              # aside (stale-*), and a hand-parked copy like the Center's
-              # RONE_Plugins_Center-stuck-<id>.dmg (audit R289).
-              for sid in $(gh api "repos/$REPO/releases/tags/$tag" --jq '.assets[] | select((.name | startswith("stale-")) or (.name | test("-stuck-"))) | .id' 2>/dev/null || true); do
-                gh api -X DELETE "repos/$REPO/releases/assets/$sid" >/dev/null 2>&1 || true
-              done
-            elif ! gh release create "$tag" --title "$title" --notes "$NOTES" --latest=false -R "$REPO"; then
-              # Created empty and filled one file at a time below, like every upload.
-              echo "::error::$id: could not create the release $tag - nothing of it is published"
-              upload_failed="$upload_failed $id"; continue
-            fi
-
-            # 1. The versioned files, the ones versions.json will name. All of them
-            #    or the product is not published - and the loop goes on to the next
-            #    product instead of ending the step (audit R030): a failure used to
-            #    exit here, so every product uploaded before it kept the old sha256.
-            ok=1; vfiles=()
-            mkdir -p "$VDIR/$id"
-            for f in "${files[@]}"; do
-              v="$VDIR/$id/$(versioned_name "$(basename "$f")")"
-              cp "$f" "$v" && vfiles+=("$v") || ok=0
-            done
-            if [ "$ok" = 1 ]; then
-              for v in "${vfiles[@]}"; do
-                upload_one "$tag" "$v" || { ok=0; break; }
-              done
-            fi
-            if [ "$ok" != 1 ]; then
-              echo "::error::$id: not every installer reached $tag - not published, versions.json keeps the previous build"
-              upload_failed="$upload_failed $id"; continue
-            fi
-
-            # 2. The unversioned alias (RoneStutter_Installer.exe, ...): the site's
-            #    download buttons and older Centers' built-in catalogue use it,
-            #    versions.json does not. A failure warns and the Verdict turns the
-            #    run red, but the product is published - its versioned files are up.
-            for f in "${files[@]}"; do
-              if ! upload_one "$tag" "$f"; then
-                echo "::warning::$id: the alias $(basename "$f") on $tag was not refreshed (versions.json does not use it)"
-                alias_failed="$alias_failed $id:$(basename "$f")"
-              fi
-            done
-            gh release edit "$tag" --title "$title" --notes "$NOTES" -R "$REPO" || echo "::warning::release notes of $tag not updated"
-
-            echo "✓ $tag — ${#files[@]} file(s), versioned -$SUFFIX"
-            published=$(echo "$published" | jq -c --arg id "$id" '. + [$id]')
+            git submodule update --init --depth 1 -- "$f" 2>/dev/null || true
           done
 
-          # update-manifest bumps only what was really published here.
-          echo "published=$published" >> $GITHUB_OUTPUT
-          echo "guard_skipped=${guard_skipped# }" >> $GITHUB_OUTPUT
-          echo "upload_failed=${upload_failed# }" >> $GITHUB_OUTPUT
-          echo "alias_failed=${alias_failed# }" >> $GITHUB_OUTPUT
-          if [ -n "$guard_skipped" ]; then
-            echo "### Release guard skipped:$guard_skipped" >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ -n "$upload_failed" ]; then
-            echo "### Upload failed, not published:$upload_failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ -n "$alias_failed" ]; then
-            echo "### Alias not refreshed:$alias_failed" >> $GITHUB_STEP_SUMMARY
-          fi
+      - name: Bump versions.json
+        id: bump
+        env:
+          # gh release view: which build owns each <Tag>-latest asset now.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PLATFORM=windows
+          published='${{ needs.release-windows.outputs.published || '[]' }}'
+          matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
+          matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
+          RUN="${{ github.run_number }}"
+          REPO="${{ github.repository }}"
+          # The versioned asset names Release uploaded (audit R028/R205).
+          SUFFIX='${{ needs.release-windows.outputs.suffix }}'
+          source scripts/ci/manifest-bump.sh
 
-  # ================================================================
-  # 5. UPDATE MANIFEST — auto-bump versions.json + commit
-  # ================================================================
-  update-manifest:
-    name: Update versions.json
-    needs: [detect-changes, release]
+      - name: Commit & push
+        id: push
+        env:
+          # guard_manifest_check reads each <Tag>-latest release's notes again.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN="${{ github.run_number }}"
+          REPO="${{ github.repository }}"
+          PLAN="$RUNNER_TEMP/bump-plan.txt"
+          if [ ! -s "$PLAN" ]; then
+            echo "push_skipped=" >> $GITHUB_OUTPUT
+            echo "No changes to commit"
+            exit 0
+          fi
+          GUARD_FETCH_ARGS=""
+          GUARD_NO_RUN_COMMIT=1
+          GUARD_PLATFORM=windows
+          MANIFEST_PLATFORM=windows
+          source scripts/ci/release-guard.sh
+          source scripts/ci/manifest-plan.sh
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # main may have moved while this run was building (a new push, a
+          # parallel run's own auto-commit, a hand edit) - #148 lost exactly this
+          # race. Each attempt starts from the newest main and writes this run's
+          # entries again, re-checking the guard against that main (audit R207).
+          PLAN_SKIPPED=''
+          if plan_commit_push "$PLAN" "$RUN" "$REPO" "ci: auto-update versions.json (build #$RUN, Windows) [skip ci]"; then
+            echo "push_skipped=${PLAN_SKIPPED# }" >> $GITHUB_OUTPUT
+            if [ -n "$PLAN_SKIPPED" ]; then
+              echo "### Left alone on the newest main:$PLAN_SKIPPED" >> $GITHUB_STEP_SUMMARY
+            fi
+            echo "### Updated versions.json" >> $GITHUB_STEP_SUMMARY
+            jq '.' versions.json >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          {
+            echo "### versions.json NOT updated"
+            echo "Release published: $(cut -d'|' -f1 "$PLAN" | tr '\n' ' ')- their versioned installers"
+            echo "are up, but versions.json still names the previous builds. Re-run this job."
+          } >> $GITHUB_STEP_SUMMARY
+          exit 1
+
+
+  update-manifest-macos:
+    name: Update versions.json (macOS)
+    needs: [detect-changes, release-windows, release-macos]
     if: >-
       !cancelled() &&
       github.event_name == 'push' &&
       needs.detect-changes.outputs.changed != '[]' &&
-      needs.release.result == 'success'
+      needs.release-macos.result == 'success'
     runs-on: ubuntu-latest
     # contents: read is enough: the push below authenticates with GH_PAT.
     outputs:
@@ -1498,201 +1463,16 @@ jobs:
           # gh release view: which build owns each <Tag>-latest asset now.
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Only what Release really published (a product the release guard
-          # skipped kept its old assets, so its entry must stay too).
-          published='${{ needs.release.outputs.published || '[]' }}'
+          PLATFORM=macos
+          published='${{ needs.release-macos.outputs.published || '[]' }}'
+          published_win='${{ needs.release-windows.outputs.published || '[]' }}'
           matrix_win='${{ needs.detect-changes.outputs.matrix_windows }}'
           matrix_mac='${{ needs.detect-changes.outputs.matrix_macos }}'
           RUN="${{ github.run_number }}"
           REPO="${{ github.repository }}"
           # The versioned asset names Release uploaded (audit R028/R205).
-          SUFFIX='${{ needs.release.outputs.suffix }}'
-          guard_skipped=''
-
-          # Release already ran the full guard BEFORE uploading; every id in
-          # 'published' is now this run's build on <Tag>-latest, so its entry
-          # must follow it - never held back because main moved since (that
-          # would pair the new installer with the old sha256). Skipped only
-          # when origin/main's versions.json already has this version or newer,
-          # or a newer build has since replaced the asset (guard_manifest_check).
-          # A failed fetch fails this job loudly; re-run it to write what
-          # Release published.
-          GUARD_FETCH_ARGS=""
-          GUARD_NO_RUN_COMMIT=1
-          source scripts/ci/release-guard.sh
-          # This step only writes the PLAN; Commit & push applies it on top of
-          # whatever main is when it pushes (audit R207, scripts/ci/manifest-plan.sh).
-          source scripts/ci/manifest-plan.sh
-          PLAN="$RUNNER_TEMP/bump-plan.txt"
-          : > "$PLAN"
-          if ! [[ "$SUFFIX" =~ ^[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release reported no asset suffix ('$SUFFIX') - versions.json left alone; re-run the workflow"
-            exit 1
-          fi
-          if ! guard_fetch_main; then
-            {
-              echo "### versions.json NOT updated"
-              echo "Release published $published - those installers are live but the"
-              echo "manifest still has the old version/sha256. Re-run this job."
-            } >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-
-          for id in $(echo "$published" | jq -r '.[]'); do
-            case "$id" in
-              reverse_reverb) folder=ReverseReverbVST;  jid=ReverseReverb;  tag=ReverseReverb-latest;  inst=ReverseReverb ;;
-              stems_fixer)    folder=RoneStemsFixer;     jid=RoneStemsFixer;  tag=RoneStemsFixer-latest;  inst=RoneStemsFixer ;;
-              stutter)        folder=RoneStutter;        jid=RoneStutter;     tag=RoneStutter-latest;     inst=RoneStutter ;;
-              stucker)        folder=RoneStucker;        jid=RoneStucker;     tag=RoneStucker-latest;     inst=RoneStucker ;;
-              throw)          folder=RoneThrow;          jid=RoneThrow;       tag=RoneThrow-latest;       inst=RoneThrow ;;
-              clipper)        folder=RoneClipper;        jid=RoneClipper;     tag=RoneClipper-latest;     inst=RoneClipper ;;
-              rise)           folder=RoneRise;           jid=RoneRise;        tag=RoneRise-latest;        inst=RoneRise ;;
-              iron)           folder=RoneIron;           jid=RoneIron;        tag=RoneIron-latest;        inst=RoneIron ;;
-              rone1176)       folder=Rone1176;           jid=Rone1176;        tag=Rone1176-latest;        inst=Rone1176 ;;
-              rone2a)         folder=Rone2A;             jid=Rone2A;          tag=Rone2A-latest;          inst=Rone2A ;;
-              sidechain)      folder=RoneSidechain;      jid=RoneSidechain;   tag=RoneSidechain-latest;   inst=RoneSidechain ;;
-              flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
-              sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
-              afterspace)     folder="RONE AFTER SPACE"; jid=RoneAfterspace; tag=RoneAfterspace-latest;  inst=RoneAfterspace ;;
-              plugins_center) folder=RonePluginsCenter;  jid=__center__;     tag=PluginsCenter-latest;   inst=RONE_Plugins_Center ;;
-              analyzer)       folder=RONEAnalyzer;       jid=RONEAnalyzer;   tag=RONEAnalyzer-latest;    inst=RONEAnalyzer ;;
-            esac
-
-            # The label is the version the installers carry (buildinfo, which
-            # Release already checked); main's CMakeLists is only a cross-check.
-            base=$(grep -oP 'VERSION\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$folder/CMakeLists.txt" 2>/dev/null | head -1 || true)
-            built=$(for f in buildinfo/buildinfo-${id}-*/version.txt; do [ -f "$f" ] && { tr -d '\r\n' < "$f"; echo; }; done | sort -u || true)
-            if [ -n "$built" ] && [ "$(printf '%s\n' "$built" | wc -l)" -eq 1 ] && printf '%s' "$built" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
-              ver="$built"
-              if [ -n "$base" ] && [ "$ver" != "${base}.${RUN}" ]; then
-                echo "::warning::$id: installers carry $ver, main's CMakeLists says ${base}.${RUN} - the manifest follows the installers"
-              fi
-            elif [ -n "$base" ]; then
-              ver="${base}.${RUN}"
-              echo "::warning::$id: no single build version in buildinfo ('$(echo $built)') - labelled $ver from CMakeLists"
-            else
-              echo "::error::$id: no build version and no CMakeLists version - manifest left alone although Release published it; re-run this job"
-              guard_skipped="$guard_skipped $id"; continue
-            fi
-
-            # Compute SHA256 for whatever we built this run (per-platform).
-            # A platform that did not build -> empty string, and its fields stay.
-            sha_win=""; sha_mac=""
-            if [ "$jid" = "__center__" ]; then
-              win_file=$(find artifacts -type f -name "${inst}_Installer.exe" 2>/dev/null | head -1)
-              mac_file=$(find artifacts -type f -name "${inst}.dmg"            2>/dev/null | head -1)
-            else
-              win_file=$(find artifacts -type f -name "${inst}_Installer.exe" 2>/dev/null | head -1)
-              mac_file=$(find artifacts -type f -name "${inst}_Installer.pkg" 2>/dev/null | head -1)
-            fi
-            [ -n "$win_file" ] && sha_win=$(sha256sum "$win_file" | awk '{print $1}')
-            [ -n "$mac_file" ] && sha_mac=$(sha256sum "$mac_file" | awk '{print $1}')
-            size_win=0; size_mac=0
-            [ -n "$win_file" ] && size_win=$(stat -c%s "$win_file")
-            [ -n "$mac_file" ] && size_mac=$(stat -c%s "$mac_file")
-            echo "  $jid: sha_win=${sha_win:0:12}... sha_mac=${sha_mac:0:12}..."
-
-            # Nothing at all was produced for this plugin this run, which
-            # means its build failed. Bumping the version anyway would point
-            # the Center at the *previous* installer under a new number, with
-            # a hash that does not match it - an update that can only fail.
-            if [ -z "$win_file" ] && [ -z "$mac_file" ]; then
-              echo "  $jid: no artefacts this run - manifest left alone"
-              continue
-            fi
-
-            # Built on only one of the platforms it was meant for: the Release
-            # job published nothing of it, so the manifest stays too. The ONE
-            # version field covers both platforms - bumping it would offer the
-            # other platform's OLD installer as the new version (#253, 2026-10-06).
-            if { [ "$(echo "$matrix_win" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] && [ -z "$win_file" ]; } \
-               || { [ "$(echo "$matrix_mac" | jq -r --arg id "$id" 'any(.[]; .plugin_id == $id)')" = true ] && [ -z "$mac_file" ]; }; then
-              echo "  $jid: did not build on every platform it was meant for - manifest left alone"
-              continue
-            fi
-
-            # Leave the entry only when the live manifest already has this
-            # version (rc 2, a re-run) or newer, or a newer build now owns
-            # <Tag>-latest (rc 1, flagged). No folder-vs-main test here.
-            rc=0; guard_manifest_check "$id" "$jid" "$ver" "$tag" "$RUN" "$REPO" || rc=$?
-            if [ "$rc" -eq 2 ]; then continue; fi
-            if [ "$rc" -ne 0 ]; then
-              guard_skipped="$guard_skipped $id"; continue
-            fi
-
-            # The versioned files Release uploaded (audit R028/R205): nothing ever
-            # replaces the bytes behind these URLs, so a Center can never pair
-            # them with another build's hash. Only a platform built this run
-            # gets a URL; the other keeps its fields.
-            if [ "$jid" = "__center__" ]; then
-              wname="${inst}_Installer-${SUFFIX}.exe"; mname="${inst}-${SUFFIX}.dmg"
-            else
-              wname="${inst}_Installer-${SUFFIX}.exe"; mname="${inst}_Installer-${SUFFIX}.pkg"
-            fi
-            url=""; url_mac=""
-            [ -n "$sha_win" ] && url="https://github.com/$REPO/releases/download/$tag/$wname"
-            [ -n "$sha_mac" ] && url_mac="https://github.com/$REPO/releases/download/$tag/$mname"
-
-            # Never write a URL that does not answer, or whose bytes GitHub hashes
-            # differently: the entry then stays on the previous build (which still
-            # matches its own hash) and the run goes red.
-            bad=""
-            if [ -n "$url" ]; then
-              plan_url_live "$url" || bad="$bad $wname (not downloadable)"
-              plan_asset_digest_ok "$REPO" "$tag" "$wname" "$sha_win" || bad="$bad $wname (sha256 differs)"
-            fi
-            if [ -n "$url_mac" ]; then
-              plan_url_live "$url_mac" || bad="$bad $mname (not downloadable)"
-              plan_asset_digest_ok "$REPO" "$tag" "$mname" "$sha_mac" || bad="$bad $mname (sha256 differs)"
-            fi
-            if [ -n "$bad" ]; then
-              echo "::error::$id:$bad - manifest left alone; re-run this job"
-              guard_skipped="$guard_skipped $id"; continue
-            fi
-
-            plan_add "$PLAN" "$id" "$jid" "$ver" "$tag" "$url" "$sha_win" "$size_win" "$url_mac" "$sha_mac" "$size_mac"
-            echo "  $jid: planned $ver"
-          done
-
-          echo "guard_skipped=${guard_skipped# }" >> $GITHUB_OUTPUT
-          if [ -n "$guard_skipped" ]; then
-            echo "### Release guard left alone:$guard_skipped" >> $GITHUB_STEP_SUMMARY
-          fi
-          if [ -s "$PLAN" ]; then
-            {
-              echo "### Planned versions.json entries"
-              echo '```'
-              cat "$PLAN"
-              echo '```'
-            } >> $GITHUB_STEP_SUMMARY
-          else
-            echo "nothing published this run - versions.json left untouched"
-          fi
-
-          # Audit R027: every installer URL a Center will follow - the ones this
-          # run planned and the ones main already carries, which Commit & push
-          # writes back - must be a file on this repository's releases. Anything
-          # else (another host, another repository, a dot segment) stops the
-          # manifest here, before anything is written.
-          url_re='^https://github\.com/liranidan2000-max/rone-plugins/releases/download/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'
-          if ! main_urls=$(jq -r '.center_installer.url, .center_installer.url_mac, (.plugins[]? | .download_url, .download_url_mac) | select(. != null)' versions.json); then
-            echo "::error::versions.json on main does not parse - nothing written"
-            exit 1
-          fi
-          plan_urls=""
-          if [ -s "$PLAN" ]; then plan_urls=$(cut -d'|' -f5,8 "$PLAN" | tr '|' '\n'); fi
-          bad_urls=$(printf '%s\n%s\n' "$main_urls" "$plan_urls" | grep -v '^$' | grep -Ev "$url_re" || true)
-          dot_urls=$(printf '%s\n%s\n' "$main_urls" "$plan_urls" | grep -E '/\.\.?(/|$)' || true)
-          if [ -n "$bad_urls$dot_urls" ]; then
-            echo "::error::versions.json would name an installer that is not a file on this repository's releases - nothing written (audit R027):"
-            printf '%s\n%s\n' "$bad_urls" "$dot_urls" | grep -v '^$' | sed 's/^/  /' || true
-            {
-              echo "### versions.json NOT updated: a download URL failed the R027 check"
-              printf '%s\n%s\n' "$bad_urls" "$dot_urls" | grep -v '^$' | sed 's/^/- /' || true
-            } >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-          echo "R027: $(printf '%s\n%s\n' "$main_urls" "$plan_urls" | grep -c . || true) installer URLs checked"
+          SUFFIX='${{ needs.release-macos.outputs.suffix }}'
+          source scripts/ci/manifest-bump.sh
 
       - name: Commit & push
         id: push
@@ -1710,6 +1490,8 @@ jobs:
           fi
           GUARD_FETCH_ARGS=""
           GUARD_NO_RUN_COMMIT=1
+          GUARD_PLATFORM=macos
+          MANIFEST_PLATFORM=macos
           source scripts/ci/release-guard.sh
           source scripts/ci/manifest-plan.sh
           git config user.name  "github-actions[bot]"
@@ -1719,7 +1501,7 @@ jobs:
           # race. Each attempt starts from the newest main and writes this run's
           # entries again, re-checking the guard against that main (audit R207).
           PLAN_SKIPPED=''
-          if plan_commit_push "$PLAN" "$RUN" "$REPO" "ci: auto-update versions.json (build #$RUN) [skip ci]"; then
+          if plan_commit_push "$PLAN" "$RUN" "$REPO" "ci: auto-update versions.json (build #$RUN, macOS) [skip ci]"; then
             echo "push_skipped=${PLAN_SKIPPED# }" >> $GITHUB_OUTPUT
             if [ -n "$PLAN_SKIPPED" ]; then
               echo "### Left alone on the newest main:$PLAN_SKIPPED" >> $GITHUB_STEP_SUMMARY
@@ -1735,6 +1517,7 @@ jobs:
           } >> $GITHUB_STEP_SUMMARY
           exit 1
 
+
   # ================================================================
   # 6. VERDICT — publish first, then tell the truth about the run
   #
@@ -1744,7 +1527,7 @@ jobs:
   # ================================================================
   verdict:
     name: Verdict
-    needs: [build-windows, build-macos, release, update-manifest]
+    needs: [build-windows, build-macos, release-windows, release-macos, update-manifest-windows, update-manifest-macos]
     if: '!cancelled()'
     runs-on: ubuntu-latest
     steps:
@@ -1752,14 +1535,19 @@ jobs:
         run: |
           win='${{ needs.build-windows.result }}'
           mac='${{ needs.build-macos.result }}'
-          rel='${{ needs.release.result }}'
-          man='${{ needs.update-manifest.result }}'
-          rel_skip='${{ needs.release.outputs.guard_skipped }}'
-          man_skip='${{ needs.update-manifest.outputs.guard_skipped }}'
-          push_skip='${{ needs.update-manifest.outputs.push_skipped }}'
-          up_fail='${{ needs.release.outputs.upload_failed }}'
-          alias_fail='${{ needs.release.outputs.alias_failed }}'
-          echo "windows=$win macos=$mac release=$rel manifest=$man"
+          rel='${{ needs.release-windows.result }}'
+          relm='${{ needs.release-macos.result }}'
+          man='${{ needs.update-manifest-windows.result }}'
+          manm='${{ needs.update-manifest-macos.result }}'
+          rel_skip='${{ needs.release-windows.outputs.guard_skipped }} ${{ needs.release-macos.outputs.guard_skipped }}'
+          man_skip='${{ needs.update-manifest-windows.outputs.guard_skipped }} ${{ needs.update-manifest-macos.outputs.guard_skipped }}'
+          push_skip='${{ needs.update-manifest-windows.outputs.push_skipped }} ${{ needs.update-manifest-macos.outputs.push_skipped }}'
+          up_fail='${{ needs.release-windows.outputs.upload_failed }} ${{ needs.release-macos.outputs.upload_failed }}'
+          alias_fail='${{ needs.release-windows.outputs.alias_failed }} ${{ needs.release-macos.outputs.alias_failed }}'
+          # one list per kind; empty when both platforms are clean
+          rel_skip=$(echo $rel_skip); man_skip=$(echo $man_skip); push_skip=$(echo $push_skip)
+          up_fail=$(echo $up_fail); alias_fail=$(echo $alias_fail)
+          echo "windows=$win macos=$mac release=$rel/$relm manifest=$man/$manm"
 
           # Products the version-regression guard held back (scripts/ci/release-guard.sh)
           if [ -n "$rel_skip$man_skip$push_skip" ]; then
@@ -1778,7 +1566,7 @@ jobs:
           fi
 
           bad=0
-          for r in "$win" "$mac" "$rel" "$man"; do
+          for r in "$win" "$mac" "$rel" "$relm" "$man" "$manm"; do
             case "$r" in
               success|skipped) ;;
               *) bad=1 ;;
