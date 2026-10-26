@@ -62,7 +62,7 @@ public:
     {
         return options
             .withUserScript (kScript)
-            .withEventListener ("roneViewFitHello", [this] (const juce::var&) { sentStretch = -1.0; check(); });
+            .withEventListener ("roneViewFitHello", [this] (const juce::var&) { pageHello = true; sentStretch = -1.0; check(); });
     }
 
     void attach (juce::WebBrowserComponent& b)
@@ -110,7 +110,9 @@ private:
         apply (std::abs (scale - seenScale) > 0.001);
         seenScale = scale;
         const double k = stretch();
-        if (std::abs (k - sentStretch) > 0.005)
+        // nothing goes to the page before it says hello: JUCE 8.0.4 never builds a WebView2 that was sent a
+        // script while another window of the same plug-in was being built (26.10: the second window stayed white)
+        if (pageHello && std::abs (k - sentStretch) > 0.005)
         {
             sentStretch = k;
             auto* o = new juce::DynamicObject();
@@ -251,6 +253,7 @@ private:
     juce::ComponentPeer* peer = nullptr;
     juce::Rectangle<int> base, lastSet;   // the bounds the editor gave the WebView / the ones this gave it
     bool applying = false;
+    bool pageHello = false;               // the page said roneViewFitHello: its WebView exists
     double sentStretch = -1.0;            // the stretch the page was last told
     double seenScale = 1.0;               // the WebView's whole scale (peer x the editor's transform) at the last look
 
