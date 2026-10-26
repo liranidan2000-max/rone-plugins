@@ -31,6 +31,162 @@ inline const std::string& getIndexHTML()
 @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2')}
 @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2')}
 </style>
+)rawhtml") + std::string (R"rawhtml(<style>/* rone-ui v2 */
+/* ============================================================================
+   RONE UI kit v2 (26.10.2026) - the graphite house language as one stylesheet.
+   Decided with Liran on the controls-finish mockup (claude.ai/artifact/PL1XNPMJeg44Dqu24SAQXC):
+     - the knob is the .arck of Reverse Reverb / Flanger (value inside, white dot, arc outside,
+       no ticks); its lit arc glows only while touched (.touch) and on the hero (.hero)
+     - keys are machined: no 1px grey border, a top highlight and a dark bottom edge, ONE on-state
+       (neon fill), an action key carries a LED; a pressed key only sinks 1px (no animation)
+     - only things that MOVE animate: the segment pill glides (380 ms, --pop), the switch thumb pops
+     - one popover for everything that opens (presets, selects, header menus, pickers)
+     - a 3 % grain on caps and panels (.rone-grain)
+   Use: paste after Shared/fonts/rone-fonts.css, then set the plugin's neon once:
+       :root { --neon:#FF5FB8; --neon-rgb:255,95,184; }
+   Pair with rone-ui.js (RoneUI.knob / seg / menu / select / switch). Demo: Shared/ui/demo.html.
+   ============================================================================ */
+
+:root {
+    --ground:#14161A; --panel:#17191E; --card:#101216; --drawer:#1B1E23;
+    --line:#23262C; --line2:#2A2E35; --line3:#383D45;
+    --text:#E8EAED; --text2:#B9BDC4;
+    --dim:#7A7F88;      /* the lowest colour for a label anyone has to read (4.5:1) */
+    --faint:#4E535B;    /* decoration only: ticks, dividers, disabled - never a label */
+    --hot:#FF3B3B; --hot-rgb:255,59,59;
+    --ink:#0F1114;      /* text on a lit neon surface */
+    --neon:#E8EAED; --neon-rgb:232,234,237;
+    --pop:cubic-bezier(.34,1.56,.64,1);   /* the one overshoot curve for things that move */
+    --font-display:'Sora','Segoe UI',-apple-system,sans-serif;
+    --font-ui:'Manrope','Segoe UI',-apple-system,sans-serif;
+    --font-mono:'IBM Plex Mono','Consolas',monospace;
+    --rone-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- type roles: nothing under 9 px on the design canvas ---- */
+.rone-display { font-family:var(--font-display); font-weight:800; letter-spacing:.02em; color:var(--text); }
+.rone-label   { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); }
+.rone-value   { font-family:var(--font-display); font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.rone-mono    { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
+
+/* ---- grain: a 3 % noise overlay on any panel (the element needs position:relative) ---- */
+.rone-grain::before { content:''; position:absolute; inset:0; background:var(--rone-noise); opacity:.5; mix-blend-mode:screen; pointer-events:none; border-radius:inherit; }
+.rone-panel { position:relative; background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); border-radius:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
+
+/* ---- the knob: .arck, as Reverse Reverb / Flanger draw it (geometry untouched) ----
+   DOM: .arck.size-m > svg(path.track, path.lit) + .kbody + .kdot + .cval        */
+.arck { position:relative; flex-shrink:0; cursor:grab; outline:none; touch-action:none; }
+.arck:active { cursor:grabbing; }
+.arck.locked { cursor:default; }
+.arck svg { position:absolute; inset:0; pointer-events:none; overflow:visible; }
+.arck .track { fill:none; stroke:var(--line); stroke-linecap:round; }
+.arck .lit { fill:none; stroke:var(--neon); stroke-linecap:round; transition:filter .5s ease-out, opacity .1s; }
+.arck.touch .lit, .arck.hero .lit { filter:drop-shadow(0 0 5px rgba(var(--neon-rgb),.6)); }
+.arck .kbody { position:absolute; border-radius:50%;
+    background:radial-gradient(circle at 38% 30%,#363B42 0%,#26292F 52%,#1A1C21 100%);
+    box-shadow:0 12px 24px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.07), inset 0 -7px 16px rgba(0,0,0,.45); }
+.arck .kbody::before { content:''; position:absolute; inset:9%; border-radius:50%;
+    background:radial-gradient(circle at 40% 32%,#2C3037 0%,#1D2025 60%,#16181C 100%);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.05), 0 2px 6px rgba(0,0,0,.4); }
+.arck .kbody::after { content:''; position:absolute; inset:0; border-radius:50%; background:var(--rone-noise); opacity:.3; mix-blend-mode:overlay; pointer-events:none; }
+.arck .kdot { position:absolute; left:50%; border-radius:50%; background:#F2F4F6; box-shadow:0 0 7px rgba(255,255,255,.5); transform:rotate(-135deg); z-index:2; pointer-events:none; }
+.arck .cval { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
+    font-family:var(--font-display); font-weight:700; color:var(--text); text-transform:uppercase; z-index:3; font-variant-numeric:tabular-nums; }
+.arck .cval small { font-size:.55em; font-weight:700; margin-left:2px; }
+.arck.size-s { width:58px;  height:58px;  } .arck.size-s .track, .arck.size-s .lit { stroke-width:3.5; } .arck.size-s .kbody { inset:8px;  } .arck.size-s .kdot { top:11px; width:4px;  height:4px;  margin-left:-2px;   transform-origin:50% 18px; } .arck.size-s .cval { font-size:10px; }
+.arck.size-m { width:104px; height:104px; } .arck.size-m .track, .arck.size-m .lit { stroke-width:4.5; } .arck.size-m .kbody { inset:13px; } .arck.size-m .kdot { top:21px; width:6px;  height:6px;  margin-left:-3px;   transform-origin:50% 31px; } .arck.size-m .cval { font-size:15px; }
+.arck.size-l { width:124px; height:124px; } .arck.size-l .track, .arck.size-l .lit { stroke-width:5;   } .arck.size-l .kbody { inset:15px; } .arck.size-l .kdot { top:23px; width:7px;  height:7px;  margin-left:-3.5px; transform-origin:50% 39px; } .arck.size-l .cval { font-size:18px; }
+/* hero: the same knob scaled; value + name inside, the lit arc always glows */
+.arck.size-xl { width:200px; height:200px; } .arck.size-xl .track, .arck.size-xl .lit { stroke-width:7; } .arck.size-xl .kbody { inset:24px; } .arck.size-xl .kdot { top:36px; width:10px; height:10px; margin-left:-5px; transform-origin:50% 64px; }
+.arck.size-xl .cval { font-size:36px; flex-direction:column; gap:2px; letter-spacing:-.02em; }
+.arck .cval .sub { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.24em; color:var(--dim); }
+.arck:focus-visible .kbody { box-shadow:0 0 0 2px var(--neon), 0 12px 24px rgba(0,0,0,.55); }
+.rone-knobgroup { display:flex; flex-direction:column; align-items:center; gap:6px; }
+
+/* ---- keys ---- */
+.rone-btn { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text2);
+    background:linear-gradient(180deg,#1E2126,#15171B); border:0; border-radius:7px; padding:9px 14px; cursor:pointer; position:relative; white-space:nowrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35);
+    transition:box-shadow .18s, color .15s, background .18s; }
+.rone-btn:hover { color:var(--text); }
+.rone-btn:active { transform:translateY(1px); box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+)rawhtml") + std::string (R"rawhtml(.rone-btn.on, .rone-btn[aria-pressed="true"] { color:var(--ink);
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+.rone-btn.hot.on { background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--hot); color:#fff; }
+.rone-btn.act { color:var(--text); }
+.rone-btn.act::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); margin-right:8px; vertical-align:1px; }
+.rone-btn.act.wait::before { background:var(--faint); box-shadow:none; }
+.rone-btn.dd::after { content:''; display:inline-block; width:5px; height:5px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); margin-left:9px; vertical-align:2px; transition:transform .2s; }
+.rone-btn.dd.open::after { transform:rotate(225deg) translate(-1px,-1px); }
+.rone-btn.icon { padding:9px 11px; }
+.rone-btn.arrow { padding:9px 10px; color:var(--dim); }
+.rone-btn:disabled { color:var(--faint); cursor:default; transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+.rone-btn:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+
+/* ---- preset bar: ◀ name ▶ (the name opens the preset popover) ---- */
+.rone-preset { display:inline-flex; align-items:center; gap:2px; background:var(--card); border-radius:8px; padding:3px; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-preset .nm { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text); padding:6px 14px; min-width:120px; text-align:center; cursor:pointer; }
+.rone-preset .rone-btn { padding:6px 9px; color:var(--dim); box-shadow:none; background:transparent; }
+.rone-preset .rone-btn:hover { color:var(--text); }
+
+/* ---- segment: one of N, a sliding pill (rone-ui.js RoneUI.seg places it) ---- */
+.rone-seg { display:inline-flex; gap:2px; padding:3px; background:var(--card); border-radius:8px; position:relative; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-seg .pill { position:absolute; top:3px; left:0; height:calc(100% - 6px); width:0; border-radius:5px; pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 1px 2px rgba(0,0,0,.5); transition:transform .38s var(--pop), width .38s var(--pop); }
+.rone-seg > :not(.pill) { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:6px 11px; color:var(--dim); cursor:pointer;
+    border-radius:5px; position:relative; z-index:1; transition:color .2s; white-space:nowrap; background:none; border:0; }
+.rone-seg > :not(.pill):hover { color:var(--text2); }
+.rone-seg > .on, .rone-seg > .active, .rone-seg > [aria-checked="true"], .rone-seg > [aria-pressed="true"] { color:var(--ink); }
+.rone-seg.squash .pill { animation:rone-squash .38s var(--pop); }
+@keyframes rone-squash { 0% { transform:scaleY(.8) translateX(var(--px)); } 50% { transform:scaleY(1.08) translateX(var(--px)); } 100% { transform:scaleY(1) translateX(var(--px)); } }
+.rone-seg.off .pill { background:var(--line2); box-shadow:none; }   /* the row is switched off: the pill goes grey */
+.rone-seg.off > .on { color:var(--text2); }
+
+/* ---- chip (a read-out) ---- */
+.rone-chip { display:inline-flex; align-items:baseline; gap:8px; background:var(--card); border-radius:7px; padding:6px 10px; white-space:nowrap; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-chip .k { font-family:var(--font-ui); font-size:9px; font-weight:700; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
+.rone-chip .v { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.rone-chip .v small { font-size:9px; color:var(--dim); margin-left:3px; }
+
+/* ---- switch ---- */
+.rone-switch { display:inline-flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; color:var(--dim); text-transform:uppercase; cursor:pointer; transition:color .2s; user-select:none; }
+.rone-switch i { width:34px; height:18px; border-radius:9px; background:var(--card); box-shadow:inset 0 1px 3px rgba(0,0,0,.7); position:relative; flex:0 0 auto; }
+.rone-switch i::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:linear-gradient(180deg,#3A3F47,#24272C); box-shadow:0 1px 2px rgba(0,0,0,.6); transition:transform .32s var(--pop), background .2s; }
+.rone-switch.on { color:var(--text); }
+.rone-switch.on i::after { transform:translateX(16px); background:var(--neon); box-shadow:0 1px 2px rgba(0,0,0,.6), 0 0 8px rgba(var(--neon-rgb),.6); }
+.rone-led { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); vertical-align:1px; }
+.rone-led.off { background:var(--faint); box-shadow:none; }
+
+/* ---- popover: presets, selects, header menus, pickers (rone-ui.js RoneUI.menu / RoneUI.select) ---- */
+.rone-anchor { position:relative; display:inline-block; }
+.rone-menu { position:absolute; top:calc(100% + 6px); left:0; min-width:200px; z-index:60; background:var(--drawer); border-radius:9px; padding:5px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(0,0,0,.6), 0 18px 40px rgba(0,0,0,.6);
+    opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top left; pointer-events:none; transition:opacity .16s ease-out, transform .18s var(--pop); max-height:420px; overflow-y:auto; }
+.rone-menu.right { left:auto; right:0; transform-origin:top right; }
+.rone-menu.up { top:auto; bottom:calc(100% + 6px); transform:translateY(6px) scale(.98); transform-origin:bottom left; }
+.rone-menu.open { opacity:1; transform:none; pointer-events:auto; }
+.rone-menu.closing { transition:opacity .1s ease-in, transform .1s ease-in; }
+.rone-menu .h { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:7px 10px 5px; }
+.rone-menu .it { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:5px; cursor:pointer; font-family:var(--font-ui); font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); transition:background .12s, color .12s; white-space:nowrap; }
+.rone-menu .it:hover, .rone-menu .it.hi { background:var(--line2); color:var(--text); }
+.rone-menu .it .d { width:6px; height:6px; border-radius:50%; background:transparent; flex:0 0 auto; transition:background .15s, box-shadow .15s; }
+.rone-menu .it.on { color:var(--text); }
+.rone-menu .it.on .d { background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); }
+.rone-menu .it .m { margin-left:auto; padding-left:14px; font-family:var(--font-mono); font-size:10px; font-weight:500; letter-spacing:.02em; text-transform:none; color:var(--dim); }
+.rone-menu .it .star { margin-left:6px; color:var(--faint); font-size:11px; }
+.rone-menu .it .star.on { color:var(--neon); }
+.rone-menu .it.disabled { color:var(--faint); cursor:default; background:none; }
+.rone-menu .sep { height:1px; background:var(--line); margin:4px 6px; }
+.rone-menu .ft { font-family:var(--font-ui); font-size:10px; font-weight:600; color:var(--dim); padding:7px 10px 6px; max-width:260px; white-space:normal; line-height:1.5; }
+.rone-menu.wide { min-width:300px; }
+.rone-menu::-webkit-scrollbar { width:8px; } .rone-menu::-webkit-scrollbar-thumb { background:var(--line2); border-radius:4px; }
+/* a native <select> wrapped by RoneUI.select: the select stays in the DOM (hidden), the key shows its text */
+.rone-select-native { position:absolute !important; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
+.rone-btn.active{color:var(--ink);background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)),var(--neon);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.25),0 1px 0 rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.35)}
+.rone-btn.hot.active{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)),var(--hot);color:#fff}
+</style>
 )rawhtml") + std::string (R"rawhtml(<style>
 /* ============================================
    AFTERSPACE — RONE graphite design language - violet neon
@@ -47,6 +203,7 @@ inline const std::string& getIndexHTML()
     --dim:     #7A7F88;
     --faint:   #4E535B;
     --neon:       #FF8A3D;
+    --neon-rgb:   255,138,61;
     --neon-glow:  rgba(255,138,61,0.5);
     --neon-soft:  rgba(255,138,61,0.14);
 }
@@ -162,126 +319,11 @@ body {
     letter-spacing: 0.3em;
     margin-top: 2px;
 }
-.preset {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    height: 28px;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    position: relative;
-}
-.preset button {
-    border-radius: 8px;
-    width: 26px; height: 100%;
-    border: none;
-    background: transparent;
-    color: var(--dim);
-    font-size: 11px;
-    cursor: pointer;
-    transition: color 0.15s;
-    font-family: inherit;
-}
-.preset button:hover { color: var(--neon); }
-#preset-name {
-    min-width: 190px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--text2);
-    text-transform: uppercase;
-    cursor: pointer;
-    padding: 0 8px;
-    border-left: 1px solid var(--line);
-    border-right: 1px solid var(--line);
-    height: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-}
-#preset-name:hover { color: var(--text); }
-#preset-menu {
-    position: absolute;
-    top: 34px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 60;
-    background: var(--drawer);
-    border: 1px solid var(--line2);
-    border-radius: 8px;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.6);
-    padding: 5px;
-    display: none;
-    min-width: 240px;
-    max-height: 520px;
-    overflow-y: auto;
-}
-#preset-menu.open { display: block; }
-#preset-menu .p-cat {
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.22em;
-    color: var(--neon);
-    padding: 8px 10px 3px;
-}
-#preset-menu .p-item {
-    display: flex;
-    align-items: center;
-    padding: 6px 10px;
-    border-radius: 5px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--text2);
-    text-transform: uppercase;
-    cursor: pointer;
-    gap: 8px;
-}
-#preset-menu .p-item:hover { background: var(--neon-soft); color: var(--neon); }
-#preset-menu .p-item.current { color: var(--neon); }
-#preset-menu .p-sep { height: 1px; background: var(--line2); margin: 5px 4px; }
-#preset-menu .p-lock {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 10px;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    color: var(--dim);
-    cursor: pointer;
-}
-#preset-menu .p-lock:hover { color: var(--text2); }
-#preset-menu .p-lock input[type="checkbox"] {
-    accent-color: var(--neon);
-    cursor: pointer;
-    width: 13px; height: 13px;
-}
-#bypass {
-    height: 28px;
-    padding: 0 14px;
-    margin-left: 10px;
-    border-radius: 8px;
-    border: 1px solid #383D45;
-    background: transparent;
-    color: var(--dim);
-    font-family: 'Manrope', 'Segoe UI', sans-serif;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.22em;
-    cursor: pointer;
-    transition: all 0.18s;
-}
-#bypass:hover { border-color: var(--text2); color: var(--text2); }
-#bypass.on {
-    border-color: var(--neon);
-    color: var(--neon);
-    box-shadow: 0 0 12px var(--neon-glow), inset 0 0 10px var(--neon-soft);
-}
+.preset { margin-left: auto; position: relative; }
+#preset-name { min-width: 190px; white-space: nowrap; overflow: hidden; }
+#preset-menu { left: 50%; margin-left: -130px; min-width: 260px; max-height: 560px; transform-origin: top center; }
+#preset-menu .p-lock input[type="checkbox"] { accent-color: var(--neon); cursor: pointer; width: 13px; height: 13px; }
+#bypass { margin-left: 10px; }
 </style>
 )rawhtml")
 
@@ -297,29 +339,8 @@ body {
     overflow: hidden;
 }
 #viz { position: absolute; inset: 0; width: 100%; height: 100%; }
-.chip {
-    position: absolute;
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    padding: 5px 10px;
-    background: rgba(16,18,22,0.85);
-    border: 1px solid var(--line2);
-    border-radius: 8px;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    color: var(--dim);
-    font-variant-numeric: tabular-nums;
-}
-.chip b {
-    font-family: 'Sora', 'Segoe UI', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--neon);
-    text-shadow: 0 0 10px var(--neon-glow);
-}
-.chip small { font-size: 9px; color: var(--dim); }
+.chip { position: absolute; }
+.chip > small { font-size: 9px; color: var(--dim); margin-left: -4px; }
 #chip-spatial { top: 10px; left: 10px; }
 #chip-bpm     { top: 10px; right: 10px; }
 #chip-engine  { bottom: 10px; right: 10px; }
@@ -332,77 +353,7 @@ body {
     align-items: center;
     gap: 5px;
 }
-.knob-group label {
-    font-size: 9px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--dim);
-}
-.knob { cursor: grab; }
-.knob:active { cursor: grabbing; }
-
-/* ---- Arc knob (family component, identical to ReverseReverb/Flanger) ---- */
-.arck { position: relative; flex-shrink: 0; }
-/* overflow visible: the arc's neon drop-shadow must not clip at the svg box */
-.arck svg { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
-.arck .track { fill: none; stroke: var(--line); stroke-linecap: round; }
-.arck .lit {
-    fill: none; stroke: var(--neon); stroke-linecap: round;
-    filter: drop-shadow(0 0 5px var(--neon-glow));
-    transition: opacity 0.1s;
-}
-.arck .kbody {
-    position: absolute; border-radius: 50%;
-    background: radial-gradient(circle at 38% 30%, #363B42 0%, #26292F 52%, #1A1C21 100%);
-    box-shadow:
-        0 12px 24px rgba(0,0,0,0.55),
-        inset 0 2px 3px rgba(255,255,255,0.07),
-        inset 0 -7px 16px rgba(0,0,0,0.45);
-}
-.arck .kbody::before {
-    content: ''; position: absolute; inset: 9%; border-radius: 50%;
-    background: radial-gradient(circle at 40% 32%, #2C3037 0%, #1D2025 60%, #16181C 100%);
-    box-shadow: inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.4);
-}
-.arck .kdot {
-    position: absolute; left: 50%; border-radius: 50%;
-    background: #F2F4F6;
-    box-shadow: 0 0 7px rgba(255,255,255,0.5);
-    transform: rotate(-135deg);
-    z-index: 2;
-    pointer-events: none;
-}
-.arck .cval {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    pointer-events: none;
-    font-family: 'Sora', 'Segoe UI', sans-serif;
-    font-weight: 700;
-    color: var(--text);
-    text-transform: uppercase;
-    z-index: 3;
-    font-variant-numeric: tabular-nums;
-}
-.arck .cval small { font-size: 0.55em; font-weight: 700; margin-left: 2px; }
-
-.arck.size-l { width: 124px; height: 124px; }
-.arck.size-l .track, .arck.size-l .lit { stroke-width: 5; }
-.arck.size-l .kbody { inset: 15px; }
-.arck.size-l .kdot { top: 23px; width: 7px; height: 7px; margin-left: -3.5px; transform-origin: 50% 39px; }
-.arck.size-l .cval { font-size: 18px; }
-
-.arck.size-m { width: 104px; height: 104px; }
-.arck.size-m .track, .arck.size-m .lit { stroke-width: 4.5; }
-.arck.size-m .kbody { inset: 13px; }
-.arck.size-m .kdot { top: 21px; width: 6px; height: 6px; margin-left: -3px; transform-origin: 50% 31px; }
-.arck.size-m .cval { font-size: 15px; }
-
-.arck.size-s { width: 58px; height: 58px; }
-.arck.size-s .track, .arck.size-s .lit { stroke-width: 3.5; }
-.arck.size-s .kbody { inset: 8px; }
-.arck.size-s .kdot { top: 11px; width: 4px; height: 4px; margin-left: -2px; transform-origin: 50% 18px; }
-.arck.size-s .cval { font-size: 10px; }
+/* knob look: rone-ui v2 .arck (pasted above) */
 
 /* ---- Main knob row ---- */
 #main-knobs {
@@ -418,30 +369,7 @@ body {
     margin: 22px 0 26px;
     background: linear-gradient(180deg, transparent, rgba(255,255,255,0.07), transparent);
 }
-#solowet-btn {
-    height: 28px;
-    padding: 0 12px;
-    margin-left: 10px;
-    border-radius: 8px;
-    border: 1px solid #383D45;
-    background: transparent;
-    color: var(--dim);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Manrope', 'Segoe UI', sans-serif;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    transition: all 0.18s;
-}
-#solowet-btn:hover { border-color: var(--text2); color: var(--text2); }
-#solowet-btn.on {
-    border-color: var(--neon);
-    color: var(--neon);
-    box-shadow: 0 0 12px var(--neon-glow), inset 0 0 10px var(--neon-soft);
-}
+#solowet-btn { margin-left: 10px; display: inline-flex; align-items: center; gap: 6px; }
 
 /* ---- Modules ---- */
 #modules {
@@ -488,29 +416,7 @@ body {
 }
 
 /* ---- Select group (family) ---- */
-.select-group { display: flex; flex-direction: column; gap: 2px; }
-.select-group label {
-    font-size: 9px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--dim);
-}
-.select-group select {
-    background: var(--card);
-    color: var(--text);
-    border: 1px solid var(--line2);
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-family: 'Manrope', 'Segoe UI', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.15s;
-}
-.select-group select:focus, .select-group select:hover { border-color: var(--neon); }
-.select-group select option { background: var(--drawer); color: var(--text); }
+.select-group { display: flex; flex-direction: column; gap: 4px; }
 .side-note {
     font-size: 9px;
     font-weight: 700;
@@ -519,30 +425,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* ---- Segmented control (family) ---- */
-.seg {
-    display: flex;
-    background: var(--card);
-    border: 1px solid var(--line2);
-    border-radius: 8px;
-    overflow: hidden;
-    width: max-content;
-}
-.seg span {
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    padding: 6px 12px;
-    color: var(--dim);
-    cursor: pointer;
-    transition: all 0.15s;
-}
-.seg span:hover { color: var(--text); }
-.seg span.on {
-    color: #0F1114;
-    background: var(--neon);
-    box-shadow: 0 0 12px var(--neon-glow);
-}
 </style>
 )rawhtml"
 
@@ -642,7 +524,9 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
 @keyframes bpLedBlink{0%,64%,68%,100%{opacity:1;}66%{opacity:.25;}}
 .bp-unit.bp-off .bp-slot::before{opacity:0;animation:none;}
 .bp-unit.bp-off .bp-slot:nth-child(5)::after{opacity:0;animation:none;}
-.bp-credits{display:flex;flex-direction:column;gap:13px;font-family:var(--bp-sans);text-align:left;}
+)rawhtml"
+
+    + R"rawhtml(.bp-credits{display:flex;flex-direction:column;gap:13px;font-family:var(--bp-sans);text-align:left;}
 .bp-cr-row{display:flex;align-items:center;gap:11px;font-size:23px;white-space:nowrap;color:var(--bp-etch);}
 .bp-cr-row b{font-weight:600;color:#c3c8ce;}
 .bp-cr-lead{color:var(--bp-etch-dim);font-weight:400;}
@@ -760,36 +644,6 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     flex: 1;
     position: relative;
 }
-.action-btn {
-    padding: 10px 22px;
-    border-radius: 8px;
-    border: 1px solid #30343D;
-    background: linear-gradient(180deg, #191C22, #14161A); /* UI-kit button fill */
-    color: var(--text2);
-    font-family: 'Manrope', 'Segoe UI', sans-serif;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.2em;
-    cursor: pointer;
-    transition: all 0.11s;
-}
-.action-btn:hover { border-color: #454A55; color: var(--text); }
-.action-btn:active { transform: translateY(1px); }
-.action-btn.active {
-    border-color: var(--neon);
-    background: var(--neon-soft);
-    color: var(--neon);
-    box-shadow: 0 0 12px var(--neon-glow);
-    text-shadow: 0 0 8px var(--neon-glow);
-}
-#freeze-btn.active {
-    border-color: transparent;
-    background: var(--neon);
-    color: #0F1114;
-    text-shadow: none;
-    box-shadow: 0 0 18px var(--neon-glow);
-}
-
 /* Character macro slider */
 #char-wrap {
     flex: 1;
@@ -894,33 +748,11 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     justify-content: center;
     gap: 6px 12px;
 }
-.adv-grid .knob-group label { font-size: 9px; letter-spacing: 0.14em; }
 .adv-foot {
     display: flex;
     flex-direction: column;
     gap: 6px;
     align-items: center;
-}
-.mini-btn {
-    height: 24px;
-    padding: 0 12px;
-    border-radius: 6px;
-    border: 1px solid #383D45;
-    background: transparent;
-    color: var(--dim);
-    font-family: 'Manrope', 'Segoe UI', sans-serif;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    cursor: pointer;
-    transition: all 0.18s;
-}
-.mini-btn:hover { color: var(--text); border-color: var(--dim); }
-.mini-btn.on {
-    border-color: var(--neon);
-    background: var(--neon-soft);
-    color: var(--neon);
-    box-shadow: 0 0 10px var(--neon-glow);
 }
 .custom-hint {
     font-size: 9px;
@@ -984,28 +816,28 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
       <h1>AFTER<i>SPACE</i></h1>
     </div>
     <span class="subtitle">RONE PLUGINS</span>
-    <div class="preset">
-      <button id="p-prev" title="Previous preset">&#9664;</button>
-      <div id="preset-name" data-tip="Browse presets.">INIT - CLEAN SPACE</div>
-      <button id="p-next" title="Next preset">&#9654;</button>
-      <div id="preset-menu"></div>
+    <div class="preset rone-preset">
+      <button id="p-prev" class="rone-btn arrow" title="Previous preset">&#9664;</button>
+      <div id="preset-name" class="nm" data-tip="Browse presets.">INIT - CLEAN SPACE</div>
+      <button id="p-next" class="rone-btn arrow" title="Next preset">&#9654;</button>
+      <div id="preset-menu" class="rone-menu"></div>
     </div>
-    <button id="solowet-btn" data-tip="Listen to the space alone.">
+    <button id="solowet-btn" class="rone-btn" data-tip="Listen to the space alone.">
       <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
         <path d="M1.5 8V6a4.5 4.5 0 019 0v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
         <rect x="0.8" y="7.2" width="2.6" height="3.6" rx="1.1" fill="currentColor"/>
         <rect x="8.6" y="7.2" width="2.6" height="3.6" rx="1.1" fill="currentColor"/>
       </svg>WET</button>
-    <button id="bypass" data-tip="Bypasses AFTERSPACE completely.">BYPASS</button>
+    <button id="bypass" class="rone-btn hot" data-tip="Bypasses AFTERSPACE completely.">BYPASS</button>
   </header>
 
   <!-- ================= SPACE DISPLAY ================= -->
   <div id="viz-wrap">
     <canvas id="viz"></canvas>
-    <div class="chip" id="chip-spatial">SPATIAL&nbsp;<b id="spatial-val">WIDE</b></div>
-    <div class="chip" id="chip-bpm">BPM&nbsp;<b id="bpm-val">120</b></div>
-    <div class="chip" id="chip-engine">ENGINE&nbsp;<b id="engine-val">ACTIVE</b></div>
-    <div class="chip" id="chip-duck">DUCK&nbsp;<b id="duckgr-val">0.0</b><small>dB</small></div>
+    <div class="chip rone-chip" id="chip-spatial"><span class="k">SPATIAL</span><b class="v" id="spatial-val">WIDE</b></div>
+    <div class="chip rone-chip" id="chip-bpm"><span class="k">BPM</span><b class="v" id="bpm-val">120</b></div>
+    <div class="chip rone-chip" id="chip-engine"><span class="k">ENGINE</span><b class="v" id="engine-val">ACTIVE</b></div>
+    <div class="chip rone-chip" id="chip-duck"><span class="k">DUCK</span><b class="v" id="duckgr-val">0.0</b><small>dB</small></div>
   </div>
 
   <!-- ================= MAIN KNOBS ================= -->
@@ -1029,7 +861,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
         <div id="knob-duck"></div>
         <div class="module-side">
           <div class="select-group">
-            <label>Mode</label>
+            <label class="rone-label">Mode</label>
             <select id="sel-duckmode" data-tip="Moves the wet signal out of the way while the source is active.">
               <option>SMART</option><option>FULL</option><option>VOCAL</option>
               <option>TRANSIENT</option><option>CUSTOM</option>
@@ -1045,7 +877,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
         <div id="knob-echo"></div>
         <div class="module-side">
           <div class="select-group">
-            <label>Time</label>
+            <label class="rone-label">Time</label>
             <select id="sel-echotime" data-tip="Blends tempo-synced echoes into the space."></select>
           </div>
           <span class="side-note" id="echo-ms"></span>
@@ -1056,7 +888,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
 
   <!-- ================= BOTTOM ROW ================= -->
   <div id="bottom-row">
-    <button class="action-btn" id="freeze-btn" data-tip="Holds the current reverb tail.">&#10052;&nbsp;&nbsp;FREEZE</button>
+    <button class="rone-btn" id="freeze-btn" data-tip="Holds the current reverb tail.">&#10052;&nbsp;&nbsp;FREEZE</button>
     <div id="char-wrap" data-tip="Moves the engine from tight and clean to wide and atmospheric.">
       <span class="char-end" id="char-clean">CLEAN</span>
       <div id="char-track">
@@ -1065,21 +897,21 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
       </div>
       <span class="char-end" id="char-dream">DREAM</span>
     </div>
-    <button class="action-btn" id="adv-btn">ADVANCED</button>
+    <button class="rone-btn" id="adv-btn">ADVANCED</button>
 
     <!-- Advanced drawer floats above this row -->
     <div id="adv-drawer">
       <div class="adv-sec"><span class="sec-title">Space</span>
         <div class="adv-grid" id="adv-space"></div>
         <div class="adv-foot">
-          <button class="mini-btn" id="ag-btn" data-tip="Keeps the wet level steady when Size or Decay changes.">AUTO GAIN</button>
+          <button class="rone-btn" id="ag-btn" data-tip="Keeps the wet level steady when Size or Decay changes.">AUTO GAIN</button>
         </div></div>
       <div class="adv-sec"><span class="sec-title">Tone</span>
         <div class="adv-grid" id="adv-tone"></div></div>
       <div class="adv-sec"><span class="sec-title">Motion &amp; Stereo</span>
         <div class="adv-grid" id="adv-mod"></div>
         <div class="adv-foot">
-          <button class="mini-btn" id="ml-btn" data-tip="Keeps the wet signal mono below 150Hz for a clean low end.">MONO LOW</button>
+          <button class="rone-btn" id="ml-btn" data-tip="Keeps the wet signal mono below 150Hz for a clean low end.">MONO LOW</button>
         </div></div>
       <div class="adv-sec"><span class="sec-title">Duck</span>
         <div class="adv-grid" id="adv-duck"></div>
@@ -1087,10 +919,10 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
       <div class="adv-sec"><span class="sec-title">Echo</span>
         <div class="adv-grid" id="adv-echo"></div>
         <div class="adv-foot">
-          <div class="seg" id="seg-routing" data-tip="Where the echo lives: before, inside or after the space.">
+          <div class="rone-seg" id="seg-routing" data-tip="Where the echo lives: before, inside or after the space.">
             <span data-i="0">BEFORE</span><span data-i="1">INSIDE</span><span data-i="2">AFTER</span>
           </div>
-          <button class="mini-btn" id="pp-btn">PING PONG</button>
+          <button class="rone-btn" id="pp-btn">PING PONG</button>
         </div></div>
     </div>
   </div>
@@ -1271,6 +1103,154 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
 </div>
 )rawhtml"
 
+    + R"rawhtml(<script>/* rone-ui v2 */
+// RONE UI kit v2 (26.10.2026) - the behaviour behind rone-ui.css. Paste after the CSS.
+//   RoneUI.knob(el, {size:'m', value:.5, def:.5, fmt:v=>..., label:'Mix', hero:false, onChange:v=>...})
+//       -> {set(v), get(), setText(html), lock(bool), el}      drag (shift = fine), wheel 2 %/notch, dbl-click = default, arrows
+//   RoneUI.seg(el, {onClass:'on'})     -> adds the sliding pill; the plugin keeps toggling its own on-class, the pill follows
+//   RoneUI.switch(el)                  -> toggles .on on click (optional helper)
+//   RoneUI.menu(trigger, {items, header, footer, wide, side, onSelect}) -> {open(), close(), set(items), el}
+//   RoneUI.select(selectEl, {wide})    -> wraps a native <select> in a key + popover; select.value / 'change' keep working
+(function (root) {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const SIZES = { s: { S: 58, st: 3.5 }, m: { S: 104, st: 4.5 }, l: { S: 124, st: 5 }, xl: { S: 200, st: 7 } };
+
+  function arcPath(cx, cy, r, a0, a1) {
+    const p = a => { const t = (a - 90) * Math.PI / 180; return [cx + r * Math.cos(t), cy + r * Math.sin(t)]; };
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+  }
+  function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+
+  // ---------------------------------------------------------------- knob (.arck)
+  function knob(target, opt) {
+    const o = Object.assign({ size: 'm', value: 0, def: null, fmt: null, label: '', hero: false, onChange: null, locked: false }, opt || {});
+    const { S, st } = SIZES[o.size] || SIZES.m, c = S / 2, r = c - st / 2 - 1;
+    const k = target; k.classList.add('arck', 'size-' + o.size); if (o.hero) k.classList.add('hero'); if (!k.hasAttribute('tabindex')) k.tabIndex = 0;
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+    const track = document.createElementNS(NS, 'path'), lit = document.createElementNS(NS, 'path');
+    track.setAttribute('class', 'track'); lit.setAttribute('class', 'lit'); track.setAttribute('d', arcPath(c, c, r, -135, 135));
+    svg.append(track, lit);
+    const body = el('div', 'kbody'), dot = el('div', 'kdot'), cval = el('div', 'cval');
+    k.replaceChildren(svg, body, dot, cval);
+    let v = clamp(o.value, 0, 1), text = null, lingerT = null;
+    const def = o.def == null ? v : o.def;
+    function draw() {
+      const a = -135 + 270 * v;
+      lit.setAttribute('d', v > 0.003 ? arcPath(c, c, r, -135, a) : '');
+      dot.style.transform = `rotate(${a.toFixed(1)}deg)`;
+      const t = text != null ? text : (o.fmt ? o.fmt(v) : Math.round(v * 100) + '%');
+      cval.innerHTML = o.hero ? `<span>${t}</span><span class="sub">${o.label}</span>` : t;
+    }
+    function touch() { k.classList.add('touch'); clearTimeout(lingerT); lingerT = setTimeout(() => k.classList.remove('touch'), 500); }
+    function user(nv) { nv = clamp(nv, 0, 1); if (nv === v) return; v = nv; text = null; draw(); if (o.onChange) o.onChange(v); }
+    let y0 = 0, v0 = 0;
+    k.addEventListener('pointerdown', e => { if (o.locked || e.button !== 0) return; k.setPointerCapture(e.pointerId); y0 = e.clientY; v0 = v; k.classList.add('touch'); clearTimeout(lingerT); e.preventDefault(); });
+    k.addEventListener('pointermove', e => { if (!k.hasPointerCapture(e.pointerId)) return; user(v0 + (y0 - e.clientY) / (e.shiftKey ? 800 : 200)); });
+    const up = () => { lingerT = setTimeout(() => k.classList.remove('touch'), 500); };
+    k.addEventListener('pointerup', up); k.addEventListener('pointercancel', up);
+    k.addEventListener('wheel', e => { if (o.locked) return; e.preventDefault(); user(v + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? .005 : .02)); touch(); }, { passive: false });
+    k.addEventListener('dblclick', () => { if (!o.locked) user(def); });
+    k.addEventListener('keydown', e => { if (o.locked) return; const d = (e.key === 'ArrowUp' || e.key === 'ArrowRight') ? .02 : (e.key === 'ArrowDown' || e.key === 'ArrowLeft') ? -.02 : 0; if (!d) return; user(v + d); touch(); e.preventDefault(); });
+    draw();
+    return { set(nv) { v = clamp(nv, 0, 1); text = null; draw(); }, get: () => v, setText(t) { text = t; draw(); },
+             lock(b) { o.locked = !!b; k.classList.toggle('locked', !!b); }, el: k };
+  }
+
+  // ---------------------------------------------------------------- segment pill
+  function seg(s, opt) {
+    const o = Object.assign({ onClass: 'on' }, opt || {});
+    s.classList.add('rone-seg');
+    let pill = s.querySelector(':scope > .pill');
+    if (!pill) { pill = el('i', 'pill'); s.appendChild(pill); }   // LAST child: index-based plugin code (children[i]) keeps its indices
+    const isOn = b => b.classList.contains(o.onClass) || b.getAttribute('aria-checked') === 'true' || b.getAttribute('aria-pressed') === 'true';
+    function current() { return Array.from(s.children).find(b => b !== pill && isOn(b)); }
+    function place(anim) {
+      const b = current();
+      if (!b) { pill.style.width = '0px'; return; }
+      const x = b.offsetLeft;
+      pill.style.setProperty('--px', x + 'px'); pill.style.transform = `translateX(${x}px)`; pill.style.width = b.offsetWidth + 'px';
+      if (anim) { s.classList.remove('squash'); void pill.offsetWidth; s.classList.add('squash'); }
+    }
+    pill.style.transition = 'none'; place(false); void pill.offsetWidth; pill.style.transition = '';
+    // the segment's own class (squash) and the pill must not re-trigger the placement, or it loops forever
+    new MutationObserver(ms => { if (ms.some(m => m.target !== s && m.target !== pill)) place(true); })
+      .observe(s, { attributes: true, subtree: true, attributeFilter: ['class', 'aria-checked', 'aria-pressed'] });
+    if (root.ResizeObserver) new ResizeObserver(() => { pill.style.transition = 'none'; place(false); void pill.offsetWidth; pill.style.transition = ''; }).observe(s);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => place(false));
+    return { place };
+  }
+  function switchEl(s) { s.classList.add('rone-switch'); if (!s.querySelector('i')) s.insertBefore(el('i'), s.firstChild); s.addEventListener('click', () => s.classList.toggle('on')); return s; }
+
+  // ---------------------------------------------------------------- popover
+  let openMenu = null;
+  function closeAll() { if (openMenu) openMenu.close(); }
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+  function menu(trigger, opt) {
+    const o = Object.assign({ items: [], header: null, footer: null, wide: false, side: 'left', up: false, onSelect: null }, opt || {});
+    let anchor = trigger.parentElement;
+    if (!anchor || !anchor.classList.contains('rone-anchor')) { anchor = el('div', 'rone-anchor'); trigger.parentNode.insertBefore(anchor, trigger); anchor.appendChild(trigger); }
+    const m = el('div', 'rone-menu' + (o.wide ? ' wide' : '') + (o.side === 'right' ? ' right' : '') + (o.up ? ' up' : ''));
+    anchor.appendChild(m);
+    const api = {
+      el: m, trigger,
+      set(items) {
+        m.replaceChildren();
+        if (o.header) m.appendChild(el('div', 'h', o.header));
+        items.forEach(it => {
+          if (it === '-') { m.appendChild(el('div', 'sep')); return; }
+          if (it.html) { const w = el('div'); w.innerHTML = it.html; m.appendChild(w); return; }
+          const r = el('div', 'it' + (it.on ? ' on' : '') + (it.disabled ? ' disabled' : ''));
+          r.innerHTML = `<span class="d"></span><span class="t">${it.t}</span>${it.m != null ? `<span class="m">${it.m}</span>` : ''}${it.star != null ? `<span class="star${it.star ? ' on' : ''}">★</span>` : ''}`;
+          r.addEventListener('click', e => {
+            e.stopPropagation(); if (it.disabled) return;
+            if (!it.action) m.querySelectorAll('.it').forEach(x => x.classList.toggle('on', x === r));
+            api.close(); if (it.onSelect) it.onSelect(it); if (o.onSelect) o.onSelect(it);
+          });
+          m.appendChild(r);
+        });
+        if (o.footer) m.appendChild(el('div', 'ft', o.footer));
+      },
+      open() { if (openMenu && openMenu !== api) openMenu.close(); m.classList.remove('closing'); m.classList.add('open'); trigger.classList.add('open'); openMenu = api; },
+      close() { if (!m.classList.contains('open')) return; m.classList.add('closing'); m.classList.remove('open'); trigger.classList.remove('open'); if (openMenu === api) openMenu = null; },
+      toggle() { m.classList.contains('open') ? api.close() : api.open(); }
+    };
+    api.set(o.items);
+    trigger.addEventListener('click', e => { e.stopPropagation(); api.toggle(); });
+    m.addEventListener('click', e => e.stopPropagation());
+    return api;
+  }
+
+  // ---------------------------------------------------------------- native <select> -> key + popover
+  function select(sel, opt) {
+    const o = Object.assign({ wide: false, side: 'left', up: false, className: '' }, opt || {});
+    if (sel._rone) return sel._rone;
+    const btn = el('button', 'rone-btn dd ' + o.className); btn.type = 'button';
+    sel.parentNode.insertBefore(btn, sel); sel.classList.add('rone-select-native'); sel.tabIndex = -1;
+    const label = () => { const op = sel.options[sel.selectedIndex]; btn.textContent = op ? op.textContent : ''; };
+    const items = () => Array.from(sel.options).map(op => ({ t: op.textContent, on: op.selected, disabled: op.disabled, value: op.value,
+      onSelect() { if (sel.value === op.value) return; sel.value = op.value; label(); sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); } }));
+    const m = menu(btn, { wide: o.wide, side: o.side, up: o.up, items: items() });
+    btn.addEventListener('click', () => m.set(items()));          // rebuild from the live options every time it opens
+    sel.addEventListener('change', label);
+    // code that assigns sel.value / sel.selectedIndex (host -> UI) must move the key's text too
+    ['value', 'selectedIndex'].forEach(p => { const d = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, p);
+      if (d && d.set) Object.defineProperty(sel, p, { get() { return d.get.call(sel); }, set(x) { d.set.call(sel, x); label(); }, configurable: true }); });
+    new MutationObserver(label).observe(sel, { childList: true, subtree: true, attributes: true });
+    if (sel.disabled) btn.disabled = true;
+    label();
+    sel._rone = { button: btn, menu: m, refresh: label };
+    return sel._rone;
+  }
+
+  root.RoneUI = { knob, seg, switch: switchEl, menu, select, arcPath, closeAll };
+})(window);
+</script>
+)rawhtml"
+
     + R"rawhtml(<script>
 "use strict";
 // ============================================================================
@@ -1318,10 +1298,11 @@ function fEL(v){ var p=Math.round(Math.abs(v)*100);
 // ============================================================================
 // Arc knob component (family .arck — value inside, label below)
 // ============================================================================
+// rone-ui v2 geometry: centre c = S/2, radius r = c - stroke/2 - 1, arc -135..135
 var SIZES = {
-  l: { box:124, r:55, arc:259, gap:87 },
-  m: { box:104, r:46, arc:217, gap:73 },
-  s: { box:58,  r:25, arc:118, gap:39 }
+  l: { box:124, st:5 },
+  m: { box:104, st:4.5 },
+  s: { box:58,  st:3.5 }
 };
 var knobs = {}; var dragCtx = null;
 
@@ -1340,23 +1321,23 @@ function mkKnob(holderId,cfg){
   var holder = document.getElementById(holderId);
   var group = document.createElement("div");
   group.className = "knob-group";
-  var c = S.box/2;
+  var c = S.box/2, r = c - S.st/2 - 1;
   group.innerHTML =
-    '<div class="arck size-'+(cfg.size||"m")+' knob">'+
+    '<div class="arck size-'+(cfg.size||"m")+'">'+
       '<svg viewBox="0 0 '+S.box+' '+S.box+'">'+
-        '<circle class="track" cx="'+c+'" cy="'+c+'" r="'+S.r+'" stroke-dasharray="'+S.arc+' '+S.gap+'" transform="rotate(135 '+c+' '+c+')"/>'+
-        '<circle class="lit" cx="'+c+'" cy="'+c+'" r="'+S.r+'" stroke-dasharray="0 999" transform="rotate(135 '+c+' '+c+')"/>'+
+        '<path class="track" d="'+RoneUI.arcPath(c,c,r,-135,135)+'"/>'+
+        '<path class="lit" d=""/>'+
       '</svg>'+
       '<div class="kbody"></div><div class="kdot"></div>'+
       '<div class="cval"></div>'+
     '</div>'+
-    '<label>'+cfg.label+'</label>';
+    '<label class="rone-label">'+cfg.label+'</label>';
   if (cfg.tip) group.setAttribute("data-tip", cfg.tip);
   holder.appendChild(group);
 
   var el = group.querySelector(".arck");
   var K = {
-    cfg:cfg, arcLen:S.arc,
+    cfg:cfg, c:c, r:r, el:el,
     litEl: el.querySelector(".lit"),
     dotEl: el.querySelector(".kdot"),
     valEl: el.querySelector(".cval"),
@@ -1367,6 +1348,7 @@ function mkKnob(holderId,cfg){
   el.addEventListener("mousedown", function(e){
     dragCtx = { knob:K, startY:e.clientY, startNorm:K.norm };
     emit("beginGesture",{name:cfg.id});
+    clearTimeout(K.lingerT); el.classList.add("touch");   // the lit arc glows only while touched
     e.preventDefault();
   });
   el.addEventListener("dblclick", function(){
@@ -1379,6 +1361,7 @@ function mkKnob(holderId,cfg){
     emit("beginGesture",{name:cfg.id});
     setKnob(K, clamp01(K.norm - Math.sign(e.deltaY)*step), true);
     emit("endGesture",{name:cfg.id});
+    touchKnob(K);
     e.preventDefault();
   },{passive:false});
   // Right-click = the host's parameter menu (FL: automation/link)
@@ -1389,6 +1372,11 @@ function mkKnob(holderId,cfg){
 
   renderKnob(K);
   return K;
+}
+// Glow while touched: on for a drag, 500 ms after a wheel notch (rone-ui.js knob() pattern)
+function touchKnob(K){
+  K.el.classList.add("touch"); clearTimeout(K.lingerT);
+  K.lingerT=setTimeout(function(){ K.el.classList.remove("touch"); },500);
 }
 function setKnob(K,norm,send){
   K.norm=clamp01(norm);
@@ -1408,11 +1396,8 @@ function renderKnob(K){
   // two fresh nodes per knob per tick - which is where this page's DOM node
   // count came from. Comparing first costs a string compare and removes all of
   // it while a knob is still; a moving knob writes exactly as before.
-  var dash = (K.norm*K.arcLen)+" 999";
-  if (dash !== K._dash) { K.litEl.setAttribute("stroke-dasharray", dash); K._dash = dash; }
-
-  var op = K.norm>0.004 ? "1" : "0";
-  if (op !== K._op) { K.litEl.style.opacity = op; K._op = op; }
+  var d = K.norm>0.003 ? RoneUI.arcPath(K.c,K.c,K.r,-135,-135+K.norm*270) : "";
+  if (d !== K._d) { K.litEl.setAttribute("d", d); K._d = d; }
 
   var rot = "rotate("+(-135+K.norm*270)+"deg)";
   if (rot !== K._rot) { K.dotEl.style.transform = rot; K._rot = rot; }
@@ -1427,7 +1412,8 @@ document.addEventListener("mousemove", function(e){
   setKnob(dragCtx.knob, dragCtx.startNorm + (dragCtx.startY-e.clientY)/range, true);
 });
 document.addEventListener("mouseup", function(){
-  if(dragCtx){ emit("endGesture",{name:dragCtx.knob.cfg.id}); dragCtx=null; }
+  if(dragCtx){ emit("endGesture",{name:dragCtx.knob.cfg.id}); var tk=dragCtx.knob; dragCtx=null;
+    tk.lingerT=setTimeout(function(){ tk.el.classList.remove("touch"); },500); }
   if(charDrag){ emit("endGesture",{name:"main.character"}); charDrag=false; }
 });
 </script>
@@ -1438,11 +1424,11 @@ document.addEventListener("mouseup", function(){
 // ============================================================================
 // Build controls
 // ============================================================================
-mkKnob("knob-size", {id:"main.size",label:"Size",min:0,max:1,size:"l",fmt:fPct,
+mkKnob("knob-size", {id:"main.size",label:"Size",min:0,max:1,size:"m",fmt:fPct,
   tip:"Changes the perceived size of the space."});
-mkKnob("knob-decay",{id:"main.decay",label:"Decay",min:0.2,max:30,curve:"log",size:"l",fmt:fSec,
+mkKnob("knob-decay",{id:"main.decay",label:"Decay",min:0.2,max:30,curve:"log",size:"m",fmt:fSec,
   tip:"Controls how long the reverb tail lasts."});
-mkKnob("knob-bloom",{id:"main.bloom",label:"Bloom",min:0,max:1,size:"l",fmt:fPct,
+mkKnob("knob-bloom",{id:"main.bloom",label:"Bloom",min:0,max:1,size:"m",fmt:fPct,
   tip:"Makes the late reverb expand into an evolving atmosphere."});
 mkKnob("knob-silk",{id:"silk.amount",label:"Silk",min:0,max:1,size:"m",fmt:fPct,
   tip:"Tames harsh sibilance in the tail - a de-esser built into the space."});
@@ -1499,12 +1485,17 @@ var selMode=document.getElementById("sel-duckmode");
 selMode.addEventListener("change",function(){
   P["duck.mode"]=selMode.selectedIndex; setParamOnce("duck.mode",selMode.selectedIndex); updateDuckHint();
 });
+// rone-ui v2: the native selects become a key + popover (they stay in the DOM; .value / change keep working).
+// They open upward: the modules sit low in the window and #win clips what drops below it.
+RoneUI.select(selMode,{up:true});
+RoneUI.select(selTime,{up:true,side:"right"});
 function updateDuckHint(){
   document.getElementById("duck-hint").style.opacity = (Math.round(P["duck.mode"])===4)?"0":"1";
 }
 
 // Routing segmented
 var segRouting=document.getElementById("seg-routing");
+RoneUI.seg(segRouting,{onClass:"on"});   // the sliding pill follows the "on" class
 segRouting.querySelectorAll("span").forEach(function(s){
   s.addEventListener("click",function(){
     var i=parseInt(s.getAttribute("data-i"));
@@ -1683,14 +1674,15 @@ function renderPresetMenu(){
   var lastCat=null;
   PRESETS.forEach(function(pr,i){
     if(pr.c!==lastCat){ lastCat=pr.c;
-      var h=document.createElement("div"); h.className="p-cat"; h.textContent=pr.c; presetMenu.appendChild(h); }
-    var it=document.createElement("div"); it.className="p-item"+(i===currentPreset?" current":"");
-    it.textContent=pr.n;
+      var h=document.createElement("div"); h.className="h"; h.textContent=pr.c; presetMenu.appendChild(h); }
+    var it=document.createElement("div"); it.className="it"+(i===currentPreset?" on":"");
+    var dot=document.createElement("span"); dot.className="d"; it.appendChild(dot);
+    var tx=document.createElement("span"); tx.textContent=pr.n; it.appendChild(tx);
     it.addEventListener("click",function(e){ e.stopPropagation(); applyPreset(i); });
     presetMenu.appendChild(it);
   });
-  var sep=document.createElement("div"); sep.className="p-sep"; presetMenu.appendChild(sep);
-  var lock=document.createElement("div"); lock.className="p-lock";
+  var sep=document.createElement("div"); sep.className="sep"; presetMenu.appendChild(sep);
+  var lock=document.createElement("div"); lock.className="it p-lock";
   lock.innerHTML='<input type="checkbox" '+(lockMix?"checked":"")+'>LOCK MIX WHILE BROWSING';
   lock.addEventListener("click",function(e){
     e.stopPropagation(); lockMix=!lockMix; renderPresetMenu();
@@ -1698,7 +1690,7 @@ function renderPresetMenu(){
   presetMenu.appendChild(lock);
 }
 document.getElementById("preset-name").addEventListener("click",function(e){
-  e.stopPropagation(); renderPresetMenu(); presetMenu.classList.toggle("open");
+  e.stopPropagation(); RoneUI.closeAll(); renderPresetMenu(); presetMenu.classList.toggle("open");
 });
 document.getElementById("p-prev").addEventListener("click",function(){ applyPreset(currentPreset-1); });
 document.getElementById("p-next").addEventListener("click",function(){ applyPreset(currentPreset+1); });
