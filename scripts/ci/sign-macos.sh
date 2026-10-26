@@ -34,29 +34,59 @@ notice() { echo "::notice::$*"; }
 warn()   { echo "::warning::$*"; }
 die()    { echo "::error::$*"; exit 1; }
 
-notarize() {   # <file>  - submits, waits, staples; fails the build on rejection
-    local f="$1"
+notarize() {   # <file>  - uploads, waits, staples; only Apple's REJECTION fails the build
+    # 26.10 (run #323): Apple's queue for a new developer account ran past 45 min (Throw, Sidechain: "Timeout of 2700
+    # second(s) was reached") and once the status call itself timed out (Iron: NSURLErrorDomain -1001) - each killed
+    # its leg, so no .pkg shipped at all. Waiting is not a verdict: on a timeout or a network error the signed .pkg
+    # ships unstapled (Gatekeeper fetches the ticket online once Apple accepts it; the Center's installer run does not
+    # need it), and only "Invalid"/"Rejected" fails the leg.
+    local f="$1" name; name=$(basename "$1")
     if [ -z "${APPLE_API_KEY_ID:-}" ] || [ -z "${APPLE_API_ISSUER_ID:-}" ] || [ ! -f "$NOTARY_KEY" ]; then
-        warn "$(basename "$f") is signed but NOT notarized (APPLE_API_KEY_ID / APPLE_API_ISSUER_ID / APPLE_API_KEY_P8_BASE64 missing). Gatekeeper will block it."
+        warn "$name is signed but NOT notarized (APPLE_API_KEY_ID / APPLE_API_ISSUER_ID / APPLE_API_KEY_P8_BASE64 missing). Gatekeeper will block it."
         return 0
     fi
-    echo "Notarizing $(basename "$f") ..."
-    local out="$TMP/notary-$(basename "$f").json"
-    if ! xcrun notarytool submit "$f" --key "$NOTARY_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID" \
-            --wait --timeout 45m --output-format json > "$out"; then
-        cat "$out" || true
-        die "notarytool submit failed for $(basename "$f")"
+    local auth=(--key "$NOTARY_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID")
+    local sub="$TMP/notary-submit-$name.json" out="$TMP/notary-$name.json" id="" status="" i
+    jget() { python3 -c "import json,sys
+try: print(json.load(open(sys.argv[1])).get(sys.argv[2],''))
+except Exception: print('')" "$1" "$2"; }
+
+    echo "Notarizing $name ..."
+    for i in 1 2 3; do                                    # 1. the upload (a network error retries)
+        if xcrun notarytool submit "$f" "${auth[@]}" --output-format json > "$sub" 2>&1; then id=$(jget "$sub" id); fi
+        [ -n "$id" ] && break
+        warn "notarytool submit try $i for $name failed: $(head -c 400 "$sub" 2>/dev/null)"
+        sleep $((20 * i))
+    done
+    if [ -z "$id" ]; then
+        warn "$name could not be uploaded to Apple's notary service - it ships signed, NOT notarized."
+        return 0
     fi
-    local status id
-    status=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('status',''))" "$out")
-    id=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('id',''))" "$out")
-    echo "notarization: $status ($id)"
-    if [ "$status" != "Accepted" ]; then
-        xcrun notarytool log "$id" --key "$NOTARY_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID" || true
-        die "Apple rejected $(basename "$f") - see the notarization log above"
-    fi
-    xcrun stapler staple "$f"
-    xcrun stapler validate "$f"
+    echo "notary submission $id"
+
+    local deadline=$((SECONDS + 40 * 60))                 # 2. the wait, in 10-minute calls (one may time out)
+    while :; do
+        if xcrun notarytool wait "$id" "${auth[@]}" --timeout 10m --output-format json > "$out" 2>&1; then
+            status=$(jget "$out" status)
+        else
+            status=$(jget "$out" status); warn "notarytool wait for $name: $(head -c 300 "$out" 2>/dev/null)"
+        fi
+        case "$status" in Accepted|Invalid|Rejected) break ;; esac
+        [ "$SECONDS" -ge "$deadline" ] && break
+        sleep 15
+    done
+    echo "notarization: ${status:-no answer} ($id)"
+
+    case "$status" in
+        Accepted)
+            xcrun stapler staple "$f"
+            xcrun stapler validate "$f" ;;
+        Invalid|Rejected)
+            xcrun notarytool log "$id" "${auth[@]}" || true
+            die "Apple rejected $name - see the notarization log above" ;;
+        *)
+            warn "$name: Apple has not finished notarizing yet (submission $id, status '${status:-no answer}') - it ships signed and unstapled; check later with: xcrun notarytool info $id" ;;
+    esac
 }
 
 case "$cmd" in
