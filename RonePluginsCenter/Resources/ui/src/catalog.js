@@ -8,10 +8,11 @@
 // One neon per product (the bundle's accent registry). The manifest's own
 // `accent` wins; this keeps the page right for a manifest without it.
 export const ACCENTS = {
-  ReverseReverb: '#2BD9FF', RoneStutter: '#FFD02B', RoneStucker: '#9D6BFF', RoneThrow: '#D8E4EC',
-  RoneClipper: '#3D8BFF', RoneRise: '#FF5FB8', RoneIron: '#E552FF', RoneFlanger: '#FF3E6C',
-  RoneAfterspace: '#FF8A3D', RONEAnalyzer: '#2DD4BF', RoneMotion: '#3DE8A0', RoneBassline: '#B6FF2E',
-  RoneChoir: '#F2A93B', RoneControl: '#52FF45',
+  ReverseReverb: '#2BD9FF', RoneStutter: '#FFD02B', RoneStucker: '#9D6BFF', RoneFlanger: '#FF3E6C',
+  RoneAfterspace: '#FF8A3D', RoneThrow: '#D8E4EC', RoneClipper: '#3D8BFF', RoneRise: '#FF5FB8',
+  RoneIron: '#E552FF', RoneGater: '#D4FF3D', RONEAnalyzer: '#5AD2E6', RoneSidechain: '#7B8CFF',
+  Rone1176: '#FF8C2E', Rone2A: '#FF6F59', RoneMotion: '#3DE8A0', RoneControl: '#52FF45',
+  RoneGrain: '#2EE6C8', RoneChoir: '#F2A93B', RoneBassline: '#5B54E8', RoneDelay: '#E9D6A6',
 }
 export const CENTER_PURPLE = '#9D6BFF'
 

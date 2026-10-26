@@ -1,0 +1,55 @@
+{
+  "_doc": "RONE PLUGINS brand source of truth. Edit here, then run: python brand/brand_sync.py --write. Lives outside Shared/ on purpose: Shared/** rebuilds every plugin in CI.",
+  "version": 1,
+  "name": "RONE PLUGINS",
+  "neutrals": {
+    "ground": "#14161A",
+    "panel": "#17191E",
+    "card": "#101216",
+    "drawer": "#1B1E23",
+    "line": "#23262C",
+    "line2": "#2A2E35",
+    "line3": "#383D45",
+    "text": "#E8EAED",
+    "text2": "#B9BDC4",
+    "dim": "#7A7F88",
+    "faint": "#4E535B",
+    "hot": "#FF3B3B",
+    "ink_on_neon": "#0B0C0E"
+  },
+  "roles": {
+    "mark": "text",
+    "faint": "decoration only - never a label anyone must read (2.3:1 on ground)",
+    "dim": "lowest colour for readable labels (4.5:1 on ground)"
+  },
+  "fonts": {
+    "display": "Sora",
+    "ui": "Manrope",
+    "mono": "IBM Plex Mono",
+    "hebrew": "Heebo",
+    "panel": "Archivo",
+    "panel_note": "Archivo only on the About back panel and the hardware faces (1176, 2A)"
+  },
+  "products": {
+    "ReverseReverb":  { "name": "RONE Reverse Reverb", "slug": "reverse-reverb", "key": "reverb",    "screen": "#2BD9FF", "manual": "reversereverb" },
+    "RoneStutter":    { "name": "RONE Stutter",        "slug": "rone-stutter",   "key": "stutter",   "screen": "#FFD02B", "manual": "stutter" },
+    "RoneStucker":    { "name": "RONE Stucker",        "slug": "rone-stucker",   "key": "stucker",   "screen": "#9D6BFF", "manual": "stucker" },
+    "RoneFlanger":    { "name": "RONE Flanger",        "slug": "rone-flanger",   "key": "flanger",   "screen": "#FF3E6C", "manual": "flanger" },
+    "RoneAfterspace": { "name": "RONE AFTERSPACE",     "slug": "afterspace",     "key": "space",     "screen": "#FF8A3D", "manual": "afterspace" },
+    "RoneThrow":      { "name": "RONE Throw",          "slug": "rone-throw",     "key": "throw",     "screen": "#D8E4EC", "print": "#9FB3C4", "manual": "throw" },
+    "RoneClipper":    { "name": "RONE Clipper",        "slug": "rone-clipper",   "key": "clipper",   "screen": "#3D8BFF", "manual": "clipper" },
+    "RoneRise":       { "name": "RONE Rise",           "slug": "rone-rise",      "key": "rise",      "screen": "#FF5FB8", "print": "#E0449A", "manual": "rise" },
+    "RoneIron":       { "name": "RONE Iron",           "slug": "rone-iron",      "key": "iron",      "screen": "#E552FF", "print": "#B530D6", "manual": "iron" },
+    "RoneGater":      { "name": "RONE Gater",          "slug": "rone-gater",     "key": "gater",     "screen": "#D4FF3D", "print": "#8FB000", "manual": "gater", "dev_folder": "RoneGater" },
+    "RONEAnalyzer":   { "name": "RONE Analyzer",       "slug": "rone-analyzer",  "key": "analyzer",  "screen": "#5AD2E6", "print": "#1A9AB0", "manual": "analyzer" },
+    "RoneSidechain":  { "name": "RONE Sidechain",      "slug": "rone-sidechain", "key": "sidechain", "screen": "#7B8CFF", "dev_folder": "RoneLock" },
+    "Rone1176":       { "name": "RONE 1176",           "slug": "rone-1176",      "key": "1176",      "screen": "#FF8C2E", "dev_folder": "Rone1176" },
+    "Rone2A":         { "name": "RONE 2A",             "slug": "rone-2a",        "key": "2a",        "screen": "#FF6F59", "dev_folder": "Rone2A" },
+    "RoneMotion":     { "name": "RONE Motion",         "slug": "rone-motion",    "key": "motion",    "screen": "#3DE8A0" },
+    "RoneControl":    { "name": "RONE Control",        "slug": "rone-control",   "key": "control",   "screen": "#52FF45", "dev_folder": "RoneControl" },
+    "RoneGrain":      { "name": "RONE Grain",          "slug": "rone-grain",     "key": "grain",     "screen": "#2EE6C8", "dev_folder": "RoneGrain" },
+    "RoneChoir":      { "name": "RONE Choir",          "slug": "rone-choir",     "key": "choir",     "screen": "#F2A93B" },
+    "RoneBassline":   { "name": "RONE Bassline",       "slug": "rone-bassline",  "key": "bassline",  "screen": "#5B54E8" },
+    "RoneDelay":      { "name": "RONE Delay",          "slug": "rone-delay",     "key": "delay",     "screen": "#E9D6A6", "dev_folder": "RoneDelay" }
+  }
+}

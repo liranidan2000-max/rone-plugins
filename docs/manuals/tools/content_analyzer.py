@@ -9,7 +9,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "analyzer", "product": "RONE Analyzer", "eyebrow": "PROFESSIONAL MEASUREMENT SUITE",
-        "title_html": "RONE <i>Analyzer</i>", "accent": "#22E36B", "version": "1.0",
+        "title_html": "RONE <i>Analyzer</i>", "accent": "#1A9AB0", "version": "1.0",
         "tagline": "A DIGICheck-style measurement suite: 30-band third-octave analyser with reference corridors, vectorscope with phosphor afterglow, level meters, EBU R128 loudness and a waveform scope locked to the bar, reading ASIO, loopback, a live input, a file or your DAW's master bus.",
         "formats": ["Standalone", "VST3 bridge"], "vst3": "RONE Analyzer Bridge.vst3", "au": "", "exe": "RONE Analyzer.exe",
         "pdf": "RONE Analyzer - User Manual.pdf", "cover_img": "analyzer/main.png",
