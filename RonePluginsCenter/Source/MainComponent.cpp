@@ -2653,10 +2653,19 @@ juce::Array<PluginInfo> MainComponent::withDevChannel (const juce::Array<PluginI
     auto all = publicPlugins;
     for (const auto& d : devPlugins)
     {
-        bool released = false;
-        for (const auto& p : publicPlugins)
-            if (p.id == d.id) { released = true; break; }
-        if (! released) all.add (d);
+        int released = -1;
+        for (int i = 0; i < all.size(); ++i)
+            if (all[i].id == d.id) { released = i; break; }
+
+        if (released < 0)
+            all.add (d);                                   // a plug-in before its release: its own card
+        // A released plug-in whose NEXT version is in development (rack-first, 26.10.2026: Throw 1.9.0 while 1.8.6 is
+        // public): the newer dev build takes the card, so this Center offers it as the update - and never offers the
+        // public version back over it (the status rule is "anything but the published version gets the published
+        // version", which turned a locally installed 1.9.0 into an endless UPDATE to 1.8.6). The public entry wins
+        // again once it catches up. Only Liran's accounts ever receive dev entries.
+        else if (VersionChecker::isNewerVersion (all[released].remoteVersion, d.remoteVersion))
+            all.set (released, d);
     }
     return all;
 }
