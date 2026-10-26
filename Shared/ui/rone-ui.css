@@ -1,17 +1,19 @@
 /* ============================================================================
-   RONE UI kit (brand phase D, 26.10.2026) - the graphite house language as one
-   stylesheet, lifted from RONE Rise (the bundle standard) so a new plugin starts
-   from it instead of re-drawing its buttons, segments, arcs and glows.
-
+   RONE UI kit v2 (26.10.2026) - the graphite house language as one stylesheet.
+   Decided with Liran on the controls-finish mockup (claude.ai/artifact/PL1XNPMJeg44Dqu24SAQXC):
+     - the knob is the .arck of Reverse Reverb / Flanger (value inside, white dot, arc outside,
+       no ticks); its lit arc glows only while touched (.touch) and on the hero (.hero)
+     - keys are machined: no 1px grey border, a top highlight and a dark bottom edge, ONE on-state
+       (neon fill), an action key carries a LED; a pressed key only sinks 1px (no animation)
+     - only things that MOVE animate: the segment pill glides (380 ms, --pop), the switch thumb pops
+     - one popover for everything that opens (presets, selects, header menus, pickers)
+     - a 3 % grain on caps and panels (.rone-grain)
    Use: paste after Shared/fonts/rone-fonts.css, then set the plugin's neon once:
        :root { --neon:#FF5FB8; --neon-rgb:255,95,184; }
-   Everything else follows. Colours come from brand/brand.json (neutrals); type
-   from the brand fonts. Existing plugins move to it with their own next release,
-   not all at once. Demo: Shared/ui/demo.html.
+   Pair with rone-ui.js (RoneUI.knob / seg / menu / select / switch). Demo: Shared/ui/demo.html.
    ============================================================================ */
 
 :root {
-    /* neutrals (brand.json) */
     --ground:#14161A; --panel:#17191E; --card:#101216; --drawer:#1B1E23;
     --line:#23262C; --line2:#2A2E35; --line3:#383D45;
     --text:#E8EAED; --text2:#B9BDC4;
@@ -19,65 +21,132 @@
     --faint:#4E535B;    /* decoration only: ticks, dividers, disabled - never a label */
     --hot:#FF3B3B; --hot-rgb:255,59,59;
     --ink:#0F1114;      /* text on a lit neon surface */
-    /* the plugin's one neon (set per plugin) */
     --neon:#E8EAED; --neon-rgb:232,234,237;
-    /* three glow strengths: a mark, a control, a hero */
-    --glow-1:0 0 6px rgba(var(--neon-rgb),.45);
-    --glow-2:0 0 14px rgba(var(--neon-rgb),.5);
-    --glow-3:0 0 24px rgba(var(--neon-rgb),.55);
-    /* type */
+    --pop:cubic-bezier(.34,1.56,.64,1);   /* the one overshoot curve for things that move */
     --font-display:'Sora','Segoe UI',-apple-system,sans-serif;
     --font-ui:'Manrope','Segoe UI',-apple-system,sans-serif;
     --font-mono:'IBM Plex Mono','Consolas',monospace;
+    --rone-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ---- type roles: nothing under 9 px on the design canvas ---- */
 .rone-display { font-family:var(--font-display); font-weight:800; letter-spacing:.02em; color:var(--text); }
-.rone-label   { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.14em;
-                text-transform:uppercase; color:var(--dim); }
-.rone-value   { font-family:var(--font-display); font-weight:700; color:var(--text);
-                font-variant-numeric:tabular-nums; }
+.rone-label   { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); }
+.rone-value   { font-family:var(--font-display); font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
 .rone-mono    { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
 
-/* ---- button ---- */
-.rone-btn { font-family:var(--font-ui); font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
-            color:var(--text2); background:var(--card); border:1px solid var(--line2); border-radius:8px;
-            padding:8px 14px; cursor:pointer; transition:color .15s, border-color .15s, box-shadow .15s, background .15s; }
-.rone-btn:hover { color:var(--text); border-color:var(--line3); }
-.rone-btn.on, .rone-btn[aria-pressed="true"] { color:var(--ink); background:var(--neon); border-color:transparent; box-shadow:var(--glow-2); }
+/* ---- grain: a 3 % noise overlay on any panel (the element needs position:relative) ---- */
+.rone-grain::before { content:''; position:absolute; inset:0; background:var(--rone-noise); opacity:.5; mix-blend-mode:screen; pointer-events:none; border-radius:inherit; }
+.rone-panel { position:relative; background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); border-radius:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
+
+/* ---- the knob: .arck, as Reverse Reverb / Flanger draw it (geometry untouched) ----
+   DOM: .arck.size-m > svg(path.track, path.lit) + .kbody + .kdot + .cval        */
+.arck { position:relative; flex-shrink:0; cursor:grab; outline:none; touch-action:none; }
+.arck:active { cursor:grabbing; }
+.arck.locked { cursor:default; }
+.arck svg { position:absolute; inset:0; pointer-events:none; overflow:visible; }
+.arck .track { fill:none; stroke:var(--line); stroke-linecap:round; }
+.arck .lit { fill:none; stroke:var(--neon); stroke-linecap:round; transition:filter .5s ease-out, opacity .1s; }
+.arck.touch .lit, .arck.hero .lit { filter:drop-shadow(0 0 5px rgba(var(--neon-rgb),.6)); }
+.arck .kbody { position:absolute; border-radius:50%;
+    background:radial-gradient(circle at 38% 30%,#363B42 0%,#26292F 52%,#1A1C21 100%);
+    box-shadow:0 12px 24px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.07), inset 0 -7px 16px rgba(0,0,0,.45); }
+.arck .kbody::before { content:''; position:absolute; inset:9%; border-radius:50%;
+    background:radial-gradient(circle at 40% 32%,#2C3037 0%,#1D2025 60%,#16181C 100%);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.05), 0 2px 6px rgba(0,0,0,.4); }
+.arck .kbody::after { content:''; position:absolute; inset:0; border-radius:50%; background:var(--rone-noise); opacity:.3; mix-blend-mode:overlay; pointer-events:none; }
+.arck .kdot { position:absolute; left:50%; border-radius:50%; background:#F2F4F6; box-shadow:0 0 7px rgba(255,255,255,.5); transform:rotate(-135deg); z-index:2; pointer-events:none; }
+.arck .cval { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
+    font-family:var(--font-display); font-weight:700; color:var(--text); text-transform:uppercase; z-index:3; font-variant-numeric:tabular-nums; }
+.arck .cval small { font-size:.55em; font-weight:700; margin-left:2px; }
+.arck.size-s { width:58px;  height:58px;  } .arck.size-s .track, .arck.size-s .lit { stroke-width:3.5; } .arck.size-s .kbody { inset:8px;  } .arck.size-s .kdot { top:11px; width:4px;  height:4px;  margin-left:-2px;   transform-origin:50% 18px; } .arck.size-s .cval { font-size:10px; }
+.arck.size-m { width:104px; height:104px; } .arck.size-m .track, .arck.size-m .lit { stroke-width:4.5; } .arck.size-m .kbody { inset:13px; } .arck.size-m .kdot { top:21px; width:6px;  height:6px;  margin-left:-3px;   transform-origin:50% 31px; } .arck.size-m .cval { font-size:15px; }
+.arck.size-l { width:124px; height:124px; } .arck.size-l .track, .arck.size-l .lit { stroke-width:5;   } .arck.size-l .kbody { inset:15px; } .arck.size-l .kdot { top:23px; width:7px;  height:7px;  margin-left:-3.5px; transform-origin:50% 39px; } .arck.size-l .cval { font-size:18px; }
+/* hero: the same knob scaled; value + name inside, the lit arc always glows */
+.arck.size-xl { width:200px; height:200px; } .arck.size-xl .track, .arck.size-xl .lit { stroke-width:7; } .arck.size-xl .kbody { inset:24px; } .arck.size-xl .kdot { top:36px; width:10px; height:10px; margin-left:-5px; transform-origin:50% 64px; }
+.arck.size-xl .cval { font-size:36px; flex-direction:column; gap:2px; letter-spacing:-.02em; }
+.arck .cval .sub { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.24em; color:var(--dim); }
+.arck:focus-visible .kbody { box-shadow:0 0 0 2px var(--neon), 0 12px 24px rgba(0,0,0,.55); }
+.rone-knobgroup { display:flex; flex-direction:column; align-items:center; gap:6px; }
+
+/* ---- keys ---- */
+.rone-btn { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text2);
+    background:linear-gradient(180deg,#1E2126,#15171B); border:0; border-radius:7px; padding:9px 14px; cursor:pointer; position:relative; white-space:nowrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35);
+    transition:box-shadow .18s, color .15s, background .18s; }
+.rone-btn:hover { color:var(--text); }
+.rone-btn:active { transform:translateY(1px); box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+.rone-btn.on, .rone-btn[aria-pressed="true"] { color:var(--ink);
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+.rone-btn.hot.on { background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--hot); color:#fff; }
+.rone-btn.act { color:var(--text); }
+.rone-btn.act::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); margin-right:8px; vertical-align:1px; }
+.rone-btn.act.wait::before { background:var(--faint); box-shadow:none; }
+.rone-btn.dd::after { content:''; display:inline-block; width:5px; height:5px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); margin-left:9px; vertical-align:2px; transition:transform .2s; }
+.rone-btn.dd.open::after { transform:rotate(225deg) translate(-1px,-1px); }
+.rone-btn.icon { padding:9px 11px; }
+.rone-btn.arrow { padding:9px 10px; color:var(--dim); }
+.rone-btn:disabled { color:var(--faint); cursor:default; transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
 .rone-btn:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
-.rone-btn:disabled { color:var(--faint); cursor:default; box-shadow:none; }
 
-/* ---- segment (one of N) ---- */
-.rone-seg { display:flex; width:fit-content; background:var(--card); border:1px solid var(--line2); border-radius:8px; overflow:hidden; }
-.rone-seg > * { font-family:var(--font-ui); font-size:10px; font-weight:800; letter-spacing:.12em; padding:7px 11px;
-                color:var(--dim); cursor:pointer; white-space:nowrap; transition:all .15s; background:none; border:0; }
-.rone-seg > *:hover { color:var(--text); }
-.rone-seg > .on, .rone-seg > [aria-checked="true"] { color:var(--ink); background:var(--neon); box-shadow:var(--glow-2); }
+/* ---- preset bar: ◀ name ▶ (the name opens the preset popover) ---- */
+.rone-preset { display:inline-flex; align-items:center; gap:2px; background:var(--card); border-radius:8px; padding:3px; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-preset .nm { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text); padding:6px 14px; min-width:120px; text-align:center; cursor:pointer; }
+.rone-preset .rone-btn { padding:6px 9px; color:var(--dim); box-shadow:none; background:transparent; }
+.rone-preset .rone-btn:hover { color:var(--text); }
 
-/* ---- chip (a read-out: label + value) ---- */
-.rone-chip { display:inline-flex; align-items:baseline; gap:8px; background:var(--card); border:1px solid var(--line2);
-             border-radius:8px; padding:6px 10px; }
-.rone-chip .k { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
-.rone-chip .v { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--neon); font-variant-numeric:tabular-nums; }
+/* ---- segment: one of N, a sliding pill (rone-ui.js RoneUI.seg places it) ---- */
+.rone-seg { display:inline-flex; gap:2px; padding:3px; background:var(--card); border-radius:8px; position:relative; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-seg .pill { position:absolute; top:3px; left:0; height:calc(100% - 6px); width:0; border-radius:5px; pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 1px 2px rgba(0,0,0,.5); transition:transform .38s var(--pop), width .38s var(--pop); }
+.rone-seg > :not(.pill) { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:6px 11px; color:var(--dim); cursor:pointer;
+    border-radius:5px; position:relative; z-index:1; transition:color .2s; white-space:nowrap; background:none; border:0; }
+.rone-seg > :not(.pill):hover { color:var(--text2); }
+.rone-seg > .on, .rone-seg > .active, .rone-seg > [aria-checked="true"], .rone-seg > [aria-pressed="true"] { color:var(--ink); }
+.rone-seg.squash .pill { animation:rone-squash .38s var(--pop); }
+@keyframes rone-squash { 0% { transform:scaleY(.8) translateX(var(--px)); } 50% { transform:scaleY(1.08) translateX(var(--px)); } 100% { transform:scaleY(1) translateX(var(--px)); } }
+.rone-seg.off .pill { background:var(--line2); box-shadow:none; }   /* the row is switched off: the pill goes grey */
+.rone-seg.off > .on { color:var(--text2); }
 
-/* ---- arc knob (svg drawn by rone-ui.js: track + lit, a charcoal cap, a white dot) ---- */
-.rone-knob { position:relative; cursor:grab; touch-action:none; }
-.rone-knob:active { cursor:grabbing; }
-.rone-knob svg { position:absolute; inset:0; overflow:visible; pointer-events:none; }
-.rone-knob .track { fill:none; stroke:var(--line2); stroke-linecap:round; }
-.rone-knob .lit   { fill:none; stroke:var(--neon); stroke-linecap:round; filter:drop-shadow(0 0 6px rgba(var(--neon-rgb),.8)); }
-.rone-knob .cap   { position:absolute; border-radius:50%;
-                    background:radial-gradient(circle at 35% 30%, #2C3038 0%, #1C1F24 55%, #121418 100%);
-                    box-shadow:0 6px 18px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); }
-.rone-knob .dot   { position:absolute; left:50%; top:0; width:7px; height:7px; margin-left:-3.5px; border-radius:50%;
-                    background:#fff; box-shadow:0 0 6px rgba(255,255,255,.7); }
-.rone-knob .pivot { position:absolute; inset:0; }
+/* ---- chip (a read-out) ---- */
+.rone-chip { display:inline-flex; align-items:baseline; gap:8px; background:var(--card); border-radius:7px; padding:6px 10px; white-space:nowrap; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-chip .k { font-family:var(--font-ui); font-size:9px; font-weight:700; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
+.rone-chip .v { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.rone-chip .v small { font-size:9px; color:var(--dim); margin-left:3px; }
 
-/* ---- glows as utilities ---- */
-.rone-glow-1 { box-shadow:var(--glow-1); }
-.rone-glow-2 { box-shadow:var(--glow-2); }
-.rone-glow-3 { box-shadow:var(--glow-3); }
+/* ---- switch ---- */
+.rone-switch { display:inline-flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; color:var(--dim); text-transform:uppercase; cursor:pointer; transition:color .2s; user-select:none; }
+.rone-switch i { width:34px; height:18px; border-radius:9px; background:var(--card); box-shadow:inset 0 1px 3px rgba(0,0,0,.7); position:relative; flex:0 0 auto; }
+.rone-switch i::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:linear-gradient(180deg,#3A3F47,#24272C); box-shadow:0 1px 2px rgba(0,0,0,.6); transition:transform .32s var(--pop), background .2s; }
+.rone-switch.on { color:var(--text); }
+.rone-switch.on i::after { transform:translateX(16px); background:var(--neon); box-shadow:0 1px 2px rgba(0,0,0,.6), 0 0 8px rgba(var(--neon-rgb),.6); }
+.rone-led { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); vertical-align:1px; }
+.rone-led.off { background:var(--faint); box-shadow:none; }
 
-/* ---- panel ---- */
-.rone-panel { background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); border:1px solid var(--line); border-radius:12px; }
+/* ---- popover: presets, selects, header menus, pickers (rone-ui.js RoneUI.menu / RoneUI.select) ---- */
+.rone-anchor { position:relative; display:inline-block; }
+.rone-menu { position:absolute; top:calc(100% + 6px); left:0; min-width:200px; z-index:60; background:var(--drawer); border-radius:9px; padding:5px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(0,0,0,.6), 0 18px 40px rgba(0,0,0,.6);
+    opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top left; pointer-events:none; transition:opacity .16s ease-out, transform .18s var(--pop); max-height:420px; overflow-y:auto; }
+.rone-menu.right { left:auto; right:0; transform-origin:top right; }
+.rone-menu.up { top:auto; bottom:calc(100% + 6px); transform:translateY(6px) scale(.98); transform-origin:bottom left; }
+.rone-menu.open { opacity:1; transform:none; pointer-events:auto; }
+.rone-menu.closing { transition:opacity .1s ease-in, transform .1s ease-in; }
+.rone-menu .h { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:7px 10px 5px; }
+.rone-menu .it { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:5px; cursor:pointer; font-family:var(--font-ui); font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); transition:background .12s, color .12s; white-space:nowrap; }
+.rone-menu .it:hover, .rone-menu .it.hi { background:var(--line2); color:var(--text); }
+.rone-menu .it .d { width:6px; height:6px; border-radius:50%; background:transparent; flex:0 0 auto; transition:background .15s, box-shadow .15s; }
+.rone-menu .it.on { color:var(--text); }
+.rone-menu .it.on .d { background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); }
+.rone-menu .it .m { margin-left:auto; padding-left:14px; font-family:var(--font-mono); font-size:10px; font-weight:500; letter-spacing:.02em; text-transform:none; color:var(--dim); }
+.rone-menu .it .star { margin-left:6px; color:var(--faint); font-size:11px; }
+.rone-menu .it .star.on { color:var(--neon); }
+.rone-menu .it.disabled { color:var(--faint); cursor:default; background:none; }
+.rone-menu .sep { height:1px; background:var(--line); margin:4px 6px; }
+.rone-menu .ft { font-family:var(--font-ui); font-size:10px; font-weight:600; color:var(--dim); padding:7px 10px 6px; max-width:260px; white-space:normal; line-height:1.5; }
+.rone-menu.wide { min-width:300px; }
+.rone-menu::-webkit-scrollbar { width:8px; } .rone-menu::-webkit-scrollbar-thumb { background:var(--line2); border-radius:4px; }
+/* a native <select> wrapped by RoneUI.select: the select stays in the DOM (hidden), the key shows its text */
+.rone-select-native { position:absolute !important; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
