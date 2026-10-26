@@ -406,6 +406,19 @@ jobs:
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
           exit 1
 
+      # The hand model for a plugin with a RONE Control rack (Source/rack.json in its folder): the
+      # installer's "hands" block ships it into <Program Files>\RONE Plugins\Hands, one folder for every
+      # rack plugin (Rack-first, 26.10.2026; Shared/RoneControlRack/README.md). RONE Control itself
+      # carries the same files as resources, fetched by its own tools/fetch_mediapipe.py in its job.
+      - name: Hand model — the rack
+        shell: bash
+        run: |
+          if [ -f "${{ matrix.folder }}/Source/rack.json" ]; then
+            python scripts/ci/fetch_hands.py hands/mp
+          else
+            echo "no rack in ${{ matrix.folder }} - no hand model to ship"
+          fi
+
       # --- MSVC ---
       - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
         with: { arch: x64 }

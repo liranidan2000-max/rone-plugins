@@ -39,9 +39,11 @@ private:
 
 // Writes link.html and the hand model (carried inside RONE Control as resources) into `folder`.
 // Files already there with the right size are left alone. A module without the resources (a plugin's rack)
-// accepts the files RONE Control wrote; when they are absent it returns kNoModelError (the camera cannot start,
-// the phone still can - the rack page shows the "install RONE Control" card on this text). "" = all good.
-inline const char* const kNoModelError = "no hand model here - install RONE Control from the Center";
+// accepts the files already in the folder, else copies them from the shared Hands folder its installer filled
+// (handsFolder()); when neither has them it returns kNoModelError (the camera cannot start, the phone still can -
+// the rack page shows the "hand model missing" card on this text). "" = all good.
+inline const char* const kNoModelError = "no hand model here - reinstall the plugin from the Center";
 juce::String prepareLinkFolder (const juce::File& folder, const juce::String& linkHtml);
+juce::File handsFolder();                       // <Program Files>\RONE Plugins\Hands (RONE_RACK_HANDS_DIR overrides, tests only)
 } // namespace RoneCtl
 #endif

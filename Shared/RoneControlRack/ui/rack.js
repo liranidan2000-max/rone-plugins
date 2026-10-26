@@ -2,7 +2,7 @@
    this page shows them and sends the user's choices back. MOUSE = the mouse is the hand (RONE Control's
    SIM: hold = pinch, right button = fist, wheel = twist, shift+wheel = near / far), computed here and sent
    as a "hands" frame, exactly as the phone page and the link page send theirs.
-     C++ -> page  rackState { open, armed, live, name, accent, source, phone, cam, rec, hands, aspect, thumb, slots, params }
+     C++ -> page  rackState { open, armed, live, lite, name, accent, source, phone, cam, rec, hands, aspect, thumb, slots (each: locked), params }
      page -> C++  slotConfig / slotOn / slotParam / addSlot / removeSlot / reset / setLive / arm / setSource / hands /
                   newCode / camera / rec / rackReady / collapse */
 (function () {
@@ -24,8 +24,20 @@
     try { var q = qrcode(0, 'M'); q.addData(url); q.make(); $('#rQrBox').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0 }); }
     catch (_) { $('#rQrBox').textContent = 'No code yet'; }
   }
-  document.getElementById('rNewCode').addEventListener('click', function (e) { e.stopPropagation(); qrFor = ''; $('#rQrBox').innerHTML = '&hellip;'; emit('newCode', {}); });
+  tap(document.getElementById('rNewCode'), function (e) { e.stopPropagation(); qrFor = ''; $('#rQrBox').innerHTML = '&hellip;'; emit('newCode', {}); });
   function emit(name, payload) { if (window.__JUCE__ && window.__JUCE__.backend) window.__JUCE__.backend.emitEvent(name, payload || {}); }
+  // Inside a DAW the FIRST click into this WebView after its window regains focus was seen to do nothing (DESIGN.md 2d):
+  // the host activates the window between mouse-down and mouse-up and no 'click' is born. So every control acts on
+  // pointerdown and ignores the click that may follow it; a click on its own (keyboard, the test tools' .click()) still
+  // works. (In the standalone the whole click arrives either way - Phase 0 probe, 26.10.2026.)
+  var tapAt = -1e9;   // one clock for all: a tap may re-render, and the click then lands on a fresh element
+  function tap(el, fn) {
+    el.addEventListener('pointerdown', function (e) { if (e.button !== 0) return; tapAt = e.timeStamp; fn(e); });
+    el.addEventListener('click', function (e) { if (e.timeStamp - tapAt < 700) { e.stopPropagation(); return; } fn(e); });
+  }
+  // LITE (no ALL ACCESS here): slot A runs, B.. are shown locked; a tap on a locked card or on + KNOB shows the card below
+  var upsellUntil = 0, centerAction = null;
+  function upsell() { upsellUntil = performance.now() + 7000; paintTop(); }
 
   // ---- fit: 280 design px to the view's width, the height follows ----
   function fit() {
@@ -176,23 +188,26 @@
   var slotsEl = $('#rSlots');
   function renderSlots() {
     var slots = S.slots || [];
-    var now = slots.map(function (s, i) { return [s.param, s.on, s.cfg.src, s.cfg.hand, s.cfg.eng, s.cfg.mode, s.cfg.rel, i === sel, s.why].join(); }).join('|') + (S.params || []).length;
+    var now = slots.map(function (s, i) { return [s.param, s.on, s.cfg.src, s.cfg.hand, s.cfg.eng, s.cfg.mode, s.cfg.rel, i === sel, s.why, s.locked].join(); }).join('|') + (S.params || []).length + (S.lite ? 'L' : '');
     if (now === sig) return;
     sig = now; slotsEl.innerHTML = '';
     slots.forEach(function (s, i) {
       var c = s.cfg, card = document.createElement('div');
-      card.className = 'r-card' + (s.on ? '' : ' off') + (i === sel ? ' sel' : ''); card.dataset.i = i;
-      card.innerHTML = '<div class="r-row1"><s>' + LETTERS[i] + '</s><span class="r-name"></span><em class="r-hand">' + (c.hand === 'ANY' ? 'L / R' : c.hand) + '</em><button class="r-on' + (s.on ? ' on' : '') + '">' + (s.on ? 'ON' : 'OFF') + '</button></div>' +
+      if (s.locked && i === sel) sel = -1;
+      card.className = 'r-card' + (s.on ? '' : ' off') + (i === sel ? ' sel' : '') + (s.locked ? ' locked' : ''); card.dataset.i = i;
+      card.innerHTML = '<div class="r-row1"><s>' + LETTERS[i] + '</s><span class="r-name"></span><em class="r-hand">' + (c.hand === 'ANY' ? 'L / R' : c.hand) + '</em>' +
+        (s.locked ? '<em class="r-lock">ALL ACCESS</em>' : '<button class="r-on' + (s.on ? ' on' : '') + '">' + (s.on ? 'ON' : 'OFF') + '</button>') + '</div>' +
         '<div class="r-ges">' + gesture(c) + '</div>' +
         '<div class="r-val"><div class="r-bar"><i></i></div><b></b><em>HELD</em></div>' +
         (s.why && i !== sel ? '<div class="r-why"></div>' : '') + (i === sel ? editorHTML(s) : '');
       card.querySelector('.r-name').textContent = s.name;
       if (s.why && i !== sel) card.querySelector('.r-why').textContent = s.why;
-      card.addEventListener('click', function (e) { if (e.target.closest('.r-edit') || e.target.closest('.r-on')) return; sel = sel === i ? -1 : i; sig = ''; renderSlots(); });
-      card.querySelector('.r-on').addEventListener('click', function (e) { e.stopPropagation(); emit('slotOn', { i: i, on: !s.on }); });
+      if (s.locked) { tap(card, function () { upsell(); }); slotsEl.appendChild(card); return; }
+      tap(card, function (e) { if (e.target.closest('.r-edit') || e.target.closest('.r-on')) return; sel = sel === i ? -1 : i; sig = ''; renderSlots(); });
+      tap(card.querySelector('.r-on'), function (e) { e.stopPropagation(); emit('slotOn', { i: i, on: !s.on }); });
       var ed = card.querySelector('.r-edit');
       if (ed) {
-        ed.addEventListener('click', function (e) {
+        tap(ed, function (e) {
           var sp = e.target.closest('.r-seg span'); if (!sp) return;
           var key = sp.closest('.r-seg').dataset.key, v = sp.dataset.v, cfg = {}; cfg[key] = v;
           if (key === 'src' && (v === 'pinch' || v === 'grip')) { cfg.eng = 'always'; cfg.mode = 'follow'; }
@@ -200,11 +215,14 @@
           emit('slotConfig', { i: i, cfg: cfg });
         });
         ed.querySelector('select').addEventListener('change', function (e) { emit('slotParam', { i: i, param: e.target.value }); });
-        ed.querySelector('.r-remove').addEventListener('click', function () { sel = -1; emit('removeSlot', { i: i }); });
+        tap(ed.querySelector('.r-remove'), function () { sel = -1; emit('removeSlot', { i: i }); });
       }
       slotsEl.appendChild(card);
     });
-    $('#rAdd').disabled = slots.length >= (S.maxSlots || 4);
+    var add = $('#rAdd');
+    add.disabled = slots.length >= (S.maxSlots || 4);
+    add.textContent = S.lite ? '+ KNOB · ALL ACCESS' : '+ KNOB';
+    add.classList.toggle('lite', !!S.lite);
   }
   function paintValues() {
     var cards = slotsEl.children, slots = S.slots || [];
@@ -224,7 +242,11 @@
     document.documentElement.style.setProperty('--acc', S.accent || '#D8E4EC');
     var m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(S.accent || '');
     if (m) document.documentElement.style.setProperty('--acc-rgb', parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16));
-    $('#rLive').classList.toggle('active', !!S.live);
+    var seen = !!(S.hands && S.hands.length > 0), lb = $('#rLive');
+    lb.classList.toggle('active', !!S.live);
+    // a hand in the picture and LIVE off = "I grab and nothing happens" (Liran, FL 26.10): the button itself asks for the tap
+    lb.classList.toggle('ask', !S.live && seen); lb.parentNode.classList.toggle('ask', !S.live && seen);   // the header makes room: the word CONTROL steps aside
+    if (lb.textContent !== (!S.live && seen ? 'TAP LIVE' : 'LIVE')) lb.textContent = !S.live && seen ? 'TAP LIVE' : 'LIVE';
     var rc = S.rec || {}, rb = $('#rRec');
     rb.classList.toggle('on', !!rc.on); rb.classList.toggle('cant', !rc.can);
     rb.title = rc.can ? (rc.on ? 'Stop recording in ' + (rc.host || 'the DAW') : 'Record in ' + (rc.host || 'the DAW') + ' and play') : (rc.why || '');
@@ -239,11 +261,11 @@
     else if (source === 'camera') {
       var c = S.cam || {}; $('#rHint').textContent = (c.tip || 'light on your hand · 50-80 cm from the camera').toUpperCase();
       if (S.peer) { txt = 'HANDS FROM RONE CONTROL IN ANOTHER PROGRAM'; cls = 'on'; }
-      // the model lives once, in RONE Control: without its files the camera cannot start here (the phone can)
-      else if (S.linkError && /no hand model/i.test(S.linkError)) { txt = 'RONE CONTROL NEEDED'; cls = 'warn'; showCenter = true; cb.textContent = 'RONE CONTROL GIVES THIS PLUGIN HANDS'; cs.textContent = 'Free, from the RONE Plugins Center. Install it once and the camera works in every RONE plugin - or use the phone.'; btn.hidden = false; btn.textContent = 'OPEN THE CENTER'; btn.onclick = function () { emit('openCenter', {}); }; }
+      // the model lives once: this plugin's installer put it in the shared Hands folder; without it the camera cannot start here (the phone can)
+      else if (S.linkError && /no hand model/i.test(S.linkError)) { txt = 'HAND MODEL MISSING'; cls = 'warn'; showCenter = true; cb.textContent = 'THE CAMERA NEEDS THE HAND MODEL'; cs.textContent = 'Reinstall ' + (S.name || 'this plugin') + ' from the RONE Plugins Center - its installer brings the model. Or use the phone: it needs none.'; btn.hidden = false; btn.textContent = 'OPEN THE CENTER'; centerAction = function () { emit('openCenter', { what: 'self' }); }; }
       else if (c.state === 'on') { txt = 'CAMERA · ' + Math.round(c.fps || 0) + ' FPS' + (c.label ? ' · ' + c.label.toUpperCase().slice(0, 18) : ''); cls = 'on'; }
       else if (c.state === 'starting' || c.state === 'model' || c.state === 'loading') txt = 'STARTING THE CAMERA…';
-      else if (c.state === 'error' || c.state === 'none') { txt = 'NO CAMERA'; cls = 'warn'; showCenter = true; cb.textContent = 'NO CAMERA'; cs.textContent = c.error || 'This computer has no camera of its own. Use the phone instead.'; btn.hidden = false; btn.textContent = 'USE THE PHONE'; btn.onclick = function () { emit('setSource', { v: 'phone' }); }; }
+      else if (c.state === 'error' || c.state === 'none') { txt = 'NO CAMERA'; cls = 'warn'; showCenter = true; cb.textContent = 'NO CAMERA'; cs.textContent = c.error || 'This computer has no camera of its own. Use the phone instead.'; btn.hidden = false; btn.textContent = 'USE THE PHONE'; centerAction = function () { emit('setSource', { v: 'phone' }); }; }
       else txt = S.linkError ? 'LINK: ' + S.linkError.toUpperCase().slice(0, 40) : 'CAMERA OFF';
       if (c.still) { txt = 'NO PICTURE · ' + txt; cls = 'warn'; }
     } else {
@@ -259,23 +281,30 @@
     if (!S.armed) { txt += ' · ARMED ELSEWHERE'; cls = cls || 'warn'; }
     if (st.textContent !== txt) st.textContent = txt;
     st.className = 'r-tl ' + cls;
-    center.hidden = !showCenter || (S.hands && S.hands.length > 0);
-    $('#rQr').hidden = !showQr || (S.hands && S.hands.length > 0);
+    var hands = seen;
+    if (S.lite && performance.now() < upsellUntil) {      // the LITE card, over everything, for a few seconds after a tap on a lock
+      showCenter = true; hands = false; cb.textContent = 'ONE KNOB IS FREE'; cs.textContent = 'Slot A is yours in every RONE plugin. RONE ALL ACCESS opens every slot of this rack - and of every other RONE rack.';
+      btn.hidden = false; btn.textContent = 'SEE ALL ACCESS'; centerAction = function () { emit('openCenter', { what: 'allaccess' }); };
+    }
+    center.hidden = !showCenter || hands;
+    $('#rQr').hidden = !showQr || hands || showCenter;
   }
-  $('#rSrc').addEventListener('click', function (e) { var s = e.target.closest('span'); if (s && !s.classList.contains('off')) emit('setSource', { v: s.dataset.v }); });
-  $('#rSide').addEventListener('click', function (e) { var s = e.target.closest('span'); if (!s) return; sim.side = s.dataset.v; $('#rSide').querySelectorAll('span').forEach(function (x) { x.classList.toggle('on', x === s); }); });
-  $('#rLive').addEventListener('click', function () { emit('setLive', { on: !(S && S.live) }); });
+  tap($('#rSrc'), function (e) { var s = e.target.closest('span'); if (s && !s.classList.contains('off')) emit('setSource', { v: s.dataset.v }); });
+  tap($('#rSide'), function (e) { var s = e.target.closest('span'); if (!s) return; sim.side = s.dataset.v; $('#rSide').querySelectorAll('span').forEach(function (x) { x.classList.toggle('on', x === s); }); });
+  tap($('#rLive'), function () { emit('setLive', { on: !(S && S.live) }); });
   var whyT = 0;
-  $('#rRec').addEventListener('click', function () {
+  tap($('#rRec'), function () {
     var rc = (S && S.rec) || {};
     if (rc.can) { emit('rec'); return; }
     var w = $('#rWhy'); w.textContent = (rc.why || 'NO TRANSPORT').toUpperCase(); w.hidden = false;
     clearTimeout(whyT); whyT = setTimeout(function () { w.hidden = true; }, 2600);
   });
-  $('#rArmed').addEventListener('click', function () { emit('arm'); });
-  $('#rAdd').addEventListener('click', function () { sel = (S.slots || []).length; emit('addSlot'); });
-  $('#rReset').addEventListener('click', function () { sel = -1; emit('reset'); });
-  $('#rClose').addEventListener('click', function () { emit('collapse'); });
+  tap($('#rArmed'), function () { emit('arm'); });
+  tap($('#rAdd'), function () { if (S && S.lite) { upsell(); return; } sel = (S.slots || []).length; emit('addSlot'); });
+  tap($('#rReset'), function () { sel = -1; emit('reset'); });
+  tap($('#rClose'), function () { emit('collapse'); });
+  tap($('#rCenterBtn'), function (e) { e.stopPropagation(); if (centerAction) centerAction(); });
+  tap(stage, function (e) { if (source !== 'sim' && !e.target.closest('.o-go') && upsellUntil) { upsellUntil = 0; paintTop(); } });
 
   // ============================================================ loop + bridge
   var lastT = 0;

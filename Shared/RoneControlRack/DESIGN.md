@@ -184,6 +184,30 @@ released the hands (nothing moved), reopening took them back. His words: "הכל
 pass of the rack. Still open: Live with Throw (auto-scale, SHRINK), 200 open/close cycles, the swallowed first
 click, Core -> Shared before any second plug-in.
 
+## 2f. Phase 0 of the Rack-first rollout (2026-10-26, Shared once, before Throw 1.9.0)
+Liran's decisions (plan https://claude.ai/artifact/GaEkpYNtgi39qB4i8PAnFM, all recommended): the model travels in every
+rack installer (Hands folder), LITE licensing (slot A free, B.. ALL ACCESS), REC dimmed "comes with RONE Control",
+waves Throw -> Rise/Stucker/Clipper -> Flanger/Iron/AFTERSPACE -> 1176/2A, 280 px fixed (narrow Clipper variant),
+DEV channel first for every plugin. Built here:
+* `prepareLinkFolder`: third source = `C:\Program Files\RONE Plugins\Hands` (copy into the link folder); the card
+  reads HAND MODEL MISSING / reinstall from the Center. `installer/RoneThrow.iss` `hands` block + CI step
+  `Hand model - the rack` (runs `scripts/ci/fetch_hands.py` when `Source/rack.json` exists).
+* LITE in `Engine` (`refreshLite`, `locked(i)`) and in rack.js/css (locked cards, amber badge, the ONE KNOB IS FREE card).
+* `RackTransport::why` for script hosts: "<host>: REC comes with RONE Control".
+* rack.js `tap()`: every control acts on pointerdown and ignores the click that follows (the DAW-side first-click trap:
+  a mousedown that reaches the page while the host activates the window still counts).
+* Tests on the Throw standalone (real mouse, SetCursorPos + mouse_event, DPI 125 %): a click into the rack with the
+  window unfocused delivers pointerdown + click and toggles LIVE - the swallowed first click did NOT reproduce in the
+  standalone (DESIGN 2d saw it inside a DAW; Liran's FL test checks it there). LITE renders as designed.
+  200 rack open / close cycles FOUND A BUG: the window came back 64 px too wide after every collapse (560 -> 910 -> 640
+  real px) - the open limits' minimum (kMinW * (W+280)/W = 504 > 440) still clamped the setSize. Fixed in
+  EditorHelper::setOpen: the limits narrow before the window does. After the fix 560 -> 910 -> 560 exactly.
+  After the fix: 200 rack open / close cycles, 0 bad (910 open / 560 closed every time, ARMED taken and released),
+  private bytes 69.3 -> 73.7 MB and flat from cycle ~180. pluginval --strictness-level 2 --repeat 200 (the editor
+  opened and closed 200 times with the rack closed): SUCCESS, memory a sawtooth 88-153 MB (compared with RONE Rise
+  without a rack in the rollout memory note).
+* Not run here (needs Liran at the machine): Live auto-scale 100 % / 125 %, Bitwig, REAPER again, Zanon's Mac.
+
 ## 3. Rollout and restore points
 
 1. Mockup (this folder) on Throw, Rise, Stucker - Liran tests on each, the map and the words settle.
@@ -227,3 +251,10 @@ early; the frame goes stale in 0.35 s and the slots let go as with no hands), ar
 (`editorOpened`) and releases on close if it holds the arm, so the open rack takes over at its next check. Its status
 line then says `HANDS IN RONE THROW · CLICK TO TAKE`; the click arms RONE Control and the rack shows ARMED ELSEWHERE.
 Two RONE Control instances never yield to each other (a hidden instance driving DAW knobs over MIDI is the everyday use).
+
+**TAP LIVE (26.10, after Liran's first FL run).** LIVE had been left off by a test (the state file is shared by every
+instance of the plugin), the phone streamed at 23 FPS, and "I grab and nothing happens" was the whole experience - the
+only sign was NOT LIVE in the status line. Now a hand in the picture while LIVE is off turns the LIVE button into a
+pulsing TAP LIVE (`.r-live.ask`); it reads LIVE again the moment the hand goes or LIVE is on. Checked in the standalone
+over CDP with the mouse sim (`scratchpad/taplive_test.py`: off+no hand = LIVE, off+hand = TAP LIVE ask, hand gone = LIVE,
+on+hand = LIVE active).

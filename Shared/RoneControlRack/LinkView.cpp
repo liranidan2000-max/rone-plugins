@@ -204,9 +204,12 @@ juce::String LinkView::error() const { return impl->err; }
 // The files the link page loads. The hand model and its runtime (Google's MediaPipe, Apache 2.0, see
 // NOTICE.txt) are compiled into RONE Control as resources (link_assets.rc, made by CMake from
 // lab/public/mp); they are written out once, then left alone while their size matches.
-// THE MODEL LIVES ONCE: a plugin with a rack carries no resources of its own - it uses the files RONE
-// Control already wrote into the shared link folder. Without them the camera cannot start; the rack then
-// shows "install RONE Control from the Center" (the phone needs no model and keeps working).
+// THE MODEL LIVES ONCE: a plugin with a rack carries no resources of its own. Its installer puts the same
+// five files into the shared Hands folder (C:\Program Files\RONE Plugins\Hands, see installer/*.iss); the
+// first rack that opens copies them into the link folder, where RONE Control's own writes also land. Order
+// of trust: a resource in this module > a file already in the link folder > the Hands folder. With none of
+// the three the camera cannot start; the rack shows the "hand model missing" card (the phone needs no model
+// and keeps working). Liran, 26.10.2026 (Rack-first): "every rack installer carries the model".
 // ============================================================================
 namespace
 {
@@ -227,7 +230,30 @@ namespace
         dest.deleteFile();
         return part.moveFileTo (dest);
     }
+
+    // The Hands folder every rack installer fills: <Program Files>\RONE Plugins\Hands\<same layout as link\mp>.
+    // RONE_RACK_HANDS_DIR points elsewhere for the tests (never set in a user's DAW).
+    juce::File sharedHandsFolder()
+    {
+        const auto over = juce::SystemStats::getEnvironmentVariable ("RONE_RACK_HANDS_DIR", {});
+        if (over.isNotEmpty()) return juce::File (over);
+        return juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
+                   .getChildFile ("RONE Plugins").getChildFile ("Hands");
+    }
+
+    bool copyFromHands (const juce::File& dest, const juce::String& relative)       // "mp/x" -> Hands\x
+    {
+        const auto src = sharedHandsFolder().getChildFile (relative.fromFirstOccurrenceOf ("mp/", false, false));
+        if (! (src.existsAsFile() && src.getSize() > 0)) return false;
+        dest.getParentDirectory().createDirectory();
+        const auto part = dest.getSiblingFile (dest.getFileName() + ".part");
+        if (! src.copyFileTo (part)) return false;
+        dest.deleteFile();
+        return part.moveFileTo (dest);
+    }
 }
+
+juce::File handsFolder() { return sharedHandsFolder(); }
 
 juce::String prepareLinkFolder (const juce::File& folder, const juce::String& linkHtml)
 {
@@ -245,9 +271,9 @@ juce::String prepareLinkFolder (const juce::File& folder, const juce::String& li
     {
         const auto dest = folder.getChildFile (a.path);
         const auto r = FindResourceW (mod, a.res, MAKEINTRESOURCEW (10));      // RT_RCDATA
-        if (r == nullptr)                                                       // not ours to write: RONE Control's file, if it is there
+        if (r == nullptr)                                                       // not ours to write: a file already there, else the Hands folder
         {
-            if (! (dest.existsAsFile() && dest.getSize() > 0)) absent.add (a.path);
+            if (! (dest.existsAsFile() && dest.getSize() > 0) && ! copyFromHands (dest, a.path)) absent.add (a.path);
             continue;
         }
         const auto g = LoadResource (mod, r);

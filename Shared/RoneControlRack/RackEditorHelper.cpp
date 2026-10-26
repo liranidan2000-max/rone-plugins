@@ -136,8 +136,11 @@ void EditorHelper::setOpen (bool shouldOpen)
         const bool grew = grows();
         open = false;
         eng.setOpen (false);
+        // The limits narrow FIRST: the open limits' minimum width is kMinW * (W + 280) / W, which is wider than the
+        // closed window (Throw: 504 > 440), and a constrainer still holding it clamps the setSize below to that
+        // minimum - the window came back 64 px too wide (Phase 0, 26.10.2026: 560 -> 910 -> 640 real px).
+        if (onToggle) onToggle();
         if (grew) ed.setSize (w - rackPx (h), h);
-        if (onToggle) onToggle();                          // the limits narrow AFTER the window did
     }
     ed.resized();
     tellPage();

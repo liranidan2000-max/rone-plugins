@@ -13,6 +13,8 @@
 // on this computer (%APPDATA%\RonePlugins\<id>\rack-slots.json), never in the project.
 // ARMED: with several RONE plugins open the hands drive the one armed last. Armed state is a small file
 // in RONE Control's data folder, so it is one truth across every plugin binary and every DAW process.
+// LITE (Liran, 26.10.2026, Rack-first): slot A is free in every plugin; slots B.. run only with RONE ALL ACCESS
+// (BundleLicenseChecker::isBundleLicensed, or the remote open mode). Locked slots are shown, never stepped.
 // ============================================================================
 
 #include <JuceHeader.h>
@@ -75,6 +77,8 @@ private:
     juce::File savedFile() const;
     static juce::File armedFile();
     void checkArmed();
+    void refreshLite();                                                   // every ~2 s: ALL ACCESS or not
+    bool locked (int slotIndex) const noexcept { return lite && slotIndex > 0; }
 
     juce::RangedAudioParameter* paramFor (const Slot& s) const;
     Slot slotFromVar (const juce::var& v) const;
@@ -90,7 +94,8 @@ private:
     RoneCtl::HandFrame hubFrame, simFrame;
     double hubAt = -1.0, simAt = -1.0, lastT = 0.0, lastHeldAt = 0.0;
     bool useSim = false, live = true, open = false, armed = false;
-    bool rememberedOpen = false;                           // the saved open state, remembered only (see DESIGN.md open questions)
+    bool lite = false;                                     // true = only slot A runs (no ALL ACCESS here)
+    bool rememberedOpen = false;                          // the saved open state, remembered only (see DESIGN.md open questions)
     bool reopen = false;
     Transport* transport = nullptr;
     juce::String myId;

@@ -1,6 +1,8 @@
 #include "RackEngine.h"
 #include "RackArmed.h"
-#include "../RoneUpdatePrompt.h"      // RoneUpdates::launchCenterFor - the "install RONE Control" card's button
+#include "../RoneUpdatePrompt.h"      // RoneUpdates::launchCenterFor - the cards' "open the Center" buttons
+#include "../BundleLicenseChecker.h"  // LITE: slot A free, the rest with ALL ACCESS
+#include "../RemoteLicenseGate.h"
 
 namespace RoneRack
 {
@@ -38,8 +40,23 @@ Engine::Engine (juce::AudioProcessorValueTreeState& s, const juce::String& plugi
     myId = juce::Uuid().toString();
     loadSaved();
     if (slots.empty()) loadManifest();
+    refreshLite();
     hub->addClient (this);
     startTimerHz (60);
+}
+
+// ---------------------------------------------------------------- LITE
+// The same answer every RONE plugin gives its own lock screen: the remote open mode, or an ALL ACCESS subscription
+// in the Center's licence file. A lifetime licence of this one plugin does NOT unlock the extra slots - they are
+// the subscription's. RONE_RACK_FORCE_LITE=1 shows the locked rack on a licensed machine (tests only).
+void Engine::refreshLite()
+{
+    const bool forced = juce::SystemStats::getEnvironmentVariable ("RONE_RACK_FORCE_LITE", {}) == "1";
+    const bool full = ! forced && (RemoteLicenseGate::isOpenMode() || BundleLicenseChecker::isBundleLicensed());
+    if (lite == ! full) return;
+    lite = ! full;
+    for (int i = 0; i < (int) slots.size(); ++i)
+        if (locked (i)) { closeGesture (slots[(size_t) i]); slots[(size_t) i].activeWas = false; slots[(size_t) i].st = SlotState {}; }
 }
 
 Engine::~Engine()
@@ -96,6 +113,7 @@ juce::var Engine::slotToVar (const Slot& s, int i, bool forPage) const
         o->setProperty ("active", s.activeWas);
         o->setProperty ("driver", juce::String::charToString ((juce::juce_wchar) (s.st.driver != 0 ? s.st.driver : ' ')).trim());
         o->setProperty ("missing", p == nullptr);
+        o->setProperty ("locked", locked (i));
     }
     return juce::var (o);
 }
@@ -211,7 +229,7 @@ juce::var Engine::hubFeedback()
     for (int i = 0; i < (int) slots.size(); ++i)
     {
         const auto& s = slots[(size_t) i];
-        if (! s.cfg.enabled) continue;
+        if (! s.cfg.enabled || locked (i)) continue;
         auto* o = new juce::DynamicObject();
         o->setProperty ("l", letter (i));
         o->setProperty ("name", s.cfg.name);
@@ -227,9 +245,10 @@ juce::var Engine::hubFeedback()
 int Engine::handsNeeded() const
 {
     bool left = false, right = false;
-    for (const auto& s : slots)
+    for (int i = 0; i < (int) slots.size(); ++i)
     {
-        if (! s.cfg.enabled) continue;
+        const auto& s = slots[(size_t) i];
+        if (! s.cfg.enabled || locked (i)) continue;
         if (s.cfg.src == Src::spread) return 2;
         left  = left  || s.cfg.hand == HandSel::left;
         right = right || s.cfg.hand == HandSel::right;
@@ -260,6 +279,7 @@ void Engine::timerCallback()
 {
     const double t = nowSeconds();
     if (++ticks % 10 == 0) checkArmed();
+    if (ticks % 120 == 0) refreshLite();
     if (! open) { lastT = t; return; }
     stepAll (t);
 }
@@ -275,10 +295,11 @@ void Engine::stepAll (double t)
     if (at > 0.0 && t - at < kFresh) f = useSim ? simFrame : hubFrame;
     const bool run = live && armed;
 
-    for (auto& s : slots)
+    for (int i = 0; i < (int) slots.size(); ++i)
     {
+        auto& s = slots[(size_t) i];
         auto* p = paramFor (s);
-        if (p == nullptr || ! s.cfg.enabled)
+        if (p == nullptr || ! s.cfg.enabled || locked (i))
         {
             if (s.gestureOpen) closeGesture (s);
             s.activeWas = false;
@@ -340,6 +361,7 @@ juce::var Engine::uiState (bool withHands)
     o->setProperty ("open", open);
     o->setProperty ("armed", armed);
     o->setProperty ("live", live);
+    o->setProperty ("lite", lite);
     o->setProperty ("name", name);
     o->setProperty ("accent", accent);
     o->setProperty ("canCamera", LinkHub::cameraSupported());
@@ -412,7 +434,8 @@ juce::var Engine::uiState (bool withHands)
 
 void Engine::pageEvent (const juce::String& ev, const juce::var& v)
 {
-    auto slotAt = [this] (const juce::var& x) -> Slot* { const int i = (int) x["i"]; return (i >= 0 && i < (int) slots.size()) ? &slots[(size_t) i] : nullptr; };
+    // a locked slot (LITE) is shown but not the user's to edit: its ON, knob and gesture stay as shipped
+    auto slotAt = [this] (const juce::var& x) -> Slot* { const int i = (int) x["i"]; return (i >= 0 && i < (int) slots.size() && ! locked (i)) ? &slots[(size_t) i] : nullptr; };
 
     if (ev == "hands")
     {
@@ -448,7 +471,7 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
     }
     else if (ev == "addSlot")
     {
-        if ((int) slots.size() >= kMaxSlots) return;
+        if ((int) slots.size() >= kMaxSlots || lite) return;          // LITE: a second knob is ALL ACCESS (the page says so)
         int lefts = 0, rights = 0;
         for (const auto& s : slots) { if (s.cfg.hand == HandSel::left) ++lefts; else if (s.cfg.hand == HandSel::right) ++rights; }
         Slot s;
@@ -468,7 +491,7 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
     else if (ev == "removeSlot")
     {
         const int i = (int) v["i"];
-        if (i >= 0 && i < (int) slots.size()) { closeGesture (slots[(size_t) i]); slots.erase (slots.begin() + i); save(); }
+        if (i >= 0 && i < (int) slots.size() && ! locked (i)) { closeGesture (slots[(size_t) i]); slots.erase (slots.begin() + i); save(); }
     }
     else if (ev == "reset")
     {
@@ -515,10 +538,11 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
     {
         hub->setView (v["v"].toString());
     }
-    else if (ev == "openCenter")                 // the model lives once: RONE Control is not installed here
+    else if (ev == "openCenter")                 // "hand model missing" (reinstall this plugin) and the LITE lock (ALL ACCESS): this plugin's card in the Center
     {
-        if (! RoneUpdates::launchCenterFor ("RoneControl"))
-            juce::URL ("https://roneaudio.com/#center").launchInDefaultBrowser();
+        const auto what = v["what"].toString();
+        if (! RoneUpdates::launchCenterFor (what == "control" ? juce::String ("RoneControl") : id))
+            juce::URL (what == "allaccess" ? "https://roneaudio.com/#all-access" : "https://roneaudio.com/#center").launchInDefaultBrowser();
     }
 }
 } // namespace RoneRack
