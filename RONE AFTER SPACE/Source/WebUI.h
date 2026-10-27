@@ -1134,7 +1134,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     track.setAttribute('class', 'track'); lit.setAttribute('class', 'lit'); track.setAttribute('d', arcPath(c, c, r, -135, 135));
     svg.append(track, lit);
     const body = el('div', 'kbody'), dot = el('div', 'kdot'), cval = el('div', 'cval');
-    k.replaceChildren(svg, body, dot, cval);
+    k.textContent = ''; k.append(svg, body, dot, cval);   // not replaceChildren: Safari 14+, older Macs run these pages
     let v = clamp(o.value, 0, 1), text = null, lingerT = null;
     const def = o.def == null ? v : o.def;
     function draw() {
@@ -1198,7 +1198,7 @@ a.bp-g,.bp-g a,.bp-g button{pointer-events:auto;}
     const api = {
       el: m, trigger,
       set(items) {
-        m.replaceChildren();
+        m.textContent = '';
         if (o.header) m.appendChild(el('div', 'h', o.header));
         items.forEach(it => {
           if (it === '-') { m.appendChild(el('div', 'sep')); return; }
