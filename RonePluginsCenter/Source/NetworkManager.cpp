@@ -835,6 +835,19 @@ juce::Array<PluginInfo> NetworkManager::parseDevChannel (const juce::String& jso
     if (! root.isObject() || ! (bool) root.getProperty ("ok", false) || ! root.getProperty ("plugins", {}).isArray())
         return {};
     auto list = parseManifest (jsonBody);
+    // Only the builds THIS computer can install (27.10.2026): a dev build is usually Windows-only, and withDevChannel
+    // merges every entry by id - on Liran's Mac 2.1.13 put the Windows-only Throw 1.9.0.1 over the public card, and the
+    // click ended in "Download refused - not a secure (https) address" (an empty Mac URL). The Worker drops them too
+    // (the device row knows its platform); this keeps an older Worker, or a cached answer, from doing it again.
+    for (int i = list.size(); --i >= 0;)
+    {
+       #if JUCE_MAC
+        const bool installable = list.getReference (i).downloadUrlMac.isNotEmpty();
+       #else
+        const bool installable = list.getReference (i).downloadUrl.isNotEmpty();
+       #endif
+        if (! installable) list.remove (i);
+    }
     for (auto& p : list) p.dev = true;
     return list;
 }
