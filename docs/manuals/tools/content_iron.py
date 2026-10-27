@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "iron", "product": "RONE Iron", "eyebrow": "DROP A VOCAL. PLAY METAL.",
-        "title_html": "RONE <i>Iron</i>", "accent": "#B530D6", "version": "1.0.0",
+        "title_html": "RONE <i>Iron</i>", "accent": "#B530D6", "version": "1.0",
         "tagline": "Drop any vocal and it becomes a metallic chop instrument: flattened to the note you pick, sliced onto your keys, rung through a comb tuned to that note and thrown from left to right. Play it from the piano roll, or let the GROOVE write the pattern.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Iron.vst3", "au": "RONE Iron.component", "exe": "RONE Iron.exe",
         "pdf": "RONE Iron - User Manual.pdf", "cover_img": "iron/main.png",

@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "stucker", "product": "RONE Stucker", "eyebrow": "ONE-KNOB ROLL-UP RISER",
-        "title_html": "RONE <i>Stucker</i>", "accent": "#9D6BFF", "version": "1.2",
+        "title_html": "RONE <i>Stucker</i>", "accent": "#9D6BFF", "version": "1.4",
         "tagline": "One knob grabs the loop and rolls it up: the captured slice shrinks tighter and tighter until it screams, then lets go right back into the beat.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Stucker.vst3", "au": "RONE Stucker.component", "exe": "RONE Stucker.exe",
         "pdf": "RONE Stucker - User Manual.pdf", "cover_img": "stucker/tour_knob.png",

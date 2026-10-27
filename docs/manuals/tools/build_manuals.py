@@ -180,17 +180,6 @@ def install_section(m):
 <h3>Uninstalling</h3>
 <p>Windows: Settings &rarr; Apps &rarr; <em>{m['product']} (RONE)</em>. macOS: delete the bundles listed above. Presets and settings in your user folder are kept.</p>
 """
-    if m.get("subscription_only"):
-        # ALL ACCESS-only products (RONE 1176, RONE 2A): there is no lifetime licence to mention
-        import re
-        p = m['product']
-        body = body.replace(", and a <strong>lifetime licence</strong> unlocks the plugin it was bought for &mdash; so " + p + " opens either way.",
-                            ". " + p + " is included in <strong>ALL ACCESS</strong>, so an active plan opens it.")
-        body = re.sub(r"There are two ways to own it:.*?a plan you already have\.",
-                      p + " is included in an <strong>ALL ACCESS</strong> plan and opens for as long as the plan is active; it is not sold as a separate lifetime licence.", body, flags=re.S)
-        body = body.replace(" on either kind of licence", "")
-        body = re.sub(r"A lifetime licence keeps working offline.*?to confirm it\.",
-                      "The Center needs to reach the internet now and then to confirm your plan.", body, flags=re.S)
     return {"title": "Installation with the RONE Plugins Center", "sub": "Center, account, file locations", "html": body}
 
 def conventions_section(m, extras=""):
@@ -311,7 +300,7 @@ def build(name):
     print(f"  {pp.name}: {'OK' if ok else 'FAILED'} {round(pp.stat().st_size / 1e6, 2) if ok else ''} MB")
     return ok
 
-ALL = ["stutter", "stucker", "flanger", "reversereverb", "afterspace", "analyzer", "throw", "clipper", "rise", "iron", "1176", "2a", "sidechain"]
+ALL = ["stutter", "stucker", "flanger", "reversereverb", "afterspace", "analyzer", "throw", "clipper", "rise", "iron", "gater"]
 
 if __name__ == "__main__":
     for n in (sys.argv[1:] or ALL): build(n)

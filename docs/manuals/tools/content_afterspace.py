@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "afterspace", "product": "RONE AFTERSPACE", "eyebrow": "CREATIVE REVERB, DELAY AND ATMOSPHERE DESIGNER",
-        "title_html": "RONE <i>AFTERSPACE</i>", "accent": "#FF8A3D", "version": "0.1 (public beta)",
+        "title_html": "RONE <i>AFTERSPACE</i>", "accent": "#FF8A3D", "version": "1.0",
         "tagline": "Huge, cinematic spaces that stay clean in the mix: a large musical reverb with built-in ducking, a tail de-esser, tempo-synced echo and bloom, in one plugin.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE AFTERSPACE.vst3", "au": "RONE AFTERSPACE.component", "exe": "RONE AFTERSPACE.exe",
         "pdf": "RONE AFTERSPACE - User Manual.pdf", "cover_img": "afterspace/tour_knobs.png",

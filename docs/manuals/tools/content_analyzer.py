@@ -9,8 +9,8 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "analyzer", "product": "RONE Analyzer", "eyebrow": "PROFESSIONAL MEASUREMENT SUITE",
-        "title_html": "RONE <i>Analyzer</i>", "accent": "#1A9AB0", "version": "1.0",
-        "tagline": "A DIGICheck-style measurement suite: 30-band third-octave analyser with reference corridors, vectorscope with phosphor afterglow, level meters, EBU R128 loudness and a waveform scope locked to the bar, reading ASIO, loopback, a live input, a file or your DAW's master bus.",
+        "title_html": "RONE <i>Analyzer</i>", "accent": "#1A9AB0", "version": "1.3",
+        "tagline": "A DIGICheck-style measurement suite: 30-band third-octave analyser with reference corridors, vectorscope with phosphor afterglow, level meters, EBU R128 loudness and bit statistics, reading ASIO, loopback, a live input, a file or your DAW's master bus.",
         "formats": ["Standalone", "VST3 bridge"], "vst3": "RONE Analyzer Bridge.vst3", "au": "", "exe": "RONE Analyzer.exe",
         "pdf": "RONE Analyzer - User Manual.pdf", "cover_img": "analyzer/main.png",
         "channels": "Any stereo pair of the selected source; mono fold available",
@@ -20,17 +20,18 @@ def manual(G):
     S = []
 
     S.append({"title": "Welcome to RONE Analyzer", "sub": "what it measures and why it is built this way", "html": f"""
-<p><strong>RONE Analyzer</strong> is a standalone measurement application in the shape of the classic RME DIGICheck: modular instruments in a panel grid, a real bandpass spectrum analyser rather than an FFT, a vectorscope with proper phosphor afterglow and EBU R128 loudness. It reads audio from an ASIO interface (alongside your DAW), from whatever Windows is playing (loopback), from a live input, from a file, or from your DAW's master bus through the included <strong>RONE Analyzer Bridge</strong> VST3.</p>
+<p><strong>RONE Analyzer</strong> is a standalone measurement application in the shape of the classic RME DIGICheck: modular instruments in a panel grid, a real bandpass spectrum analyser rather than an FFT, a vectorscope with proper phosphor afterglow, bit statistics and EBU R128 loudness. It reads audio from an ASIO interface (alongside your DAW), from whatever Windows is playing (loopback), from a live input, from a file, or from your DAW's master bus through the included <strong>RONE Analyzer Bridge</strong> VST3.</p>
 <p>The point of a separate application is that it is always on screen, always measuring the same thing, whatever project or plugin you have open. The point of the bridge is that you can also put the analyser exactly where a plugin would sit: on your master, after your limiter.</p>
 <div class="two">
 <div>
 <h3>The instruments</h3>
 <ul>
 <li><strong>Totalyser</strong> - 30-band ISO third-octave analyser (also 1/1 and 1/6 octave), PEAK / HOLD / RTA traces, L/R or Mid/Side, per-band stereo strip, hover readout, band solo by ear, and a <em>reference corridor</em> built from your reference tracks.</li>
-<li><strong>Level Meters</strong> - peak and RMS per channel, crest factor, configurable over detection.</li>
+<li><strong>Level Meters</strong> - peak and RMS per channel, crest factor, configurable over detection, K-System scales.</li>
 <li><strong>Stereo Vectorscope</strong> - goniometer with bright / dim afterglow, correlation meter with a low-water mark.</li>
-<li><strong>Loudness (EBU R128)</strong> - momentary, short-term, integrated, LRA, true peak, max RMS, target deviation.</li>
-<li><strong>Bar Scope</strong> - the waveform locked to your DAW's bar, from four bars down to an eighth, with hold-to-zoom.</li>
+<li><strong>Loudness (EBU R128)</strong> - momentary, short-term, integrated, LRA, true peak, target deviation.</li>
+<li><strong>Bit Statistic &amp; Noise</strong> - true word length, stuck bits, SNR, noise floor, DC offset.</li>
+<li><strong>Spectroscope</strong> and <strong>Oscilloscope</strong>, plus a <strong>Global Level Meter</strong> for many-channel interfaces.</li>
 </ul>
 </div>
 <div>
@@ -77,21 +78,19 @@ def manual(G):
 {ctl("Setup (gear / SETUP)", "Source, Mode, range, Top L., Res., Size, Freeze, Rise T., Release, Hold T., FSC for OVR, Display, Range comp / full, Correlator Int., Release 1 / 2, AGC", "<p>DIGICheck's own setup dialog with DIGICheck's own words, so existing users can type their numbers straight in, and every value applies at once. <strong>Source</strong> picks what the bars measure (Max. L/R, L+R, Left, Right, Mid, Side); <strong>Mode</strong> picks the trace (Peak, Peak Hold, RMS); <strong>Top L.</strong> and <strong>Range</strong> set the scale; <strong>Res.</strong> is decibels per LED and <strong>Size</strong> the bar width; <strong>Freeze</strong> (or F) holds the bars. Rise T. is the band detector attack (0 = instant, 15 ms = RME default). Analyser release is in seconds to fall the whole range; meter release is in dB per second - both as in DIGICheck. The Totalyser's title names a Source or Mode that is not the default.</p>")}
 <h3>Level Meters</h3>
 {ctl("Layout", "RMS L | Peak L | Peak R | RMS R", "<p>Inner bars are peak (AC+DC), outer bars are RMS (AC only). The width of the coloured region between them is the crest factor, also printed underneath with peak and RMS. 0 dBFS is referenced to a full-scale sine, so RMS carries the +3.01 dB the RME convention requires. The scale is DIGICheck's non-linear one, with the top 20 dB stretched.</p>")}
-{ctl("Overs", "N consecutive samples, 1-20", "<p>An <em>over</em> is a run of N consecutive full-scale samples - one clipped sample is not an over. Overs are counted next to the OVR cap and in the status bar; RESET clears them. In Setup, <strong>FSC for OVR</strong> sets N, and <strong>Hold Time</strong> (0.1 to 10 s, or Infinite Hold) and <strong>Release</strong> set the peak hold.</p>")}
+{ctl("Overs", "N consecutive samples, 1-20", "<p>An <em>over</em> is a run of N consecutive full-scale samples - one clipped sample is not an over. Overs are counted next to the OVR cap. Click the meter to clear. Peak hold 0.2-100 s; range down to -160 dB; K-20 / K-14 / K-12 scales.</p>")}
 <h3>Stereo Vectorscope</h3>
 {ctl("Goniometer", "45&deg; rotated: mono is a vertical line", "<p>Draws continuous lines between successive samples with intensity inversely proportional to segment length, the way a real beam deposits energy - transients leave a faint streak, sustained tones a bright figure. Afterglow has separate decay rates for bright and dim pixels (Release 1 / Release 2, in seconds) plus AGC. <strong>MODE</strong> in the title switches the frame between the diamond and a circle: the diamond shows the legal L/R square exactly (full-scale mono on the M tip, a hard-panned channel on the rim under its own L or R label), the circle stretches the same picture onto a disc, DIGICheck's Polar. The choice is remembered.</p>")}
 {ctl("Correlation", "-1 to +1", "<p>The figure, then an LED bar lit from zero to the reading in its zone colour - red where the pair cancels in mono, amber around zero, green where it folds safely. A white tick holds the lowest reading of the last few seconds (MIN HELD), so a dip you did not see is still reported. Under it, the last ten seconds as a trace: a dip that returns on every bass note is a pattern a needle cannot show. BAL is the left / right energy balance on a small centre-zero bar, a full side at 6 dB.</p>", "Watch the ten-second trace while the drop plays. If it dives below the line on every bass hit, the low end is not mono.")}
 {ctl("STEREO / MONO", "the chip in the vectorscope's title, or M", "<p>Folds every instrument to mono at once - the level meters drop wherever the channels were fighting, the spectrum changes shape, the trace stands as a line and the correlation reads +1, because that is what mono <em>is</em>. With <strong>RONE Analyzer Bridge</strong> on your DAW's master the DAW plays the fold too, and a lit dot on the chip says the bridge is there; without it the fold is on screen only. It sits on the vectorscope because that is where you are looking when you want it, and it never survives a restart.</p>", "Press M while the bass plays. If it thins out, the low end is not mono.")}
 <h3>Loudness (EBU R128)</h3>
 <p>Closed until you ask for it: the small arrow in the bottom-right corner of the Spectrogram (or L) opens the strip under it, and the same arrow puts it away. It measures all the time, open or closed.</p>
-{ctl("Readings", "M &middot; S &middot; I &middot; LRA &middot; True Peak &middot; Max RMS", "<p>Momentary (400 ms), short-term (3 s) and gated integrated loudness in LUFS, loudness range in LU and 4&times; oversampled true peak in dBTP. <strong>MAX RMS</strong> is the highest RMS since the last reset, read the way StandardCLIP reads it, to the hundredth: the louder channel, unweighted, averaged over 217 ms (the power falls 20 dB a second). It is plain RMS - a sine at -6 dBFS reads -9.01. Click the cell to reset it on its own. Targets for streaming, podcast and broadcast show the deviation in LU. The K-weighting filter is rebuilt for every sample rate from BS.1770's design, so 44.1, 88.2 and 96 kHz measure exactly as 48 kHz does.</p>", "Press RESET when the song starts so the integrated value covers only the material you mean.")}
-<h3>BAR SCOPE</h3>
-<p>The waveform locked to the bar. <span class='pill'>SCOPE</span> in the header (or <span class='pill'>O</span>) opens a strip along the bottom, the full width of the instrument; the panels above make room for it and the window keeps its shape. Every sample is filed under its musical position from your DAW's playhead, so the same beat always lands in the same place: a kick that drifts, a tail that runs into the next beat or a clipped transient shows at a glance.</p>
-{ctl("Window", "4 BARS &middot; 2 &middot; 1 BAR &middot; 1/2 &middot; 1/4 &middot; 1/8", "<p>How much of the bar the strip shows. The trace is a thin line for the wave with a faint fill down to the zero line, so every half cycle reads as a lobe.</p>")}
-{ctl("Channels", "SUM &middot; L / R &middot; M / S", "<p>SUM draws one trace. L / R and M / S draw the first channel in the trace colour and the second in white.</p>")}
-{ctl("HOLD", "on by default", "<p>A quiet pass fades the picture instead of erasing it, so a beat without a kick still shows the last one.</p>")}
-{ctl("Zoom and scroll", "hold the mouse on the plot", "<p>Hold, then drag up or down to zoom around the point you hold and sideways to scroll. Double-click (or right-click) shows the whole window again. Shift-drag slides the trace onto the grid; shift-double-click puts it back. The strip's own line reads the zoom, the offset and the tempo.</p>")}
-{note("It needs the bridge", "The bar comes from the DAW's playhead, which only <strong>RONE Analyzer Bridge</strong> on the master can hand over. Without it the strip reads NO PLAYHEAD. With the transport stopped it holds the last pass.")}
+{ctl("Readings", "M &middot; S &middot; I &middot; LRA &middot; True Peak", "<p>Momentary (400 ms), short-term (3 s) and gated integrated loudness in LUFS, loudness range in LU and 4&times; oversampled true peak in dBTP. Targets for streaming, podcast and broadcast show the deviation in LU. The K-weighting filter is rebuilt for every sample rate from BS.1770's design, so 44.1, 88.2 and 96 kHz measure exactly as 48 kHz does.</p>", "Press RESET when the song starts so the integrated value covers only the material you mean.")}
+<h3>Bit Statistic &amp; Noise</h3>
+{ctl("Per-bit state", "green = toggling, blue = never set, red = stuck", "<p>Count the green bits and you have the true word length regardless of what the file header claims. Flat and A-weighted SNR, measured noise floor and DC offset sit below. This is the instrument that catches a '24-bit' file that is really 16, a truncated export, or a converter with an offset.</p>")}
+<h3>Spectroscope and Oscilloscope</h3>
+{ctl("Spectroscope", "scrolling spectrogram", "<p>Same third-octave axis as the analyser, over time. Resonances and intermittent noise appear as horizontal streaks that a bar graph cannot show.</p>")}
+{ctl("Oscilloscope", "triggered, with afterglow", "<p>A triggered scope with a 10&times;8 graticule for waveform shape, clipping and DC.</p>")}
 """})
 
     S.append({"title": "Step-by-step workflows", "sub": "how a session with the analyser looks", "html": f"""
@@ -112,7 +111,7 @@ def manual(G):
 {recipe("Check a delivered file", "Mastering QC",
  steps([
   "FILE &rarr; <em>Open and scan (fast, whole file)</em>. The whole file runs through every instrument in seconds.",
-  "Read Loudness (integrated, true peak, max RMS) and the Level Meters' over count and crest factor.",
+  "Read Bit Statistic (true word length, DC), Loudness (integrated, true peak) and the Level Meters' over count.",
   "Switch to <em>Open and play (real time)</em> to listen to any section that looked suspicious.",
  ]))}
 {recipe("Mono compatibility", "Any mix",
@@ -142,6 +141,7 @@ def manual(G):
 <ul>
 <li>A mix that is too bright by the crest factor of its top end will look fine against the corridor with the PEAK trace and wrong with RTA. RTA is the honest one.</li>
 <li>Hard-panned elements show -3 dB in the mono delta. That is physics, not a problem; below -3 dB is.</li>
+<li>Two green bits fewer than expected in the Bit Statistic usually means a dither or truncation stage you forgot about.</li>
 </ul>
 """})
 
@@ -153,7 +153,6 @@ def manual(G):
  ("<code>V</code>", "Hold the vectorscope's trace inside the graticule diamond (LOCKED), or let it run to the corners of the frame (FREE)."),
  ("<code>F</code>", "Freeze the Totalyser's bars where they are; press again to let them go. The meters and the scope keep running."),
  ("<code>L</code>, or the arrow under the Spectrogram's right scale", "Show or hide the LOUDNESS strip. It starts closed."),
- ("<code>O</code>, or SCOPE in the header", "Open or close the BAR SCOPE strip along the bottom."),
  ("MODE on the vectorscope", "Switch the frame between the diamond and the circle."),
  ("<code>Space</code>, or PLAY / STOP in the header", "Start or stop the file that is the source. SCAN pushes the whole file through again; the status bar shows the position."),
  ("RESET", "Clear the overs, the held peaks and every cap, and restart the loudness integration."),

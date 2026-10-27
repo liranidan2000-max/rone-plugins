@@ -132,3 +132,32 @@ window.__scn_clipper_adv = function () {
   document.getElementById('advToggle').click();
   state.autogain = true; renderBypass();
 };
+
+// ---- Scenario: Gater - a held pad chopped by a 1/16 groove at 140 BPM, last note held ----
+// The page draws only from host `frame` events: {count, bps, env, held, midiSeen, playing, bpm, ppq, buckets:[peak, env, ...]}.
+window.__scn_gater = function () {
+  var st = document.createElement('style'); st.textContent = '*{transition:none!important;animation:none!important}'; document.head.appendChild(st);
+  state.attack_ms = 1.5; state.release_ms = 45; state.depth = 100; state.velocity = false; renderAll();
+  var bpm = 140, bps = 400, step = 60 / bpm * bps / 4, rnd = window.__mockRand(11);
+  // 32 sixteenths over two bars: note length in steps (0 = rest)
+  // 32 sixteenths over two bars: note length in sixteenths (0 = rest); each note is let go a little early
+  var pat = [1,0,1,1, 0,1,2,0, 1,0,1,1, 3,0,0,1,  1,0,1,1, 0,1,2,0, 1,1,0,1, 2,0,1,0];
+  var total = Math.ceil(32 * step * 1.15), pre = total - Math.round(32 * step) - 4;
+  var env = 0, tauA = 1.5 / 3 / 1000 * bps, tauR = 45 / 3 / 1000 * bps, b = [], held = 0;
+  for (var i = 0; i < total; i++) {
+    var s = (i - pre) / step, on = 0;
+    for (var j = 0; j < 32; j++) if (pat[j] && s >= j && s < j + pat[j] - 0.4) on = 1;
+    held = on;
+    var tgt = on ? 1 : 0, tau = tgt > env ? tauA : tauR;
+    env += (tgt - env) * (1 - Math.exp(-1 / Math.max(tau, 0.05)));
+    var t = i / bps, peak = 0.62 + 0.14 * Math.sin(2 * Math.PI * t * 0.9) + 0.06 * Math.sin(2 * Math.PI * t * 7.3) + (rnd() - 0.5) * 0.08;
+    b.push(Math.max(0, Math.min(1, peak)), env);
+  }
+  var f = { count: total, bps: bps, env: env, held: 0, midiSeen: true, playing: true, bpm: bpm, ppq: (total - pre) / (step * 4), buckets: b };
+  Object.keys(frame).forEach(function (key) { if (f[key] !== undefined) frame[key] = f[key]; });
+  onFrame(f); renderStatus();
+  document.getElementById('midiBox').classList.add('on');   // the lamp as it flashes on a note
+  // ids for the callouts (the knobs are .k[data-k] only)
+  document.querySelectorAll('.k').forEach(function (el) { el.id = 'k_' + el.dataset.k; });
+  var vb = document.querySelector('.p-velbox'); if (vb) vb.id = 'velBox';
+};

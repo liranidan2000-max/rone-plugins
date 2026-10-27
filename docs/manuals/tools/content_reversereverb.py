@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "reversereverb", "product": "RONE Reverse Reverb", "eyebrow": "TEMPO-SYNCED REVERSE REVERB",
-        "title_html": "RONE Reverse <i>Reverb</i>", "accent": "#2BD9FF", "version": "1.1",
+        "title_html": "RONE Reverse <i>Reverb</i>", "accent": "#2BD9FF", "version": "1.2",
         "tagline": "Drop in a sound, choose how many bars the swell should take, and RONE Reverse Reverb renders a reversed reverb tail that lands exactly on the beat - shaped with fades, filters, stereo width and a rhythmic tremolo.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Reverse Reverb.vst3", "au": "RONE Reverse Reverb.component", "exe": "RONE Reverse Reverb.exe",
         "pdf": "RONE Reverse Reverb - User Manual.pdf", "cover_img": "reversereverb/tour_knobs.png",
@@ -26,7 +26,7 @@ def manual(G):
 <div>
 <h3>The 10-second version</h3>
 {steps([
- "Drop a short sound (up to 30 seconds) on the waveform.",
+ "Drop a short sound (up to 8 seconds) on the waveform.",
  "Set TAIL LENGTH to the number of bars the swell should take.",
  "Press PLAY.",
  "Drag the result to your DAW, or leave the plugin on the channel: the file is saved with the project."])}
@@ -43,7 +43,7 @@ def manual(G):
 </div>
 {steps([
  "<strong>Insert</strong> the plugin on a channel (an empty channel is ideal, since the plugin plays its result through it). In the standalone app just open it.",
- "<strong>Load a sound.</strong> Drag a WAV, AIFF, FLAC or MP3 of up to 30 seconds onto the waveform. Short, distinct sounds - a word, a snare, a chord stab - give the clearest swells.",
+ "<strong>Load a sound.</strong> Drag a WAV, AIFF, FLAC or MP3 of up to 8 seconds onto the waveform. Short, distinct sounds - a word, a snare, a chord stab - give the clearest swells.",
  "<strong>Choose the length.</strong> TAIL LENGTH runs from 1/32 to 8 BAR. It is the total length of the result at the current tempo (host tempo in a DAW; the BPM slider in the standalone app).",
  "<strong>Set the room.</strong> ROOM SIZE controls how dense and long the reverb is inside that length; LOW CUT removes rumble from the tail; WIDTH sets how wide the swell is.",
  "<strong>Listen.</strong> Press <span class='pill'>PLAY</span>. In a DAW you can also trigger playback with any MIDI note routed to the plugin - note on starts, note off stops.",
@@ -73,7 +73,7 @@ def manual(G):
  ("TREMOLO on/off", "opens the tremolo section"),
  ("Resize grip", "drag to resize the window"),
 ])}
-{img("reversereverb/tremolo.png", "<b>TREMOLO section open.</b> 1 DEPTH &middot; 2 PAN &middot; 3 RATE &middot; 4 SHAPE &middot; 5 MODE (RAMP / SYNC / FREE) &middot; 6 FROM / TO divisions for RAMP (a single Division list appears in SYNC mode).")}
+{img("reversereverb/tremolo.png", "<b>TREMOLO section open.</b> 1 DEPTH &middot; 2 PAN &middot; 3 RATE &middot; 4 SHAPE &middot; 5 MODE (RAMP / SYNC / FREE). In RAMP mode the FROM / TO division lists take the place of RATE; SYNC shows a single Division list.")}
 """})
 
     S.append({"title": "Controls reference", "sub": "what every control does, its range and default", "html": f"""
@@ -86,14 +86,14 @@ def manual(G):
 {img("reversereverb/tour_knobs.png", "<b>LOW CUT, WIDTH, TAIL LENGTH, ROOM SIZE, DRY/WET.</b>")}
 {ctl("TAIL LENGTH", "8 BAR &middot; 4 BAR &middot; 2 BAR &middot; 1 BAR &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32<br>default 1/2", "<p>The total length of the rendered result at the current tempo. This is what makes the swell land: an 8 BAR tail dropped eight bars before the downbeat arrives exactly on it.</p>", "Use short values (1/4, 1/8) on drums for tight pre-hits; long values (2-8 BAR) on vocals and chords for cinematic entries.")}
 {ctl("ROOM SIZE", "0 to 100 %<br>default 80 %", "<p>The size of the reverb used to create the tail. Larger rooms give denser, smoother swells; small rooms give short, grainy pre-echoes that still stretch to the chosen length.</p>")}
-{ctl("LOW CUT", "20 to 500 Hz<br>default 200 Hz", "<p>A high-pass filter on the result. Reversed tails carry a lot of low-mid rumble; 100-200 Hz keeps the swell out of the way of bass and kick.</p>")}
+{ctl("LOW CUT", "20 to 500 Hz<br>default 20 Hz", "<p>A high-pass filter on the result. Reversed tails carry a lot of low-mid rumble; 100-200 Hz keeps the swell out of the way of bass and kick.</p>")}
 {ctl("WIDTH", "0 to 100 %<br>default 50 %", "<p>Stereo width of the result. 0 % is mono, 50 % is the natural reverb width, 100 % is as wide as it goes.</p>", "Check the mix in mono above 80 %.")}
 {ctl("HI CUT", "1 kHz to OFF<br>default OFF", "<p>A low-pass filter on the result. Reversed tails are bright by nature; 4-8 kHz makes a dark, cinematic swell that sits behind a lead instead of fighting it.</p>")}
 {ctl("OUTPUT", "0 to 200 %<br>default 100 %<br>automatable", "<p>The level of the result. Above 100 % a soft limiter takes over: the loud end of a swell rounds off instead of clipping, so a hot OUTPUT is a colour, not a fault.</p>")}
 <h3>Tremolo</h3>
 {img("reversereverb/tremolo_panel.png", "<b>The tremolo section.</b>")}
 {ctl("TREMOLO on/off", "power button", "<p>Enables a rhythmic amplitude gate on the result - the difference between a swell and a riser.</p>")}
-{ctl("DEPTH", "0 to 100 %<br>default 100 %", "<p>How deep the tremolo cuts. 100 % is a hard gate.</p>")}
+{ctl("DEPTH", "0 to 100 %<br>default 50 %", "<p>How deep the tremolo cuts. 100 % is a hard gate.</p>")}
 {ctl("PAN", "0 to 100 %<br>default 0 %", "<p>Turns the tremolo into an auto-pan: alternate pulses lean left and right by this amount.</p>")}
 {ctl("RATE", "0.1 to 20 Hz<br>default 4 Hz", "<p>Speed of the tremolo in FREE mode. In RAMP and SYNC modes the speed comes from the tempo and this knob is inactive.</p><p><strong>REC</strong> (the small red dot on the knob, 1.1.7) records the knob into the sample: click it (it blinks), press PLAY and turn RATE while the swell plays. The movement is recorded across the whole sample, and from then on the tremolo follows the take in the preview, in the waveform and in the dragged file; the knob turns red and follows the take while it plays. Click REC again to record a new take. Turning RATE by hand replaces the take with a plain knob again. The take is saved with the project.</p>")}
 {ctl("SHAPE", "sine &middot; triangle &middot; square<br>default sine", "<p>The shape of the pulse. Sine is smooth, triangle is sharper, square is a hard gate.</p>")}
@@ -143,7 +143,7 @@ def manual(G):
 <li>Try TRANSITION mode on drum hits; the shared reverb makes the hit sound like it belongs to the swell.</li>
 </ul></div>
 <div><h4>Avoid</h4><ul>
-<li>Files longer than 30 seconds; the plugin refuses them. Trim in your DAW first.</li>
+<li>Files longer than 8 seconds; the plugin refuses them. Trim in your DAW first.</li>
 <li>WIDTH at 100 % on low-frequency material; it can cancel in mono.</li>
 <li>Deep square tremolo on soft pads; sine or triangle keeps the swell musical.</li>
 </ul></div>
@@ -159,7 +159,7 @@ def manual(G):
     S.append(G["conventions_section"](m, note("MIDI", "Route a MIDI track to the plugin to trigger playback: note on plays the result from the start, note off stops it. This works in the VST3 and AU versions.")))
 
     S.append(G["support_section"](m, [
-        ("The file does not load", "Files longer than 30 seconds are rejected. Trim the sound in your DAW and try again. WAV, AIFF, FLAC and MP3 are supported."),
+        ("The file does not load", "Files longer than 8 seconds are rejected. Trim the sound in your DAW and try again. WAV, AIFF, FLAC and MP3 are supported."),
         ("The swell does not land on the beat", "Check the tempo shown next to the status line. In the standalone app set the BPM slider; in a DAW the host tempo is used - re-render if you changed it."),
         ("PLAY is greyed out", "No sound is loaded yet, or the render is still running (very long tails take a moment)."),
         ("The swell sounds a semitone or so too high or too low", "Fixed in 1.0.1: files are now resampled to the session's sample rate. If an old project still sounds off, re-drop the source file once."),

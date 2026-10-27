@@ -29,9 +29,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "throw":      ROOT / "RoneThrow" / "Source" / "WebUI.h",
     "clipper":    ROOT / "RoneClipper" / "Source" / "WebUI.h",
     "rise":       ROOT / "RoneRise" / "Source" / "WebUI.h",
-    "c1176":      ROOT / "Rone1176" / "Source" / "WebUI.h",
-    "c2a":        ROOT / "Rone2A" / "Source" / "WebUI.h",
-    "sidechain":  ROOT / "RoneSidechain" / "Source" / "WebUI.h",
+    "gater":      ROOT / "RoneGater" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -73,39 +71,14 @@ STATES = [
     ("rise", "", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.land=2;frame.running=true;frame.t=0.62;frame.bar=4;frame.beat=2;frame.playing=true;frame.phase=0.6;CH.cur=0.62;CH.target=0.62;renderLand();renderKnob()", None),
     ("rise", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.preset=2;Object.assign(state,PRESETS[2].m);state.land=2;state.intensity=0.7;Object.assign(frame,{hpf:900,lpf:20000,gate:16,pitch:62,rev:0.55,del:0.35,noise:-26,shep:540,drive:0.28});CH.cur=0.7;CH.target=0.7;renderKnob();renderMacros();renderPresets();renderLand();renderTail();renderChain();document.getElementById('drawer').classList.add('open');document.getElementById('advBtn').classList.add('on')", None),
     ("rise", "_about", "click:pLogo", None),
-    # RONE 1176 / RONE 2A: one face at 1080 wide; the window is 296 tall without the scope, 626 with it,
-    # 718 with the scope's ADVANCED row open (PluginEditor.h kBaseH*). The scope draws only from host frames.
-    ("c1176", "", "", (1080, 296)),
-    ("c1176", "_scope", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);ui.scope=true;renderScope()", (1080, 626)),
-    ("c1176", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);ui.scope=true;ui.adv=true;renderScope()", (1080, 718)),
-    ("c1176", "_about", "click:pLogo", (1080, 296)),
-    ("c2a", "", "", (1080, 296)),
-    ("c2a", "_scope", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);ui.scope=true;renderScope()", (1080, 626)),
-    ("c2a", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);ui.scope=true;ui.adv=true;renderScope()", (1080, 718)),
-    ("c2a", "_about", "click:pLogo", (1080, 296)),
-    # RONE Sidechain (960x560): without a host the page runs its own demo kick and bass, so the waves draw
-    # by themselves. Pages switch through the tab row (showTab lives inside the page's closure, so the
-    # states click the spans); LANES / OVERLAY through #viewSeg. Transitions off first, like 2A, and the
-    # demo clock frozen a set time after a kick (the KICK chip flashes at every cycle start) so the shots
-    # are the same on every run - SPACE at 125 ms, inside the bells' window, so the red cut shows.
-    ("sidechain", "", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();", None),
-    ("sidechain", "_overlay", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[1].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();", None),
-    ("sidechain", "_phase", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=ph]').click();", None),
-    ("sidechain", "_space", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-125)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sp]').click();", None),
-    # DUCK = BAND at its defaults (20 - 200 Hz) for the strip crop; the CLASSIC shape for its bend circle
-    ("sidechain", "_band", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();document.getElementById('rangeSeg').querySelectorAll('span')[2].click()", None),
-    ("sidechain", "_shape", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();document.getElementById('shapes').querySelectorAll('button')[2].click()", None),
-    # the SETUP popover as it opens (OTHER DAWS closed: opened, the list runs past the window's bottom)
-    ("sidechain", "_setup", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();,click:kickBox", None),
-    ("sidechain", "_presets", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();,click:presetBtn", None),
-    # PRESET with MY PRESETS (one saved and starred as the default through the popup itself) and the SAVE AS row open
-    ("sidechain", "_psave", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();,click:presetBtn,js:document.getElementById('psaveBtn').click();document.getElementById('psaveName').value='MY ROLLING';document.getElementById('psaveOk').click();document.getElementById('myPresetList').querySelector('.pico:not(.del)').click();document.getElementById('psaveBtn').click()", None),
-    # the SHAPES row under a real mouse hover (shoot.HOVER): the third tile shows its delete x
-    ("sidechain", "_hover", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();", None),
-    ("sidechain", "_about", "click:pLogo", None),
+    # Gater: the display draws only from host `frame` events, so _mock.js feeds it a pad chopped
+    # by a 1/16 groove at 140 BPM (MIDI IN, GATE FOLLOWS THE NOTES); SETUP is shown as FL Studio sees it.
+    ("gater", "", "js:window.__scn_gater()", None),
+    ("gater", "_setup", "js:window.__scn_gater();hostKey='fl';renderSetup();document.getElementById('setupBtn').click()", None),
+    ("gater", "_about", "click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
-    ("reversereverb_m", "_trem", "click:tremolo-power", None), ("reversereverb_m", "_about", "click:p-logo", None),
+    ("reversereverb_m", "_trem", "click:tremolo-power,js:setTremMode('free')", None), ("reversereverb_m", "_about", "click:p-logo", None),
     ("afterspace", "", "", None), ("afterspace", "_adv", "click:adv-btn", None), ("afterspace", "_about", "click:p-logo", None),
     ("center", "_tall", "", (1100, 1000)),
 ]
@@ -167,8 +140,9 @@ def prepare_ui():
         f = dst / "index.html"
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
     # the Clipper only draws what the host pushes as `frame` events, so its manual states feed them through the fake bridge (in place, no copy)
-    f = UI / "clipper" / "index.html"
-    f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
+    for src in ("clipper", "gater"):
+        f = UI / src / "index.html"
+        f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
 
 class Server:
     def __enter__(self):

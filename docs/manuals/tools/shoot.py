@@ -22,13 +22,9 @@ from edge_cdp import Edge
 
 # editor sizes (kBaseW x kBaseH from each PluginEditor.h; the Center is its default window)
 SIZES = {"reversereverb": (700, 650), "stutter": (900, 600), "stucker": (440, 520),
-         "flanger": (680, 520), "afterspace": (1150, 780), "choir": (1000, 750), "throw": (440, 560), "clipper": (340, 680), "rise": (860, 580),
-         "c1176": (1080, 626), "c2a": (1080, 626), "sidechain": (960, 560),
+         "flanger": (680, 520), "afterspace": (1150, 780), "choir": (1000, 750), "throw": (440, 560), "clipper": (340, 680), "rise": (860, 580), "gater": (860, 440),
          "center": (920, 640)}
 DPR = 2
-# a real mouse hover (CDP Input.dispatchMouseEvent, editor px) for states whose look is a :hover rule:
-# shot name -> (x, y). Sidechain: the third SHAPES tile, which shows its delete x on hover.
-HOVER = {"sidechain_hover": (226, 420)}
 
 def shoot(name, suffix="", state="", size=None):
     ensure()
@@ -41,11 +37,7 @@ def shoot(name, suffix="", state="", size=None):
         # _shot.js: fonts ready -> 800 ms -> state applied -> 1200 ms -> rects posted to the harness
         raw = edge.wait_for("(function(){var s=document.getElementById('__rects');return s?s.textContent:''})()", timeout=40)
         rects = json.loads(raw)
-        import time
-        if f"{name}{suffix}" in HOVER:
-            hx, hy = HOVER[f"{name}{suffix}"]
-            edge.ws.call("Input.dispatchMouseEvent", {"type": "mouseMoved", "x": hx, "y": hy})
-        time.sleep(0.4)                       # let the last transition frame paint
+        import time; time.sleep(0.4)          # let the last transition frame paint
         edge.screenshot(out, w, h)
     im = Image.open(out)
     if im.size != (w * DPR, h * DPR):
