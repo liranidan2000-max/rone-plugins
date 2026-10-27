@@ -8,7 +8,9 @@ from PIL import Image, ImageDraw, ImageFont
 from paths import SHOTS, DOCIMG, FONT, ensure
 
 ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "reversereverb": "#2BD9FF",
-          "afterspace": "#FF8A3D", "analyzer": "#22E36B", "center": "#9D6BFF",
+          "afterspace": "#FF8A3D", "center": "#9D6BFF",
+          # the Analyzer is RONE cyan everywhere since 1.3.34 - never the old green
+          "analyzer": "#5AD2E6",
           # Throw's on-screen accent is Ice White #D8E4EC, which vanishes on paper; the
           # manual uses this printable ice-grey for badges and headings instead.
           "throw": "#9FB3C4", "clipper": "#3D8BFF",
@@ -31,58 +33,114 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
 # badge somebody else's description. That is what happened to the old
 # eighteen-entry list when the UI changed.
 ANALYZER_CALLOUTS = {
+    # --- header
     "#brand":
-        ("Logo", "the R mark opens About - there is no ABOUT button"),
+        ("Logo", "the R mark opens About (version, licence, links)"),
     ".readbar":
-        ("Source readout", "current source, channel pair and sample rate; "
-                           "the dot lights while audio is arriving"),
-    '.chip[data-act="source"]':
-        ("SOURCE", "choose the input: ASIO, loopback, live input or DAW master"),
-    '.chip[data-act="channels"]':
-        ("CH", "which pair of a multichannel device to analyse"),
-    '.chip[data-act="file"]':
-        ("FILE", "open and play in real time, open and scan a whole file in "
-                 "seconds, or loop"),
-    '.chip[data-act="reference"]':
-        ("REF", "add reference tracks and show or clear the reference corridor "
-                "behind the analyser"),
-    '.chip[data-act="reset"]':
-        ("RESET", "clear every accumulating measurement: peak holds, "
-                  "the over counter, integrated loudness"),
-    '.chip[data-act="setup"]':
-        ("SETUP", "range, scale, ballistics, hold times, mono fold, "
-                  "goniometer release and AGC"),
-    "#bare":
-        ("Full screen", "takes the header and status bar off so the instruments "
-                        "have the whole screen. H toggles it; Escape comes back"),
-    '.chip[data-act="menu"]':
-        ("App menu", "Appearance, Totalyser Setup, Bridge bypass (A/B), "
-                     "Start with Windows, About, Quit"),
-    "#specCard":
-        ("Totalyser", "the spectrum analyser: thirty third-octave bands on "
-                      "6th-order Butterworth filters, not an FFT"),
-    "#specCard .meta":
-        ("Resolution, bands, range", "what the analyser is currently set to; "
-                                     "change it in SETUP"),
+        ("Source readout", "what is being measured: source, channel pair and "
+                           "sample rate; the dot lights while audio is arriving"),
+    '[data-act="source"]':
+        ("SOURCE", "what to measure: your DAW's master through RONE Analyzer "
+                   "Bridge, what the computer plays, an input, a file - and the "
+                   "channel pair of the open source. F3"),
+    "#playChip":
+        ("PLAY / STOP", "the file transport, shown while a file is the source. Space"),
+    "#scanChip":
+        ("SCAN", "push the whole file through the meters again, as fast as they "
+                 "can take it"),
+    '[data-act="menu"]':
+        ("Menu", "open a file, Appearance, reset every measurement, Bridge "
+                 "bypass, always on top, start with Windows, the Hints tour, About"),
+    "#chrome":
+        ("Hide the chrome", "takes the header and the status bar away so the "
+                            "instruments have the whole window. H; Escape brings them back"),
+    # --- spectrogram
+    "#chanRow":
+        ("CHANNELS", "every RONE Analyzer Channel in your DAW appears here as a "
+                     "chip in its colour; click shows or hides it, S sees it alone, "
+                     "right-click hears it alone, drag changes the drawing order"),
+    "#sidesChip":
+        ("SIDES", "paints the side signal (L minus R) over the bars in violet: "
+                  "what is wide, band by band"),
+    "#refModeChip":
+        ("REF LINE / FULL", "how the reference is drawn: its curve over the plot, "
+                            "or the whole record in its own colour behind the live one"),
+    "#rulesChip":
+        ("RULES", "the gold 10 dB rows and the fainter 5 dB rows: one click hides "
+                  "the fives, the next the tens too, the next brings them back"),
+    "#viewChip":
+        ("BARS / WAVES", "the third-octave analyser, or the FFT spectrum the way "
+                         "spectrum analysers everyone knows draw it. W"),
+    '[data-act="setupSpectrum"]':
+        ("Setup", "bands, range, resolution, decay, rise time, hold; in WAVES "
+                  "the Spectrum Mode editor. F2"),
+    "#specPlot":
+        ("Spectrogram", "thirty third-octave bands of LEDs; the white LED is the "
+                        "held peak. Press and hold a bar to hear only that band"),
     "#specAxis":
-        ("Frequency axis", "ISO 266 third-octave centres, 25 Hz to 20 kHz, "
-                           "staggered over two rows"),
-    "#levCard":
-        ("Level Meters", "RMS L, Peak L, Peak R, RMS R, with the OVR counter "
-                         "above and peak / RMS / crest printed below"),
+        ("Zones and frequencies", "the band centres, and SUB, BASS, LOW MID ... AIR: "
+                                  "click a zone to hear that range alone, right-click "
+                                  "to solo just it"),
+    "#ldToggle":
+        ("Loudness toggle", "opens and closes the LOUDNESS panel. L"),
+    # --- loudness
+    "#ldTarget":
+        ("Target", "CLUB -8, STREAM -14 or EBU -23 LUFS: the gauge and TO TARGET "
+                   "measure against it"),
+    '[data-act="lufsReset"]':
+        ("RESET", "restart Integrated, Range and the true-peak hold; Momentary "
+                  "and Short-term keep running"),
+    "#ldRow":
+        ("Loudness readings", "Momentary, Short-term, Integrated, Range, True Peak "
+                              "(OVER -1 lights above -1.0 dBTP) and the distance to the target"),
+    # --- level meters
+    "#lvMax":
+        ("MAX PEAK / MAX RMS", "the loudest moment since the last reset - the "
+                               "largest sample, and the RMS of the louder channel; "
+                               "click to restart"),
+    "#lvGear":
+        ("Meter settings", "range, hold, release and over detection"),
+    "#levels":
+        ("Level meters", "RMS inside, PEAK outside, per channel; the top rows "
+                         "turn yellow from -3 dB and the OVR rows red on an over"),
+    # --- vectorscope
+    "#shapechip":
+        ("MODE", "the frame: diamond or circle"),
+    "#monochip":
+        ("STEREO / SIDES / MONO", "folds everything: every instrument then measures "
+                                  "the fold, and the Bridge plays it in the DAW. M"),
+    "#vec2Open":
+        ("Second vectorscope", "a second scope beside this one for the reference "
+                               "record or one of your Channels, in its colour"),
+    '[data-act="setupScope"]':
+        ("Scope settings", "the phosphor's afterglow and the AGC"),
     "#scopeBox":
-        ("Vectorscope", "the goniometer, rotated 45 degrees so mono is a "
-                        "vertical line"),
-    "#clipmode":
-        ("LOCKED / FREE", "LOCKED holds the trace inside the graticule, so a "
-                          "full signal reads as a diamond; FREE lets it run to "
-                          "the corners. V toggles it"),
-    "#corrBox":
-        ("Correlation", "-1 to +1 with the minimum held, and the L/R balance"),
+        ("Vectorscope", "the stereo image: M up, L and R on the diagonals, S "
+                        "across. V toggles LOCKED and FREE"),
+    "#corrCv":
+        ("Correlation", "+1 is mono-safe, 0 is wide, below zero cancels in mono"),
+    "#refWave":
+        ("Reference record", "the loaded record; the bright stretch is the 16 bars "
+                             "the curve is taken from - click to move it, the arrows "
+                             "step 16 bars"),
+    "#noteRow":
+        ("NOTE", "the note under the mix - the bass or kick fundamental - with its "
+                 "octave, hertz and cents; the small arrow pops it out into a window "
+                 "that stays on top"),
+    "#refCtl":
+        ("PLAY / CURVES / CLEAR", "play the reference loop; save this curve under "
+                                  "a name or bring one back; remove the reference"),
+    ".balWrap":
+        ("BAL", "left / right energy balance"),
+    "#bsChip":
+        ("SCOPE", "opens the BAR SCOPE: the waveform locked to the DAW's bar. O"),
+    # --- status bar
     "#status":
-        ("Status bar", "sample rate, device, over count, dropped frames, CPU"),
-    "#grip":
-        ("Resize grip", "drag to resize the window"),
+        ("Status bar", "sample rate and channels, the source or file and its "
+                       "position, MONO, overs, dropped frames, CPU"),
+    "#sizeLock":
+        ("FIXED / FREE", "FIXED keeps the window's shape and zooms the instrument; "
+                         "FREE lets it take any size"),
 }
 
 def load_rects(name):
@@ -322,10 +380,12 @@ def main():
         # picture. Nudge those few boxes in; a dozen pixels on a 3200-wide
         # capture is not visible, and a clipped number is.
         img_w, img_h = Image.open(SHOTS / "analyzer_raw.png").size
+        # the badge radius annotate() will use (badge_scale 0.5), plus air
+        edge = int(19 * 0.5 * (img_w / 1400)) + 12 + 10
         def _fit(b):
             x, y, w, h = b
-            nx = min(max(x, 26), img_w - 44)
-            ny = min(max(y, 26), img_h - 44)
+            nx = min(max(x, edge), img_w - edge)
+            ny = min(max(y, edge), img_h - edge)
             return [nx, ny, max(8, w - (nx - x)), max(8, h - (ny - y))]
 
         boxes = [(_fit(measured[sel]), entry[0])

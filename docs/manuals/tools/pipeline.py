@@ -171,6 +171,11 @@ class Server:
             subprocess.run(["taskkill", "/F", "/T", "/PID", str(self.p.pid)], capture_output=True)
         self.p.terminate()
 
+# Liran's tutorial material: a kick + bass loop as the source and a finished
+# track as the reference record (both 142 BPM).
+ANALYZER_DEMO_FILE = r"D:\FUNCTION LOOPS\_RONE TUTORIAL\RONE Tut - Kick Bass RONE 142.wav"
+ANALYZER_DEMO_REFERENCE = r"D:\FUNCTION LOOPS\_RONE TUTORIAL\RONE Ref - Find Yourself 142.wav"
+
 def capture_native():
     """The analyzer's shot, through the web view's own debugger.
 
@@ -186,10 +191,23 @@ def capture_native():
         os.environ.get("ProgramFiles", r"C:\Program Files") + r"\RONE Plugins\RONE Analyzer.exe")
     if not os.path.exists(exe):
         log("  Analyzer not installed - keeping the previous capture if any"); return
+    # An analyser with nothing to analyse is a picture of an empty grid, and
+    # half the callouts (the transport, the reference strip) only exist with
+    # a file playing and a record loaded. RONE_ANALYZER_FILE / _REFERENCE
+    # override the two demo files; a missing file is simply left out.
+    args = []
+    for flag, var, default in (("--file", "RONE_ANALYZER_FILE", ANALYZER_DEMO_FILE),
+                               ("--reference", "RONE_ANALYZER_REFERENCE", ANALYZER_DEMO_REFERENCE)):
+        f = os.environ.get(var) or default
+        if os.path.exists(f): args += [flag, f]
+        else: log(f"  (no {flag} for the analyzer shot: {f} not found)")
     log(f"  capturing {exe}")
     ok = capture_webview.capture(exe, SHOTS / "analyzer_raw.png",
                                  selectors=annotate.ANALYZER_CALLOUTS,
-                                 out_rects=SHOTS / "analyzer_rects.json")
+                                 out_rects=SHOTS / "analyzer_rects.json",
+                                 settle=9.0, args=args,
+                                 # the LOUDNESS panel open, so the tour can name it
+                                 pose="setLoud(true)")
     log("  analyzer captured" if ok else "  analyzer capture FAILED - previous shot kept")
 
 def main(argv):

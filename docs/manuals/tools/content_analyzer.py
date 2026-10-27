@@ -8,172 +8,199 @@ ANALYZER_LEGEND = [(label, desc) for label, desc in _CALLOUTS.values()]
 def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
-        "id": "analyzer", "product": "RONE Analyzer", "eyebrow": "PROFESSIONAL MEASUREMENT SUITE",
+        "id": "analyzer", "product": "RONE Analyzer", "eyebrow": "THE MIX, MEASURED",
         "title_html": "RONE <i>Analyzer</i>", "accent": "#1A9AB0", "version": "1.3",
-        "tagline": "A DIGICheck-style measurement suite: 30-band third-octave analyser with reference corridors, vectorscope with phosphor afterglow, level meters, EBU R128 loudness and bit statistics, reading ASIO, loopback, a live input, a file or your DAW's master bus.",
-        "formats": ["Standalone", "VST3 bridge"], "vst3": "RONE Analyzer Bridge.vst3", "au": "", "exe": "RONE Analyzer.exe",
+        "tagline": "One window that is always on: a third-octave spectrogram with a reference record drawn over it, level meters, a vectorscope, EBU R128 loudness, a bar-locked scope - fed by your DAW's master through the Bridge, by what the computer plays, by an input or by a file.",
+        "formats": ["Standalone", "VST3 + AU (Bridge, Channel)"], "vst3": "RONE Analyzer Bridge.vst3 / RONE Analyzer Channel.vst3",
+        "au": "RONE Analyzer Bridge.component / RONE Analyzer Channel.component", "exe": "RONE Analyzer.exe",
         "pdf": "RONE Analyzer - User Manual.pdf", "cover_img": "analyzer/main.png",
-        "channels": "Any stereo pair of the selected source; mono fold available",
-        "engine": "JUCE 8, native interface (no WebView needed)",
-        "latency": "Not applicable (measurement only; the bridge plugin is transparent)",
+        "channels": "Any stereo pair of the selected source; STEREO / SIDES / MONO fold",
+        "engine": "Native analysis engine; the instruments are drawn in a web view",
+        "latency": "Not applicable (measurement only; the Bridge and the Channel pass audio through untouched)",
     }
     S = []
 
-    S.append({"title": "Welcome to RONE Analyzer", "sub": "what it measures and why it is built this way", "html": f"""
-<p><strong>RONE Analyzer</strong> is a standalone measurement application in the shape of the classic RME DIGICheck: modular instruments in a panel grid, a real bandpass spectrum analyser rather than an FFT, a vectorscope with proper phosphor afterglow, bit statistics and EBU R128 loudness. It reads audio from an ASIO interface (alongside your DAW), from whatever Windows is playing (loopback), from a live input, from a file, or from your DAW's master bus through the included <strong>RONE Analyzer Bridge</strong> VST3.</p>
-<p>The point of a separate application is that it is always on screen, always measuring the same thing, whatever project or plugin you have open. The point of the bridge is that you can also put the analyser exactly where a plugin would sit: on your master, after your limiter.</p>
+    S.append({"title": "Welcome to RONE Analyzer", "sub": "what it measures and how it is meant to be used", "html": f"""
+<p><strong>RONE Analyzer</strong> is a measurement window that stays open all session, on a second monitor or over the DAW. It is one picture of the whole mix: the spectrogram on the left, the level meters in the middle, the vectorscope with correlation, NOTE and the reference strip on the right, and the LOUDNESS panel under the spectrogram when you want it. It reads your DAW's master through the included <strong>RONE Analyzer Bridge</strong> plugin, whatever the computer is playing, a hardware input, or a file.</p>
+<p>Two plugins come with it. The <strong>Bridge</strong> goes last on your master: it sends the mix to the analyser bit for bit, and it is the only source where band solo, zone solo and the mono fold are <em>heard</em> in the DAW itself. <strong>RONE Analyzer Channel</strong> goes on any mixer channel - KICK, BASS, VOX - and that channel's spectrum is drawn over the master in its own colour.</p>
 <div class="two">
 <div>
 <h3>The instruments</h3>
 <ul>
-<li><strong>Totalyser</strong> - 30-band ISO third-octave analyser (also 1/1 and 1/6 octave), PEAK / HOLD / RTA traces, L/R or Mid/Side, per-band stereo strip, hover readout, band solo by ear, and a <em>reference corridor</em> built from your reference tracks.</li>
-<li><strong>Level Meters</strong> - peak and RMS per channel, crest factor, configurable over detection, K-System scales.</li>
-<li><strong>Stereo Vectorscope</strong> - goniometer with bright / dim afterglow, correlation meter with a low-water mark.</li>
-<li><strong>Loudness (EBU R128)</strong> - momentary, short-term, integrated, LRA, true peak, target deviation.</li>
-<li><strong>Bit Statistic &amp; Noise</strong> - true word length, stuck bits, SNR, noise floor, DC offset.</li>
-<li><strong>Spectroscope</strong> and <strong>Oscilloscope</strong>, plus a <strong>Global Level Meter</strong> for many-channel interfaces.</li>
+<li><strong>Spectrogram</strong> - thirty third-octave bands of LEDs with held peaks, or WAVES, an FFT spectrum drawn the way spectrum analysers everyone knows draw it. Zones you can solo by ear, bands you can press to hear, SIDES in violet, your Channels in their colours and a <em>reference record</em> drawn over it all.</li>
+<li><strong>Level meters</strong> - RMS and PEAK per channel, MAX PEAK and MAX RMS, overs that stay lit until you reset them.</li>
+<li><strong>Vectorscope</strong> - the stereo image as a phosphor trace, correlation, left / right balance, and a second scope for the reference or a Channel.</li>
+<li><strong>NOTE</strong> - the note under the mix, the fundamental of the bass or the kick, in a pop-out window if you like.</li>
+<li><strong>LOUDNESS</strong> - EBU R128: momentary, short-term, integrated, range, true peak, against a CLUB, STREAM or EBU target.</li>
+<li><strong>BAR SCOPE</strong> - the waveform locked to the DAW's bar, from 4 bars down to 1/8, with the Channels drawn in.</li>
 </ul>
 </div>
 <div>
 <h3>The 10-second version</h3>
 {steps([
  "Open RONE Analyzer.",
- "SOURCE &rarr; pick the endpoint with the live meter next to it.",
- "Read the spectrum, the meters and the scope.",
- "Put the RONE Analyzer Bridge on your DAW master to measure the mix itself."])}
-<h3>Why bandpass, not FFT</h3>
-<p>An FFT has linear bins; an ear does not. The Totalyser runs thirty real bandpass filters on the ISO 266 centres (25 Hz to 20 kHz), so every band is a third of an octave wide and a tone reads its own level. It is the same axis you see on DIGICheck and on every third-octave RTA in a mastering room.</p>
+ "Put <strong>RONE Analyzer Bridge</strong> last on your DAW's master. The analyser picks it up by itself.",
+ "Read the spectrogram, the meters, the scope.",
+ "REFERENCE &rarr; load a record you admire. Its curve sits over your bars.",
+ "Press <strong>F1</strong> for the built-in tour of everything."])}
+<h3>Why third-octave bands</h3>
+<p>An FFT has linear bins; an ear does not. The spectrogram runs thirty real bandpass filters on the standard third-octave centres from 25 Hz to 20 kHz, so every band is a third of an octave wide and a tone reads its own level. When you want the familiar FFT picture, WAVES is one key away.</p>
 </div></div>
+{note("No routing", "The analyser never needs your interface's outputs. It opens its sources with no output channels, so it sits beside the DAW without fighting for the device, and a Bridge or a Channel in the DAW needs no routing at all - insert it and it shows up.")}
 """})
 
     S.append(G["install_section"](m))
 
     S.append({"title": "Quick start", "sub": "seeing your mix in the analyser", "html": f"""
-{img("analyzer/main.png", "<b>RONE Analyzer</b>: Totalyser, Level Meters, Vectorscope.")}
+{img("analyzer/main.png", "<b>RONE Analyzer</b> with a file playing and a reference record loaded: spectrogram with the reference curve and the live average, LOUDNESS open, level meters, vectorscope, correlation, the reference strip, NOTE.")}
 {steps([
- "<strong>Start</strong> RONE Analyzer from the Start menu (Windows) or Applications (macOS). It remembers its source, its settings and its window position between runs.",
- "<strong>Choose a source.</strong> Click <span class='pill'>SOURCE</span>. The menu lists every audio endpoint on the machine with a small live meter next to each - the one that moves is the one carrying your mix. Pick an ASIO device to read your interface's inputs (works alongside a running DAW on multiclient drivers such as RME), a loopback endpoint to read whatever Windows is playing (Spotify, YouTube, references), or a live input for a microphone or line signal.",
- "<strong>Or open a file.</strong> <span class='pill'>FILE</span> &rarr; <em>Open and play (real time)</em> to hear and measure it, or <em>Open and scan (fast, whole file)</em> to push the whole file through the meters in seconds. You can also drop a file on the window.",
- "<strong>Measure inside the DAW.</strong> Insert <strong>RONE Analyzer Bridge</strong> on your master bus (last in the chain). Then choose <em>DAW master (RONE Bridge plugin)</em> in the SOURCE menu. The bridge taps the master and sends it to the analyser; band solo and mono fold then act inside the DAW's own signal path.",
- "<strong>Give it the whole screen.</strong> The chevron at the right of the header, or <span class='pill'>H</span>, takes the header and the status bar away and leaves the three instruments edge to edge. It is the way to use the analyser on a second monitor. <span class='pill'>Escape</span>, or the small chevron in the top corner, brings the chrome back.",
- "<strong>Set it up.</strong> <span class='pill'>SETUP</span> holds everything about how the instruments behave: band resolution and range, rise and release times, hold times, the mono fold, and the goniometer's afterglow and AGC. <span class='pill'>Appearance</span> in the app menu (or <span class='pill'>F4</span>) picks a theme and every colour in it.",
+ "<strong>Start</strong> RONE Analyzer from the Start menu (Windows) or Applications (macOS). It remembers its source, its settings, its theme and its window between runs.",
+ "<strong>Measure the DAW.</strong> Insert <strong>RONE Analyzer Bridge</strong> on your master bus, last in the chain. The moment the plugin runs, the analyser switches to it by itself (its window says LINKED). Band solo, zone solo and the mono fold are then heard through the DAW.",
+ "<strong>Or choose another source.</strong> Click <span class='pill'>SOURCE</span> (or F3). The menu lists the DAW master, what the computer plays (no routing needed), your inputs, ASIO devices and other device types, a sample rate, and <em>Analyse a file...</em>. Under them, the channel pairs of the open source.",
+ "<strong>Or open a file.</strong> Menu &rarr; <em>Open a file and play</em> to hear and measure it, or <em>Open a file and scan</em> to push the whole file through the meters in seconds. PLAY / STOP and SCAN then appear in the header; <em>Loop the file</em> is in the menu.",
+ "<strong>Load a reference.</strong> Press <span class='pill'>REFERENCE</span> on the right. Pick a record; its waveform comes up, the bright stretch is the 16 bars the curve is taken from, and the curve sits over your spectrogram. REF LINE / REF FULL chooses how it is drawn.",
+ "<strong>Hear a range.</strong> Click a zone under the spectrogram - SUB, BASS, LOW MID - to hear only that range; press and hold a bar to hear one band. Escape lets everything back.",
+ "<strong>Check the low end in mono.</strong> Press <span class='pill'>M</span>, or the STEREO chip on the vectorscope. If the bass thins out, it is not mono.",
+ "<strong>Give it the whole screen.</strong> The chevron at the top right, or <span class='pill'>H</span>, takes the header and status bar away. <span class='pill'>Escape</span> brings them back.",
 ])}
-{note("Zero output channels", "The analyser opens your device with no output channels so it can sit beside your DAW without fighting for the outputs. Monitoring (band solo by ear) needs an output and therefore reopens the device; it is never on at start-up and is only offered on hardware sources.")}
+{note("The tour", "Menu &rarr; <em>Hints: a tour of everything</em>, or F1, walks through every control with a short animation of the gesture. The instrument stays live underneath, so each step can be tried while it is up. Arrows step, Escape ends.")}
 """})
 
     S.append({"title": "Interface tour", "sub": "every element on screen", "html": f"""
-{img("analyzer/tour.png", "The application window.")}
+<p>The window as it opens, with a file playing, the LOUDNESS panel open and a reference record loaded. The BAR SCOPE (SCOPE, bottom right) and the second vectorscope (the + on the vectorscope's title) open as extra panels and are described in the reference section.</p>
+{img("analyzer/tour.png", "RONE Analyzer, every control numbered.")}
 {legend(ANALYZER_LEGEND)}
 """})
 
-    S.append({"title": "Instruments reference", "sub": "how to read each one", "html": f"""
-<h3>Spectrogram (the Totalyser)</h3>
-<p>The left panel, titled SPECTROGRAM: thirty real bandpass filters, drawn as bars. Its title row carries only the FROZEN badge and the Setup gear; everything it used to print there is in Setup.</p>
-{ctl("Bands", "1/1 (10) &middot; 1/3 (30) &middot; 1/6 (60) octave<br>default 1/3", "<p>Third-octave bands on the ISO 266 series: 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1k, 1k25, 1k6, 2k, 2k5, 3k15, 4k, 5k, 6k3, 8k, 10k, 12k5, 16k, 20k. Labels alternate between two rows so all thirty stay legible.</p>")}
-{ctl("PEAK / HOLD / RTA", "trace", "<p><strong>PEAK</strong> shows the instantaneous peak per band; <strong>HOLD</strong> adds peak-hold caps; <strong>RTA</strong> shows the averaged (RMS) spectrum, which is the trace to compare against a reference.</p>")}
-{ctl("Stereo link", "sum &middot; L/R &middot; M/S", "<p>Bars show the summed spectrum, both channels, or Mid and Side. Under the plot a per-band <strong>stereo strip</strong> shows width or mono damage: mono content loses nothing when summed, hard-panned content loses 3 dB (the panning law, not a fault), and anything worse than -3 dB is real cancellation and is coloured as such.</p>")}
-{ctl("Hover readout", "", "<p>Hover a band to read its level, crest factor, nearest note, Mid/Side split and mono delta in one box.</p>")}
-{ctl("Band solo", "press and hold a band", "<p>Hear only that band. Drag while holding to sweep between centres; the mouse wheel changes Q while holding and the highlighted width is the filter's own -3 dB width. Double-click latches the solo; Escape or another double-click releases it. The other bands go dark while soloing, so eyes and ears agree. With <strong>RONE Analyzer Bridge</strong> on your DAW's master the solo is rendered inside the DAW's own signal path; without it the solo is on screen only and the analyser says so.</p>", "Soloing a band around 200-400 Hz while comparing to a reference is the quickest way to hear mud.")}
-{ctl("Reference corridor", "REF menu", "<p>Add several reference tracks and the analyser reduces them to a <em>range</em> per band rather than a single curve - two records you admire will disagree by several dB in any given band, and the shape they share is the only part worth aiming at. The corridor is drawn as a tint behind the bars with edges in front; a white curve shows your live average spectrum, which is what is actually comparable, and a legend in the plot names the record or counts them. REF lights while the corridor is shown. The hover readout reports distance outside the corridor and <em>in</em> anywhere inside it.</p>")}
-{ctl("Setup (gear / SETUP)", "Source, Mode, range, Top L., Res., Size, Freeze, Rise T., Release, Hold T., FSC for OVR, Display, Range comp / full, Correlator Int., Release 1 / 2, AGC", "<p>DIGICheck's own setup dialog with DIGICheck's own words, so existing users can type their numbers straight in, and every value applies at once. <strong>Source</strong> picks what the bars measure (Max. L/R, L+R, Left, Right, Mid, Side); <strong>Mode</strong> picks the trace (Peak, Peak Hold, RMS); <strong>Top L.</strong> and <strong>Range</strong> set the scale; <strong>Res.</strong> is decibels per LED and <strong>Size</strong> the bar width; <strong>Freeze</strong> (or F) holds the bars. Rise T. is the band detector attack (0 = instant, 15 ms = RME default). Analyser release is in seconds to fall the whole range; meter release is in dB per second - both as in DIGICheck. The Totalyser's title names a Source or Mode that is not the default.</p>")}
-<h3>Level Meters</h3>
-{ctl("Layout", "RMS L | Peak L | Peak R | RMS R", "<p>Inner bars are peak (AC+DC), outer bars are RMS (AC only). The width of the coloured region between them is the crest factor, also printed underneath with peak and RMS. 0 dBFS is referenced to a full-scale sine, so RMS carries the +3.01 dB the RME convention requires. The scale is DIGICheck's non-linear one, with the top 20 dB stretched.</p>")}
-{ctl("Overs", "N consecutive samples, 1-20", "<p>An <em>over</em> is a run of N consecutive full-scale samples - one clipped sample is not an over. Overs are counted next to the OVR cap. Click the meter to clear. Peak hold 0.2-100 s; range down to -160 dB; K-20 / K-14 / K-12 scales.</p>")}
-<h3>Stereo Vectorscope</h3>
-{ctl("Goniometer", "45&deg; rotated: mono is a vertical line", "<p>Draws continuous lines between successive samples with intensity inversely proportional to segment length, the way a real beam deposits energy - transients leave a faint streak, sustained tones a bright figure. Afterglow has separate decay rates for bright and dim pixels (Release 1 / Release 2, in seconds) plus AGC. <strong>MODE</strong> in the title switches the frame between the diamond and a circle: the diamond shows the legal L/R square exactly (full-scale mono on the M tip, a hard-panned channel on the rim under its own L or R label), the circle stretches the same picture onto a disc, DIGICheck's Polar. The choice is remembered.</p>")}
-{ctl("Correlation", "-1 to +1", "<p>The figure, then an LED bar lit from zero to the reading in its zone colour - red where the pair cancels in mono, amber around zero, green where it folds safely. A white tick holds the lowest reading of the last few seconds (MIN HELD), so a dip you did not see is still reported. Under it, the last ten seconds as a trace: a dip that returns on every bass note is a pattern a needle cannot show. BAL is the left / right energy balance on a small centre-zero bar, a full side at 6 dB.</p>", "Watch the ten-second trace while the drop plays. If it dives below the line on every bass hit, the low end is not mono.")}
-{ctl("STEREO / MONO", "the chip in the vectorscope's title, or M", "<p>Folds every instrument to mono at once - the level meters drop wherever the channels were fighting, the spectrum changes shape, the trace stands as a line and the correlation reads +1, because that is what mono <em>is</em>. With <strong>RONE Analyzer Bridge</strong> on your DAW's master the DAW plays the fold too, and a lit dot on the chip says the bridge is there; without it the fold is on screen only. It sits on the vectorscope because that is where you are looking when you want it, and it never survives a restart.</p>", "Press M while the bass plays. If it thins out, the low end is not mono.")}
-<h3>Loudness (EBU R128)</h3>
-<p>Closed until you ask for it: the small arrow in the bottom-right corner of the Spectrogram (or L) opens the strip under it, and the same arrow puts it away. It measures all the time, open or closed.</p>
-{ctl("Readings", "M &middot; S &middot; I &middot; LRA &middot; True Peak", "<p>Momentary (400 ms), short-term (3 s) and gated integrated loudness in LUFS, loudness range in LU and 4&times; oversampled true peak in dBTP. Targets for streaming, podcast and broadcast show the deviation in LU. The K-weighting filter is rebuilt for every sample rate from BS.1770's design, so 44.1, 88.2 and 96 kHz measure exactly as 48 kHz does.</p>", "Press RESET when the song starts so the integrated value covers only the material you mean.")}
-<h3>Bit Statistic &amp; Noise</h3>
-{ctl("Per-bit state", "green = toggling, blue = never set, red = stuck", "<p>Count the green bits and you have the true word length regardless of what the file header claims. Flat and A-weighted SNR, measured noise floor and DC offset sit below. This is the instrument that catches a '24-bit' file that is really 16, a truncated export, or a converter with an offset.</p>")}
-<h3>Spectroscope and Oscilloscope</h3>
-{ctl("Spectroscope", "scrolling spectrogram", "<p>Same third-octave axis as the analyser, over time. Resonances and intermittent noise appear as horizontal streaks that a bar graph cannot show.</p>")}
-{ctl("Oscilloscope", "triggered, with afterglow", "<p>A triggered scope with a 10&times;8 graticule for waveform shape, clipping and DC.</p>")}
+    S.append({"title": "Spectrogram", "sub": "the bars, the zones, the reference and your Channels", "html": f"""
+<p>Thirty third-octave bands of LEDs, 25 Hz to 20 kHz. The <strong>white LED</strong> on each column is the held peak. The gold rows across the plot are the 10 dB rules, the fainter ones the 5 dB rows. Hover a band for its readout.</p>
+{ctl("BARS / WAVES", "chip in the title &middot; W", "<p><strong>BARS</strong> is the third-octave analyser. <strong>WAVES</strong> is the FFT spectrum: a 2048-point Hann window, 50 % overlap, a 2-second average, a 4.5 dB per octave slope and a -78 to -18 dB scale, so it reads like the spectrum analysers everyone knows. The reference and your Channels are drawn in both.</p>")}
+{ctl("Setup (gear)", "F2 &middot; BARS: bands, range, resolution, decay, rise time, hold, 5 dB rows &middot; WAVES: Spectrum Mode", "<p>In BARS the gear opens the analyser's setup: how many bands, the range and the resolution of the scale, the decay and rise time of the bars, the peak hold, and whether the 5 dB rows are drawn. <strong>Freeze</strong> holds the bars where they are (F; the FROZEN badge shows while it is on).</p><p>In WAVES the gear opens the <strong>Spectrum Mode</strong> editor: routing (stereo, mid, side), window, type, block size, overlap, averaging time, the frequency and level range, slope, offset, smoothing, a filled display, a second spectrum, anti-alias, ALIGN 0 DB and BYPASS. DEFAULT puts the factory mode back. Drag a knob up or down, use the wheel (Shift for fine), double-click to type.</p>")}
+{ctl("RULES", "chip in the title", "<p>One click hides the 5 dB rows, the next hides the 10 dB rows too, the next brings them all back.</p>")}
+{ctl("SIDES", "chip in the title", "<p>Paints the side signal (L minus R) over the bars in violet: what is <em>wide</em>, band by band. A mono mix shows none. A band whose violet reaches the cyan is as wide as it is loud - wide bass, usually.</p>")}
+{ctl("Zones", "SUB &middot; BASS &middot; LOW MID &middot; MID &middot; HIGH MID &middot; PRES &middot; AIR", "<p>The strip under the frequency numbers. <strong>Click</strong> a zone to hear that range alone; click more to add them. <strong>Right-click</strong> one to solo just it. <span class='kbd'>Esc</span> lets everything back. Through the Bridge the solo is heard in the DAW; on any other source it is drawn on screen and heard on the reference player.</p>", "Solo BASS while the drop plays. What you hear is what the sub really does under the kick.")}
+{ctl("Band solo", "press and hold a bar", "<p>Hear only that band. Drag while holding to sweep across; the <strong>wheel</strong> narrows or widens the band; a double-press latches it, and Escape or another double-press releases it. The shaded width is the filter's own -3 dB width.</p>", "Hold a band around 200-400 Hz against the reference to hear mud, and one around 2-3 kHz to hear harshness.")}
+{ctl("CHANNELS", "chips in the title row", "<p>Put <strong>RONE Analyzer Channel</strong> on a mixer channel, name it in the plugin (KICK, BASS, VOX), pick one of its six colours, and it appears here as a chip in that colour, drawn over the master with the master's own LEDs. <strong>Click</strong> a chip to show or hide it, <strong>S</strong> to see it alone, <strong>right-click</strong> to hear it alone (every other Channel ducks). <strong>Drag</strong> the chips left and right to set the drawing order: the rightmost is drawn on top. The <strong>MIX</strong> chip is the master itself - drag it among the Channels to put the master above or below them, or click it to hide the master and see only your Channels. Up to eight Channels; the row scrolls when they do not fit.</p>")}
+{ctl("REF LINE / REF FULL", "chip in the title, shown while a reference is loaded", "<p>How the reference record is drawn. <strong>LINE</strong>: its curve over the plot, with the live average in white beside it, and a legend naming the record and its bars. <strong>FULL</strong>: the whole record in its own colour behind the live one - as bars in BARS, as a spectrum in WAVES - at the record's own level, so muting your kick does not move it.</p>")}
+"""})
+
+    S.append({"title": "Meters, scope, reference", "sub": "the rest of the window", "html": f"""
+<h3>Level meters</h3>
+{ctl("RMS / PEAK", "RMS inside, PEAK outside, per channel", "<p>Ten LEDs a step. The rows from -3 dB up are yellow, the OVR rows red: they light on an over and stay lit until RESET. The white LED holds the peak.</p>")}
+{ctl("MAX PEAK / MAX RMS", "title row", "<p>The loudest moment since the last reset: the largest sample, and the RMS averaged over 217 ms of the louder channel - read the way a clipper reads them. Click either to restart.</p>")}
+{ctl("Meter settings (gear)", "range, hold, release, over detection", "<p>How far down the scale goes, how long a peak is held, how fast the meters fall, and how many consecutive full-scale samples count as an over - one clipped sample is not an over.</p>")}
+<h3>Vectorscope</h3>
+{ctl("The trace", "M up, L and R on the diagonals, S across", "<p>A phosphor picture of the stereo image: every sample step leaves a dot, brighter the slower the beam moves, with afterglow. A thin vertical line is mono; a wide cloud is wide; a line leaning to L or R is a balance problem. <strong>MODE</strong> switches the frame between the diamond and a circle. <span class='kbd'>V</span> toggles LOCKED (the trace stays inside the diamond) and FREE (it runs to the frame). The AGC reading in the corner is how much the picture is being lifted; the gear sets the afterglow and the AGC.</p>")}
+{ctl("STEREO / SIDES / MONO", "chip on the vectorscope &middot; M", "<p>Every click folds further: <strong>SIDES</strong> is the mix with its mid taken out, <strong>MONO</strong> is the fold. Every instrument then measures the fold - the meters drop wherever the channels were fighting, the spectrum changes shape, the trace stands as a line - and with the Bridge on the master the DAW plays the fold too (the dot on the chip lights while the Bridge is there). The fold never survives a restart.</p>", "Press M while the bass plays. If it thins out, the low end is not mono.")}
+{ctl("Second vectorscope", "+ on the title", "<p>A fourth column with a second scope. Its sources are chips: the loaded reference record, by its name, or any of your Channels, in its colour - the reference's image beside yours, or the kick alone. With nothing loaded it says ADD A REFERENCE OR A CHANNEL. The X closes it.</p>")}
+{ctl("Correlation and BAL", "-1 to +1", "<p><strong>+1</strong> is mono-safe, <strong>0</strong> is wide, below zero cancels in mono; the LED bar lights from zero to the reading, red on the cancelling side. <strong>BAL</strong> is the left / right energy balance in dB.</p>")}
+<h3>Reference</h3>
+{ctl("REFERENCE", "button under the correlation", "<p>Load a record to compare against. It is analysed in a few seconds; its waveform comes up in the strip with its tempo, and the <strong>16 bars</strong> the curve is taken from are the bright stretch - click anywhere on the waveform to move it there, the arrows step 16 bars back or forward. The curve sits over the spectrogram (REF LINE / REF FULL) and the record is a source for the second vectorscope.</p>")}
+{ctl("PLAY / DAW-REF", "under the strip", "<p><strong>PLAY</strong> plays the reference's 16 bars, round and round, on this computer's output. Through the Bridge the button becomes <strong>DAW / REF</strong>: an A/B that mutes the DAW while the reference plays, so you switch between the two with one click and the meters follow. Band solo, zone solo and the mono fold apply to the reference as they do to the mix.</p>", "Set your DAW to loop the same 16 bars of your track, then A/B. Same bars, same meters, same ears.")}
+{ctl("CURVES / CLEAR", "under the strip", "<p><strong>CURVES</strong> keeps the current curve under a name and brings back any curve you kept - a saved curve needs no record. <strong>CLEAR</strong> removes the reference and brings the REFERENCE button back.</p>")}
+{ctl("NOTE", "under the strip", "<p>The note under the mix - the fundamental of the bass or the kick, from the analysed pair - with its octave, its hertz and how far off the note it sits, in cents. The small arrow pops NOTE out into a little window that stays on top of everything: put it over your EQ. Its X closes it; it remembers its place.</p>")}
+<h3>LOUDNESS</h3>
+<p>Closed until you ask for it: the small arrow at the bottom right of the spectrogram, or <span class='kbd'>L</span>, opens the panel under it, and the same arrow puts it away. It measures all the time, open or closed.</p>
+{ctl("Readings", "MOMENTARY &middot; SHORT-TERM &middot; INTEGRATED &middot; RANGE &middot; TRUE PEAK &middot; TO TARGET", "<p>Momentary (400 ms), short-term (3 s) and gated integrated loudness in LUFS, loudness range in LU, 4&times; oversampled true peak in dBTP (rounded <em>up</em> to the next 0.1 dB, so the number is never under the peak it stands for; OVER -1 lights above -1.0 dBTP), and the integrated value's distance from the target. INT counts the audio integrated since the last reset; the gauge under the numbers shows integrated against the target.</p>")}
+{ctl("Target", "CLUB -8 &middot; STREAM -14 &middot; EBU -23", "<p>A club or DJ master at -8 LUFS, streaming (Spotify, Apple Music, YouTube) at -14, broadcast at -23. The gauge and TO TARGET measure against the chosen one.</p>")}
+{ctl("RESET", "the chip on the panel", "<p>Restarts Integrated, Range and the true-peak hold from zero; Momentary and Short-term keep running. The menu's <em>Reset all measurements</em> does this and clears the overs and held peaks everywhere.</p>", "Reset when the song starts so the integrated value covers only the material you mean, then let the whole track play.")}
+<h3>BAR SCOPE</h3>
+{ctl("SCOPE", "bottom right of the vectorscope &middot; O", "<p>A strip under the instruments: the waveform locked to the DAW's bar, so every pass of the loop lands on top of the last. The window is <strong>4 BARS</strong> down to <strong>1/8</strong>. Hold and drag up to zoom, sideways to scroll; double-click for the whole window; the wheel stretches the wave taller or flatter (the HEIGHT chip shows the stretch and puts it back); Shift-drag slides the trace onto the grid (the OFFSET chip puts it back). <strong>HOLD</strong> keeps a ghost of the loudest pass, so a beat without a kick fades the picture instead of erasing it. Your Channels are drawn in their colours: the chip cycles MIX + CH, CHANNELS, MIX. It needs a tempo and a position - the Bridge's, or a Channel's.</p>", "Put the kick and the bass in the scope at 1/4 and you see, not guess, where the bass sits against the kick's tail.")}
 """})
 
     S.append({"title": "Step-by-step workflows", "sub": "how a session with the analyser looks", "html": f"""
-{recipe("Compare your mix to references", "Mixing and mastering",
+{recipe("Compare your mix to a reference", "Mixing and mastering",
  steps([
-  "REFERENCE &rarr; <em>Add reference tracks...</em> and pick three to five commercial tracks in your genre. Each is scanned in a few seconds.",
-  "Enable <em>Show reference</em>. The corridor appears behind the Totalyser bars.",
-  "Set the trace to RTA and play your mix. Watch the white average curve against the corridor: inside is fine, outside is where to look.",
-  "Press and hold a band that sits outside the corridor to hear it in isolation, then fix it in your EQ.",
+  "REFERENCE &rarr; pick a record in your genre. Click the waveform to put the bright 16 bars on its drop.",
+  "Set your DAW to loop the drop of your own track. The reference curve sits over your bars; the white line is your live average.",
+  "Where the two disagree, click that zone (or press and hold the band) to hear it alone - in your mix, and with DAW / REF, in the record.",
+  "Open the second vectorscope (+) and put the record in it: width beside width.",
+  "Fix it in your EQ, and watch the white line move towards the orange one.",
  ]))}
-{recipe("Measure the master through the bridge", "Final checks before export",
+{recipe("Measure the master through the Bridge", "Final checks before export",
  steps([
-  "Insert <strong>RONE Analyzer Bridge</strong> last on the DAW master (after the limiter).",
-  "In the analyser choose SOURCE &rarr; <em>DAW master (RONE Bridge plugin)</em>.",
-  "Put Loudness in one panel and Level Meters in another. Press RESET, play the whole song, read Integrated, LRA and True Peak.",
-  "Use the app menu's <em>Bridge bypass (A/B)</em> to compare with and without your master chain while watching the meters.",
+  "Insert <strong>RONE Analyzer Bridge</strong> last on the DAW master, after the limiter. The analyser switches to it.",
+  "Open LOUDNESS (L), choose the target, press RESET and play the whole song.",
+  "Read Integrated, Range and True Peak; OVER -1 must not light for a streaming master. The meters' OVR rows must stay dark.",
+  "Menu &rarr; <em>Bridge bypass</em> to compare with and without your master chain while watching the same meters.",
+ ]))}
+{recipe("Kick and bass", "The low end of a dance track",
+ steps([
+  "Put a <strong>RONE Analyzer Channel</strong> on the kick and one on the bass; name and colour them in the plugin. Both appear over the master.",
+  "Click SUB and BASS to hear only the low end. Read NOTE: it is the note the bass is actually sitting on.",
+  "Press M. If the low end thins out, part of it cancels in mono - look at SIDES to see which band.",
+  "Open SCOPE at 1/4 and watch the bass against the kick's tail, pass after pass.",
  ]))}
 {recipe("Check a delivered file", "Mastering QC",
  steps([
-  "FILE &rarr; <em>Open and scan (fast, whole file)</em>. The whole file runs through every instrument in seconds.",
-  "Read Bit Statistic (true word length, DC), Loudness (integrated, true peak) and the Level Meters' over count.",
-  "Switch to <em>Open and play (real time)</em> to listen to any section that looked suspicious.",
- ]))}
-{recipe("Mono compatibility", "Any mix",
- steps([
-  "Watch the correlation meter and its low-water mark through the chorus.",
-  "Look at the stereo strip under the Totalyser: bands coloured for mono damage are cancelling, not just wide.",
-  "Press STEREO on the vectorscope panel to fold everything to mono and listen.",
+  "Menu &rarr; <em>Open a file and scan</em>. The whole file runs through every instrument in seconds.",
+  "Read LOUDNESS (integrated, true peak), MAX PEAK and the overs.",
+  "Menu &rarr; <em>Open a file and play</em> to listen to any section that looked suspicious; Space stops and starts it.",
  ]))}
 """})
 
     S.append({"title": "Recommendations", "sub": "reading meters well", "html": f"""
 <div class="dos">
 <div><h4>Do</h4><ul>
-<li>Use the RTA trace when comparing tonal balance; PEAK is for transient checks.</li>
-<li>Build the reference corridor from several tracks, not one. One master's accidents are not a target.</li>
+<li>Keep the Bridge last in the master chain, after the limiter, so you measure what leaves the DAW.</li>
+<li>Compare against the reference on the same 16 bars of both tracks, at the same spot in the arrangement.</li>
 <li>Reset before measuring integrated loudness, and let the whole track play.</li>
-<li>Put it on a second monitor and press <code>H</code>. The instruments are then as large as the screen allows, which is the whole point of a meter you keep open all session.</li>
-<li>Keep the bridge last in the master chain, after the limiter, so you measure what leaves the DAW.</li>
+<li>Put it on a second monitor and press H. The instruments are then as large as the screen allows.</li>
+<li>Use FULL to see the record whole, LINE to see your average against it.</li>
 </ul></div>
 <div><h4>Avoid</h4><ul>
-<li>Reading the loopback source while an ASIO application bypasses Windows audio - it will read silence. Use the ASIO source instead.</li>
-<li>Judging width by correlation alone; the per-band strip tells you where it is coming from.</li>
-<li>Leaving band solo latched. It blanks the display and changes what you hear; a single press releases it.</li>
+<li>Reading "what the computer plays" while the DAW runs on ASIO - it will read silence. Use the Bridge, or the ASIO source.</li>
+<li>Judging width by correlation alone; SIDES tells you which band it is coming from.</li>
+<li>Leaving a band or a zone soloed. It changes what you hear; Escape lets everything back.</li>
+<li>A Channel plugin from an older version beside a newer analyser - update both from the Center, they ship together.</li>
 </ul></div>
 </div>
 <h3>Reading tips</h3>
 <ul>
-<li>A mix that is too bright by the crest factor of its top end will look fine against the corridor with the PEAK trace and wrong with RTA. RTA is the honest one.</li>
-<li>Hard-panned elements show -3 dB in the mono delta. That is physics, not a problem; below -3 dB is.</li>
-<li>Two green bits fewer than expected in the Bit Statistic usually means a dither or truncation stage you forgot about.</li>
+<li>The white LED is the held peak; the lit column is the level now. A column whose peak sits far above its LEDs is transient, not loud.</li>
+<li>A hard-panned element shows in SIDES at its full level. That is physics, not a problem; a <em>kick</em> in SIDES is.</li>
+<li>TRUE PEAK rounds up. A meter that rounds to nearest can read 0.1 lower on the same file.</li>
 </ul>
 """})
 
-    S.append({"title": "Interface conventions", "sub": "panels, menus, shortcuts", "html": f"""
-{table(["Gesture", "What it does"], [
- ("Gear on a panel", "Open Setup."),
- ("<code>H</code>, or the chevron at the right of the header", "Take the header and status bar away so the instruments fill the screen. <code>Escape</code>, or the small chevron in the top corner, brings them back."),
- ("<code>M</code>, or STEREO / MONO on the vectorscope", "Fold to mono - on screen, and in the DAW when RONE Analyzer Bridge is on the master."),
- ("<code>V</code>", "Hold the vectorscope's trace inside the graticule diamond (LOCKED), or let it run to the corners of the frame (FREE)."),
- ("<code>F</code>", "Freeze the Totalyser's bars where they are; press again to let them go. The meters and the scope keep running."),
- ("<code>L</code>, or the arrow under the Spectrogram's right scale", "Show or hide the LOUDNESS strip. It starts closed."),
- ("MODE on the vectorscope", "Switch the frame between the diamond and the circle."),
- ("<code>Space</code>, or PLAY / STOP in the header", "Start or stop the file that is the source. SCAN pushes the whole file through again; the status bar shows the position."),
- ("RESET", "Clear the overs, the held peaks and every cap, and restart the loudness integration."),
- ("Press and hold a Totalyser band", "Solo that band by ear (hardware sources). Drag to sweep; wheel for Q; double-click to latch."),
- ("Drop an audio file on the window", "Scan it."),
- ("Close the window", "Quit. The source, the window and the layout come back as they were the next time it opens."),
- ("Start with Windows (app menu)", "Launch at login."),
- ("Command line", "<code>--file &lt;path&gt;</code>, <code>--scan &lt;path&gt;</code>, <code>--loopback [name]</code>, <code>--bridge</code>, <code>--asio [device]</code>, <code>--input &lt;device&gt;</code>, <code>--add-references &lt;paths...&gt;</code>. Without arguments it reopens the last source."),
+    S.append({"title": "Interface conventions", "sub": "menus, keys, Appearance", "html": f"""
+<h3>The menu</h3>
+<p>The button at the right of the header: <em>Open a file and play</em>, <em>Open a file and scan</em>, Play / Stop and <em>Scan the whole file again</em> for the loaded file, <em>Loop the file</em>; <em>Appearance</em> (F4); <em>Reset all measurements</em>, <em>Restore default layout</em>; <em>Bridge bypass</em> while the Bridge is in the DAW; <em>Always on top</em>; <em>Start with Windows</em>; <em>Hints: a tour of everything</em> (F1); About; Quit.</p>
+{table(["Key", "What it does"], [
+ ("<code>F1</code>", "The Hints tour. Arrows step, Escape ends."),
+ ("<code>F2</code>", "Setup - the spectrogram's, the meters' and the scope's settings."),
+ ("<code>F3</code>", "The SOURCE menu."),
+ ("<code>F4</code>", "Appearance."),
+ ("<code>H</code>", "Hide the chrome: the header and the status bar go, the instruments fill the window. <code>Escape</code> brings them back."),
+ ("<code>W</code>", "BARS / WAVES."),
+ ("<code>F</code>", "Freeze the spectrogram's bars; again to let them go. The meters and the scope keep running."),
+ ("<code>L</code>", "Show or hide LOUDNESS."),
+ ("<code>M</code>", "Fold to mono - on screen, and in the DAW through the Bridge."),
+ ("<code>V</code>", "Vectorscope LOCKED / FREE."),
+ ("<code>O</code>", "Open or close the BAR SCOPE."),
+ ("<code>Space</code>", "Play or stop the file that is the source."),
+ ("<code>S</code>", "See the Channel under the pointer alone."),
+ ("<code>Escape</code>", "Let go of a band or zone solo; close a panel; bring the chrome back."),
+ ("Drop an audio file on the window", "Analyse it."),
+ ("Close the window", "Quit. Source, window, theme and layout come back as they were."),
+ ("Command line", "<code>--file &lt;path&gt;</code>, <code>--scan &lt;path&gt;</code>, <code>--reference &lt;path&gt;</code>, <code>--loopback [name]</code>, <code>--bridge</code>, <code>--asio [device]</code>, <code>--input &lt;device&gt;</code>. Without arguments it reopens the last source."),
 ])}
 <div class="two">
-<div><h4>Appearance</h4><p>The app menu's <em>Appearance...</em> (or F4) opens the theme drawer on the right. On a wide window the instrument moves aside so every panel stays in view and changes as you choose - the instrument is the preview; on a narrow one the drawer floats over the right-hand side. <strong>Themes</strong>: six built-in themes and your own, each shown as it will look. Nothing is kept until <em>Apply theme</em>; Cancel or Escape puts everything back. <strong>Meter colour</strong> is the level ramp or the theme's own colour; <strong>Meter style</strong> is LED segments or solid bars. <strong>Customize</strong> sets every colour - surfaces, graticule, meter, RMS, peak hold, accent, text, scope trace and reference - by swatch or hex, and every row has <strong>Copy</strong> and <strong>Paste</strong> so one colour can be matched across panels (copy Background, paste it into Panels). <em>Save as new theme</em> keeps your colours under a name, <em>Set as default</em> marks the theme that <em>Reset to default</em> returns to (Graphite until you choose one).</p></div>
-<div><h4>Settings</h4><p>Source, channel pair and every Setup and Appearance value persist between runs in your user folder.</p></div>
+<div><h4>Appearance</h4><p><em>Appearance</em> in the menu (or F4) opens the theme panel over the right of the window; the instrument behind it is the preview and changes as you choose. Eleven built-in themes - RONE, Graphite, Ice, Phosphor, Ember, Fjord, Tokyo, Mocha, Rose, Solar, Mono - and your own. <strong>Meter colour</strong> is the level ramp or the theme's own colour; <strong>meter style</strong> LED segments or solid bars; the 5 dB rows can be shown or hidden. <strong>Customize</strong> sets every colour - surfaces, meters, marks and text - by swatch or hex, with Copy and Paste on every row so one colour can be matched across panels. <em>Save</em> keeps your colours under a name, <em>Set as default</em> marks the theme that <em>Reset</em> returns to. Nothing is kept until <em>Apply theme</em>; Cancel or Escape puts everything back.</p></div>
+<div><h4>The window</h4><p>The grip at the bottom-right corner resizes the whole instrument. <strong>FIXED</strong> (the lock in the status bar) keeps the window's shape and zooms the instrument with it; <strong>FREE</strong> lets it take any size. Source, channel pair, every setting, the theme and the window position persist between runs.</p>
+<h4>Settings</h4><p>The spectrogram's, the meters' and the scope's gears each open their own section of Setup; F2 opens them all. Every value applies at once.</p></div>
 </div>
 """})
 
     S.append(G["support_section"](m, [
-        ("The analyser shows silence on a device that is playing", "Windows applications that use ASIO or WASAPI exclusive mode bypass the loopback path. Choose the ASIO source and, on RME hardware, enable a Loopback on that submix in TotalMix so the playback appears as an input."),
-        ("A source is greyed out or reads 'something else is holding this device'", "Another application has the endpoint in exclusive mode. Close it, or pick a different endpoint."),
-        ("No 'DAW master' entry appears", "The RONE Analyzer Bridge is not loaded in the DAW, or the DAW has not scanned it yet. Rescan plugins; the bridge is at <code>C:\\Program Files\\Common Files\\VST3\\RONE Analyzer Bridge.vst3</code>."),
-        ("Monitoring (band solo) is not offered", "Only hardware sources can monitor. Loopback capture has no output half and a file is pushed by its own thread."),
-        ("The window opened off-screen or at a strange size", "Use the app menu's <em>Restore default layout</em>, or delete the window state from the settings file in your user folder while the app is closed."),
+        ("The analyser shows silence on a device that is playing", "Applications on ASIO or in exclusive mode bypass the system playback path. Insert the Bridge on the DAW's master, or choose the ASIO source; on an interface with its own mixer, a loopback of that submix makes the playback appear as an input."),
+        ("A source is greyed out or 'something else is holding this device'", "Another application has the endpoint in exclusive mode. Close it, or pick a different endpoint."),
+        ("The DAW master entry says 'insert RONE Analyzer Bridge on the master'", "The Bridge is not running in the DAW, or the DAW has not scanned it yet. Rescan plugins; on Windows the Bridge is at <code>C:\\Program Files\\Common Files\\VST3\\RONE Analyzer Bridge.vst3</code>, on macOS in <code>/Library/Audio/Plug-Ins/VST3</code> and <code>Components</code>. Its window must say LINKED."),
+        ("A Channel is in the DAW but no chip appears", "An older Channel plugin beside a newer analyser, or a project opened before the plugin was updated. Update from the Center (the Analyzer and its plugins ship together) and reopen the project."),
+        ("Zone or band solo is only drawn, not heard", "Only the Bridge plays the solo in the DAW. On other sources it is on screen, and on the reference player."),
+        ("The BAR SCOPE stays empty", "It needs a tempo and a position: the Bridge's, or a Channel's. A file or an input has neither."),
+        ("macOS: 'Listening to an output needs macOS 14.2'", "Older macOS cannot tap an output. Insert the Bridge on the DAW's master, or route the output through BlackHole."),
+        ("The window opened off-screen or at a strange size", "Menu &rarr; <em>Restore default layout</em>, or switch FIXED to FREE in the status bar and resize."),
     ]))
 
     m["sections"] = S
