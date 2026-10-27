@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-27T07:03:54Z",
+  "last_updated": "2026-10-27T07:04:14Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-332.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-332.1.dmg",
@@ -80,10 +80,10 @@
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-334.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-333.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-334.1.pkg",
       "sha256": "941726e49e7b5a5d827462f7e3b958071e483aacd46a2322187b86f1ac7397e9",
       "registry_key": "RoneStutter",
-      "sha256_mac": "261278558aa9947eb7049d9dfd1d82ee5c5861565d01cc5242563c0d27a66c33",
+      "sha256_mac": "0fdd20c7cf5dd9fa49f959ac595381619cb3f03eb80ffe5c120eb48c34b7690e",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
@@ -108,8 +108,8 @@
         }
       },
       "size": 6629416,
-      "size_mac": 19116963,
-      "version_mac": "1.6.7.333"
+      "size_mac": 19117698,
+      "version_mac": "1.6.8.334"
     },
     {
       "id": "RoneStucker",
@@ -278,10 +278,10 @@
       "manual": "RONE Rise - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-334.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-333.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-334.1.pkg",
       "sha256": "d70f9a19df22d6cbd3d2ccecb847bffe95649d4912b6d1a3c0efceb66a8630b8",
       "registry_key": "RoneRise",
-      "sha256_mac": "059d185abdcfbf26ec13b984e6c8edaabb1d69da9c1df4a38d41d47b76a6ebc2",
+      "sha256_mac": "a485e4b798db6f8ecae91c28d8d679be9bf6c3ce0e9449ecb9d977825e5ce1c4",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
       "launch_price": 39,
@@ -307,8 +307,8 @@
         }
       },
       "size": 5314673,
-      "size_mac": 14091811,
-      "version_mac": "1.0.10.333"
+      "size_mac": 14092613,
+      "version_mac": "1.0.11.334"
     },
     {
       "id": "RoneIron",
