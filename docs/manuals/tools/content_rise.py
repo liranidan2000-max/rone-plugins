@@ -138,6 +138,7 @@ def manual(G):
  ["The tail stops dead on the drop", "TAIL is CUT", "Set TAIL to 1-4 bars"],
  ["The effect switched off when I stopped the song", "REST ON STOP: when the host stops, Rise fades its tail and rests at zero, whatever the automation left INTENSITY at - it never keeps building or ringing into a stopped project", "Press play again, or touch the knob"],
  ["The lift sounds metallic", "PITCH is a frequency shift, not a transposition", "Lower PITCH in ADVANCED"],
+ ["The window is white in Ableton Live, the standalone works (Windows)", "Live's <strong>Auto-Scale Plug-In Window</strong> (seen with Windows display scaling such as 110 %)", "In Live's browser open Plug-Ins, right-click the plugin and untick Auto-Scale Plug-In Window, then delete the plugin from the track and insert it again"],
 ])}
 """})
 

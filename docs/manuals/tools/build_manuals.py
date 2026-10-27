@@ -180,6 +180,17 @@ def install_section(m):
 <h3>Uninstalling</h3>
 <p>Windows: Settings &rarr; Apps &rarr; <em>{m['product']} (RONE)</em>. macOS: delete the bundles listed above. Presets and settings in your user folder are kept.</p>
 """
+    if m.get("subscription_only"):
+        # ALL ACCESS-only products (RONE 1176, RONE 2A): there is no lifetime licence to mention
+        import re
+        p = m['product']
+        body = body.replace(", and a <strong>lifetime licence</strong> unlocks the plugin it was bought for &mdash; so " + p + " opens either way.",
+                            ". " + p + " is included in <strong>ALL ACCESS</strong>, so an active plan opens it.")
+        body = re.sub(r"There are two ways to own it:.*?a plan you already have\.",
+                      p + " is included in an <strong>ALL ACCESS</strong> plan and opens for as long as the plan is active; it is not sold as a separate lifetime licence.", body, flags=re.S)
+        body = body.replace(" on either kind of licence", "")
+        body = re.sub(r"A lifetime licence keeps working offline.*?to confirm it\.",
+                      "The Center needs to reach the internet now and then to confirm your plan.", body, flags=re.S)
     return {"title": "Installation with the RONE Plugins Center", "sub": "Center, account, file locations", "html": body}
 
 def conventions_section(m, extras=""):
@@ -214,6 +225,7 @@ def support_section(m, trouble_rows):
 {table(["Symptom", "What to do"], trouble_rows + [
  ("The plugin does not appear in the DAW", "Rescan plugins. On Windows the VST3 lives in <code>C:\\Program Files\\Common Files\\VST3\\RONE</code>; make sure that folder (or its parent) is in the DAW's VST3 search path. On macOS restart the DAW after installing; Logic and GarageBand may need a full AU rescan."),
  ("The window is blank or shows an error page (Windows)", "The Microsoft WebView2 runtime is missing or damaged. Reinstall the RONE Plugins Center; it repairs WebView2. Also check that <code>WebView2Loader.dll</code> sits next to the standalone executable."),
+ ("The window is white in Ableton Live but the standalone works (Windows)", "Turn off Live's auto-scaling for this plugin: in Live's browser open <strong>Plug-Ins</strong>, right-click the plugin and untick <strong>Auto-Scale Plug-In Window</strong>, then delete the plugin from the track and insert it again. Seen with Windows display scaling at values such as 110 %."),
  ("A licence screen appears", "Open the RONE Plugins Center, sign in, confirm your plan is active, then reopen the plugin. Check that you have not exceeded your device limit."),
  ("The plugin shows an older version than the Center", "Close every DAW and standalone RONE app, then press UPDATE again. A running standalone keeps the old executable locked."),
  ("Crash", "RONE plugins write a crash report to your user folder; the Center uploads it the next time it runs. Please also tell us what you did right before the crash."),
@@ -300,7 +312,7 @@ def build(name):
     print(f"  {pp.name}: {'OK' if ok else 'FAILED'} {round(pp.stat().st_size / 1e6, 2) if ok else ''} MB")
     return ok
 
-ALL = ["stutter", "stucker", "flanger", "reversereverb", "afterspace", "analyzer", "throw", "clipper", "rise", "iron", "gater"]
+ALL = ["stutter", "stucker", "flanger", "reversereverb", "afterspace", "analyzer", "throw", "clipper", "rise", "iron", "1176", "2a", "sidechain", "gater"]
 
 if __name__ == "__main__":
     for n in (sys.argv[1:] or ALL): build(n)

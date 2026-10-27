@@ -235,6 +235,7 @@ def manual(G):
  ["A short wait after changing NOTE, LIFE or the slicing", "The vocal is re-rendered for the new setting", "The old chops play until the new ones are ready"],
  ["It sounds too much like a robot", "LIFE is low and MIX is at 100 %", "Raise LIFE, or pull MIX down (NOTE on keeps the note)"],
  ["Peaks sound squashed", "SAFE is catching overs (many voices, long rings)", "Lower OUT, IRON or RING, or switch POLY to MONO"],
+ ["The window is white in Ableton Live, the standalone works (Windows)", "Live's <strong>Auto-Scale Plug-In Window</strong> (seen with Windows display scaling such as 110 %)", "In Live's browser open Plug-Ins, right-click the plugin and untick Auto-Scale Plug-In Window, then delete the plugin from the track and insert it again"],
 ])}
 """})
 

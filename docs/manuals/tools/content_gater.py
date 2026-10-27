@@ -116,6 +116,7 @@ def manual(G):
  ["The track is silent as soon as the plugin is inserted", "Rule one: no note = closed", "Intended - the sound passes only while a note is held; press BYPASS to hear the source"],
  ["The gate ignores which key I play", "Rule three: any key, any channel", "Intended - use velocity with → LEVEL for accents"],
  ["Clicks on the chops", "ATTACK or RELEASE at the very minimum on a low sound", "Raise ATTACK to 1-2 ms and RELEASE to 10 ms or more"],
+ ["The window is white in Ableton Live, the standalone works (Windows)", "Live's <strong>Auto-Scale Plug-In Window</strong> (seen with Windows display scaling such as 110 %)", "In Live's browser open Plug-Ins, right-click the plugin and untick Auto-Scale Plug-In Window, then delete the plugin from the track and insert it again"],
 ])}
 """})
 

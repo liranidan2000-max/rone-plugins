@@ -130,6 +130,7 @@ def manual(G):
  ["LOW CUT makes the graph emptier", "The band below LOW CUT bypasses the clipper and is not drawn", "Intended - the graph shows what enters the clipper"],
  ["Latency", "384 samples at 48 kHz (8 ms): the oversampling plus the linear-phase LOW CUT filter, constant in every setting", "The host compensates it automatically"],
  ["Aliasing on bright material at 1x", "A hard clip at the base rate folds its harmonics back", "Use 4x or 8x"],
+ ["The window is white in Ableton Live, the standalone works (Windows)", "Live's <strong>Auto-Scale Plug-In Window</strong> (seen with Windows display scaling such as 110 %)", "In Live's browser open Plug-Ins, right-click the plugin and untick Auto-Scale Plug-In Window, then delete the plugin from the track and insert it again"],
 ])}
 """})
 
