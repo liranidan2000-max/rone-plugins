@@ -4,6 +4,7 @@
 #include "../../Shared/RoneUpdatePrompt.h"
 #include "CustomTitleBar.h"
 #include "../../Shared/RoneAboutOverlay.h"
+#include "RackEditorHelper.h"   // RONE Control Rack (DEV, branch rack-dev)
 
 class RoneAfterspaceAudioProcessorEditor : public juce::AudioProcessorEditor,
                                            private juce::Timer
@@ -30,9 +31,11 @@ private:
 
     std::optional<juce::WebBrowserComponent::Resource> getResource (const juce::String& url);
     void sendAllParametersToJS();
+    void applyResizeLimits();                 // the window's min/max follow the rack (open = a wider ratio)
 
     RoneAfterspaceAudioProcessor& processorRef;
     RoneUpdatePrompt updatePrompt;            // before the WebView: its options carry the prompt's script
+    RoneRack::EditorHelper rackUi;            // before the WebView too: the + handle's script rides in its options
     juce::WebBrowserComponent webView;
     RoneAboutOverlay aboutOverlay { "AFTERSPACE", JucePlugin_VersionString,
                                     juce::Colour (0xffFF8A3D) };

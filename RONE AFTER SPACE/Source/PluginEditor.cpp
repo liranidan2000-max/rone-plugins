@@ -2,7 +2,6 @@
 #include "WebUI.h"
 
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
-#include "../../Shared/RoneFonts.h"
 
 // =============================================================================
 // Editor Construction
@@ -10,8 +9,9 @@
 RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfterspaceAudioProcessor& p)
     : AudioProcessorEditor (&p),
       processorRef (p),
-      updatePrompt ("RoneAfterspace", "RONE AFTERSPACE", JucePlugin_VersionString, "#FF8A3D", p.roneUpdatePending),
-      webView (updatePrompt.addTo (juce::WebBrowserComponent::Options{}
+      updatePrompt ("RoneAfterspace", "RONE Afterspace", JucePlugin_VersionString, "#FF8A3D", p.roneUpdatePending),
+      rackUi (*this, p.rack, kWidth, kHeight),
+      webView (rackUi.addTo (updatePrompt.addTo (juce::WebBrowserComponent::Options{}
           .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
           .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}
               .withUserDataFolder (juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
@@ -74,11 +74,11 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
           })
           .withEventListener ("requestResize", [this] (const juce::var& payload)
           {
-              int w = juce::jlimit (kMinWidth, kMaxWidth,
+              // Keep the plugin's aspect ratio (rack open = (W + 280) : H, see RackEditorHelper)
+              const double k = rackUi.widthFactor();
+              int w = juce::jlimit (juce::roundToInt (kMinWidth * k), juce::roundToInt (kMaxWidth * k),
                                     resizeBaseW + (int) payload["dx"]);
-              // Keep the plugin's aspect ratio
-              int h = juce::roundToInt ((double) w * kHeight / kWidth);
-              h = juce::jlimit (kMinHeight, kMaxHeight, h);
+              int h = rackUi.heightForWidth (w);
               setSize (w, h + (customTitleBar != nullptr ? CustomTitleBar::kHeight : 0));
           })
           .withEventListener ("showAbout", [this] (const juce::var&)
@@ -114,9 +114,11 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
               // test subsumes the empty check this used to make.
               if (url.startsWithIgnoreCase ("https://") || url.startsWithIgnoreCase ("http://"))
                   juce::URL (url).launchInDefaultBrowser();
-          })))
+          }))))
 {
     updatePrompt.attachBrowser (webView);
+    rackUi.attach (webView);
+    rackUi.onToggle = [this] { applyResizeLimits(); };
 
     isStandalone = (processorRef.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
 
@@ -139,11 +141,6 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
             holder->getMuteInputValue().setValue (false);
 
         customTitleBar = std::make_unique<CustomTitleBar>();
-        customTitleBar->onAudioSettings = []
-        {
-            if (auto* holder = juce::StandalonePluginHolder::getInstance())
-                holder->showAudioSettingsDialog();
-        };
         addAndMakeVisible (*customTitleBar);
         customTitleBar->toFront (false);
         // The app always opens at its natural size — the auto-restored session
@@ -154,9 +151,7 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
     {
         // Host-side resizing (window frame / host grip); aspect locked
         setResizable (true, false);
-        if (auto* c = getConstrainer())
-            c->setFixedAspectRatio ((double) kWidth / (double) kHeight);
-        setResizeLimits (kMinWidth, kMinHeight, kMaxWidth, kMaxHeight);
+        applyResizeLimits();
         setSize (startW, startH);
     }
 
@@ -177,9 +172,6 @@ RoneAfterspaceAudioProcessorEditor::~RoneAfterspaceAudioProcessorEditor()
 std::optional<juce::WebBrowserComponent::Resource>
 RoneAfterspaceAudioProcessorEditor::getResource (const juce::String& url)
 {
-    if (auto font = roneFontResource (url))   // the bundled UI fonts (Shared/fonts)
-        return font;
-
     if (url == "/" || url.isEmpty() || url == "/index.html")
     {
         juce::String html (WebUI::getIndexHTML());
@@ -211,15 +203,35 @@ void RoneAfterspaceAudioProcessorEditor::resized()
     if (customTitleBar != nullptr)
         customTitleBar->setBounds (area.removeFromTop (CustomTitleBar::kHeight));
 
-    webView.setBounds (area);
+    rackUi.layout (area);                     // the plugin's view, and the rack beside it when open
     aboutOverlay.setBounds (getLocalBounds());
 
-    // Remember the content size for session recall (spec §24)
-    if (area.getWidth() >= kMinWidth && area.getHeight() >= kMinHeight)
+    // Remember the content size for session recall (spec §24) - the plugin's own view, not the rack
+    const auto view = webView.getBounds();
+    if (view.getWidth() >= kMinWidth && view.getHeight() >= kMinHeight)
     {
-        processorRef.uiWidth.store (area.getWidth());
-        processorRef.uiHeight.store (area.getHeight());
+        processorRef.uiWidth.store (view.getWidth());
+        processorRef.uiHeight.store (view.getHeight());
     }
+}
+
+void RoneAfterspaceAudioProcessorEditor::applyResizeLimits()
+{
+    const int tb = (isStandalone && customTitleBar != nullptr) ? CustomTitleBar::kHeight : 0;
+    const double k = rackUi.widthFactor();
+    const int minW = juce::roundToInt (kMinWidth * k), maxW = juce::roundToInt (kMaxWidth * k);
+    const int minH = rackUi.heightForWidth (minW), maxH = rackUi.heightForWidth (maxW);
+    if (! isStandalone)
+        if (auto* c = getConstrainer())
+            c->setFixedAspectRatio ((double) kWidth * k / (double) rackUi.heightForWidth (juce::roundToInt (kWidth * k)));
+    setResizeLimits (minW, minH + tb, maxW, maxH + tb);
+    if (isStandalone)
+        if (auto* dw = dynamic_cast<juce::DocumentWindow*> (getTopLevelComponent()))
+            if (auto* c = dw->getConstrainer())
+            {
+                c->setMinimumSize (minW, minH + CustomTitleBar::kHeight);
+                c->setMaximumSize (maxW, maxH + CustomTitleBar::kHeight);
+            }
 }
 
 void RoneAfterspaceAudioProcessorEditor::parentHierarchyChanged()
@@ -239,8 +251,10 @@ void RoneAfterspaceAudioProcessorEditor::parentHierarchyChanged()
 
                 if (auto* sizeConstrainer = dw->getConstrainer())
                 {
-                    sizeConstrainer->setMinimumSize (kMinWidth, kMinHeight + CustomTitleBar::kHeight);
-                    sizeConstrainer->setMaximumSize (kMaxWidth, kMaxHeight + CustomTitleBar::kHeight);
+                    const double k = rackUi.widthFactor();
+                    const int minW = juce::roundToInt (kMinWidth * k), maxW = juce::roundToInt (kMaxWidth * k);
+                    sizeConstrainer->setMinimumSize (minW, rackUi.heightForWidth (minW) + CustomTitleBar::kHeight);
+                    sizeConstrainer->setMaximumSize (maxW, rackUi.heightForWidth (maxW) + CustomTitleBar::kHeight);
                 }
 
                 customTitleBar->setWindowToDrag (dw);

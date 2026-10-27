@@ -6,6 +6,7 @@
 #include "dsp/EchoEngine.h"
 #include "dsp/DuckProcessor.h"
 #include "dsp/SilkProcessor.h"
+#include "RackEngine.h"   // RONE Control Rack (DEV, branch rack-dev)
 #include "../../Shared/BundleLicenseChecker.h"
 #include "../../Shared/RemoteLicenseGate.h"
 #include "../../Shared/RoneCrashReporter.h"
@@ -48,6 +49,20 @@ public:
     static constexpr int kStateSchemaVersion = 1;
 
     juce::AudioProcessorValueTreeState apvts;
+
+    // RONE Control Rack: the hands driving this plugin's own knobs (Shared/RoneControlRack, DEV).
+    // After apvts: it binds to its parameters. Lives here so the hands keep working with the editor closed.
+    RoneRack::Transport rackTransport;                        // the rack's REC: REAPER directly, the others through RONE Control's script
+    RoneRack::Engine rack { apvts, "RoneAfterspace", juce::String::fromUTF8 (BinaryData::rack_json, BinaryData::rack_jsonSize) };
+
+    // REAPER hands a VST3 its own API through the host application: the rack's REC uses it.
+    struct Vst3Ext : juce::VST3ClientExtensions
+    {
+        explicit Vst3Ext (RoneAfterspaceAudioProcessor& o) : owner (o) {}
+        void setIHostApplication (Steinberg::FUnknown* h) override { owner.rackTransport.attachHost (h); }
+        RoneAfterspaceAudioProcessor& owner;
+    } vst3Ext { *this };
+    juce::VST3ClientExtensions* getVST3ClientExtensions() override { return &vst3Ext; }
 
     // === Preset name (message thread only; serialized with state) ===
     juce::String getPresetName() const;

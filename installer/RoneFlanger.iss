@@ -74,6 +74,15 @@ Source: "..\docs\manuals\RONE Flanger - User Manual.pdf"; \
   DestDir: "{app}\Manuals"; \
   Flags: ignoreversion restartreplace
 
+; RONE Control's hands (the rack): the hand model and its runtime (Google MediaPipe,
+; Apache 2.0, NOTICE.txt beside them), fetched by CI with scripts/ci/fetch_hands.py when
+; this plugin has a rack (Source/rack.json). One folder shared by every RONE plugin with a
+; rack, so it stays when this plugin is uninstalled. Without the files the installer just
+; skips them (a build before the rack, a local dev build).
+Source: "..\hands\mp\*"; \
+  DestDir: "{app}\Hands"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist uninsneveruninstall
+
 ; ============================================================================
 ; Registry — write installed version for Center detection
 ; ============================================================================

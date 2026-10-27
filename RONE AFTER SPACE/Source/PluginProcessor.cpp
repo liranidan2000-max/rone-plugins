@@ -8,14 +8,15 @@ RoneAfterspaceAudioProcessor::RoneAfterspaceAudioProcessor()
     : AudioProcessor (BusesProperties()
           .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
           .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
-      // Saved projects key on this name (the parameter tree inside every saved state,
-      // looked up in setStateInformation) - never rename it.
       apvts (*this, nullptr, "Parameters", createParameterLayout())
 {
     // Standalone builds own their process: capture crashes into the shared
     // report queue (the Plugins Center uploads it). Never installed in a DAW.
     if (wrapperType == wrapperType_Standalone)
         RoneCrashReporter::installCrashHandler (JucePlugin_Name, JucePlugin_VersionString, "Standalone");
+
+    rackTransport.setStandalone (wrapperType == wrapperType_Standalone);
+    rack.attachTransport (rackTransport);
 
     auto raw = [this] (const char* id) { return apvts.getRawParameterValue (id); };
 
@@ -178,6 +179,7 @@ void RoneAfterspaceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
                 dawBpm.store (*bpm);
                 dawBpmAvailable.store (*bpm > 0.0);
             }
+            rackTransport.setHostRecording (pos->getIsRecording());
         }
     }
 
@@ -462,8 +464,6 @@ void RoneAfterspaceAudioProcessor::setPresetName (const juce::String& name)
 // =============================================================================
 void RoneAfterspaceAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // "RoneAfterspaceState" is the root tag every saved project carries (checked in
-    // setStateInformation) - never rename it.
     auto root = std::make_unique<juce::XmlElement> ("RoneAfterspaceState");
     root->setAttribute ("schemaVersion", kStateSchemaVersion);
     root->setAttribute ("presetName", getPresetName());
