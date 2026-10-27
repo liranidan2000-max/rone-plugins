@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-27T07:04:14Z",
+  "last_updated": "2026-10-27T07:08:23Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-332.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-332.1.dmg",
@@ -460,7 +460,7 @@
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.3.43.333",
+      "version": "1.3.44.335",
       "type": "standalone",
       "formats": [
         "Standalone"
@@ -471,9 +471,9 @@
       "vst3_bundle": "",
       "au_bundle": "",
       "manual": "RONE Analyzer - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-333.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-335.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-333.1.pkg",
-      "sha256": "7a12b44d7c768c9e4e6971897f0b88e4ecb6a1e48e96065cef10a0e2f716a7a4",
+      "sha256": "87269e4a3444667c751163670ad486533c3d69eb4d3a50904a6ca80870eaf2d9",
       "registry_key": "RONEAnalyzer",
       "sha256_mac": "3260bac65f72c5e66c1efc95907e0d983668f5a03296dc35b700360d95b3e277",
       "price": 80,
@@ -500,7 +500,7 @@
           "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
         }
       },
-      "size": 9288276,
+      "size": 9291062,
       "size_mac": 51763130,
       "version_mac": "1.3.43.333"
     },
