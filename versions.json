@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-26T23:04:17Z",
+  "last_updated": "2026-10-27T07:03:54Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-332.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-332.1.dmg",
@@ -65,7 +65,7 @@
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.6.7.333",
+      "version": "1.6.8.334",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -79,9 +79,9 @@
       "au_bundle": "RONE Stutter.component",
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-333.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-334.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-333.1.pkg",
-      "sha256": "2a64ec2215127e35fdbb45ed18b6a88066154ef1e054b402ba28ea3496fe10b5",
+      "sha256": "941726e49e7b5a5d827462f7e3b958071e483aacd46a2322187b86f1ac7397e9",
       "registry_key": "RoneStutter",
       "sha256_mac": "261278558aa9947eb7049d9dfd1d82ee5c5861565d01cc5242563c0d27a66c33",
       "price": 49,
@@ -107,7 +107,7 @@
           "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
         }
       },
-      "size": 6627859,
+      "size": 6629416,
       "size_mac": 19116963,
       "version_mac": "1.6.7.333"
     },
@@ -263,7 +263,7 @@
     {
       "id": "RoneRise",
       "name": "RONE Rise",
-      "version": "1.0.10.333",
+      "version": "1.0.11.334",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -277,9 +277,9 @@
       "au_bundle": "RONE Rise.component",
       "manual": "RONE Rise - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-333.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-334.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-333.1.pkg",
-      "sha256": "e2681b0f9dfc4a9d9b649571759f6c4ac67ff6c073be69b8faa808d275e8c580",
+      "sha256": "d70f9a19df22d6cbd3d2ccecb847bffe95649d4912b6d1a3c0efceb66a8630b8",
       "registry_key": "RoneRise",
       "sha256_mac": "059d185abdcfbf26ec13b984e6c8edaabb1d69da9c1df4a38d41d47b76a6ebc2",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
@@ -306,7 +306,7 @@
           "description": "Un knob, todo el build-up: sube INTENSITY a lo largo de la frase y la mezcla se vuelve un rise (high-pass pronunciado, gran reverb, ecos, ruido, una subida infinita), llévalo a cero en el drop y la reverb aún se derrama en él - o pulsa GO y deja que aterrice en el compás solo"
         }
       },
-      "size": 5313530,
+      "size": 5314673,
       "size_mac": 14091811,
       "version_mac": "1.0.10.333"
     },
