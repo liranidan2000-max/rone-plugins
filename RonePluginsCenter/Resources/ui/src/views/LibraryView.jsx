@@ -14,8 +14,9 @@ function Skeleton () {
   )
 }
 
-export default function LibraryView ({ t, plugins, loading, access, account, license, preview, personal, optinAsk, tips, reduced, query, setQuery,
-                                       cat, setCat, sort, setSort, catLabel, onNavigate, onUpdateAll, onRefresh, handlers }) {
+export default function LibraryView ({ t, plugins, loading, access, account, license, personal, optinAsk, tips, reduced, query, setQuery,
+                                       cat, setCat, sort, setSort, catLabel, onNavigate, onUpdateAll, onRefresh, handlers,
+                                       centerUpdate, onCenterUpdate }) {
   const ups = updatable(plugins, access)
   const filtered = sortPlugins(plugins.filter(p => (cat === 'all' || categoriesOf(p).includes(cat)) && matchesSearch(p, query, catLabel)), access, sort)
   const count = (c) => c === 'all' ? plugins.length : plugins.filter(p => categoriesOf(p).includes(c)).length
@@ -23,20 +24,24 @@ export default function LibraryView ({ t, plugins, loading, access, account, lic
   return (
     <div className="flex flex-col">
       {!query && (
-        <Hero t={t} plugins={plugins} access={access} account={account} license={license} preview={preview} personal={personal} optinAsk={optinAsk} onBuy={handlers.onBuy} tips={tips} reduced={reduced}
+        <Hero t={t} plugins={plugins} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk} onBuy={handlers.onBuy} tips={tips} reduced={reduced}
               onInstall={handlers.onInstall} onDetail={handlers.onDetail} onAccount={() => onNavigate('account')} />
       )}
 
+      {/* One bar for every update: the plugins' and, when there is one, the Center's own (App hides its top strip then) */}
       {ups.length > 0 && !query && (
-        <div className="mt-3.5 flex items-center gap-3 h-[46px] pl-4 pr-2 rounded-[12px] border border-[rgba(255,208,43,.28)] bg-[rgba(255,208,43,.05)]">
-          <span className="w-2 h-2 rounded-full bg-rone-amber" style={{ boxShadow: '0 0 8px rgba(255,208,43,.6)' }} />
+        <div className="mt-3.5 flex items-center gap-3 h-[50px] pl-4 pr-2 rounded-[13px] border border-[rgba(255,208,43,.32)]"
+             style={{ background: 'linear-gradient(90deg, rgba(255,208,43,.08) 0%, rgb(var(--card)) 45%)', boxShadow: '0 0 24px rgba(255,208,43,.07)' }}>
+          <Icon.download className="w-4 h-4 text-rone-amber flex-none" style={{ filter: 'drop-shadow(0 0 6px rgba(255,208,43,.7))' }} />
           <span className="text-[13.5px] font-bold truncate">
             {ups.length === 1 ? t('upd.one') : t('upd.many', { n: ups.length })}
+            {centerUpdate && <span className="text-rone-text-primary"> + Center {centerUpdate.split('.').slice(0, 3).join('.')}</span>}
             <span className="text-rone-text-dim font-semibold"> · {ups.map(p => shortName(p) + ' ' + (p.remoteVersion || '').split('.').slice(0, 3).join('.')).join(', ')}</span>
           </span>
           <span className="flex-1" />
           <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('updates')}>{t('upd.details')}</button>
-          <button className="btn btn-pri btn-sm" style={{ '--acc': '#FFD02B' }} onClick={onUpdateAll}>
+          {centerUpdate && <button className="btn btn-out btn-sm" onClick={onCenterUpdate}>{t('cu.restart')}</button>}
+          <button className="btn btn-pri btn-white btn-sm" onClick={onUpdateAll}>
             <Icon.download className="w-3 h-3" />{t('upd.button', { n: ups.length })}
           </button>
         </div>
@@ -78,7 +83,7 @@ export default function LibraryView ({ t, plugins, loading, access, account, lic
         {loading && plugins.length === 0
           ? [...Array(6)].map((_, i) => <Skeleton key={i} />)
           : filtered.map(p => (
-              <PluginCard key={p.id} t={t} plugin={p} access={access} preview={preview} catLabel={catLabel} {...handlers} />
+              <PluginCard key={p.id} t={t} plugin={p} access={access} catLabel={catLabel} {...handlers} />
             ))}
       </div>
 

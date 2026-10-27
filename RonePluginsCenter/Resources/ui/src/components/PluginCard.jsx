@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Icon, FloatingMenu, useFloatingMenu } from './ui'
 import { accentOf, categoriesOf, descriptionOf, isBusy, isInstalled, isNew, isUnlocked, priceOf, shortName, tint, usd } from '../catalog'
 
+// No LED for update_available: the footer's version line and Update button say it already.
 const LED = {
-  up_to_date: 'led-ok', update_available: 'led-upd', error: 'led-err',
+  up_to_date: 'led-ok', error: 'led-err',
   queued: 'led-busy', downloading: 'led-busy', ready: 'led-busy', installing: 'led-busy', waiting: 'led-busy', uninstalling: 'led-busy',
 }
 
@@ -18,22 +19,6 @@ function Tile ({ plugin, size = 56 }) {
          style={{ width: size, height: size, background: 'radial-gradient(circle at 38% 30%, #2A2E35, #1B1E23 55%, #14161A)' }}>
       {shortName(plugin).substring(0, 2).toUpperCase()}
     </div>
-  )
-}
-
-export function PlayButton ({ t, plugin, preview, big = false }) {
-  if (!plugin.preview) return null
-  const on = preview.id === plugin.id && preview.status !== 'error'
-  const name = 'RONE ' + shortName(plugin)
-  return (
-    <button onClick={(e) => { e.stopPropagation(); preview.toggle(plugin) }}
-            aria-label={on ? t('card.stopHear', { name }) : t('card.hear', { name })} aria-pressed={on}
-            className={`grid place-items-center rounded-full border flex-none transition-all
-                        ${big ? 'w-[52px] h-[52px]' : 'w-[34px] h-[34px]'}
-                        ${on ? 'text-[#101216]' : 'border-rone-border-3 text-rone-text-secondary hover:text-[var(--acc)] hover:border-[var(--acc)]'}`}
-            style={on ? { background: 'var(--acc)', borderColor: 'var(--acc)', boxShadow: `0 0 14px ${tint(accentOf(plugin), 0.5)}` } : undefined}>
-      {on ? <Icon.stop className={big ? 'w-4 h-4' : 'w-3 h-3'} /> : <Icon.play className={big ? 'w-4 h-4 ml-0.5' : 'w-3 h-3 ml-0.5'} />}
-    </button>
   )
 }
 
@@ -52,18 +37,19 @@ export function cardAction (plugin, access, t) {
     const price = priceOf(plugin)
     return { price, primary: { label: t('card.getIt'), kind: 'buy' } }
   }
-  if (st === 'update_available') return { version: true, primary: { label: t('card.update'), kind: 'install', icon: Icon.download, amber: true } }
+  if (st === 'update_available') return { version: true, primary: { label: t('card.update'), kind: 'install', icon: Icon.download, amber: true, quiet: true } }
   if (st === 'error') return { status: t('card.error'), error: true, primary: { label: t('card.retry'), kind: 'install', icon: Icon.retry } }
   if (st === 'up_to_date') return { status: t('card.installed'), ok: true, secondary: plugin.hasStandalone ? { label: t('card.open'), kind: 'open', icon: Icon.open } : null }
   return { status: t('card.notInstalled'), primary: { label: t('card.install'), kind: 'install', icon: Icon.download } }
 }
 
-function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel, onOpen, onDetail, onBuy, onSignIn, onManual, onOpenFolder, onUninstall }) {
+function PluginCard ({ t, plugin, access, catLabel, onInstall, onCancel, onOpen, onDetail, onBuy, onSignIn, onManual, onOpenFolder, onUninstall }) {
   const acc = accentOf(plugin)
   const un = isUnlocked(plugin, access)
   const a = cardAction(plugin, access, t)
   const menu = useFloatingMenu()
   const name = shortName(plugin)
+  const [unitBroken, setUnitBroken] = useState(false)
 
   // The neon flickers on when an install has just finished.
   const prev = useRef(plugin.status)
@@ -96,16 +82,19 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
   ]
 
   return (
-    <article className={`card ${un ? '' : 'locked'} ${power ? 'power-on' : ''} relative flex flex-col gap-2.5 p-3.5 rounded-[14px] min-w-0 cursor-pointer`}
-             style={{ '--acc': acc }} onClick={() => onDetail(plugin.id)} data-card={plugin.id}
-             aria-label={'RONE ' + name}>
-      <div className="flex items-start gap-3">
+    <article className={`card ${un ? '' : 'locked'} ${power ? 'power-on' : ''} relative overflow-hidden flex flex-col gap-2.5 p-3.5 rounded-[14px] min-w-0 cursor-pointer`}
+             style={{ '--acc': acc, background: `radial-gradient(70% 90% at 100% 50%, ${tint(acc, 0.07)} 0%, rgb(var(--card)) 70%)` }}
+             onClick={() => onDetail(plugin.id)} data-card={plugin.id} aria-label={'RONE ' + name}>
+      {plugin.unitUrl && !unitBroken && (
+        <img className="card-unit" src={plugin.unitUrl} alt="" aria-hidden="true" onError={() => setUnitBroken(true)} />
+      )}
+      <div className="relative flex items-start gap-3">
         <Tile plugin={plugin} />
         <div className="flex-1 min-w-0 flex flex-col gap-1">
           <h3 className="m-0 font-display font-bold text-[15px] text-rone-text-primary truncate">
             {/* The name is the keyboard's way into the plugin's page */}
             <button className="text-left max-w-full truncate" onClick={(e) => { e.stopPropagation(); onDetail(plugin.id) }}>
-              <span className="font-sans text-[11px] font-bold text-rone-text-faint mr-1">RONE</span>{name}
+              {name}
             </button>
           </h3>
           <div className="flex items-center gap-1.5 flex-wrap text-[11.5px] text-rone-text-dim">
@@ -117,7 +106,7 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
             {plugin.owned && !plugin.free && <span className="pill pill-own">{t('card.lifetime')}</span>}
           </div>
         </div>
-        <span className={`led mt-1.5 ${LED[plugin.status] || ''}`} aria-hidden="true" />
+        {LED[plugin.status] && <span className={`led mt-1.5 ${LED[plugin.status]}`} aria-hidden="true" />}
         <button ref={menu.anchor} onClick={(e) => { e.stopPropagation(); menu.isOpen ? menu.close() : menu.open() }}
                 aria-label={t('card.menu', { name: 'RONE ' + name })} aria-haspopup="menu" aria-expanded={menu.isOpen}
                 className="-mr-1 -mt-0.5 p-1 rounded-md text-rone-text-faint hover:text-rone-text-primary">
@@ -126,7 +115,7 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
         <FloatingMenu menu={menu} items={items} label={t('card.menu', { name: 'RONE ' + name })} />
       </div>
 
-      <p className="m-0 text-[12.5px] leading-[1.45] text-rone-text-secondary line-clamp-2 min-h-[36px]">
+      <p className="relative m-0 max-w-[82%] text-[12.5px] leading-[1.45] text-rone-text-secondary line-clamp-2 min-h-[36px]">
         {descriptionOf(plugin)}
       </p>
 
@@ -136,7 +125,7 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
         </div>
       )}
 
-      <div className="mt-auto pt-2.5 border-t border-rone-border flex items-center gap-2 min-h-[44px]" onClick={(e) => e.stopPropagation()}>
+      <div className="relative mt-auto pt-2.5 border-t border-white/[0.06] flex items-center gap-2 min-h-[44px]" onClick={(e) => e.stopPropagation()}>
         {a.price ? (
           <span className="flex items-baseline gap-1.5 whitespace-nowrap">
             <b className="font-display text-[16px] text-rone-text-primary num">{usd(a.price.live)}</b>
@@ -147,7 +136,7 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
           </span>
         ) : a.version ? (
           <span className="font-mono text-[11.5px] text-rone-text-dim whitespace-nowrap">
-            v{(plugin.installedVersion || '?').split('.').slice(0, 3).join('.')} <b className="text-rone-amber font-semibold">→ {(plugin.remoteVersion || '').split('.').slice(0, 3).join('.')}</b>
+            v{(plugin.installedVersion || '?').split('.').slice(0, 3).join('.')} <b className="text-rone-amber font-semibold" style={{ textShadow: '0 0 10px rgba(255,208,43,.45)' }}>→ {(plugin.remoteVersion || '').split('.').slice(0, 3).join('.')}</b>
           </span>
         ) : (
           <span className={`text-[11px] font-extrabold uppercase tracking-[0.08em] truncate
@@ -158,7 +147,6 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
           </span>
         )}
         <span className="flex-1" />
-        <PlayButton t={t} plugin={plugin} preview={preview} />
         {a.cancel && (
           <button className="btn btn-ghost btn-sm" onClick={() => onCancel(plugin.id)}>{t('card.cancel')}</button>
         )}
@@ -168,8 +156,8 @@ function PluginCard ({ t, plugin, access, preview, catLabel, onInstall, onCancel
           </button>
         )}
         {a.primary && (
-          <button className="btn btn-pri btn-sm" onClick={() => act(a.primary.kind)}
-                  style={a.primary.amber ? { '--acc': '#FFD02B' } : undefined}>
+          // An update is a quiet outline on the card: the amber version and the bar's Update all carry it
+          <button className={`btn btn-sm ${a.primary.quiet ? 'btn-out bg-[rgba(16,18,22,.7)]' : 'btn-pri btn-white'}`} onClick={() => act(a.primary.kind)}>
             {a.primary.icon && <a.primary.icon className="w-3 h-3" />}{a.primary.label}
           </button>
         )}

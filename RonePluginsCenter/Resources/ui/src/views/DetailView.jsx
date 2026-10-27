@@ -1,19 +1,15 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { Icon } from '../components/ui'
-import { PlayButton, cardAction } from '../components/PluginCard'
-import { useBars } from '../usePreview'
+import { cardAction } from '../components/PluginCard'
 import { accentOf, categoriesOf, descriptionOf, formatSize, isInstalled, isUnlocked, parseChangelog, priceOf, shortName, tagsOf, tint, usd } from '../catalog'
 import { openExternal } from '../bridge'
 
-// A plugin's own page: the unit, a dry/wet player, what is new, where it shows
+// A plugin's own page: the unit, what is new, where it shows
 // up in the user's DAW, the guide and the manual - everything that used to hide
 // in a small Details window and a ⋮ menu.
-export default function DetailView ({ t, plugin, access, preview, reduced, daws, dawId, onDaw, catLabel,
+export default function DetailView ({ t, plugin, access, reduced, daws, dawId, onDaw, catLabel,
                                       onBack, onInstall, onCancel, onOpen, onBuy, onSignIn, onManualPdf, onOpenFolder, onUninstall }) {
-  const canvas = useRef(null)
   const acc = accentOf(plugin)
-  const playing = preview.id === plugin.id && preview.status === 'playing'
-  useBars(canvas, { color: acc, bands: 48, active: playing, reduced })
 
   const a = cardAction(plugin, access, t)
   const un = isUnlocked(plugin, access)
@@ -73,27 +69,6 @@ export default function DetailView ({ t, plugin, access, preview, reduced, daws,
             {un && isInstalled(plugin) && <button className="btn btn-ghost btn-sm" onClick={() => onOpenFolder(plugin.id)}><Icon.folder className="w-3.5 h-3.5" />{t('menu.openFolder')}</button>}
             {un && plugin.status === 'up_to_date' && <button className="btn btn-ghost btn-sm" onClick={() => onInstall(plugin.id)}>{t('menu.reinstall')}</button>}
             {un && isInstalled(plugin) && <button className="btn btn-ghost btn-sm text-rone-error/80 hover:text-rone-error" onClick={() => onUninstall(plugin)}>{t('menu.uninstall')}</button>}
-          </div>
-
-          {/* Dry / wet: the same loop, one switch */}
-          <div className="grid grid-cols-[auto_1fr] gap-4 items-center p-3.5 rounded-[14px] border border-rone-border bg-rone-card">
-            {plugin.preview ? <PlayButton t={t} plugin={plugin} preview={preview} big /> :
-              <span className="w-[52px] h-[52px] rounded-full border border-dashed border-rone-border-3 grid place-items-center text-rone-text-faint"><Icon.play className="w-4 h-4 ml-0.5" /></span>}
-            <canvas ref={canvas} width="1100" height="140" className="w-full h-[70px] block" aria-hidden="true" />
-            <div className="col-span-2 flex items-center gap-3 text-[12px] text-rone-text-dim">
-              {plugin.preview ? (
-                <>
-                  <span className="inline-flex border border-rone-border-2 rounded-[7px] p-[2px] gap-[2px]" role="radiogroup" aria-label="Dry / wet">
-                    {[[false, t('pv.dry')], [true, t('pv.wet')]].map(([w, label]) => (
-                      <button key={label} type="button" role="radio" aria-checked={preview.wet === w} onClick={() => preview.setWet(w)}
-                              className={`px-2.5 h-[22px] rounded-[5px] text-[10.5px] font-extrabold tracking-[0.08em] ${preview.wet === w ? 'text-[#101216]' : 'text-rone-text-dim'}`}
-                              style={preview.wet === w ? { background: acc } : undefined}>{label}</button>
-                    ))}
-                  </span>
-                  <span>{preview.status === 'error' && preview.id === plugin.id ? t('pv.error') : t('detail.ab', { name: 'RONE ' + name })}</span>
-                </>
-              ) : <span>{t('detail.noPreview')}</span>}
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

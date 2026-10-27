@@ -18,7 +18,6 @@ import SettingsView from './views/SettingsView'
 import AccountView from './views/AccountView'
 import { makeT, LOCALES } from './i18n'
 import { usePrefs, prefersReducedMotion } from './prefs'
-import { usePreview } from './usePreview'
 import { playPowerOn } from './sounds'
 import { productKey, ownedProductIds } from './ownership'
 import { pickAnnouncement, rememberAnnouncement } from './announcements'
@@ -32,7 +31,6 @@ export default function App () {
   const t = useMemo(() => makeT(prefs.lang), [prefs.lang])
   const locale = LOCALES[prefs.lang] || 'en-US'
   const reduced = prefersReducedMotion(prefs)
-  const preview = usePreview()
 
   const [plugins, setPlugins] = useState([])
   const [loading, setLoading] = useState(true)
@@ -493,23 +491,22 @@ export default function App () {
     onSignIn: () => navigate('account'), onManual: setManualPlugin, onOpenFolder: openFolder, onUninstall: setUninstallAsk,
   }
   const detailPlugin = tagged.find(p => p.id === detailId)
-  const playingPlugin = preview.id ? tagged.find(p => p.id === preview.id) : null
   const installedCount = tagged.filter(isInstalled).length
 
   return (
     <div className="h-screen flex flex-col bg-rone-bg overflow-hidden">
-      {centerUpdate && (
-        <div className="flex-shrink-0 flex items-center gap-3 px-6 py-2 bg-rone-purple/[0.08] border-b border-rone-purple/25">
+      {centerUpdate && !(view === 'library' && !query && ups.length > 0) && (
+        <div className="flex-shrink-0 flex items-center gap-3 px-6 py-2 bg-white/[0.04] border-b border-white/10">
           <span className="led led-upd" />
           <span className="text-[12px] font-bold text-rone-text-secondary">{t('cu.ready', { version: centerUpdate.split('.').slice(0, 3).join('.') })}</span>
           <span className="flex-1" />
-          <button className="btn btn-pri btn-sm" onClick={() => api.applyCenterUpdate().catch(() => {})}>{t('cu.restart')}</button>
+          <button className="btn btn-pri btn-white btn-sm" onClick={() => api.applyCenterUpdate().catch(() => {})}>{t('cu.restart')}</button>
         </div>
       )}
 
       <div className="flex-1 min-h-0 flex">
         <Sidebar t={t} view={view} onNavigate={navigate} updatesCount={ups.length} account={account} license={license}
-                 ownedPlugins={ownedPlugins} preview={preview} playingPlugin={playingPlugin} reduced={reduced} locale={locale} />
+                 ownedPlugins={ownedPlugins} locale={locale} />
 
         <main className="flex-1 min-w-0 flex flex-col relative">
           <TopBar t={t} searchQuery={query} onSearchChange={(q) => { setQuery(q); if (q && view !== 'library') navigate('library') }}
@@ -526,7 +523,8 @@ export default function App () {
 
           <div ref={scroller} className="flex-1 min-h-0 overflow-y-auto scroll-y px-6 pt-5 pb-24">
             {view === 'library' && (
-              <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} preview={preview} personal={personal} optinAsk={optinAsk}
+              <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk}
+                           centerUpdate={centerUpdate} onCenterUpdate={() => api.applyCenterUpdate().catch(() => {})}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
                            catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} />
             )}
@@ -534,7 +532,7 @@ export default function App () {
               <UpdatesView t={t} plugins={tagged} access={access} onInstall={install} onUpdateAll={updateAll} onCancel={cancel} onRefresh={refresh} onDetail={openDetail} />
             )}
             {view === 'detail' && detailPlugin && (
-              <DetailView t={t} plugin={detailPlugin} access={access} preview={preview} reduced={reduced} daws={daws} dawId={dawId}
+              <DetailView t={t} plugin={detailPlugin} access={access} reduced={reduced} daws={daws} dawId={dawId}
                           onDaw={(id) => setPrefs({ daw: id })} catLabel={catLabel} onBack={() => navigate(returnView)}
                           onInstall={install} onCancel={cancel} onOpen={open} onBuy={(p) => buy(p, 'detail')} onSignIn={() => navigate('account')}
                           onManualPdf={manualPdf} onOpenFolder={openFolder} onUninstall={setUninstallAsk} />

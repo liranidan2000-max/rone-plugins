@@ -1,46 +1,14 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { Icon } from './ui'
 import { openExternal } from '../bridge'
-import { useBars } from '../usePreview'
-import { accentOf, shortName } from '../catalog'
+import { shortName } from '../catalog'
 import { isGiftPass } from '../announcements'
 
 const NAV = [
   ['library', Icon.library], ['updates', Icon.updates], ['rack', Icon.rack], ['learn', Icon.learn], ['settings', Icon.settings],
 ]
 
-// The preview player that took the place of the decorative equaliser: its bars
-// move only when something really plays, in the playing plugin's colour.
-function PreviewPlayer ({ t, preview, playingPlugin, reduced }) {
-  const canvas = useRef(null)
-  const color = playingPlugin ? accentOf(playingPlugin) : '#4E535B'
-  useBars(canvas, { color, active: !!playingPlugin, reduced })
-  const status = preview.status
-
-  return (
-    <div className="mx-3 mt-auto rounded-xl border border-rone-border bg-rone-card p-3" style={{ '--acc': color }} aria-live="polite">
-      <div className="flex items-center justify-between">
-        <span className="text-[10.5px] font-extrabold tracking-[0.14em] uppercase text-rone-text-faint">{t('pv.title')}</span>
-        {playingPlugin && (
-          <span className="inline-flex border border-rone-border-2 rounded-[7px] p-[2px] gap-[2px]" role="radiogroup" aria-label="Dry / wet">
-            {[[false, t('pv.dry')], [true, t('pv.wet')]].map(([w, label]) => (
-              <button key={label} type="button" role="radio" aria-checked={preview.wet === w} onClick={() => preview.setWet(w)}
-                      className={`px-2 h-[20px] rounded-[5px] text-[10px] font-extrabold tracking-[0.08em] ${preview.wet === w ? 'text-[#101216]' : 'text-rone-text-dim'}`}
-                      style={preview.wet === w ? { background: color } : undefined}>{label}</button>
-            ))}
-          </span>
-        )}
-      </div>
-      <p className={`mt-1 mb-1.5 ${playingPlugin ? 'font-display font-bold text-[13px] text-rone-text-primary truncate' : 'text-[12px] text-rone-text-dim leading-snug'}`}>
-        {playingPlugin ? (status === 'loading' ? t('pv.loading') : 'RONE ' + shortName(playingPlugin))
-          : status === 'error' ? t('pv.error') : t('pv.idle')}
-      </p>
-      <canvas ref={canvas} width="360" height="100" className="block w-full h-[50px]" aria-hidden="true" />
-    </div>
-  )
-}
-
-export default function Sidebar ({ t, view, onNavigate, updatesCount, account, license, ownedPlugins, preview, playingPlugin, reduced, locale }) {
+export default function Sidebar ({ t, view, onNavigate, updatesCount, account, license, ownedPlugins, locale }) {
   const navView = view === 'detail' ? 'library' : view
   const signedIn = !!account.signedIn
   const pass = !!license.licensed
@@ -67,7 +35,7 @@ export default function Sidebar ({ t, view, onNavigate, updatesCount, account, l
     <aside className="sidebar-panel flex-shrink-0 w-[224px] h-full flex flex-col" aria-label="RONE Plugins Center">
       <button onClick={() => onNavigate('library')} className="group px-5 pt-5 pb-4 text-left" aria-label={t('nav.library')}>
         <div className="font-display font-extrabold text-[19px] tracking-[0.01em] text-rone-text-primary whitespace-nowrap transition-transform duration-200 group-hover:scale-[1.03] origin-left">
-          RONE<span className="ml-1.5 text-rone-text-secondary font-semibold">PLUGINS</span>
+          <span style={{ textShadow: '0 0 16px rgba(255,255,255,0.35)' }}>RONE</span><span className="ml-1.5 text-rone-text-dim">PLUGINS</span>
         </div>
         <div className="mt-0.5 text-[10px] font-extrabold tracking-[0.32em] text-rone-text-dim uppercase">Center</div>
       </button>
@@ -83,7 +51,7 @@ export default function Sidebar ({ t, view, onNavigate, updatesCount, account, l
               <I className={`w-[17px] h-[17px] ${active ? 'text-rone-purple' : 'text-rone-text-faint'}`} />
               <span className="flex-1 text-left">{t('nav.' + key)}</span>
               {badge > 0 && (
-                <span className="min-w-[20px] h-[20px] px-1.5 rounded-full bg-rone-amber text-[#1d1600] text-[11px] font-extrabold grid place-items-center"
+                <span className="min-w-[20px] h-[20px] px-1.5 rounded-full bg-white text-[#101216] text-[11px] font-extrabold grid place-items-center shadow-[0_0_12px_rgba(255,255,255,0.4)]"
                       aria-label={String(badge)}>{badge}</span>
               )}
             </button>
@@ -97,9 +65,7 @@ export default function Sidebar ({ t, view, onNavigate, updatesCount, account, l
         </button>
       </nav>
 
-      <PreviewPlayer t={t} preview={preview} playingPlugin={playingPlugin} reduced={reduced} />
-
-      <div className="m-3 rounded-xl border border-rone-border p-3.5" style={{ background: 'linear-gradient(160deg, #1B1E23 0%, #101216 100%)' }}>
+      <div className="m-3 mt-auto rounded-xl border border-rone-border p-3.5" style={{ background: 'linear-gradient(160deg, #1B1E23 0%, #101216 100%)' }}>
         <div className="flex items-center gap-2 font-display text-[12px] font-extrabold tracking-[0.16em] text-rone-text-primary">
           <Icon.bolt className="w-3.5 h-3.5 text-rone-purple" />{plan.k}
         </div>

@@ -5,7 +5,9 @@
 /* ============================================================
    RONE graphite design language - Center 2.0
    Ground, panels and type are the house's; each plugin card carries
-   its own neon in --acc, the Center's own neon is purple.
+   its own neon in --acc, the Center's own accent is white (2.2; was purple).
+   The variables keep their old names (--purple, bg-rone-purple) so nothing
+   else had to move.
    ============================================================ */
 
 :root {
@@ -17,9 +19,9 @@
   --line: 35 38 44;        /* #23262C */
   --line2: 42 46 53;       /* #2A2E35 */
   --line3: 56 61 69;       /* #383D45 */
-  --purple: 232 234 237;   /* the master brand is neutral white on graphite (brand/brand.json, 26.10); the name stays for the classes */
-  --purple-light: 255 255 255;
-  --neon-dark: 22 15 33;   /* #101216 */
+  --purple: 255 255 255;   /* the Center's accent: white (brand/brand.json neutral master, 26.10); the name stays for the classes */
+  --purple-light: 214 218 224;
+  --neon-dark: 16 18 22;   /* text on the white accent */
   --ok: 62 255 139;
   --err: 244 63 94;
   --amber: 255 208 43;
@@ -68,8 +70,8 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .scroll-y { overflow-y: auto; }
 .scroll-y::-webkit-scrollbar { width: 8px; }
 .scroll-y::-webkit-scrollbar-track { background: transparent; }
-.scroll-y::-webkit-scrollbar-thumb { background: rgba(232, 234, 237, 0.2); border-radius: 4px; }
-.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(232, 234, 237, 0.36); }
+.scroll-y::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.24); }
 
 /* Surfaces */
 .pro-card {
@@ -82,7 +84,7 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   border-right: 1px solid rgb(var(--line));
 }
 
-/* Buttons. --acc is the plugin's neon on a card, purple elsewhere. */
+/* Buttons. --acc is the plugin's neon where one is set, white elsewhere. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   height: 34px; padding: 0 14px; border-radius: 9px;
@@ -92,10 +94,13 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .btn:active:not(:disabled) { transform: scale(0.97); }
 .btn:disabled { opacity: .5; cursor: default; }
 /* Each color-mix() below has a plain line before it: a WebKit older than Safari 16.2 (old Macs) drops color-mix and keeps that. */
-.btn-pri { background: var(--acc, #E8EAED); color: #101216; box-shadow: 0 0 14px rgba(0, 0, 0, .35); box-shadow: 0 0 14px color-mix(in srgb, var(--acc, #E8EAED) 32%, transparent); }
+.btn-pri { background: var(--acc, #FFFFFF); color: #101216; box-shadow: 0 0 14px rgba(0, 0, 0, .35); box-shadow: 0 0 16px color-mix(in srgb, var(--acc, #FFFFFF) 30%, transparent); }
+/* The Center's own white call to action, whatever --acc the parent carries */
+.btn-white { --acc: #FFFFFF; }
+.btn-white:hover:not(:disabled) { box-shadow: 0 0 0 1px #FFFFFF, 0 0 26px rgba(255, 255, 255, .42); }
 .btn-pri:hover:not(:disabled) { filter: brightness(1.08); }
 .btn-out { border: 1px solid rgb(var(--line3)); color: rgb(var(--tx2)); }
-.btn-out:hover:not(:disabled) { border-color: var(--acc, #E8EAED); color: rgb(var(--tx)); }
+.btn-out:hover:not(:disabled) { border-color: var(--acc, #FFFFFF); color: rgb(var(--tx)); }
 .btn-ghost { color: rgb(var(--tx3)); padding: 0 10px; }
 .btn-ghost:hover { color: rgb(var(--tx)); }
 .btn-busy { background: rgb(var(--drawer)); color: rgb(var(--tx3)); cursor: default; }
@@ -103,14 +108,14 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .btn-sm { height: 30px; padding: 0 11px; font-size: 11.5px; }
 
 /* Legacy names some kept components still use */
-.btn-gradient { background: #E8EAED; color: #101216; box-shadow: 0 0 12px rgba(232, 234, 237, 0.28); }
+.btn-gradient { background: #FFFFFF; color: #101216; box-shadow: 0 0 14px rgba(255, 255, 255, 0.28); }
 .btn-gradient:hover { filter: brightness(1.08); }
 .btn-outline { border: 1px solid rgb(var(--line3)); color: rgb(var(--tx2)); }
-.btn-outline:hover { border-color: rgba(232, 234, 237, 0.5); color: #E8EAED; }
+.btn-outline:hover { border-color: rgba(255, 255, 255, 0.5); color: #FFFFFF; }
 
 /* Plugin cards */
 .card {
-  --acc: #E8EAED;
+  --acc: #FFFFFF;
   background: rgb(var(--card));
   border: 1px solid rgb(var(--line));
   transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
@@ -122,7 +127,48 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--acc) 40%, transparent);
   transform: translateY(-2px);
 }
+.card:hover { box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--acc) 40%, transparent), 0 0 26px -4px color-mix(in srgb, var(--acc) 22%, transparent); }
 .card.locked .card-icon { filter: saturate(.6) brightness(.82); }
+.card .card-icon { box-shadow: 0 8px 18px rgba(0, 0, 0, .45), 0 0 18px color-mix(in srgb, var(--acc) 30%, transparent); }
+
+/* The plugin's 3D unit, faint at the card's right edge: it drifts in from the
+   right once, and comes up a little under the mouse. */
+.card-unit {
+  position: absolute; top: 50%; right: -64px; height: 210px; width: auto; max-width: none;
+  opacity: .2; transform: translate(0, -50%); pointer-events: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 58%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 58%);
+  transition: opacity .6s ease, transform .6s ease;
+  animation: unitIn 1.4s ease-out both;
+}
+.card:hover .card-unit { opacity: .34; transform: translate(-10px, -50%); }
+@keyframes unitIn { from { opacity: 0; transform: translate(40px, -50%); } to { opacity: .2; transform: translate(0, -50%); } }
+
+/* The banner's unit: a slow turn in perspective, a float, a light that sweeps
+   across it and a reflection under it - premium, never busy. */
+.hero-stage { perspective: 1100px; }
+.hero-unit-wrap { position: relative; transform-style: preserve-3d; animation: heroTurn 9s ease-in-out infinite; }
+.hero-unit { display: block; filter: drop-shadow(0 22px 34px rgba(0, 0, 0, .65)); animation: heroIn 1.2s cubic-bezier(.2, .7, .2, 1) both; }
+.hero-sheen {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .22) 48%, transparent 58%);
+  background-size: 250% 100%; animation: heroSheen 6s ease-in-out infinite;
+  -webkit-mask-image: var(--unit-mask); mask-image: var(--unit-mask);
+  -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center;
+}
+.hero-reflect {
+  position: absolute; left: 0; right: 0; top: 100%; height: 40%; pointer-events: none; opacity: .18;
+  transform: scaleY(-1); background-size: contain; background-repeat: no-repeat; background-position: center bottom;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 70%); mask-image: linear-gradient(to top, #000 0%, transparent 70%);
+}
+.hero-glow { animation: heroGlow 6s ease-in-out infinite; }
+@keyframes heroIn { from { opacity: 0; transform: translateX(60px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes heroTurn {
+  0%, 100% { transform: rotateY(-14deg) rotateX(3deg) translateY(0); }
+  50% { transform: rotateY(10deg) rotateX(-1deg) translateY(-8px); }
+}
+@keyframes heroSheen { 0% { background-position: 120% 0; } 55%, 100% { background-position: -120% 0; } }
+@keyframes heroGlow { 0%, 100% { opacity: .30; } 50% { opacity: .46; } }
 
 /* The moment an install finishes: the icon flickers on like a neon tube */
 .power-on .card-icon { animation: powerOn 1.5s ease-out; }
@@ -168,7 +214,7 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .nav-active { background: rgb(var(--drawer)); color: rgb(var(--tx)); }
 .nav-active::before {
   content: ''; position: absolute; left: 0; top: 24%; bottom: 24%; width: 3px;
-  border-radius: 0 3px 3px 0; background: #E8EAED; box-shadow: 0 0 10px rgba(232, 234, 237, 0.5);
+  border-radius: 0 3px 3px 0; background: #FFFFFF; box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
 }
 
 /* Skeleton shimmer */
