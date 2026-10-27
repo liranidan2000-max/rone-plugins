@@ -1,4 +1,4 @@
-; 2026-10-27: release 1.7.0 (COMPLEX) - its pointer landed in 1f0bdf2 with the skip token
+; 2026-10-27: release 1.7.1 (PLAY LOCK) - its pointer landed in f7756b5 with the skip token
 ; 2026-10-26: rebuilt for the macOS .pkg - run #323 lost it to Apple notarization timeouts (fixed in b9db578)
 ; ============================================================================
 ; Rone Stutter — Silent Plugin Installer
