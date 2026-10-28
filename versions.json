@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-28T13:16:58Z",
+  "last_updated": "2026-10-28T20:06:37Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-345.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-345.1.dmg",
@@ -65,7 +65,7 @@
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "1.7.2.345",
+      "version": "1.7.3.346",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -79,9 +79,9 @@
       "au_bundle": "RONE Stutter.component",
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-345.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-346.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-345.1.pkg",
-      "sha256": "84730798ef2244a33ed2a7f570c8a2be3789eae6aa9f929e4fe720fa03b09476",
+      "sha256": "f184fd5815be83f2f61c1cfc88fba5941f58a04ec749c91ebfd999994eb035a1",
       "registry_key": "RoneStutter",
       "sha256_mac": "ff82258446c19dd2c9211540c8944f90774c86d2db6c5887b31096be0cf471d6",
       "price": 49,
@@ -107,7 +107,7 @@
           "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
         }
       },
-      "size": 6384286,
+      "size": 6384520,
       "size_mac": 18973685,
       "version_mac": "1.7.2.345"
     },
