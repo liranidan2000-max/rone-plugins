@@ -2,6 +2,7 @@
 #include "WebUI.h"
 
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
+#include "../../Shared/RoneFonts.h"
 
 // =============================================================================
 // Editor Construction
@@ -9,7 +10,7 @@
 RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfterspaceAudioProcessor& p)
     : AudioProcessorEditor (&p),
       processorRef (p),
-      updatePrompt ("RoneAfterspace", "RONE Afterspace", JucePlugin_VersionString, "#FF8A3D", p.roneUpdatePending),
+      updatePrompt ("RoneAfterspace", "RONE AFTERSPACE", JucePlugin_VersionString, "#FF8A3D", p.roneUpdatePending),
       rackUi (*this, p.rack, kWidth, kHeight),
       webView (rackUi.addTo (updatePrompt.addTo (juce::WebBrowserComponent::Options{}
           .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
@@ -157,6 +158,11 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
             holder->getMuteInputValue().setValue (false);
 
         customTitleBar = std::make_unique<CustomTitleBar>();
+        customTitleBar->onAudioSettings = []
+        {
+            if (auto* holder = juce::StandalonePluginHolder::getInstance())
+                holder->showAudioSettingsDialog();
+        };
         addAndMakeVisible (*customTitleBar);
         customTitleBar->toFront (false);
         // The app always opens at its natural size — the auto-restored session
@@ -188,6 +194,9 @@ RoneAfterspaceAudioProcessorEditor::~RoneAfterspaceAudioProcessorEditor()
 std::optional<juce::WebBrowserComponent::Resource>
 RoneAfterspaceAudioProcessorEditor::getResource (const juce::String& url)
 {
+    if (auto font = roneFontResource (url))   // the bundled UI fonts (Shared/fonts)
+        return font;
+
     if (url == "/" || url.isEmpty() || url == "/index.html")
     {
         juce::String html (WebUI::getIndexHTML());

@@ -50,7 +50,7 @@ juce_add_plugin(RoneAfterspace
     # macOS: without a usage description the system kills an app the moment it opens the microphone
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT "RONE AFTERSPACE needs your audio input to process live audio."
-    COPY_PLUGIN_AFTER_BUILD TRUE
+    COPY_PLUGIN_AFTER_BUILD FALSE
     NEEDS_WEB_BROWSER      TRUE
     NEEDS_WEBVIEW2         TRUE
     ICON_BIG               "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_1024.png"
@@ -95,7 +95,7 @@ target_sources(RoneAfterspace
     PRIVATE
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
-        Source/dsp/ReverbEngine.cpp
+        ../Shared/RoneReverbEngine.cpp   # the FDN reverb (Source/dsp/ReverbEngine.h names it ReverbEngine)
         Source/dsp/EchoEngine.cpp
         Source/dsp/DuckProcessor.cpp
 )
@@ -110,6 +110,10 @@ target_compile_definitions(RoneAfterspace
         JUCE_STRICT_REFCOUNTEDPOINTER=1
         JUCE_DISPLAY_SPLASH_SCREEN=0
 )
+
+# The RONE UI fonts built into the binary (brand phase B, Shared/fonts)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../Shared/fonts/RoneFonts.cmake)
+rone_add_fonts(RoneAfterspace)
 
 target_link_libraries(RoneAfterspace
     PRIVATE
@@ -143,7 +147,7 @@ juce_generate_juce_header(AfterspaceTests)
 target_sources(AfterspaceTests
     PRIVATE
         Source/tests/DSPTests.cpp
-        Source/dsp/ReverbEngine.cpp
+        ../Shared/RoneReverbEngine.cpp
         Source/dsp/EchoEngine.cpp
         Source/dsp/DuckProcessor.cpp
 )
