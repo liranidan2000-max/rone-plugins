@@ -31,7 +31,8 @@ private:
 
     std::optional<juce::WebBrowserComponent::Resource> getResource (const juce::String& url);
     void sendAllParametersToJS();
-    void applyResizeLimits();                 // the window's min/max follow the rack (open = a wider ratio)
+    void applyResizeLimits();
+    juce::Point<int> closedSize;            // the window before the rack opened (restored exactly on close)                 // the window's min/max follow the rack (open = a wider ratio)
 
     RoneAfterspaceAudioProcessor& processorRef;
     RoneUpdatePrompt updatePrompt;            // before the WebView: its options carry the prompt's script

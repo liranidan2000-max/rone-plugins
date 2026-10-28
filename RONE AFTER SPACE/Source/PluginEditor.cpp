@@ -118,7 +118,23 @@ RoneAfterspaceAudioProcessorEditor::RoneAfterspaceAudioProcessorEditor (RoneAfte
 {
     updatePrompt.attachBrowser (webView);
     rackUi.attach (webView);
-    rackUi.onToggle = [this] { applyResizeLimits(); };
+    rackUi.onToggle = [this]
+    {
+        // The size the window had before the rack opened comes back EXACTLY when it closes: the fixed-aspect
+        // constrainer rounds the open width, and width - rackPx then landed one pixel short (fleet test 28.10.2026).
+        if (rackUi.isOpen()) closedSize = { getWidth(), getHeight() };
+        applyResizeLimits();
+        if (! rackUi.isOpen() && closedSize.x > 0)
+        {
+            const auto want = closedSize;
+            juce::Component::SafePointer<juce::Component> safe (this);
+            juce::MessageManager::callAsync ([safe, want]
+            {
+                if (auto* c = safe.getComponent())
+                    if (c->getWidth() != want.x || c->getHeight() != want.y) c->setSize (want.x, want.y);
+            });
+        }
+    };
 
     isStandalone = (processorRef.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
 
