@@ -112,7 +112,8 @@ private:
         const double k = stretch();
         // nothing goes to the page before it says hello: JUCE 8.0.4 never builds a WebView2 that was sent a
         // script while another window of the same plug-in was being built (26.10: the second window stayed white)
-        if (pageHello && std::abs (k - sentStretch) > 0.005)
+        // (a WebView hidden by RoneWebViewGuard drops events: it is told when it shows again)
+        if (pageHello && browser->isVisible() && std::abs (k - sentStretch) > 0.005)
         {
             sentStretch = k;
             auto* o = new juce::DynamicObject();
