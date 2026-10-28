@@ -1,3 +1,4 @@
+; 2026-10-28: release 1.7.3 (COMPLEX no longer dulls the top end - Alex)
 ; 2026-10-27: release 1.7.1 (PLAY LOCK) - its pointer landed in f7756b5 with the skip token
 ; 2026-10-26: rebuilt for the macOS .pkg - run #323 lost it to Apple notarization timeouts (fixed in b9db578)
 ; ============================================================================
