@@ -270,12 +270,14 @@
       if (c.still) { txt = 'NO PICTURE · ' + txt; cls = 'warn'; }
     } else {
       var p = S.phone || {}; $('#rHint').textContent = 'SAME WI-FI · TAP START ON THE PHONE';
-      if (S.peer) { txt = 'HANDS FROM RONE CONTROL IN ANOTHER PROGRAM'; cls = 'on'; }
+      // a peer mirrors the owner: 'peer' = the owner's phone is in and its hands reach this plug-in too
+      var phoneIn = p.state === 'connected' || p.state === 'peer';
+      if (S.peer && p.state === 'peer') { txt = 'PHONE · ' + Math.round(p.fps || 0) + ' FPS' + (p.via === 'relay' ? ' · RELAY' : ''); cls = 'on'; }
       else if (p.state === 'connected') { txt = 'PHONE · ' + Math.round(p.fps || 0) + ' FPS' + (p.via === 'relay' ? ' · RELAY' : ''); cls = 'on'; }
       else if (p.state === 'waiting' || p.state === 'connecting') { txt = p.state === 'connecting' ? 'PHONE CONNECTING…' : 'WAITING FOR THE PHONE…'; }
       else { txt = S.linkError ? 'LINK: ' + S.linkError.toUpperCase().slice(0, 40) : 'PHONE OFF'; }
       // the QR: shown until the phone is in (a phone paired in RONE Control comes straight here - same code)
-      if (p.state !== 'connected' && p.url) { showQr = true; renderQr(p.url); $('#rNewCode').hidden = !!S.peer; $('#rQrS').textContent = S.peer ? 'RONE Control in another program holds the link - the same code works here.' : (p.state === 'connecting' ? 'The phone is connecting…' : 'Its camera becomes your hands. One scan - it stays paired.'); }
+      if (!phoneIn && p.url) { showQr = true; renderQr(p.url); $('#rNewCode').hidden = !!S.peer; $('#rQrS').textContent = S.peer ? 'Another RONE plug-in holds the link - the same code works here.' : (p.state === 'connecting' ? 'The phone is connecting…' : 'Its camera becomes your hands. One scan - it stays paired.'); }
     }
     if (!S.live) { txt += ' · NOT LIVE'; cls = 'warn'; }
     if (!S.armed) { txt += ' · ARMED ELSEWHERE'; cls = cls || 'warn'; }

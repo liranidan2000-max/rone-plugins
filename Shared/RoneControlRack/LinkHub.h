@@ -90,6 +90,7 @@ private:
 
     std::unique_ptr<LinkWindow> window;
     std::unique_ptr<juce::InterProcessLock> ownerLock;
+    juce::String claimToken;                                   // this hub's claim on the link inside the process
     std::unique_ptr<HandLinkServer> peerServer;                // owner: the hands go out to the other processes
     std::unique_ptr<HandLinkClient> peer;                      // peer: the hands come in from the owner
     juce::Array<Client*> clients;
