@@ -164,6 +164,12 @@ private:
 
             if (isWebView2Window (w))
                 return false;                       // the invisible overlays themselves (ours or another plug-in's)
+
+            if (isDropOverlay (w))
+                return false;                       // the plug-in's own file-drop layer, part of the page
+
+            if ((ex & WS_EX_LAYERED) != 0 && ! layeredAndSeen (w))
+                return false;                       // a screen-wide overlay (NVIDIA, Discord, Steam): clicks go through it
         }
 
         // a window with a region (rounded / shaped) only holds what its region holds
@@ -174,6 +180,45 @@ private:
             inside = PtInRegion (rgn, pt.x - r.left, pt.y - r.top) != 0;
         DeleteObject (rgn);
         return inside;
+    }
+
+    // The sample plug-ins (Iron, Stutter, Reverse Reverb) lay a window of their
+    // own over the page to take file drops and the drag-out: a top-level popup
+    // in this process, class "<Plugin>DropOverlay", alpha 1, passing every click
+    // on to the WebView. It is the plug-in, not something covering it - counting
+    // it hid the page the moment the mouse came over it, and the window went
+    // black (Alex 2026-10-28, Live 12 and Studio One, 1.0.12 / 1.7.2 / 1.2.8).
+    static bool isDropOverlay (HWND w)
+    {
+        DWORD pid = 0;
+        GetWindowThreadProcessId (w, &pid);
+        if (pid != GetCurrentProcessId())
+            return false;
+
+        wchar_t cls[128] = {};
+        if (GetClassNameW (w, cls, 128) <= 0)
+            return false;
+
+        return juce::String (cls).endsWith ("DropOverlay");
+    }
+
+    // A layered window of another program only covers us when it is drawn with
+    // one visible opacity (SetLayeredWindowAttributes, LWA_ALPHA above 0). The
+    // screen-wide overlays of the GPU driver, Discord, Steam or the game bar draw
+    // per pixel (UpdateLayeredWindow): Windows hands the mouse through wherever
+    // they are clear, which is almost everywhere. Counting them blacked out the
+    // page on any machine running one (found beside the DropOverlay case, NVIDIA
+    // Overlay over the whole desktop). A layered window can't be asked for its
+    // pixel under the mouse, so per-pixel ones are left out; a real app window
+    // that draws per pixel is rare, and missing it only means the old FL catch.
+    static bool layeredAndSeen (HWND w)
+    {
+        BYTE alpha = 0;
+        DWORD flags = 0;
+        if (! GetLayeredWindowAttributes (w, nullptr, &alpha, &flags))
+            return false;                           // per pixel (UpdateLayeredWindow)
+
+        return (flags & LWA_ALPHA) == 0 || alpha > 0;
     }
 
     static bool isCloaked (HWND w)
