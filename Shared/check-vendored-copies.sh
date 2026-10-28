@@ -20,7 +20,7 @@ note() {
 }
 
 core="$root/RONEAnalyzer/Source/Core"
-for f in BundleLicenseChecker RemoteLicenseGate RoneEntitlement RoneUpdatePrompt RoneCrashReporter RoneWebCompat RoneWindowFit; do
+for f in BundleLicenseChecker RemoteLicenseGate RoneEntitlement RoneUpdatePrompt RoneCrashReporter RoneWebCompat RoneWindowFit RoneWebViewGuard; do
   [ -f "$core/$f.h" ] || continue
   if ! cmp -s <(tr -d '\r' < "$root/Shared/$f.h") <(tr -d '\r' < "$core/$f.h"); then
     note "RONEAnalyzer/Source/Core/$f.h differs from Shared/$f.h - copy Shared/$f.h over it unchanged"
