@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-10-29T13:21:00Z",
+  "last_updated": "2026-10-29T13:51:04Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-349.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-349.1.dmg",
@@ -263,7 +263,7 @@
     {
       "id": "RoneRise",
       "name": "RONE Rise",
-      "version": "1.0.14.348",
+      "version": "1.0.15.350",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -277,9 +277,9 @@
       "au_bundle": "RONE Rise.component",
       "manual": "RONE Rise - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-348.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-350.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-348.1.pkg",
-      "sha256": "5591e6aa9ad0d0f5928d9a9b55dbf794b4a542c6c927cd68a6cab9516d28df49",
+      "sha256": "640c1bfeaf2175057c680edade4c24714e95372b1836ac6ba1269bcd6e7106a0",
       "registry_key": "RoneRise",
       "sha256_mac": "40408ed6a6030c7caeab73da2bf083f5516d3afbec084c2de51ff4dfcbc94ec6",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
@@ -306,7 +306,7 @@
           "description": "Un knob, todo el build-up: sube INTENSITY a lo largo de la frase y la mezcla se vuelve un rise (high-pass pronunciado, gran reverb, ecos, ruido, una subida infinita), llévalo a cero en el drop y la reverb aún se derrama en él - o pulsa GO y deja que aterrice en el compás solo"
         }
       },
-      "size": 5180402,
+      "size": 5192509,
       "size_mac": 13956330,
       "version_mac": "1.0.14.348"
     },
