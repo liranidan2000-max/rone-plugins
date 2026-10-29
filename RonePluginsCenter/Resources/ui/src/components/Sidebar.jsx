@@ -8,7 +8,26 @@ const NAV = [
   ['library', Icon.library], ['updates', Icon.updates], ['rack', Icon.rack], ['learn', Icon.learn], ['settings', Icon.settings],
 ]
 
-export default function Sidebar ({ t, view, onNavigate, updatesCount, account, license, ownedPlugins, locale }) {
+// RONE VST MANAGER, always at hand under the menu (Liran 29.10: the banner is the
+// promo, the sidebar is the way in). One click opens it, or installs it first.
+function VstManagerEntry ({ t, app, onInstall, onOpen }) {
+  const busy = ['queued', 'downloading', 'ready', 'installing', 'waiting'].includes(app.status)
+  const installed = app.status === 'up_to_date' || app.status === 'update_available'
+  const state = busy ? (app.status === 'downloading' && app.downloadProgress > 0 ? Math.round(app.downloadProgress * 100) + '%' : t('card.installing'))
+              : installed ? null : t('card.install')
+  return (
+    <button onClick={() => (busy ? null : installed ? onOpen(app.id) : onInstall(app.id))} disabled={busy}
+            title={installed ? t('card.open') + ' ' + app.name : app.name}
+            className="mx-2.5 mt-4 flex items-center gap-3 px-3 py-[9px] rounded-[10px] text-[12.5px] font-bold text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04] disabled:cursor-default">
+      <img src={app.logoUrl} alt="" width={22} height={22} className="w-[22px] h-[22px] rounded-[6px] flex-none" />
+      <span className="flex-1 text-left leading-tight">VST MANAGER</span>
+      {state ? <span className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-rone-text-faint">{state}</span>
+             : <Icon.open className="w-3 h-3 text-rone-text-faint" />}
+    </button>
+  )
+}
+
+export default function Sidebar ({ t, view, onNavigate, updatesCount, account, license, ownedPlugins, locale, giftApp, onInstall, onOpen }) {
   const navView = view === 'detail' ? 'library' : view
   const signedIn = !!account.signedIn
   const pass = !!license.licensed
@@ -64,6 +83,8 @@ export default function Sidebar ({ t, view, onNavigate, updatesCount, account, l
           <Icon.open className="w-3 h-3" />
         </button>
       </nav>
+
+      {giftApp && <VstManagerEntry t={t} app={giftApp} onInstall={onInstall} onOpen={onOpen} />}
 
       <div className="m-3 mt-auto rounded-xl border border-rone-border p-3.5" style={{ background: 'linear-gradient(160deg, #1B1E23 0%, #101216 100%)' }}>
         <div className="flex items-center gap-2 font-display text-[12px] font-extrabold tracking-[0.16em] text-rone-text-primary">

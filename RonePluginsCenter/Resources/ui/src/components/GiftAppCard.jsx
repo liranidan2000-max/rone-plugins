@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Icon } from './ui'
 import { cardAction } from './PluginCard'
 import { descriptionOf } from '../catalog'
@@ -12,16 +12,20 @@ export default function GiftAppCard ({ t, app, onInstall, onCancel, onOpen }) {
   const a = cardAction(app, { licensed: true, signedIn: true }, t)
   const act = (kind) => (kind === 'open' ? onOpen(app.id) : onInstall(app.id))
   const v = (s) => (s || '').split('.').slice(0, 3).join('.')
+  const [broken, setBroken] = useState(false)
   const busy = ['downloading', 'installing', 'queued', 'ready'].includes(app.status)
 
   return (
     <section className="mt-3.5 relative overflow-hidden flex items-center gap-4 pl-4 pr-3 py-3 rounded-[13px] border border-white/[0.14]"
              style={{ background: 'linear-gradient(90deg, rgba(255,255,255,.07) 0%, rgb(var(--card)) 55%)' }}
              data-card={app.id} aria-label={app.name}>
-      <div className="flex-none w-12 h-12 rounded-[12px] grid place-items-center border border-white/15 text-white"
-           style={{ background: 'radial-gradient(circle at 38% 30%, #2A2E35, #1B1E23 55%, #14161A)', boxShadow: '0 8px 18px rgba(0,0,0,.45)' }}>
-        <Icon.gift className="w-6 h-6" />
-      </div>
+      {app.logoUrl && !broken
+        ? <img src={app.logoUrl} alt="" width={48} height={48} onError={() => setBroken(true)}
+               className="flex-none w-12 h-12 rounded-[12px]" style={{ boxShadow: '0 8px 18px rgba(0,0,0,.45)' }} />
+        : <div className="flex-none w-12 h-12 rounded-[12px] grid place-items-center border border-white/15 text-white"
+               style={{ background: 'radial-gradient(circle at 38% 30%, #2A2E35, #1B1E23 55%, #14161A)', boxShadow: '0 8px 18px rgba(0,0,0,.45)' }}>
+            <Icon.gift className="w-6 h-6" />
+          </div>}
 
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <div className="flex items-center gap-2 flex-wrap">

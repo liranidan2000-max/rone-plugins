@@ -201,7 +201,7 @@ function mockGiftApp(scenario) {
     description: 'Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig or FL Studio - or from the side strip (Ctrl+Alt+V) right next to your DAW. A gift for every RONE customer.',
     remoteVersion: '0.9.0', installedVersion: installed,
     status: !installed ? 'not_installed' : installed === '0.9.0' ? 'up_to_date' : 'update_available',
-    downloadProgress: 0, waitingFor: '', hasStandalone: true, standaloneInstalled: !!installed, categories: [], tags: [],
+    downloadProgress: 0, waitingFor: '', hasStandalone: true, logoUrl: '/logos/RoneVstManager.png', standaloneInstalled: !!installed, categories: [], tags: [],
   }
 }
 

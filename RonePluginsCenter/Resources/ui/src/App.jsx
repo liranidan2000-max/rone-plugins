@@ -518,7 +518,7 @@ export default function App () {
 
       <div className="flex-1 min-h-0 flex">
         <Sidebar t={t} view={view} onNavigate={navigate} updatesCount={ups.length} account={account} license={license}
-                 ownedPlugins={ownedPlugins} locale={locale} />
+                 ownedPlugins={ownedPlugins} locale={locale} giftApp={giftApp} onInstall={install} onOpen={open} />
 
         <main className="flex-1 min-w-0 flex flex-col relative">
           <TopBar t={t} searchQuery={query} onSearchChange={(q) => { setQuery(q); if (q && view !== 'library') navigate('library') }}
