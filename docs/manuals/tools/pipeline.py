@@ -74,6 +74,7 @@ STATES = [
     ("rise", "", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.land=2;frame.running=true;frame.t=0.62;frame.bar=4;frame.beat=2;frame.playing=true;frame.phase=0.6;CH.cur=0.62;CH.target=0.62;renderLand();renderKnob()", None),
     ("rise", "_adv", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.preset=2;Object.assign(state,PRESETS[2].m);state.land=2;state.intensity=0.7;Object.assign(frame,{hpf:900,lpf:20000,gate:16,pitch:62,rev:0.55,del:0.35,noise:-26,shep:540,drive:0.28});CH.cur=0.7;CH.target=0.7;renderKnob();renderMacros();renderPresets();renderLand();renderTail();renderChain();document.getElementById('drawer').classList.add('open');document.getElementById('advBtn').classList.add('on')", None),
     ("rise", "_about", "click:pLogo", None),
+    ("rise", "_presets", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);loadPreset(2,FACTORY[9].m,'PSY GATE');document.getElementById('pName').click()", None),
     # Gater: the display draws only from host `frame` events, so _mock.js feeds it a pad chopped
     # by a 1/16 groove at 140 BPM (MIDI IN, GATE FOLLOWS THE NOTES); SETUP is shown as FL Studio sees it.
     ("gater", "", "js:window.__scn_gater()", None),

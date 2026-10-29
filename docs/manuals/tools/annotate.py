@@ -280,13 +280,15 @@ def main():
     A = ACCENT["rise"]
     # Order here IS the legend order in content_rise.py - keep the two lists in step.
     annotate("rise", "rise/tour.png", [
-        ("#pLogo", "Header logo"), ("#bypassBtn", "BYPASS"), ("#knob", "INTENSITY"), ("#goBtn", "GO"), ("#clockTxt", "Bar counter"),
-        ("#mood", "Mood"), ("#presets", "Presets"), ("#advBtn", "ADVANCED"), ("#resize-handle", "Resize grip")], A,
+        ("#pLogo", "Header logo"), ("#pbar", "Preset bar"), ("#pSaveBtn", "SAVE"), ("#pGear", "Settings"), ("#tailSeg", "TAIL"),
+        ("#bypassBtn", "BYPASS"), ("#knob", "INTENSITY"), ("#goBtn", "GO"), ("#clockTxt", "Bar counter"),
+        ("#mood", "Mood"), ("#presets", "Modes"), ("#advBtn", "ADVANCED"), ("#resize-handle", "Resize grip")], A,
         crops=[("knob", "#knob", 10)])
     annotate("rise_adv", "rise/adv.png", [
         ("#landSeg", "LAND ON BAR"), ("#curveSeg", "CURVE"), ("#tailBar", "TAIL"), ("#macros", "Macros"), ("#chain", "Chain strip")], A,
         crops=[("panel", "#drawer", 8)])
     plain("rise_about", "rise/about.png")
+    plain("rise_presets", "rise/presets.png")
     # ------------------------------------------------------------ RONE 1176 / RONE 2A (1080 wide at DPR 2)
     # The faces are drawn by face_kit.js and their knobs carry no ids, so the boxes are image pixels
     # measured on the shots (296 tall without the scope, 718 with the scope + ADVANCED open).
