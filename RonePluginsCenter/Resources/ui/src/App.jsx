@@ -89,9 +89,10 @@ export default function App () {
     return m
   }, [upsell, upsellTick])
   // RONE's own apps (the manifest's "apps": RONE VST MANAGER) are not plugins: they leave the catalog and
-  // come back as one gift card, shown only to a customer (the backend decides `unlocked`) on Windows.
+  // come back as one gift card, shown only to a customer (the backend decides `unlocked`) where this
+  // platform has an installer (`installable`; RONE VST MANAGER went out on Windows first).
   const catalog = useMemo(() => plugins.filter(p => p.kind !== 'app'), [plugins])
-  const giftApp = useMemo(() => (platform === 'mac' ? null : plugins.find(p => p.kind === 'app' && p.unlocked) || null), [plugins, platform])
+  const giftApp = useMemo(() => plugins.find(p => p.kind === 'app' && p.unlocked && p.installable !== false) || null, [plugins])
   const tagged = useMemo(() => catalog.map(p => {
     const d = p.i18n?.[prefs.lang]?.description
     const q = d ? { ...p, description: d } : p

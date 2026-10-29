@@ -906,6 +906,11 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         info.sha256         = entry.getProperty ("sha256",           {}).toString();
         info.sha256Mac      = entry.getProperty ("sha256_mac",       {}).toString();
         info.standaloneExe  = entry.getProperty ("standalone_exe",   {}).toString();
+       #if JUCE_MAC
+        // A Windows sub-folder ("RONE VST MANAGER\RONE VST MANAGER.exe") means nothing
+        // here: the .app is looked for by its name in the Applications folders.
+        info.standaloneExe  = info.standaloneExe.fromLastOccurrenceOf ("\\", false, false);
+       #endif
         info.vst3Bundle     = entry.getProperty ("vst3_bundle",      {}).toString();
         info.auBundle       = entry.getProperty ("au_bundle",        {}).toString();
         info.manualPdf      = entry.getProperty ("manual",           {}).toString();

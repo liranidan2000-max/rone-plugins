@@ -197,7 +197,7 @@ function mockGiftApp(scenario) {
   const installed = q.get('vm') === 'update' ? '0.8.0' : q.get('vm') === 'cur' ? '0.9.0' : ''
   return {
     id: 'RoneVstManager', name: 'RONE VST MANAGER', kind: 'app', type: 'standalone', formats: ['App'],
-    unlocked: scenario === 'lifetime' || scenario === 'all',
+    unlocked: scenario === 'lifetime' || scenario === 'all', installable: true,
     description: 'Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig or FL Studio - or from the side strip (Ctrl+Alt+V) right next to your DAW. A gift for every RONE customer.',
     remoteVersion: '0.9.0', installedVersion: installed,
     status: !installed ? 'not_installed' : installed === '0.9.0' ? 'up_to_date' : 'update_available',

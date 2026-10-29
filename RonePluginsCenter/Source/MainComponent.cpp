@@ -628,6 +628,12 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     {
         obj->setProperty ("kind", "app");
         obj->setProperty ("unlocked", isRoneCustomer());
+        // Only where this platform has an installer: RONE VST MANAGER went out on Windows first.
+       #if JUCE_MAC
+        obj->setProperty ("installable", info.downloadUrlMac.isNotEmpty());
+       #else
+        obj->setProperty ("installable", info.downloadUrl.isNotEmpty());
+       #endif
     }
     if (info.dev)  obj->setProperty ("dev", true);    // a DEV CHANNEL card (Liran's own Center only)
 
@@ -2682,6 +2688,23 @@ juce::Array<PluginInfo> MainComponent::withDevChannel (const juce::Array<PluginI
 
         if (released < 0)
             all.add (d);                                   // a plug-in before its release: its own card
+        else if (all[released].app)
+        {
+            // A dev build of a RONE app (RONE VST MANAGER for Mac, 30.10.2026) keeps the gift card. The dev
+            // channel answers in "plugins"; the public entry knows it is an app. Taken whenever this platform
+            // has no public installer (the Mac app before its release), otherwise only when it is newer.
+           #if JUCE_MAC
+            const bool publicHere = all[released].downloadUrlMac.isNotEmpty();
+           #else
+            const bool publicHere = all[released].downloadUrl.isNotEmpty();
+           #endif
+            if (! publicHere || VersionChecker::isNewerVersion (all[released].remoteVersion, d.remoteVersion))
+            {
+                auto appBuild = d;
+                appBuild.app = true;
+                all.set (released, appBuild);
+            }
+        }
         // A released plug-in whose NEXT version is in development (rack-first, 26.10.2026: Throw 1.9.0 while 1.8.6 is
         // public): the newer dev build takes the card, so this Center offers it as the update - and never offers the
         // public version back over it (the status rule is "anything but the published version gets the published
