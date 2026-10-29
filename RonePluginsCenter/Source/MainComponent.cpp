@@ -621,6 +621,14 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     // Free with any RONE account: before 2.0 the page never heard of it, and a
     // signed-out visitor saw RONE Clipper as LOCKED with no way in.
     if (info.free) obj->setProperty ("free", true);
+
+    // A RONE app (RONE VST MANAGER): the page gives it its own gift card, never a
+    // library card, and shows it only when this account is a customer.
+    if (info.app)
+    {
+        obj->setProperty ("kind", "app");
+        obj->setProperty ("unlocked", isRoneCustomer());
+    }
     if (info.dev)  obj->setProperty ("dev", true);    // a DEV CHANNEL card (Liran's own Center only)
 
     auto list = [] (const juce::StringArray& s)
@@ -720,15 +728,52 @@ int MainComponent::countUpdates()
     // Audit R119: only updates this account can install - the same gate as
     // startInstall and the page's own count. The tray said "3 updates ready" to a
     // signed-out or lapsed account while the page said everything was up to date.
-    const bool signedIn = accountClient.getState().signedIn;
-
     juce::ScopedLock sl (pluginDataLock);
     int n = 0;
     for (auto& p : pluginData)
-        if (p.status == PluginStatus::UpdateAvailable
-            && (isEffectivelyLicensed (licenseHandler, accountClient, p.id) || (p.free && signedIn)))
+        if (p.status == PluginStatus::UpdateAvailable && mayUse (p))
             ++n;
     return n;
+}
+
+// A RONE customer: a live pass, a serial, or a plug-in bought outright. The
+// free plug-in does not count - the server lists it in `owned` for every
+// signed-in account, which would make "customers only" mean everyone. The
+// open-mode kill-switch does not count either: it unlocks plug-ins, it does
+// not make anyone a customer. RONE VST MANAGER reads the same licence file
+// (BundleLicense.xml) on its own side.
+bool MainComponent::isRoneCustomer()
+{
+    if (licenseHandler.isLicensed())
+        return true;
+
+    const auto s = accountClient.getState();
+    if (s.licensed)
+        return true;
+
+    juce::StringArray freeIds;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.free)
+                freeIds.add (p.id.trim());
+    }
+
+    for (auto id : s.ownedProducts)
+        if (id.trim().isNotEmpty() && ! freeIds.contains (id.trim(), true))
+            return true;
+    return false;
+}
+
+bool MainComponent::mayUse (const PluginInfo& p)
+{
+    if (p.app)
+        return isRoneCustomer();
+
+    // A free plugin is unlocked by any signed-in account (the server lists it in
+    // `owned` too; this keeps it installable even before that answer arrives).
+    return isEffectivelyLicensed (licenseHandler, accountClient, p.id)
+        || (p.free && accountClient.getState().signedIn);
 }
 
 void MainComponent::publishUpdateCount()
@@ -907,17 +952,14 @@ bool MainComponent::startInstall (const juce::String& pluginId, juce::String& er
 {
     JUCE_ASSERT_MESSAGE_THREAD
 
-    bool isFree = false, known = false, isDev = false;
+    bool known = false, isDev = false, allowed = false;
     {
         juce::ScopedLock sl (pluginDataLock);
         for (auto& p : pluginData)
-            if (p.id == pluginId) { isFree = p.free; isDev = p.dev; known = true; break; }
+            if (p.id == pluginId) { isDev = p.dev; known = true; allowed = mayUse (p); break; }
     }
 
-    // A free plugin is unlocked by any signed-in account (the server lists it in
-    // `owned` too; this keeps it installable even before that answer arrives).
-    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId)
-        && ! (isFree && accountClient.getState().signedIn))
+    if (known && ! allowed)
     {
         // Audit R246: a signed-out Center (a forced sign-out, a new computer) is
         // asked to sign in - not told to wait a minute for a purchase.
@@ -1470,15 +1512,14 @@ void MainComponent::handleOpenPlugin (NativeArgs args, NativeCompletion complete
 
     auto pluginId = args[0].toString();
 
-    bool isFree = false;
+    bool allowed = false;
     {
         juce::ScopedLock sl (pluginDataLock);
         for (auto& p : pluginData)
-            if (p.id == pluginId) { isFree = p.free; break; }
+            if (p.id == pluginId) { allowed = mayUse (p); break; }
     }
 
-    if (! isEffectivelyLicensed (licenseHandler, accountClient, pluginId)
-        && ! (isFree && accountClient.getState().signedIn))
+    if (! allowed)
     {
         complete ("{\"success\":false,\"error\":\"License required\"}");
         return;
@@ -1646,7 +1687,7 @@ void MainComponent::startBackgroundDownloads()
         {
             if (p.status != PluginStatus::UpdateAvailable || p.installedVersion == "?")
                 continue;
-            if (! isEffectivelyLicensed (licenseHandler, accountClient, p.id) && ! (p.free && accountClient.getState().signedIn))
+            if (! mayUse (p))
                 continue;
            #if JUCE_MAC
             wants.add ({ p.id, p.downloadUrlMac, p.sha256Mac, p.remoteVersion, p.dev });

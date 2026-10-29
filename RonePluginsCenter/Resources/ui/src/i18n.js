@@ -11,6 +11,9 @@ export const LANGS = [
 ]
 
 const en = {
+  'gift.badge': 'A gift for RONE customers',
+  'gift.free': 'Free for you',
+  'gift.installedText': 'Open it from the Start menu. In any DAW, Ctrl+Alt+V opens the side strip.',
   // navigation
   'nav.library': 'Library', 'nav.updates': 'Updates', 'nav.rack': 'My Rack', 'nav.learn': 'Learn',
   'nav.settings': 'Settings', 'nav.account': 'Account',
@@ -232,6 +235,9 @@ const en = {
 }
 
 const pt = {
+  'gift.badge': 'Um presente para clientes RONE',
+  'gift.free': 'Grátis para você',
+  'gift.installedText': 'Abra pelo menu Iniciar. Em qualquer DAW, Ctrl+Alt+V abre a barra lateral.',
   'nav.library': 'Biblioteca', 'nav.updates': 'Atualizações', 'nav.rack': 'Meu Rack', 'nav.learn': 'Aprender',
   'nav.settings': 'Configurações', 'nav.account': 'Conta',
   'top.search': 'Busque plugins ou o que você precisa: riser, vocal chop…', 'top.searchAria': 'Buscar plugins',
@@ -397,6 +403,9 @@ const pt = {
 }
 
 const es = {
+  'gift.badge': 'Un regalo para clientes de RONE',
+  'gift.free': 'Gratis para ti',
+  'gift.installedText': 'Ábrelo desde el menú Inicio. En cualquier DAW, Ctrl+Alt+V abre la barra lateral.',
   'nav.library': 'Biblioteca', 'nav.updates': 'Actualizaciones', 'nav.rack': 'Mi Rack', 'nav.learn': 'Aprender',
   'nav.settings': 'Ajustes', 'nav.account': 'Cuenta',
   'top.search': 'Busca plugins o lo que necesitas: riser, vocal chop…', 'top.searchAria': 'Buscar plugins',

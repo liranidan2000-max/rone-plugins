@@ -1,4 +1,5 @@
 #include "NetworkManager.h"
+#include "AutoStart.h"
 #include "../../Shared/RemoteLicenseGate.h"
 #include "../../Shared/RoneCrashReporter.h"
 
@@ -112,8 +113,17 @@ void NetworkManager::fetchOnce (bool fromOrigin)
                                                              "X-GitHub-Api-Version: 2022-11-28\r\n"
                                                            : "");
 
+    // A build run from a source tree (never the installed copy) can read a local
+    // catalog instead: RONE_CENTER_TEST_MANIFEST=<full path of a versions.json>.
+    // How a new manifest entry is tried before it reaches main, where a push is a
+    // release (the "apps" entry, 29.10.2026). Never written to the cache.
     juce::String body;
-    if (auto stream = url.createInputStream (options))
+    const auto testManifest = AutoStart::isInstalledCopy() ? juce::String()
+                            : juce::SystemStats::getEnvironmentVariable ("RONE_CENTER_TEST_MANIFEST", {});
+    const bool fromTestFile = juce::File::isAbsolutePath (testManifest) && juce::File (testManifest).existsAsFile();
+    if (fromTestFile)
+        body = juce::File (testManifest).loadFileAsString();
+    else if (auto stream = url.createInputStream (options))
         body = stream->readEntireStreamAsString();
 
     if (manifestWorker.threadShouldExit())
@@ -137,9 +147,12 @@ void NetworkManager::fetchOnce (bool fromOrigin)
         RemoteLicenseGate::writeLatestVersions (root);
         captureManifestWide (root);
 
-        auto cache = getManifestCacheFile();
-        cache.getParentDirectory().createDirectory();
-        cache.replaceWithText (body);
+        if (! fromTestFile)
+        {
+            auto cache = getManifestCacheFile();
+            cache.getParentDirectory().createDirectory();
+            cache.replaceWithText (body);
+        }
 
         lastSuccessMs = juce::Time::currentTimeMillis();
         post ([this, plugins] { listeners.call (&Listener::onManifestReady, plugins, false); });
@@ -864,9 +877,19 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
     if (pluginsArray == nullptr)
         return result;
 
-    for (auto& entry : *pluginsArray)
+    // "apps" (29.10.2026): RONE's own apps that every customer gets as a gift -
+    // RONE VST MANAGER first. Their own array, so a Center older than this one
+    // never shows them as a locked plug-in card. Same fields as a plug-in.
+    juce::Array<juce::var> entries (*pluginsArray);
+    const int firstApp = entries.size();
+    if (auto* appsArray = root.getProperty ("apps", {}).getArray())
+        entries.addArray (*appsArray);
+
+    for (int n = 0; n < entries.size(); ++n)
     {
+        const auto& entry = entries.getReference (n);
         PluginInfo info;
+        info.app           = n >= firstApp;
         info.id            = entry.getProperty ("id",           {}).toString();
         info.name          = entry.getProperty ("name",         {}).toString();
         info.remoteVersion = entry.getProperty ("version",      {}).toString();

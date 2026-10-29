@@ -17,6 +17,7 @@ export const Icon = {
   offline: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><path d="M2 8.5a15 15 0 0120 0M5.5 12a10 10 0 0113 0M9 15.5a5 5 0 016 0" /><path d="M3 3l18 18" /></svg>,
   play: (p) => <svg viewBox="0 0 12 12" {...p}><path d="M3 1.6v8.8l7.4-4.4z" fill="currentColor" /></svg>,
   stop: (p) => <svg viewBox="0 0 12 12" {...p}><rect x="2.6" y="2.6" width="6.8" height="6.8" rx="1" fill="currentColor" /></svg>,
+  gift: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><rect x="3.5" y="8" width="17" height="4" rx="1" /><path d="M5 12v7a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19v-7M12 8v12.5M12 8C10.5 4.5 7 4.5 7 6.5S10 8 12 8zm0 0c1.5-3.5 5-3.5 5-1.5S14 8 12 8z" /></svg>,
   download: (p) => <svg viewBox="0 0 24 24" {...P} strokeWidth={2.4} {...p}><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14" /></svg>,
   open: (p) => <svg viewBox="0 0 24 24" {...P} strokeWidth={2.4} {...p}><path d="M7 17L17 7M9 7h8v8" /></svg>,
   retry: (p) => <svg viewBox="0 0 24 24" {...P} strokeWidth={2.2} {...p}><path d="M4 4v5h5M20 20v-5h-5M5.1 15a8 8 0 0013.8 2.5M18.9 9A8 8 0 005.1 6.5" /></svg>,

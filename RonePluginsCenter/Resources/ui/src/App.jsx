@@ -88,13 +88,17 @@ export default function App () {
     }
     return m
   }, [upsell, upsellTick])
-  const tagged = useMemo(() => plugins.map(p => {
+  // RONE's own apps (the manifest's "apps": RONE VST MANAGER) are not plugins: they leave the catalog and
+  // come back as one gift card, shown only to a customer (the backend decides `unlocked`) on Windows.
+  const catalog = useMemo(() => plugins.filter(p => p.kind !== 'app'), [plugins])
+  const giftApp = useMemo(() => (platform === 'mac' ? null : plugins.find(p => p.kind === 'app' && p.unlocked) || null), [plugins, platform])
+  const tagged = useMemo(() => catalog.map(p => {
     const d = p.i18n?.[prefs.lang]?.description
     const q = d ? { ...p, description: d } : p
     if (ownedKeys.has(productKey(p.id))) return { ...q, owned: true }
     const mine = myPrices.get(productKey(p.id))
     return mine ? { ...q, ...mine } : q
-  }), [plugins, ownedKeys, prefs.lang, myPrices])
+  }), [catalog, ownedKeys, prefs.lang, myPrices])
   const localTips = useMemo(() => tips.map(x => ({ ...x, text: (typeof x.i18n?.[prefs.lang] === 'string' && x.i18n[prefs.lang]) || x.text })), [tips, prefs.lang])
   const ownedPlugins = useMemo(() => tagged.filter(p => p.owned), [tagged])
   const access = useMemo(() => ({ licensed: !!license.licensed, signedIn: !!account.signedIn }), [license.licensed, account.signedIn])
@@ -176,18 +180,25 @@ export default function App () {
 
   const pluginsRef = useRef(plugins)
   pluginsRef.current = tagged
+  const giftRef = useRef(giftApp)
+  giftRef.current = giftApp
 
   // The rules live in messages.js (tested there); an install that finished gets
   // its own toast with the DAW steps.
   const translateMessage = useCallback((m) => {
     if (m?.code === 'installed') {
       const params = m.params || {}
+      const gift = giftRef.current
+      if (gift && gift.id === params.id) {
+        if (prefs.sounds) playPowerOn()
+        return { type: 'success', title: t('msg.installedTitle', { name: gift.name }), text: t('gift.installedText') }
+      }
       const plugin = pluginsRef.current.find(x => x.id === params.id)
       announceInstalled(plugin, (params.version || '').split('.').slice(0, 3).join('.'))
       return null
     }
     return translateStatus(m, t)
-  }, [t, announceInstalled])
+  }, [t, announceInstalled, prefs.sounds])
 
   const translateRef = useRef(translateMessage)
   translateRef.current = translateMessage
@@ -277,7 +288,8 @@ export default function App () {
       const r = await api.installPlugin(id)
       if (r && !r.started && r.error) {
         const plugin = pluginsRef.current.find(p => p.id === id)
-        addToast({ text: installErrorText(r.error, 'RONE ' + (plugin ? shortName(plugin) : id), t), type: 'error' })
+        const name = plugin ? 'RONE ' + shortName(plugin) : giftRef.current?.id === id ? giftRef.current.name : id
+        addToast({ text: installErrorText(r.error, name, t), type: 'error' })
       }
     } catch (e) { addToast({ text: e.message || 'Install failed', type: 'error' }) }
   }
@@ -526,7 +538,7 @@ export default function App () {
               <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk}
                            centerUpdate={centerUpdate} onCenterUpdate={() => api.applyCenterUpdate().catch(() => {})}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
-                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} />
+                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} giftApp={giftApp} />
             )}
             {view === 'updates' && (
               <UpdatesView t={t} plugins={tagged} access={access} onInstall={install} onUpdateAll={updateAll} onCancel={cancel} onRefresh={refresh} onDetail={openDetail} />
