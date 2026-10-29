@@ -81,9 +81,9 @@ public:
     /** True when a token exists, regardless of whether it is still valid. */
     bool hasStoredToken() const;
 
-    /** The signed licence this computer holds verifies and says "paid": true - a
-        purchase, never a gift or a giveaway (the server decides). RONE VST MANAGER
-        unlocks on exactly this claim, so the Center offers it on exactly this. */
+    /** The signed licence this computer holds verifies and says "vstm": true (or the
+        older "paid": true) - the server decides who gets RONE VST MANAGER. The app
+        unlocks on exactly these claims, so the Center offers it on exactly these. */
     bool hasPaidLicence() const;
 
     /** Something about the start-up worth a diagnostic report (audit R285, R125 -

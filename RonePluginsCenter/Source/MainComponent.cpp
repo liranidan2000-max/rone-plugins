@@ -736,10 +736,10 @@ int MainComponent::countUpdates()
     return n;
 }
 
-// A RONE customer for the gift apps: someone who BOUGHT something (Liran,
-// 29.10.2026: "not a giveaway - a purchase"). Only the server knows a purchase
-// from a gift, so it says so inside the signed licence ("paid": true) and RONE
-// VST MANAGER unlocks on that same claim. No claim yet (a server before it, a
+// Who gets the gift apps is the server's call, signed into the licence: "vstm"
+// (30.10.2026: a purchase, an ALL ACCESS Liran gave, or a story that tagged
+// RONE), or the older "paid" (29.10: a purchase). RONE VST MANAGER unlocks on
+// the same claims. No claim yet (a server before it, a
 // serial without an account) = no card, never a card for an app that then
 // stays in its trial.
 bool MainComponent::isRoneCustomer()

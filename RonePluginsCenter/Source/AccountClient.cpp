@@ -661,7 +661,10 @@ bool AccountClient::hasPaidLicence() const
     juce::MemoryOutputStream json;
     if (! juce::Base64::convertFromBase64 (json, ent.trim()))
         return false;
-    return (bool) juce::JSON::parse (json.toString()).getProperty ("paid", false);
+    // "vstm" (30.10): VST MANAGER opens - a purchase, a pass Liran gave, or a story
+    // that tagged RONE. "paid" stays for the licences signed before that claim.
+    const auto claims = juce::JSON::parse (json.toString());
+    return (bool) claims.getProperty ("vstm", false) || (bool) claims.getProperty ("paid", false);
 }
 
 void AccountClient::notifyChanged()
