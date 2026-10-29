@@ -646,6 +646,24 @@ juce::String AccountClient::signatureNoticeLocked() const
     return "Sign in again to keep your plugins unlocked on this computer.";
 }
 
+bool AccountClient::hasPaidLicence() const
+{
+    juce::String ent, sig;
+    {
+        const juce::ScopedLock sl (lock);
+        ent = signedEntitlement;
+        sig = signedEntitlementSig;
+    }
+
+    // Verified first; the claim is then read from the same signed bytes.
+    if (! RoneEntitlement::read (ent, sig).has_value())
+        return false;
+    juce::MemoryOutputStream json;
+    if (! juce::Base64::convertFromBase64 (json, ent.trim()))
+        return false;
+    return (bool) juce::JSON::parse (json.toString()).getProperty ("paid", false);
+}
+
 void AccountClient::notifyChanged()
 {
     if (onStateChanged)

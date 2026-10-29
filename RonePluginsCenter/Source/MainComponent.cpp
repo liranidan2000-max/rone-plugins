@@ -736,33 +736,15 @@ int MainComponent::countUpdates()
     return n;
 }
 
-// A RONE customer: a live pass, a serial, or a plug-in bought outright. The
-// free plug-in does not count - the server lists it in `owned` for every
-// signed-in account, which would make "customers only" mean everyone. The
-// open-mode kill-switch does not count either: it unlocks plug-ins, it does
-// not make anyone a customer. RONE VST MANAGER reads the same licence file
-// (BundleLicense.xml) on its own side.
+// A RONE customer for the gift apps: someone who BOUGHT something (Liran,
+// 29.10.2026: "not a giveaway - a purchase"). Only the server knows a purchase
+// from a gift, so it says so inside the signed licence ("paid": true) and RONE
+// VST MANAGER unlocks on that same claim. No claim yet (a server before it, a
+// serial without an account) = no card, never a card for an app that then
+// stays in its trial.
 bool MainComponent::isRoneCustomer()
 {
-    if (licenseHandler.isLicensed())
-        return true;
-
-    const auto s = accountClient.getState();
-    if (s.licensed)
-        return true;
-
-    juce::StringArray freeIds;
-    {
-        juce::ScopedLock sl (pluginDataLock);
-        for (auto& p : pluginData)
-            if (p.free)
-                freeIds.add (p.id.trim());
-    }
-
-    for (auto id : s.ownedProducts)
-        if (id.trim().isNotEmpty() && ! freeIds.contains (id.trim(), true))
-            return true;
-    return false;
+    return accountClient.hasPaidLicence();
 }
 
 bool MainComponent::mayUse (const PluginInfo& p)

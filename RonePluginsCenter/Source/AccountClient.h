@@ -81,6 +81,11 @@ public:
     /** True when a token exists, regardless of whether it is still valid. */
     bool hasStoredToken() const;
 
+    /** The signed licence this computer holds verifies and says "paid": true - a
+        purchase, never a gift or a giveaway (the server decides). RONE VST MANAGER
+        unlocks on exactly this claim, so the Center offers it on exactly this. */
+    bool hasPaidLicence() const;
+
     /** Something about the start-up worth a diagnostic report (audit R285, R125 -
         logged only), handed out once; empty when there is nothing to say. */
     juce::String takeStartupNote();

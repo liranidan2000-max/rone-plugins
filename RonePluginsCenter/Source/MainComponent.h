@@ -175,7 +175,7 @@ private:
     void restoreIdleState (const juce::String& id);    // after a cancel: whatever is on disk now
     void startBackgroundDownloads();                   // pre-download the updates the user owns
     int  countUpdates();
-    bool isRoneCustomer();                             // the gift apps' gate: a pass, a serial or a bought plug-in
+    bool isRoneCustomer();                             // the gift apps' gate: a signed licence that says "paid"
     bool mayUse (const PluginInfo& p);                 // install / open / update: the one licence question per card
     void publishUpdateCount();
 
