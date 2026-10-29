@@ -628,21 +628,21 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.2",
+      "version": "0.9.3",
       "type": "standalone",
       "formats": [
         "App"
       ],
       "description": "Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig or FL Studio - or from the side strip (Ctrl+Alt+V) right next to your DAW. A gift for every RONE customer.",
-      "whats_new": "0.9.2 - Opens for every RONE buyer and ALL ACCESS member, and for a story that tags @roneplugins. 0.9.1 - A new icon; the app now unlocks with a RONE purchase. 0.9.0 - First release: the library of every VST3, VST2 and CLAP on this computer, with a picture of each one; one click loads a plug-in onto the selected track in REAPER, Live, Bitwig and FL Studio; the side strip (Ctrl+Alt+V); key mapping; a health check of your projects; the phone remote and Stream Deck keys.",
+      "whats_new": "0.9.3 - Nothing opens a plug-in for a picture unless you ask (and the app says why some plug-ins pop up an activation window); a sharper R in the title bar; the Remote page shows how to set your network to Private. 0.9.2 - Opens for every RONE buyer and ALL ACCESS member, and for a story that tags @roneplugins. 0.9.1 - A new icon; the app now unlocks with a RONE purchase. 0.9.0 - First release: the library of every VST3, VST2 and CLAP on this computer, with a picture of each one; one click loads a plug-in onto the selected track in REAPER, Live, Bitwig and FL Studio; the side strip (Ctrl+Alt+V); key mapping; a health check of your projects; the phone remote and Stream Deck keys.",
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer.exe",
       "download_url_mac": "",
-      "sha256": "b9f8d0f2223d69a3941da82c598bf4b7c4fecea5202d71e0064610834e897b61",
+      "sha256": "bad6259d814f3dff8235052e96714594662d0c7a9dbaf83fd20bc1c9814897f4",
       "sha256_mac": "",
-      "size": 5013165,
+      "size": 5015675,
       "released": "2026-10-29"
     }
   ],
