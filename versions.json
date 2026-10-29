@@ -628,21 +628,21 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.0",
+      "version": "0.9.1",
       "type": "standalone",
       "formats": [
         "App"
       ],
       "description": "Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig or FL Studio - or from the side strip (Ctrl+Alt+V) right next to your DAW. A gift for every RONE customer.",
-      "whats_new": "0.9.0 - First release: the library of every VST3, VST2 and CLAP on this computer, with a picture of each one; one click loads a plug-in onto the selected track in REAPER, Live, Bitwig and FL Studio; the side strip (Ctrl+Alt+V); key mapping; a health check of your projects; the phone remote and Stream Deck keys.",
+      "whats_new": "0.9.1 - A new icon; the app now unlocks with a RONE purchase. 0.9.0 - First release: the library of every VST3, VST2 and CLAP on this computer, with a picture of each one; one click loads a plug-in onto the selected track in REAPER, Live, Bitwig and FL Studio; the side strip (Ctrl+Alt+V); key mapping; a health check of your projects; the phone remote and Stream Deck keys.",
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer.exe",
       "download_url_mac": "",
-      "sha256": "59109895bc9be33b80259d833a536cdacf8f9ea1ae11cd9b640dd0ca70ce19ff",
+      "sha256": "f88c210163d7f22702425da3bc7e1836b4a99c670991e97d407b45897b7511bb",
       "sha256_mac": "",
-      "size": 5043301,
+      "size": 5013283,
       "released": "2026-10-29"
     }
   ],
