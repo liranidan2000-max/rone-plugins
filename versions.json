@@ -634,15 +634,17 @@
         "App"
       ],
       "description": "Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig or FL Studio - or from the side strip (Ctrl+Alt+V) right next to your DAW. A gift for every RONE customer.",
-      "whats_new": "0.9.3 - Nothing opens a plug-in for a picture unless you ask (and the app says why some plug-ins pop up an activation window); a sharper R in the title bar; the Remote page shows how to set your network to Private. 0.9.2 - Opens for every RONE buyer and ALL ACCESS member, and for a story that tags @roneplugins. 0.9.1 - A new icon; the app now unlocks with a RONE purchase. 0.9.0 - First release: the library of every VST3, VST2 and CLAP on this computer, with a picture of each one; one click loads a plug-in onto the selected track in REAPER, Live, Bitwig and FL Studio; the side strip (Ctrl+Alt+V); key mapping; a health check of your projects; the phone remote and Stream Deck keys.",
+      "whats_new": "Mac 0.9.4 - RONE VST MANAGER on the Mac: Audio Units, VST3, VST2 and CLAP in one library, signed and notarized by Apple. 0.9.3 - Nothing opens a plug-in for a picture unless you ask (and the app says why some plug-ins pop up an activation window); a sharper R in the title bar; the Remote page shows how to set your network to Private. 0.9.2 - Opens for every RONE buyer and ALL ACCESS member, and for a story that tags @roneplugins. 0.9.1 - A new icon; the app now unlocks with a RONE purchase. 0.9.0 - First release: the library of every VST3, VST2 and CLAP on this computer, with a picture of each one; one click loads a plug-in onto the selected track in REAPER, Live, Bitwig and FL Studio; the side strip (Ctrl+Alt+V); key mapping; a health check of your projects; the phone remote and Stream Deck keys.",
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer.exe",
-      "download_url_mac": "",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.4.7.pkg",
       "sha256": "bad6259d814f3dff8235052e96714594662d0c7a9dbaf83fd20bc1c9814897f4",
-      "sha256_mac": "",
+      "sha256_mac": "5252fd2efa7c9518c3d2d1b473622ca7d39f834a432e250d799b514fd4bcfcab",
       "size": 5015675,
+      "size_mac": 9732154,
+      "version_mac": "0.9.4.7",
       "released": "2026-10-29"
     }
   ],
