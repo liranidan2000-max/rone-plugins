@@ -82,6 +82,7 @@ target_sources(RonePluginsCenter PRIVATE
     Source/RoneTrayIcon.h
     Source/CustomTitleBar.h
     Source/ControlPort.h
+    Source/WinMidiLoopback.h
     Source/InstallBatcher.h
     Source/DawDetector.h
     Source/CenterLinks.h
@@ -157,9 +158,9 @@ target_link_libraries(RonePluginsCenter PRIVATE
 # API, on the Mac through juce::MidiInput / MidiOutput - which live in
 # juce_audio_devices. Without the module the Mac build of 2.0.3 failed
 # (run #253: "no member named 'MidiOutput' in namespace 'juce'").
-if (APPLE)
-    target_link_libraries(RonePluginsCenter PRIVATE juce::juce_audio_basics juce::juce_audio_devices)
-endif()
+# 2.1.19: Windows needs them too - on the new MIDI stack the Center opens the
+# "RONE Control Link" side of a Windows MIDI pair with juce::MidiInput / MidiOutput.
+target_link_libraries(RonePluginsCenter PRIVATE juce::juce_audio_basics juce::juce_audio_devices)
 
 # Generate JuceHeader.h — aggregates all linked JUCE modules into a single
 # include. Without this call the header is never written to the build tree,
@@ -168,7 +169,7 @@ juce_generate_juce_header(RonePluginsCenter)
 
 # Windows: link registry + shell APIs + WebView2 include path
 if(WIN32)
-    target_link_libraries(RonePluginsCenter PRIVATE advapi32 shell32 urlmon)
+    target_link_libraries(RonePluginsCenter PRIVATE advapi32 shell32 urlmon ole32)
 
     # juce_add_gui_app doesn't support NEEDS_WEBVIEW2, so manually add include path
     if(DEFINED JUCE_WEBVIEW2_PACKAGE_LOCATION)

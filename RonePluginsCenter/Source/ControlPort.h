@@ -9,6 +9,7 @@
  #endif
  #include <windows.h>
  #include <tlhelp32.h>
+ #include "WinMidiLoopback.h"
 #endif
 
 // ============================================================================
@@ -32,7 +33,15 @@
 // - Only while RONE Control is installed. The exact name or nothing: a port of that name that is already there
 //   (the plugin made its own, or a loopMIDI port) is left alone and tried again later.
 //
-// Windows: loopMIDI's driver (teVirtualMIDI - its SDK needs Tobias Erichsen's licence for a commercial product).
+// Windows 11 with the new MIDI stack (service midisrv): a port pair from Windows itself (WinMidiLoopback.h).
+//   A = "RONE Control" (the plugin and the DAW open it), B = "RONE Control Link" (only the Center opens it). The
+//   Center echoes what reaches B back out of B, so "RONE Control" stays one loopback, exactly as before: every
+//   plugin version (the ones out there open the output "RONE Control") and every DAW script keep working, no
+//   plugin release needed. loopMIDI's ports pass NO data on that stack until midisrv restarts (2026-10-30).
+//   The pair goes away when the Center closes (a port nobody echoes would swallow the plugin's CCs) and is made
+//   again when midisrv restarts (a restart wipes every pair).
+// Windows otherwise, or when the pair cannot be made: loopMIDI's driver (teVirtualMIDI - its SDK needs Tobias
+//   Erichsen's licence for a commercial product).
 // macOS: a CoreMIDI destination and source of the same name.
 // ============================================================================
 class ControlPort : private juce::Timer
@@ -41,7 +50,11 @@ public:
     ControlPort()  { startTimer (2000); }             // a moment after the Center starts
     ~ControlPort() override { stopTimer(); close(); }
 
+   #if JUCE_WINDOWS
+    bool isOpen() const noexcept { return port != nullptr || (pair != nullptr && pair->state == Pair::open); }
+   #else
     bool isOpen() const noexcept { return port != nullptr; }
+   #endif
 
     static juce::File pluginBundle()
     {
@@ -88,7 +101,7 @@ private:
             return;
         }
         installScript();
-        if (port == nullptr)
+        if (! isOpen())
             open();
         ensureFlDevice();
     }
@@ -179,8 +192,124 @@ private:
             self->sendFn (p, data, length);
     }
 
+    static void log (const juce::String& line)
+    {
+        const auto f = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                           .getChildFile ("RonePluginsCenter").getChildFile ("control-port.log");
+        if (f.getSize() > 100000) f.deleteFile();
+        f.getParentDirectory().createDirectory();
+        f.appendText (juce::Time::getCurrentTime().toString (true, true, true, true) + " " + line + "\n");
+    }
+
+    // The new MIDI stack's pair, on its own thread: the MIDI service is out of process and a wedged one blocks
+    // every call into it (windows-midi-service-hang) - the Center's window must never wait on it.
+    struct Pair : juce::Thread, juce::MidiInputCallback
+    {
+        static constexpr const char* kLinkName = "RONE Control Link";
+        // RONE Control's pair, the same on every computer (lower case: the service looks removals up as written)
+        static constexpr const char* kAssociation = "{5ce1a0b2-7d3e-4c52-9b43-524f4e45434c}";
+        enum State { trying, open, failed };
+        std::atomic<int> state { trying };
+
+        Pair() : juce::Thread ("RONE Control pair") { startThread(); }
+        ~Pair() override
+        {
+            signalThreadShouldExit();
+            notify();
+            stopThread (6000);                        // run() closes the ports and removes the pair on its way out
+        }
+
+        void run() override
+        {
+            DWORD madeFor = 0;                        // the service process the pair lives in
+            while (! threadShouldExit())
+            {
+                const auto pid = rone::winmidi::serviceProcessId();
+                if (state != open || (pid != 0 && pid != madeFor))
+                {
+                    if (state == open) log ("MIDI service restarted: making the pair again");
+                    closePorts();
+                    if (! makeAndOpen()) { state = failed; break; }
+                    madeFor = rone::winmidi::serviceProcessId();
+                    state = open;
+                }
+                wait (15000);
+            }
+            closePorts();
+            if (made)
+            {
+                juce::String reply;
+                const bool gone = rone::winmidi::removeLoopback (kAssociation, reply);
+                log ("pair " + juce::String (gone ? "removed" : "not removed") + ": " + reply.substring (0, 300));
+            }
+        }
+
+        bool makeAndOpen()
+        {
+            juce::String reply;
+            made = rone::winmidi::createLoopback (kAssociation, "RONECONTROL",
+                                                  kName, "RONE Control: the port the RONE Control plugin and your DAW open",
+                                                  kLinkName, "RONE Control: the side the RONE Plugins Center keeps open",
+                                                  reply);
+            log ("Windows MIDI pair " + juce::String (made ? "made" : "not available") + ": " + reply.substring (0, 300));
+            if (! made) return false;
+            // the service publishes the ports a moment after it says yes
+            for (int i = 0; i < 50 && ! threadShouldExit() && (out == nullptr || in == nullptr); ++i)
+            {
+                if (out == nullptr)
+                    for (const auto& d : juce::MidiOutput::getAvailableDevices())
+                        if (d.name == kLinkName) { out = juce::MidiOutput::openDevice (d.identifier); break; }
+                if (out != nullptr && in == nullptr)  // the echo needs the output before anything comes in
+                    for (const auto& d : juce::MidiInput::getAvailableDevices())
+                        if (d.name == kLinkName)
+                        {
+                            if ((in = juce::MidiInput::openDevice (d.identifier, this)) != nullptr) in->start();
+                            break;
+                        }
+                if (out == nullptr || in == nullptr) wait (100);
+            }
+            if (out != nullptr && in != nullptr)
+            {
+                log ("\"" + juce::String (kName) + "\" open through \"" + kLinkName + "\"");
+                return true;
+            }
+            log ("pair made, but \"" + juce::String (kLinkName) + "\" did not open");
+            closePorts();
+            return false;
+        }
+
+        void closePorts()
+        {
+            if (in != nullptr) in->stop();            // no callback runs after this
+            in.reset();
+            out.reset();
+        }
+
+        // what the plugin (or a DAW) sent into "RONE Control" comes out of "RONE Control" again
+        void handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage& m) override
+        {
+            if (out == nullptr) return;
+            if (isIdentityRequest (m.getRawData(), m.getRawDataSize()))
+                out->sendMessageNow (juce::MidiMessage (kIdentity, (int) sizeof (kIdentity)));
+            else
+                out->sendMessageNow (m);
+        }
+
+        std::unique_ptr<juce::MidiInput> in;
+        std::unique_ptr<juce::MidiOutput> out;
+        bool made = false;
+    };
+
     void open()
     {
+        // the new MIDI stack: the pair first; while it is being made (or is open) nothing else
+        if (pair == nullptr && rone::winmidi::serviceInstalled())
+        {
+            pair = std::make_unique<Pair>();
+            return;
+        }
+        if (pair != nullptr && pair->state != Pair::failed) return;
+        if (port != nullptr) return;
         if (dll == nullptr)
             dll = LoadLibraryExW (L"teVirtualMIDI64.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
         if (dll == nullptr) return;                   // loopMIDI's driver is not installed (yet)
@@ -193,6 +322,7 @@ private:
 
     void close()
     {
+        pair.reset();                                 // the plugin was removed / the Center quits: the pair goes
         if (port != nullptr && closeFn != nullptr) closeFn (port);   // no callback runs after this
         port = nullptr;
         if (dll != nullptr) { FreeLibrary (dll); dll = nullptr; }
@@ -203,6 +333,7 @@ private:
     CloseFn closeFn = nullptr;
     SendFn sendFn = nullptr;
     Port port = nullptr;
+    std::unique_ptr<Pair> pair;
    #else
     void ensureFlDevice() {}                          // macOS: FL keeps its settings elsewhere - to do
 
