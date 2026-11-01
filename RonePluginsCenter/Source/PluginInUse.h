@@ -229,6 +229,39 @@ namespace PluginInUse
     /** Ends FL Studio helper programs that hold the files while no FL Studio is
         running: orphans left by a crash or a stuck shutdown. Returns how many
         it ended. Anything else is left alone. */
+    /** Ends the processes of our own app that hold its files (the app and its
+        helper copies), only when no other program does. Returns how many. */
+    inline int endOwnApp (const Holders& holders, const juce::File& exe)
+    {
+        int ended = 0;
+       #if JUCE_WINDOWS
+        if (! holders.ownApp || ! holders.hosts.isEmpty() || ! exe.existsAsFile())
+            return 0;
+
+        for (auto pid : holders.pids)
+        {
+            HANDLE process = OpenProcess (PROCESS_TERMINATE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, (DWORD) pid);
+            if (process == nullptr)
+                continue;
+
+            // Still that program: a pid can be reused.
+            wchar_t path[MAX_PATH] = {};
+            DWORD length = MAX_PATH;
+            if (QueryFullProcessImageNameW (process, 0, path, &length)
+                && juce::File (juce::String (path)) == exe
+                && TerminateProcess (process, 0))
+            {
+                WaitForSingleObject (process, 3000);
+                ++ended;
+            }
+            CloseHandle (process);
+        }
+       #else
+        juce::ignoreUnused (holders, exe);
+       #endif
+        return ended;
+    }
+
     inline int endOrphanedFlHelpers (const Holders& holders)
     {
         int ended = 0;

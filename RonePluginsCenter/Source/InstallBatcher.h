@@ -320,6 +320,10 @@ public:
 private:
     enum class State { ready, waiting, installing };
 
+    // Apps of ours the Center may close for their update (opened again after).
+    static bool closesForUpdate (const Item& item) { return item.id == "RoneVstManager"; }
+    juce::StringArray reopenAfter;   // closed by the Center for this update; under lock
+
     struct Entry
     {
         Item item;
@@ -437,6 +441,19 @@ private:
             // closed (a crash, a stuck shutdown) would keep this waiting for good.
             if (PluginInUse::endOrphanedFlHelpers (holders) > 0)
                 holders = PluginInUse::find (bundle, exe);
+
+            // Our own app, open on its own (no DAW holds it): the Center closes
+            // it, installs and opens it again - nothing for the user to do.
+            // Liran 1.11: "VST MANAGER is ours, no Close it to finish".
+            if (closesForUpdate (e.item) && PluginInUse::endOwnApp (holders, exe) > 0)
+            {
+                holders = PluginInUse::find (bundle, exe);
+                if (holders.isEmpty())
+                {
+                    const juce::ScopedLock sl (lock);
+                    reopenAfter.addIfNotAlreadyThere (e.item.id);
+                }
+            }
 
             // Half a day: try anyway, the installer reports the lock.
             const bool giveUp = e.state == State::waiting && now - e.waitStartMs > 12u * 3600u * 1000u;
@@ -618,6 +635,22 @@ private:
 
     void finishItem (const Item& item, Result r)
     {
+       #if JUCE_WINDOWS
+        bool reopen = false;
+        {
+            const juce::ScopedLock sl (lock);
+            reopen = reopenAfter.contains (item.id);
+            reopenAfter.removeString (item.id);
+        }
+        // Closed for this update: open again, the new one or (it failed) the old.
+        if (reopen)
+        {
+            juce::File bundle, exe;
+            holderFiles (item, bundle, exe);
+            if (exe.existsAsFile())
+                exe.startAsProcess();
+        }
+       #endif
         if (r.ok)
         {
             VersionChecker::setInstalledVersion (item.registryKey, item.version);
