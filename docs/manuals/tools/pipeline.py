@@ -33,9 +33,17 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "c1176":      ROOT / "Rone1176" / "Source" / "WebUI.h",
     "c2a":        ROOT / "Rone2A" / "Source" / "WebUI.h",
     "sidechain":  ROOT / "RoneSidechain" / "Source" / "WebUI.h",
+    "delay":      ROOT / "RoneDelay" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
+
+def _cmake_version(folder):
+    """The plugin's own version (project(... VERSION x.y.z) in its CMakeLists.txt), for back-panel shots."""
+    import re
+    f = ROOT / folder / "CMakeLists.txt"
+    m = re.search(r"project\s*\(\s*\w+\s+VERSION\s+([\d.]+)", f.read_text(encoding="utf-8")) if f.exists() else None
+    return m.group(1) if m else "1.0.0"
 
 # every screenshot the manuals use: (served name, suffix, state, size)
 STATES = [
@@ -110,6 +118,21 @@ STATES = [
     # the SHAPES row under a real mouse hover (shoot.HOVER): the third tile shows its delete x
     ("sidechain", "_hover", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);var kb=document.getElementById('kickBox'),pn=performance.now.bind(performance),mo=new MutationObserver(function(){if(kb.classList.contains('flash')){var T=pn();performance.now=function(){return T-(-300)};mo.disconnect()}});mo.observe(kb,{attributes:true});document.getElementById('viewSeg').querySelectorAll('span')[0].click();document.getElementById('tabSeg').querySelector('span[data-t=sc]').click();", None),
     ("sidechain", "_about", "click:pLogo", None),
+    # RONE Delay (780x500): the LIVE scope draws only from host `frame` events, so every state runs
+    # _mock.js's __scn_delay (a vocal hook at 142 BPM and its echoes, computed from the page's own model).
+    # Transitions off first (the segment pills slide, the preset list fades in).
+    ("delay", "", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay()", None),
+    ("delay", "_dual", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay({preset:'DUAL DOTTED'})", None),
+    ("delay", "_ms", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay({preset:'VOCAL SLAP'})", None),
+    # the pointer on the strip shows each handle's slope (filtHot); RADIO TAIL = 24 dB/oct both sides
+    ("delay", "_filter", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay({preset:'RADIO TAIL'});filtHot=true;drawFilt()", None),
+    ("delay", "_hold", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay({preset:'INFINITE HOLD'})", None),
+    # the list is filled on pointerdown (scrolled to the live preset), then the click opens it
+    ("delay", "_presets", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay();var n=document.getElementById('pName');n.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));n.click()", None),
+    # MACRO: 1 and 2 saved, 2 the one you are on (no '#' in a state: shoot.py puts it in the URL unencoded)
+    ("delay", "_macros", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay();saveSlot(0);saveSlot(1);document.getElementById('macros').querySelectorAll('.slot').forEach(function(b){b.classList.remove('saved')})", None),
+    # the back panel shows the version the host sends (uiConfig); without a host it would read the page's placeholder
+    ("delay", "_about", f"js:window.__mockEmit('uiConfig',{{version:'{_cmake_version('RoneDelay')}'}}),click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power,js:setTremMode('free')", None), ("reversereverb_m", "_about", "click:p-logo", None),
@@ -169,14 +192,22 @@ def prepare_ui():
             html = html.replace("</body>", '<script src="/_shot.js"></script>\n</body>', 1) if "</body>" in html else html + '\n<script src="/_shot.js"></script>'
         f.write_text(html, encoding="utf-8")
     for src in ("stutter", "reversereverb"):
+        if not (UI / src).exists(): continue  # a worktree without that submodule
         dst = UI / (src + "_m")
         shutil.copytree(UI / src, dst)
         f = dst / "index.html"
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
     # the Clipper only draws what the host pushes as `frame` events, so its manual states feed them through the fake bridge (in place, no copy)
-    for src in ("clipper", "gater"):
+    # (Gater and Delay the same: their displays draw only from host frames)
+    for src in ("clipper", "gater", "delay"):
         f = UI / src / "index.html"
+        if not f.exists(): continue          # a worktree without that submodule
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
+    # RONE Delay asks for its type as fonts/<file>.woff2 (the plugin serves Shared/fonts): serve the same files
+    fonts = ROOT / "Shared" / "fonts"
+    if (UI / "delay").exists() and fonts.exists():
+        (UI / "delay" / "fonts").mkdir(exist_ok=True)
+        for f in fonts.glob("*.woff2"): shutil.copy(f, UI / "delay" / "fonts" / f.name)
 
 class Server:
     def __enter__(self):

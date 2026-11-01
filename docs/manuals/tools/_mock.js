@@ -161,3 +161,50 @@ window.__scn_gater = function () {
   document.querySelectorAll('.k').forEach(function (el) { el.id = 'k_' + el.dataset.k; });
   var vb = document.querySelector('.p-velbox'); if (vb) vb.id = 'velBox';
 };
+
+// ---- Scenario: RONE Delay ----
+// The LIVE scope draws only from host `frame` events (5 ms peak buckets: IN / L / R / duck gain), so this
+// feeds two bars at 142 BPM: one short vocal hook at the start, its echoes after it. The echoes are computed
+// from the page's own model - taps() (the real loop filter, FEEDBACK, SEND, WET), the stereo mode's
+// routing and the engine's DUCK curve - so the picture follows the settings the shot poses.
+// opt.preset: a factory preset name to load first; opt.ppq: where the playhead stands.
+window.__scn_delay = function (opt) {
+  opt = opt || {};
+  var st = document.createElement('style'); st.textContent = '*{transition:none!important;animation:none!important}'; document.head.appendChild(st);
+  frame.bpm = 142; frame.bps = 200; frame.playing = true;
+  if (opt.preset) { var pi = PRESETS.findIndex(function (p) { return p.n === opt.preset; }); if (pi >= 0) loadPreset(pi); }
+  if (opt.state) { Object.assign(state, opt.state); touched(); }
+  var bps = 200, bpm = 142, N = 2400, ppqNow = opt.ppq != null ? opt.ppq : 71.6, rnd = window.__mockRand(5);
+  var ppqOf = function (i) { return ppqNow + (i - (N - 1)) / bps * bpm / 60; };
+  // the hook, once, on beat 64: three syllables (beats 0, .5, 1) - short, so every echo stands apart
+  var syl = [[0, .3, .78], [.5, .25, .64], [1, .55, .72]];
+  var x = new Float32Array(N);
+  for (var i = 0; i < N; i++) {
+    var b = ppqOf(i) - 64, a = 0;
+    syl.forEach(function (s) { var u = b - s[0]; if (u >= 0 && u < s[1]) a = Math.max(a, s[2] * Math.min(1, u / .03) * (1 - .45 * u / s[1])); });
+    x[i] = a > 0 ? Math.min(1, a * (.86 + .14 * rnd())) : 0;
+  }
+  var T = taps(), sL = secOf('L'), sR = secOf('R'), L = new Float32Array(N), R = new Float32Array(N);
+  var add = function (arr, delaySec, g) { var d = Math.round(delaySec * bps); for (var i = d; i < N; i++) arr[i] += x[i - d] * g; };
+  T.list.forEach(function (tp) {
+    var g = Math.pow(10, tp.db / 20); if (g < 1e-3) return;
+    var t = (tp.n + 1) * T.T;
+    if (state.stereo === 3) { add(L, (tp.n + 1) * sL, g); add(R, (tp.n + 1) * sR, g); }
+    else if (state.stereo === 2) add(tp.n % 2 === 0 ? L : R, t, g);
+    else if (state.stereo === 1) { add(L, t, g); add(R, (tp.n + 1) * (T.T + SPREAD), g); }
+    else { add(L, t, g); add(R, t, g); }
+  });
+  var out = [], env = 0;
+  for (var j = N - 900; j < N; j++) {
+    env = Math.max(x[j], env * .967);                 // 150 ms release at 5 ms a bucket
+    var amt = env > 1e-4 ? Math.max(0, Math.min(1, (20 * Math.log10(env) + 40) / 30)) : 0, dg = 1 - state.duck / 100 * amt;
+    out.push(x[j], Math.min(1, L[j] * dg), Math.min(1, R[j] * dg), dg);
+  }
+  var f = { bpm: bpm, ppq: ppqNow, playing: true, bps: bps, safe: 0, rests: 0, buckets: out };
+  Object.keys(frame).forEach(function (k) { if (f[k] !== undefined) frame[k] = f[k]; });
+  onFrame(f); renderAll();
+  // ids for the callouts (the knobs and the DUAL dials carry data attributes only)
+  document.querySelectorAll('.kn').forEach(function (el) { el.id = 'k_' + el.dataset.k; });
+  document.querySelectorAll('#duo .dd').forEach(function (el) { el.id = 'duo' + el.dataset.s; });
+  document.querySelectorAll('.scr').forEach(function (el, k) { el.id = ['scrScope', 'scrMap', 'scrFilt'][k]; });
+};

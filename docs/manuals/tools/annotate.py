@@ -23,7 +23,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # the compressors' neons (#FF8C2E, #FF6F59) are thin on paper; deeper shades for the badges
           "c1176": "#E0701A", "c2a": "#E04E38",
           # Sidechain's periwinkle prints as it is
-          "sidechain": "#7B8CFF"}
+          "sidechain": "#7B8CFF",
+          # Delay Champagne #E9D6A6 is too pale for white paper; a deeper champagne-gold for badges
+          "delay": "#B39352"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -401,6 +403,23 @@ def main():
         crops=[("knobs", "#knobs", 8)])
     plain("gater_setup", "gater/setup.png"); plain("gater_about", "gater/about.png")
     plain("iron", "iron/main.png"); plain("iron_locks", "iron/locks.png"); plain("iron_empty", "iron/empty.png"); plain("iron_about", "iron/about.png")
+    # ------------------------------------------------------------ DELAY
+    A = ACCENT["delay"]
+    # Order here IS the legend order in content_delay.py - keep the two lists in step.
+    # The knobs, the DUAL dials and the screens get their ids from _mock.js's __scn_delay.
+    annotate("delay", "delay/tour.png", [
+        ("#pLogo", "Header logo"), ("#pPrev+#pName+#pNext", "PRESET"), ("#stereoSeg", "Stereo mode"), ("#bypassBtn", "BYPASS"),
+        ("#modeSeg", "SYNC / MS"), ("#dial", "TIME dial"), ("#tSub+#tMs", "Time readout"), ("#famSeg", "STRAIGHT / DOTTED / TRIPLET"),
+        ("#scrScope", "LIVE scope"), ("#scrMap", "ONE HIT map"), ("#scrFilt", "Loop filter"),
+        ("#k_feedback", "FEEDBACK"), ("#k_send", "SEND"), ("#k_wet", "WET"), ("#k_duck", "DUCK"),
+        ("#killBtn", "KILL"), ("#holdBtn", "HOLD"), ("#lRest+#lSafe+#lDuck", "Lamps"), ("#macros", "MACRO"), ("#resize-handle", "Resize grip")], A,
+        crops=[("time", "#modeSeg+#dial+#famSeg", 12), ("knobs", "#k_feedback+#k_duck", 8), ("foot", "#killBtn+#macros", 8)])
+    annotate("delay_dual", "delay/dual.png", [("#stereoSeg", "DUAL"), ("#duoL", "LEFT"), ("#duoR", "RIGHT")], A)
+    annotate("delay_ms", "delay/ms.png", [], A, crops=[("time", "#modeSeg+#dial+#famSeg", 12)])
+    annotate("delay_filter", "delay/filter.png", [], A, crops=[("strip", "#scrFilt", 6)])
+    annotate("delay_hold", "delay/hold.png", [], A, crops=[("map", "#scrMap", 6)])
+    annotate("delay_macros", "delay/macros.png", [], A, crops=[("slots", "#macros", 8)])
+    plain("delay", "delay/main.png"); plain("delay_presets", "delay/presets.png"); plain("delay_about", "delay/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

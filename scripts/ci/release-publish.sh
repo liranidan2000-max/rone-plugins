@@ -114,6 +114,7 @@ for id in $(echo "$changed" | jq -r '.[]'); do
     rone1176)       tag=Rone1176-latest;          title="RONE 1176 (Latest)";           folder=Rone1176;           jid=Rone1176 ;;
     rone2a)         tag=Rone2A-latest;            title="RONE 2A (Latest)";             folder=Rone2A;             jid=Rone2A ;;
     sidechain)      tag=RoneSidechain-latest;     title="RONE Sidechain (Latest)";      folder=RoneSidechain;      jid=RoneSidechain ;;
+    delay)          tag=RoneDelay-latest;         title="RONE Delay (Latest)";          folder=RoneDelay;          jid=RoneDelay ;;
     flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)";        folder=rone-flanger-;      jid=RoneFlanger ;;
     sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)";      folder="rone sync verb";   jid=RoneSyncVerb ;;
     afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)";     folder="RONE AFTER SPACE"; jid=RoneAfterspace ;;

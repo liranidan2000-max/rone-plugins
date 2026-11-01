@@ -40,3 +40,6 @@
 [submodule "RoneSidechain"]
 	path = RoneSidechain
 	url = https://github.com/liranidan2000-max/RoneSidechain.git
+[submodule "RoneDelay"]
+	path = RoneDelay
+	url = https://github.com/liranidan2000-max/RoneDelay.git

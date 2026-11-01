@@ -622,6 +622,42 @@
       "size": 6515436,
       "size_mac": 18039361,
       "version_mac": "1.0.5.348"
+    },
+    {
+      "id": "RoneDelay",
+      "released": "",
+      "name": "RONE Delay",
+      "version": "1.0.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "description": "The simplest, clearest delay: one TIME dial through straight, dotted and triplet with every step written, mono / spread / ping-pong / dual, HP and LP inside the feedback loop, DUCK, and feedback that never runs away.",
+      "whats_new": "1.0.0 - First release.",
+      "standalone_exe": "RONE Delay.exe",
+      "vst3_bundle": "RONE Delay.vst3",
+      "au_bundle": "RONE Delay.component",
+      "manual": "RONE Delay - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneDelay",
+      "sha256_mac": "",
+      "store_url": "https://roneaudio.com/products/rone-delay.html",
+      "category": [
+        "space"
+      ],
+      "tags": [
+        "delay",
+        "echo",
+        "ping-pong",
+        "dual",
+        "tempo-sync"
+      ],
+      "accent": "#E9D6A6",
+      "inno_app_id": "{04213AF9-9AD6-4447-B6AE-7F544C41994C}"
     }
   ],
   "apps": [
