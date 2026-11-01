@@ -54,6 +54,9 @@ public:
     // a plugin waits for its DAW, or what a batch installed. Windows shows it.
     std::function<void (const juce::String& text)> onTrayNotice;
 
+    // The page has pulled its catalog and drawn it: the launch intro may go (Main.cpp).
+    std::function<void()> onPageReady;
+
     // NetworkManager::Listener
     void onManifestReady  (const juce::Array<PluginInfo>& plugins, bool fromCache) override;
     // The DEV CHANNEL: Liran's plug-ins in development, added after the public catalog (a released

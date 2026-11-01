@@ -8,6 +8,7 @@
 #include "ControlPort.h"
 #include "InstallBatcher.h"
 #include "CenterLinks.h"
+#include "CenterIntro.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -57,8 +58,26 @@ public:
         const auto link = CenterLinks::parse (commandLine);
         const bool startInTray = commandLine.contains (AutoStart::kTrayFlag) && ! link.isValid();
 
-        mainWindow = std::make_unique<MainWindow> (getApplicationName(), startInTray);
+        // A plain launch: the icon intro first (CenterIntro.h). The window loads
+        // its page beyond the screen's edge and opens when the intro ends with
+        // the library drawn. A link or an UPDATE button goes straight in.
+       #if JUCE_WINDOWS
+        const bool playIntro = ! startInTray && ! link.isValid() && ! commandLine.contains ("--update");
+       #else
+        const bool playIntro = false;   // Windows first; the Mac keeps its plain open
+       #endif
+
+        mainWindow = std::make_unique<MainWindow> (getApplicationName(), startInTray, playIntro);
         trayIcon = std::make_unique<RoneTrayIcon> (*mainWindow);
+
+        if (playIntro)
+        {
+            intro = std::make_unique<CenterIntro> (mainWindow->getOpenBounds().getCentre());
+            intro->onReveal = [this] { if (mainWindow != nullptr) mainWindow->showAndRaise(); };
+            intro->onDone = [this] { juce::MessageManager::callAsync ([this] { intro.reset(); }); };
+            if (auto* page = dynamic_cast<MainComponent*> (mainWindow->getContentComponent()))
+                page->onPageReady = [this] { if (intro != nullptr) intro->pageReady(); };
+        }
 
         if (auto* page = dynamic_cast<MainComponent*> (mainWindow->getContentComponent()))
         {
@@ -91,6 +110,7 @@ public:
 
     void shutdown() override
     {
+        intro.reset();
         controlPort.reset();
         trayIcon.reset();
         mainWindow.reset();
@@ -107,6 +127,9 @@ public:
     // to us and quits. macOS delivers a ronecenter:// URL here too.
     void anotherInstanceStarted (const juce::String& commandLine) override
     {
+        if (intro != nullptr)
+            intro->skip();   // opened again during the intro: the window now
+
         if (mainWindow != nullptr)
             mainWindow->showAndRaise();
 
@@ -154,7 +177,10 @@ private:
                        private juce::Timer
     {
     public:
-        explicit MainWindow (const juce::String& name, bool startHidden = false)
+        /** `parked`: a launch with the intro - the window is shown (a hidden
+            WebView2 may not load) but beyond the desktop's right edge, and
+            comes to its place on the first showAndRaise(). */
+        MainWindow (const juce::String& name, bool startHidden, bool startParked)
             : DocumentWindow (name,
                               juce::Colour (0xff14161A),
                               DocumentWindow::allButtons)
@@ -174,8 +200,18 @@ private:
             // The grid flows from three to five cards a row, so a big screen is welcome.
             setResizeLimits (980, 620, 3840, 2400);
             centreWithSize (getWidth(), getHeight());
+            openBounds = getBounds();
+            if (startParked && ! startHidden)
+            {
+                parked = true;
+                const auto all = juce::Desktop::getInstance().getDisplays().getTotalBounds (true);
+                setTopLeftPosition (all.getRight() + 200, all.getY());
+            }
             setVisible (! startHidden);
         }
+
+        /** Where the window opens (centred), also while it is parked. */
+        juce::Rectangle<int> getOpenBounds() const { return parked ? openBounds : getBounds(); }
 
         void closeButtonPressed() override
         {
@@ -209,6 +245,11 @@ private:
         // state for the call, the standard way round that rule.
         void showAndRaise()
         {
+            if (parked)
+            {
+                parked = false;
+                setBounds (openBounds);
+            }
             setVisible (true);
             setMinimised (false);
 
@@ -290,6 +331,8 @@ private:
                 page->setWindowActive (inFront);
         }
 
+        juce::Rectangle<int> openBounds;
+        bool parked = false;
         bool releasePending = false;
         bool foregroundKnown = false;
         bool wasInFront = true;
@@ -300,6 +343,7 @@ private:
     std::unique_ptr<MainWindow> mainWindow;
     std::unique_ptr<RoneTrayIcon> trayIcon;
     std::unique_ptr<ControlPort> controlPort;
+    std::unique_ptr<CenterIntro> intro;
    #if JUCE_WINDOWS
     HANDLE runningMutex = nullptr;
    #endif

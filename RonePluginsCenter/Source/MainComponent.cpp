@@ -872,6 +872,12 @@ void MainComponent::handleGetPlugins (NativeArgs, NativeCompletion complete)
 
         // Offline / last sync, the tips of the week, and where a link asked to go.
         pageReady = true;
+        if (onPageReady != nullptr)
+        {
+            // A moment for React to paint the library before the intro lets go.
+            juce::Component::SafePointer<MainComponent> safe (this);
+            juce::Timer::callAfterDelay (120, [safe] { if (safe != nullptr && safe->onPageReady) safe->onPageReady(); });
+        }
         obj->setProperty ("manifest", manifestStateVar());
         obj->setProperty ("tips", networkManager.getManifestExtras().getProperty ("tips", juce::var()));
         if (pendingNavigation.isNotEmpty())
