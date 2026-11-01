@@ -1,4 +1,5 @@
 ; ============================================================================
+; First public release 1.1.1 (2026-11-01): run #356 published Windows; the Mac build follows the release-guard fix.
 ; RONE Delay — Silent Plugin Installer
 ; Designed to be invoked by RONE Plugins Center with /VERYSILENT flag
 ; ============================================================================

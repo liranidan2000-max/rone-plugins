@@ -15,9 +15,9 @@ from ci_harness import (ROOT, step_script, fill, write, copy_lf, install_jq, ins
 RUN = '999'
 LIVE = {  # what origin/main's versions.json says is live
     'center_installer': {'version': '2.1.2.264'},
-    'plugins': [{'id': 'RoneStutter', 'version': '1.5.5.268'},
-                {'id': 'RoneThrow', 'version': '1.8.3.270'},
-                {'id': 'RONEAnalyzer', 'version': '1.3.13.271'}],
+    'plugins': [{'id': 'RoneStutter', 'version': '1.5.5.268', 'sha256_mac': 'm'},
+                {'id': 'RoneThrow', 'version': '1.8.3.270', 'sha256_mac': 'm'},
+                {'id': 'RONEAnalyzer', 'version': '1.3.13.271', 'sha256_mac': 'm'}],
 }
 PRODUCTS = {  # id -> (folder, base version, windows file, mac file)
     'stutter': ('RoneStutter', '1.5.6', 'RoneStutter_Installer.exe', 'RoneStutter_Installer.pkg'),
@@ -224,6 +224,13 @@ check(rc == 0 and all(pub(outs, p) == '[]' and outs[p].get('guard_skipped') == '
 rc, outs, ups, log, final = run_release('guard: Mac against version_mac', ['throw'], {'throw': ['macos']},
                                         releases={'RoneThrow-latest': []}, live_extra={'RoneThrow': {'version': '1.8.4.999', 'version_mac': '1.8.3.270'}})
 check(rc == 0 and pub(outs, M) == '["throw"]', 'the Mac build goes out although Windows is already at this version')
+
+# 9c. A NEW plugin: its Windows pass already wrote `version` and there is no Mac build yet
+#     (no version_mac, no sha256_mac) - the Mac side is not live, so it goes out (RONE Delay, run #356).
+rc, outs, ups, log, final = run_release('guard: new plugin, Mac after Windows', ['throw'], {'throw': ['macos']},
+                                        releases={'RoneThrow-latest': []}, versions={'throw': '1.8.4.999'},
+                                        live_extra={'RoneThrow': {'version': '1.8.4.999', 'sha256_mac': ''}})
+check(rc == 0 and pub(outs, M) == '["throw"]', 'the first Mac build of a new plugin goes out after its Windows pass')
 
 # 11. R090: the Center's alias is swapped, never deleted first.
 CEN = ['RONE_Plugins_Center_Installer.exe', 'RONE_Plugins_Center.dmg']

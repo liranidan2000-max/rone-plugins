@@ -110,8 +110,9 @@ F = {
  '. + [$e]': lambda d: [d + [arg['e']]],
  '.center_installer.version // ""': lambda d: [(d.get('center_installer') or {}).get('version') or ''],
  '[.plugins[]? | select(.id == $id) | .version][0] // ""': lambda d: [([p.get('version') for p in plugin(d, arg['id'])] + [None])[0] or ''],
- '[.plugins[]? | select(.id == $id) | (.version_mac // .version)][0] // ""':
-     lambda d: [([p.get('version_mac') or p.get('version') for p in plugin(d, arg['id'])] + [None])[0] or ''],
+ '[.plugins[]? | select(.id == $id) | (.version_mac // (if (.sha256_mac // "") == "" then "" else .version end))][0] // ""':
+     lambda d: [([p.get('version_mac') or (p.get('version') if (p.get('sha256_mac') or '') != '' else '')
+                  for p in plugin(d, arg['id'])] + [None])[0] or ''],
  '(.plugins[]|select(.id==$id)).version_mac = $v': lambda d: [setp(d, arg['id'], version_mac=arg['v'])],
  '(.plugins[]|select(.id==$id)) |= (if .version_mac == null and (.sha256_mac // "") != "" then .version_mac = .version else . end)':
      lambda d: [[p.__setitem__('version_mac', p.get('version')) for p in plugin(d, arg['id'])
