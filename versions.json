@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-01T07:49:24Z",
+  "last_updated": "2026-11-01T07:49:37Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-356.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-356.1.dmg",
@@ -627,7 +627,7 @@
       "id": "RoneDelay",
       "released": "",
       "name": "RONE Delay",
-      "version": "1.1.1.356",
+      "version": "1.1.1.357",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -640,9 +640,9 @@
       "vst3_bundle": "RONE Delay.vst3",
       "au_bundle": "RONE Delay.component",
       "manual": "RONE Delay - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-356.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-357.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-357.1.pkg",
-      "sha256": "315bbfe5b00c18c70f00f387c3d7cf7884dfcf21319c2ddd3ab5d258689c661b",
+      "sha256": "70ddcaa82bd5c4fb46a7fda3dc8ec465074525802eb0c2574a73e3f8bd344485",
       "registry_key": "RoneDelay",
       "sha256_mac": "3531e0dd008d969168c84a039b6e756f8534ea3fb47ce06869708f5b2be79c69",
       "store_url": "https://roneaudio.com/products/rone-delay.html",
@@ -658,7 +658,7 @@
       ],
       "accent": "#E9D6A6",
       "inno_app_id": "{04213AF9-9AD6-4447-B6AE-7F544C41994C}",
-      "size": 5913115,
+      "size": 5912691,
       "version_mac": "1.1.1.357",
       "size_mac": 14363452
     }
