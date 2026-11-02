@@ -667,7 +667,7 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.16",
+      "version": "0.9.17",
       "type": "standalone",
       "formats": [
         "App"
@@ -677,11 +677,11 @@
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.16.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.17.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.16.21.pkg",
-      "sha256": "94d54aead3874263f20282500acae098e6a1c987a431abc5d3a0cad65f3256f7",
+      "sha256": "32ee3579b17f7538868801218adeab2092c4155cdd13add2f2c297b07b975bea",
       "sha256_mac": "230b6c289a8e216f2565c6dda6bfbcabc4e7dd36c998b2b311895af52af55ef9",
-      "size": 5174262,
+      "size": 5175919,
       "size_mac": 10236209,
       "version_mac": "0.9.16.21",
       "released": "2026-11-02"
