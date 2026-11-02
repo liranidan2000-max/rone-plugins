@@ -1,5 +1,5 @@
 {
- "about": "RONE VST MANAGER's update list: the latest version of popular plugins of other makers, each confirmed on the maker's own site (source). The app compares a library plugin whose name is in match (and whose maker starts like maker) with latest.",
+ "about": "RONE VST MANAGER's update list: the latest version of popular plugins of other makers, each confirmed on the maker's own site (source). The app compares a library plugin whose name is in match (and whose maker starts like maker) with latest. FabFilter's site writes 4.13 for what its plugins report as 4.1.3: latest is kept in the plugins' own form.",
  "checked": "2026-11-02",
  "plugins": [
   {
@@ -8,9 +8,10 @@
     "Pro-Q 4",
     "FabFilter Pro-Q 4"
    ],
-   "latest": "4.13",
+   "latest": "4.1.3",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 4.13; the plugin reports 4.1.3"
   },
   {
    "maker": "FabFilter",
@@ -18,9 +19,10 @@
     "Pro-C 3",
     "FabFilter Pro-C 3"
    ],
-   "latest": "3.02",
+   "latest": "3.0.2",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 3.02; the plugin reports 3.0.2"
   },
   {
    "maker": "FabFilter",
@@ -28,9 +30,10 @@
     "Pro-L 2",
     "FabFilter Pro-L 2"
    ],
-   "latest": "2.26",
+   "latest": "2.2.6",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 2.26; the plugin reports 2.2.6"
   },
   {
    "maker": "FabFilter",
@@ -38,9 +41,10 @@
     "Pro-R 2",
     "FabFilter Pro-R 2"
    ],
-   "latest": "2.06",
+   "latest": "2.0.6",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 2.06; the plugin reports 2.0.6"
   },
   {
    "maker": "FabFilter",
@@ -48,9 +52,10 @@
     "Pro-MB",
     "FabFilter Pro-MB"
    ],
-   "latest": "1.33",
+   "latest": "1.3.3",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 1.33; the plugin reports 1.3.3"
   },
   {
    "maker": "FabFilter",
@@ -58,9 +63,10 @@
     "Pro-DS",
     "FabFilter Pro-DS"
    ],
-   "latest": "1.32",
+   "latest": "1.3.2",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 1.32; the plugin reports 1.3.2"
   },
   {
    "maker": "FabFilter",
@@ -68,9 +74,10 @@
     "Saturn 2",
     "FabFilter Saturn 2"
    ],
-   "latest": "2.13",
+   "latest": "2.1.3",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 2.13; the plugin reports 2.1.3"
   },
   {
    "maker": "FabFilter",
@@ -78,9 +85,10 @@
     "Timeless 3",
     "FabFilter Timeless 3"
    ],
-   "latest": "3.10",
+   "latest": "3.1.0",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 3.10; the plugin reports 3.1.0"
   },
   {
    "maker": "FabFilter",
@@ -88,9 +96,10 @@
     "Volcano 3",
     "FabFilter Volcano 3"
    ],
-   "latest": "3.09",
+   "latest": "3.0.9",
    "url": "https://www.fabfilter.com/download",
-   "source": "https://www.fabfilter.com/download"
+   "source": "https://www.fabfilter.com/download",
+   "note": "site says 3.09; the plugin reports 3.0.9"
   },
   {
    "maker": "u-he",
