@@ -36,7 +36,7 @@ const en = {
   'lib.retry': 'Try again',
 
   // hero
-  'hero.newDrop': 'New drop', 'hero.free': 'Free plugin', 'hero.tip': 'Tip of the week',
+  'hero.newDrop': 'New drop', 'hero.free': 'Free plugin', 'hero.tip': 'Tip of the week', 'hero.newApp': 'New app', 'hero.tryFree': 'Try it free', 'hero.vstmBody': 'Every plugin you own, of every maker, in one library. One click puts it on your track.',
   'hero.freeLine': 'Free with any RONE account.', 'hero.hear': 'Hear it', 'hero.stop': 'Stop',
   'hero.details': 'Details', 'hero.watch': 'Watch the guide', 'hero.getFree': 'Get it free',
   'hero.install': 'Install', 'hero.getIt': 'Get it · {price}', 'hero.slide': 'Slide {n}',
@@ -249,7 +249,7 @@ const pt = {
   'lib.sort': 'Ordem', 'lib.sortYours': 'Seus primeiro', 'lib.sortName': 'A–Z', 'lib.sortNew': 'Mais novos',
   'lib.grid': 'Grade', 'lib.rack': 'Rack', 'lib.noResults': 'Nada encontrado para “{q}”.', 'lib.clear': 'Limpar busca',
   'lib.loading': 'Carregando os plugins…', 'lib.empty': 'Nenhum plugin ainda. Confira sua conexão.', 'lib.retry': 'Tentar de novo',
-  'hero.newDrop': 'Lançamento', 'hero.free': 'Plugin grátis', 'hero.tip': 'Dica da semana',
+  'hero.newDrop': 'Lançamento', 'hero.free': 'Plugin grátis', 'hero.tip': 'Dica da semana', 'hero.newApp': 'Novo app', 'hero.tryFree': 'Teste grátis', 'hero.vstmBody': 'Todos os seus plugins, de qualquer fabricante, numa biblioteca. Um clique e ele está na sua faixa.',
   'hero.freeLine': 'Grátis com qualquer conta RONE.', 'hero.hear': 'Ouvir', 'hero.stop': 'Parar',
   'hero.details': 'Detalhes', 'hero.watch': 'Ver o tutorial', 'hero.getFree': 'Pegar grátis',
   'hero.install': 'Instalar', 'hero.getIt': 'Comprar · {price}', 'hero.slide': 'Slide {n}',
@@ -417,7 +417,7 @@ const es = {
   'lib.sort': 'Orden', 'lib.sortYours': 'Los tuyos primero', 'lib.sortName': 'A–Z', 'lib.sortNew': 'Más nuevos',
   'lib.grid': 'Cuadrícula', 'lib.rack': 'Rack', 'lib.noResults': 'Nada coincide con “{q}”.', 'lib.clear': 'Borrar búsqueda',
   'lib.loading': 'Cargando los plugins…', 'lib.empty': 'Aún no hay plugins. Revisa tu conexión.', 'lib.retry': 'Reintentar',
-  'hero.newDrop': 'Novedad', 'hero.free': 'Plugin gratis', 'hero.tip': 'Consejo de la semana',
+  'hero.newDrop': 'Novedad', 'hero.free': 'Plugin gratis', 'hero.tip': 'Consejo de la semana', 'hero.newApp': 'App nueva', 'hero.tryFree': 'Pruébalo gratis', 'hero.vstmBody': 'Todos tus plugins, de cualquier fabricante, en una biblioteca. Un clic y está en tu pista.',
   'hero.freeLine': 'Gratis con cualquier cuenta RONE.', 'hero.hear': 'Escuchar', 'hero.stop': 'Parar',
   'hero.details': 'Detalles', 'hero.watch': 'Ver el tutorial', 'hero.getFree': 'Conseguir gratis',
   'hero.install': 'Instalar', 'hero.getIt': 'Comprar · {price}', 'hero.slide': 'Diapositiva {n}',

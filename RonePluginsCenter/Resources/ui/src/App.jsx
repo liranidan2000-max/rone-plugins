@@ -92,6 +92,7 @@ export default function App () {
   // come back as one gift card, shown only to a customer (the backend decides `unlocked`) where this
   // platform has an installer (`installable`; RONE VST MANAGER went out on Windows first).
   const catalog = useMemo(() => plugins.filter(p => p.kind !== 'app'), [plugins])
+  const vstmApp = useMemo(() => plugins.find(p => p.kind === 'app') || null, [plugins])
   const giftApp = useMemo(() => plugins.find(p => p.kind === 'app' && p.unlocked && p.installable !== false) || null, [plugins])
   const tagged = useMemo(() => catalog.map(p => {
     const d = p.i18n?.[prefs.lang]?.description
@@ -539,7 +540,7 @@ export default function App () {
               <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk}
                            centerUpdate={centerUpdate} onCenterUpdate={() => api.applyCenterUpdate().catch(() => {})}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
-                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} giftApp={giftApp} />
+                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} giftApp={giftApp} vstmApp={vstmApp} />
             )}
             {view === 'updates' && (
               <UpdatesView t={t} plugins={tagged} access={access} onInstall={install} onUpdateAll={updateAll} onCancel={cancel} onRefresh={refresh} onDetail={openDetail} />

@@ -7,7 +7,7 @@ import { openExternal } from '../bridge'
 // tip of the week - instead of a status banner. A guest or a lapsed pass sees
 // what unlocks things first. Slides change every 8 s unless motion is reduced.
 // The unit turns slowly in perspective with a light sweeping across it (index.css .hero-*).
-export default function Hero ({ t, plugins, access, account, license, personal, optinAsk, onBuy, tips, reduced, onInstall, onDetail, onAccount }) {
+export default function Hero ({ t, plugins, app, access, account, license, personal, optinAsk, onBuy, tips, reduced, onInstall, onDetail, onAccount }) {
   const slides = useMemo(() => {
     const out = []
     const signedIn = !!account.signedIn
@@ -15,6 +15,15 @@ export default function Hero ({ t, plugins, access, account, license, personal, 
     if (!signedIn && !license.licensed) {
       out.push({ key: 'signin', color: '#FFFFFF', eyebrow: 'RONE PLUGINS', title: t('hero.signInTitle'), body: t('hero.signInBody'),
                  unit: plugins.find(p => p.free)?.unitUrl, actions: [{ label: t('top.signIn'), primary: true, onClick: onAccount }] })
+    }
+
+    // RONE VST MANAGER, for everyone who does not have it yet: every plugin in one library.
+    if (app && app.status !== 'up_to_date' && app.status !== 'update_available') {
+      const canInstall = app.unlocked && app.installable !== false
+      out.push({ key: 'vstm', color: '#5AA9FF', eyebrow: t('hero.newApp'), title: 'RONE VST MANAGER', body: t('hero.vstmBody'), unit: app.unitUrl || app.logoUrl,
+                 actions: [canInstall ? { label: t('hero.install'), primary: true, icon: Icon.download, onClick: () => onInstall(app.id) }
+                                      : { label: t('hero.tryFree'), primary: true, onClick: () => openExternal('https://roneaudio.com/vst-manager?src=center') },
+                           { label: t('hero.watch'), icon: Icon.play, onClick: () => openExternal('https://youtu.be/5O7U35jwAzI') }] })
     }
 
     const newest = [...plugins].filter(p => isNew(p)).sort((a, b) => Date.parse(b.released) - Date.parse(a.released))[0]
