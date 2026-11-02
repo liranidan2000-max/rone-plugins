@@ -1,0 +1,363 @@
+{
+ "about": "RONE VST MANAGER's update list: the latest version of popular plugins of other makers, each confirmed on the maker's own site (source). The app compares a library plugin whose name is in match (and whose maker starts like maker) with latest.",
+ "checked": "2026-11-02",
+ "plugins": [
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Pro-Q 4",
+    "FabFilter Pro-Q 4"
+   ],
+   "latest": "4.13",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Pro-C 3",
+    "FabFilter Pro-C 3"
+   ],
+   "latest": "3.02",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Pro-L 2",
+    "FabFilter Pro-L 2"
+   ],
+   "latest": "2.26",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Pro-R 2",
+    "FabFilter Pro-R 2"
+   ],
+   "latest": "2.06",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Pro-MB",
+    "FabFilter Pro-MB"
+   ],
+   "latest": "1.33",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Pro-DS",
+    "FabFilter Pro-DS"
+   ],
+   "latest": "1.32",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Saturn 2",
+    "FabFilter Saturn 2"
+   ],
+   "latest": "2.13",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Timeless 3",
+    "FabFilter Timeless 3"
+   ],
+   "latest": "3.10",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "FabFilter",
+   "match": [
+    "Volcano 3",
+    "FabFilter Volcano 3"
+   ],
+   "latest": "3.09",
+   "url": "https://www.fabfilter.com/download",
+   "source": "https://www.fabfilter.com/download"
+  },
+  {
+   "maker": "u-he",
+   "match": [
+    "Diva",
+    "u-he Diva"
+   ],
+   "latest": "1.4.8",
+   "url": "https://u-he.com/products/diva/",
+   "source": "https://u-he.com/products/diva/"
+  },
+  {
+   "maker": "u-he",
+   "match": [
+    "Zebra3",
+    "Zebra 3",
+    "u-he Zebra3",
+    "u-he Zebra 3"
+   ],
+   "latest": "3.0.2",
+   "url": "https://u-he.com/products/zebra3/",
+   "source": "https://u-he.com/products/zebra3/"
+  },
+  {
+   "maker": "u-he",
+   "match": [
+    "Zebra2",
+    "Zebra 2",
+    "Zebra Legacy",
+    "u-he Zebra2",
+    "u-he Zebra Legacy"
+   ],
+   "latest": "2.9.4",
+   "url": "https://u-he.com/products/zebra-legacy/",
+   "source": "https://u-he.com/products/zebra-legacy/"
+  },
+  {
+   "maker": "u-he",
+   "match": [
+    "Repro-1",
+    "Repro-5",
+    "Repro",
+    "u-he Repro-1",
+    "u-he Repro-5",
+    "u-he Repro"
+   ],
+   "latest": "1.1.3",
+   "url": "https://u-he.com/products/repro/",
+   "source": "https://u-he.com/products/repro/"
+  },
+  {
+   "maker": "u-he",
+   "match": [
+    "Hive",
+    "Hive 2",
+    "u-he Hive",
+    "u-he Hive 2"
+   ],
+   "latest": "2.1.2",
+   "url": "https://u-he.com/products/hive/",
+   "source": "https://u-he.com/products/hive/"
+  },
+  {
+   "maker": "Arturia",
+   "match": [
+    "Pigments",
+    "Arturia Pigments"
+   ],
+   "latest": "7.0.1",
+   "url": "https://www.arturia.com/products/software-instruments/pigments/resources",
+   "source": "https://www.arturia.com/products/software-instruments/pigments/resources"
+  },
+  {
+   "maker": "reFX",
+   "match": [
+    "Nexus",
+    "Nexus5",
+    "Nexus 5",
+    "reFX Nexus",
+    "reFX Nexus5"
+   ],
+   "latest": "5.5.21",
+   "url": "https://refx.com/nexus/",
+   "source": "https://refx.com/nexus/version/"
+  },
+  {
+   "maker": "Native Instruments",
+   "match": [
+    "Kontakt 8",
+    "Kontakt",
+    "Native Instruments Kontakt 8"
+   ],
+   "latest": "8.14.0",
+   "url": "https://www.native-instruments.com/en/specials/native-access/",
+   "source": "https://community.native-instruments.com/discussion/39/"
+  },
+  {
+   "maker": "iZotope",
+   "match": [
+    "Ozone 12",
+    "iZotope Ozone 12",
+    "Ozone 12 Equalizer",
+    "Ozone 12 Maximizer"
+   ],
+   "latest": "12.2.0",
+   "url": "https://www.izotope.com/en/products/release-notes/ozone-advanced-release-notes",
+   "source": "https://www.izotope.com/en/products/release-notes/ozone-advanced-release-notes"
+  },
+  {
+   "maker": "iZotope",
+   "match": [
+    "Neutron 5",
+    "iZotope Neutron 5"
+   ],
+   "latest": "5.2.0",
+   "url": "https://www.izotope.com/pages/release-notes/neutron",
+   "source": "https://www.izotope.com/pages/release-notes/neutron"
+  },
+  {
+   "maker": "iZotope",
+   "match": [
+    "RX 11",
+    "iZotope RX 11"
+   ],
+   "latest": "11.4.0",
+   "url": "https://www.izotope.com/pages/release-notes/rx-advanced",
+   "source": "https://www.izotope.com/pages/release-notes/rx-advanced"
+  },
+  {
+   "maker": "iZotope",
+   "match": [
+    "RX 12",
+    "iZotope RX 12"
+   ],
+   "latest": "12.1.0",
+   "url": "https://www.izotope.com/pages/release-notes/rx-advanced",
+   "source": "https://www.izotope.com/pages/release-notes/rx-advanced"
+  },
+  {
+   "maker": "Soundtoys",
+   "match": [
+    "Soundtoys 5",
+    "Decapitator",
+    "EchoBoy",
+    "EchoBoy Jr",
+    "Soundtoys Decapitator",
+    "Soundtoys EchoBoy"
+   ],
+   "latest": "5.5.5",
+   "url": "https://www.soundtoys.com/release-log/",
+   "source": "https://www.soundtoys.com/release-log/"
+  },
+  {
+   "maker": "oeksound",
+   "match": [
+    "soothe2",
+    "oeksound soothe2"
+   ],
+   "latest": "1.3.3",
+   "url": "https://oeksound.com/changelog/soothe2/",
+   "source": "https://oeksound.com/changelog/soothe2/"
+  },
+  {
+   "maker": "Polyverse",
+   "match": [
+    "Wider",
+    "Polyverse Wider"
+   ],
+   "latest": "2.0",
+   "url": "https://polyversemusic.com/products/wider/",
+   "source": "https://polyversemusic.com/products/wider/"
+  },
+  {
+   "maker": "Antares",
+   "match": [
+    "Auto-Tune Pro 11",
+    "AutoTune Pro 11",
+    "Auto-Tune Pro",
+    "Antares Auto-Tune Pro 11"
+   ],
+   "latest": "11.6.0",
+   "url": "https://www.antarestech.com/products/auto-tune/pro",
+   "source": "https://help.antarestech.com/hc/en-us/articles/41117430548628-Auto-Tune-Pro-11-Release-Notes"
+  },
+  {
+   "maker": "Celemony",
+   "match": [
+    "Melodyne",
+    "Melodyne 5",
+    "Celemony Melodyne",
+    "Celemony Melodyne 5"
+   ],
+   "latest": "5.4.2",
+   "url": "https://www.celemony.com/en/service1/download",
+   "source": "https://helpcenter.celemony.com/M5/doc/melodyneStudio5/en/M5tour_VersionHistory"
+  },
+  {
+   "maker": "Waves",
+   "match": [
+    "Waves"
+   ],
+   "latest": "17",
+   "url": "https://www.waves.com/support/update-to-latest-version",
+   "source": "https://www.waves.com/support/update-to-latest-version"
+  },
+  {
+   "maker": "Tokyo Dawn Labs",
+   "match": [
+    "TDR Nova",
+    "Tokyo Dawn Labs TDR Nova"
+   ],
+   "latest": "2.2.3",
+   "url": "https://www.tokyodawn.net/tdr-nova/",
+   "source": "https://www.tokyodawn.net/tdr-nova/"
+  },
+  {
+   "maker": "Tokyo Dawn Labs",
+   "match": [
+    "TDR Kotelnikov",
+    "Kotelnikov",
+    "Tokyo Dawn Labs TDR Kotelnikov"
+   ],
+   "latest": "1.6.7",
+   "url": "https://www.tokyodawn.net/tdr-kotelnikov/",
+   "source": "https://www.tokyodawn.net/tdr-kotelnikov/"
+  },
+  {
+   "maker": "Voxengo",
+   "match": [
+    "SPAN",
+    "Voxengo SPAN"
+   ],
+   "latest": "3.24",
+   "url": "https://www.voxengo.com/product/span/",
+   "source": "https://www.voxengo.com/product/span/"
+  },
+  {
+   "maker": "Youlean",
+   "match": [
+    "Youlean Loudness Meter 2",
+    "Youlean Loudness Meter"
+   ],
+   "latest": "2.5.15",
+   "url": "https://youlean.co/youlean-loudness-meter/",
+   "source": "https://youlean.co/?p=26640"
+  },
+  {
+   "maker": "Toontrack",
+   "match": [
+    "EZdrummer 3",
+    "EZdrummer",
+    "Toontrack EZdrummer 3"
+   ],
+   "latest": "3.1.2",
+   "url": "https://www.toontrack.com/release-notes/ezdrummer-3/",
+   "source": "https://www.toontrack.com/release-notes/ezdrummer-3/"
+  },
+  {
+   "maker": "Toontrack",
+   "match": [
+    "Superior Drummer 3",
+    "Superior Drummer",
+    "Toontrack Superior Drummer 3"
+   ],
+   "latest": "3.4.4",
+   "url": "https://www.toontrack.com/release-notes/superior-drummer-3/",
+   "source": "https://www.toontrack.com/release-notes/superior-drummer-3/"
+  }
+ ]
+}
