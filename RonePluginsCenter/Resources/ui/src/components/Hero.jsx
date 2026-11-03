@@ -62,7 +62,7 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
       const price = priceOf(p)
       const hours = personal.kind === 'first' ? Math.max(1, Math.ceil((Date.parse(personal.endsAt) - Date.now()) / 3600000)) : 0
       out.unshift({ key: 'mine', color: accentOf(p),
-                    eyebrow: personal.kind === 'first' ? t('hero.first') : t('hero.because', { name: personal.becauseName }),
+                    eyebrow: personal.kind === 'first' && !personal.becauseName ? t('hero.first') : t('hero.because', { name: personal.becauseName }),
                     title: 'RONE ' + shortName(p),
                     body: (personal.line ? personal.line + '.' : descriptionOf(p)) + (hours ? ' ' + t('hero.hoursLeft', { n: hours }) + '.' : ''),
                     unit: p.unitUrl || p.logoUrl,

@@ -438,7 +438,8 @@ export default function App () {
     const f = upsell.first && Date.parse(upsell.first.endsAt) > Date.now() ? upsell.first : null
     if (f) {
       const plugin = tagged.find(p => productKey(p.id) === productKey(f.product))
-      return plugin && !plugin.owned ? { plugin, kind: 'first', line: f.line || '', endsAt: f.endsAt } : null
+      // a giveaway winner's offer names the plugin they won (site 4a9e389): "Because you have RONE Sidechain"
+      return plugin && !plugin.owned ? { plugin, kind: 'first', becauseName: f.becauseName || '', line: f.line || '', endsAt: f.endsAt } : null
     }
     const o = upsell.offer && Date.parse(upsell.offer.endsAt) > Date.now() ? upsell.offer : null
     const id = o ? o.product : upsell.owner?.pick

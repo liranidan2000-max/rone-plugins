@@ -254,7 +254,9 @@ export function mockUpsell (scenario = devScenario()) {
       ok: true, offer: null, owner: null, links: { RoneStucker: link('RoneStucker') },
       first: { kind: 'first', product: 'RoneStucker', name: 'RONE Stucker', slug: 'products/rone-stucker.html', price: 15, regular: 29,
                endsAt: new Date(Date.now() + 47.5 * 3600000).toISOString(), line: 'The classic roll-up, back on the beat',
-               video: '/media/shorts/RoneStucker.mp4', poster: '/media/shorts/RoneStucker.jpg' },
+               video: '/media/shorts/RoneStucker.mp4', poster: '/media/shorts/RoneStucker.jpg',
+               // ?winner: a giveaway winner's offer names the plugin they won
+               ...(new URLSearchParams(location.search).has('winner') ? { because: 'RoneSidechain', becauseName: 'RONE Sidechain' } : {}) },
     }
   }
   const prices = { RoneThrow: 29, RoneRise: 29, RoneIron: 29, ReverseReverb: 37, RoneAfterspace: 44, RONEAnalyzer: 37 }
