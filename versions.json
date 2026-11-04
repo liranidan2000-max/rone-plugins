@@ -678,12 +678,12 @@
       "registry_key": "RoneVstManager",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.19.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.18.22.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.20.24.pkg",
       "sha256": "cfeb518ef329ae4e15d29a40e58ec1955df71104f2d93b4db43bff8625f98977",
-      "sha256_mac": "c54c6683d7e9530d29b3452972c30bb1a94d936e0ace9829d9e826b2d0eae85e",
+      "sha256_mac": "d84059f788f8afa552e33902e2ce9f3bbb01ff30b79bfc35e0f0b0772e76ce33",
       "size": 5175510,
-      "size_mac": 10236259,
-      "version_mac": "0.9.18.22",
+      "size_mac": 10258087,
+      "version_mac": "0.9.20.24",
       "released": "2026-11-04"
     }
   ],
