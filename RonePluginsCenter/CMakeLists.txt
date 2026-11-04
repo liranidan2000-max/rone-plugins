@@ -75,6 +75,7 @@ juce_add_gui_app(RonePluginsCenter
 target_sources(RonePluginsCenter PRIVATE
     Source/Main.cpp
     Source/MainComponent.cpp
+    Source/OsCrashScanner.cpp
     Source/NetworkManager.cpp
     Source/VersionChecker.cpp
     Source/LicenseHandler.cpp

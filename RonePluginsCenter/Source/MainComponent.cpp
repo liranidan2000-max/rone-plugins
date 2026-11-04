@@ -3,6 +3,7 @@
 #include "../../Shared/RemoteLicenseGate.h"
 #include "../../Shared/RoneWebCompat.h"
 #include "CrashReportUploader.h"   // also brings in Shared/RoneCrashReporter.h
+#include "OsCrashScanner.h"
 #include "AutoStart.h"
 #include "PluginInUse.h"
 #include "OldVersionCleaner.h"
@@ -301,6 +302,7 @@ MainComponent::MainComponent()
     RoneCrashReporter::installCrashHandler ("RONE Plugins Center",
                                             JUCE_APPLICATION_VERSION_STRING,
                                             "Center");
+    OsCrashScanner::scanAsync();
     CrashReportUploader::uploadPendingAsync();
 
 #if JUCE_WINDOWS
@@ -403,7 +405,10 @@ void MainComponent::timerCallback()
     // days waited for days. Every 10 minutes (a pass on an empty queue costs a
     // directory listing, and the uploader limits itself to one pass a minute).
     if (++timerTicks % 10 == 0)
+    {
+        OsCrashScanner::scanAsync();
         CrashReportUploader::uploadPendingAsync();
+    }
 
     // Audit R026 (review): a Center update parked behind busy plugins is woken by
     // the batch going idle or a failed download - not by an uninstall finishing.

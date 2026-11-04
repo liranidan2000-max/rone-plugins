@@ -1,0 +1,10 @@
+# Runs OsCrashScanner on this machine and prints what it would report. Sends nothing.
+cmake_minimum_required(VERSION 3.22)
+project(OsScanProof VERSION 1.0.0 LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_subdirectory("${JUCE_SRC}" juce)
+juce_add_console_app(OsScanProof PRODUCT_NAME "OsScanProof")
+target_sources(OsScanProof PRIVATE main.cpp ../../../RonePluginsCenter/Source/OsCrashScanner.cpp)
+target_compile_definitions(OsScanProof PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 NOMINMAX=1)
+target_link_libraries(OsScanProof PRIVATE juce::juce_core juce::juce_recommended_config_flags)
