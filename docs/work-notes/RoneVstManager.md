@@ -7,6 +7,7 @@
 - Not tested in a DAW: Live one-click MIDI (needs Live restarted once for the new script); RONE RACK only in REAPER.
 
 ## Done
+- [x] 05.11.2026 — "כשיש הודעה כזאת הכפתור שמוריד אותה 'הבנתי' לא מוצג הוא למטה" (screenshot: "RONE 1176 did not load") → in a low bottom strip the dialog was taller than the window. **Done in 0.9.21 b8fe851: every dialog stops at the window height, the buttons stay on screen, Enter/Esc closes, the steps are translated. 6 window sizes tested.**
 - [x] 04.11.2026 — "בטריי, בווינדוז, התפריט שלו נראה כמו ג'וס רגיל, צריך להיות מעוצב, יפה. אותו דבר גם לגבי ארוני סנטר עצמו" → the tray menu is a stock JUCE popup; give it the brand look in VST MANAGER and in the Center. **Done: RoneMenuLook.h in both apps; VST MANAGER 0.9.20, Center 2.1.24.**
 - [x] 04.11.2026 — "עוד כפתור בסייד פאנל, כפתור שמחליט אם הפאנל נשאר אחרי לחיצה על פלאגין או שהוא נסגר אוטומטית" → strip button: stay open / auto close after a load. **Done: pin button in the strip (settings.stripAutoClose) → 0.9.20.**
 - [x] 04.11.2026 — "כשעושים זום, זה רק מקטין או מגדיל את התמונות ... כשזה נהיה יותר קטן, זה אמור לעשות כבר כמה שורות" → strip zoom must reflow: smaller cards = more rows in the same height. **Done: small tiles = more rows, in the rack and by the side (tiles, tiny) → 0.9.20.**
