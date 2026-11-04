@@ -667,7 +667,7 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.19",
+      "version": "0.9.20",
       "type": "standalone",
       "formats": [
         "App"
