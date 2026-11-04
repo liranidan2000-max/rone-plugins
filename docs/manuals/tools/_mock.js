@@ -142,7 +142,7 @@ window.__scn_clipper = function (view) {
       t += 1 / bps; var a = Math.pow(10, env(t) / 20); var ph = Math.sin(2 * Math.PI * 55 * t) * a;
       b.push(Math.min(ph, -a * 0.3 * rnd()), Math.max(ph, a * 0.3 * rnd()));
     }
-    onFrame({ bps: bps, sr: 44100, ch: 2, os: 2, transition: false, latency: 384, inPk: 0.5, outPk: 0.6, tp: 0.62, wetPk: 0.6, inSq: 1, outSq: 0.9, sqN: 2, buckets: b });
+    onFrame({ bps: bps, sr: 44100, ch: 2, os: 0, transition: false, latency: 384, inPk: 0.5, outPk: 0.6, tp: 0.62, wetPk: 0.6, inSq: 1, outSq: 0.9, sqN: 2, buckets: b });
   }
   if (view === 'peaks') setView('peaks');
   if (view === 'detail') {
