@@ -217,14 +217,14 @@ def main():
     # ------------------------------------------------------------ STUTTER
     A = ACCENT["stutter"]
     annotate("stutter_m_loaded", "stutter/tour.png", [
-        ("#pLogo", "Header logo"), ("#fileName+#fileInfo", "Loaded file"),
+        ("#pLogo", "Header logo"), ("#fileName+#fileInfo", "Loaded file"), ("#modeSwitch", "EDIT / LIVE"),
         ("#presetBar", "PRESETS"), ("#macroStrip", "MACRO SLOTS"), ("#browseBtn", "BROWSE"),
         ("#timelinePanel", "Waveform"), ("#transientNav", "PREV / NEXT"), ("#viewToggle", "ORIGINAL / RESULT"),
         ("#divisionBtns", "GRID"), ("#rampToBtns", "RAMP TO"), ("#rampCurveBtns", "CURVE"),
         ("#sliceMs", "SLICE"), ("#barsMinus+#barsPlus", "BARS"), ("#bpmInput+#bpmSource", "BPM"),
         ("#fadeInKnob", "FADE IN"), ("#fadeOutKnob", "FADE OUT"), ("#stereoKnob", "STEREO"),
         ("#fadeOutAutoBtns", "FADE OUT AUTO"), ("#stereoAutoBtns", "STEREO AUTO"),
-        ("#playBtn", "PLAY"), ("#onBarBtn", "ON BAR"), ("#applyBtn", "STUTTER"),
+        ("#playBtn", "PLAY"), ("#onBarBtn", "ON BAR"), ("#playLockBtn", "PLAY LOCK"), ("#applyBtn", "STUTTER"),
         ("#exportBtn", "EXPORT"), ("#advToggle", "ADVANCED"), ("#extrasToggle", "EXTRAS"),
         ("#statusText", "Status line"), ("#resize-handle", "Resize grip")], A,
         crops=[("grid", "#divisionBtns+#bpmSource", 14), ("knobs", "#fadeInArc+#stereoAutoBtns", 14), ("transport", "#playBtn+#exportBtn", 12)])
@@ -236,8 +236,15 @@ def main():
         ("#tremoloBtns", "TREMOLO"), ("#freeEndChip", "END length")], A)
     annotate("stutter_m_adv", "stutter/adv.png", [
         ("#mixKnob", "MIX"), ("#fadeInCurveKnob", "IN CURVE"), ("#fadeOutCurveKnob", "OUT CURVE"), ("#globalFadeInKnob", "GLOBAL IN"),
-        ("#globalFadeOutKnob", "GLOBAL OUT"), ("#pitchKnob", "PITCH"), ("#pitchRampKnob", "PITCH RAMP"), ("#keyRootBtns", "KEY"), ("#keyModeBtns", "SCALE")], A,
+        ("#globalFadeOutKnob", "GLOBAL OUT"), ("#pitchKnob", "PITCH"), ("#pitchRampKnob", "PITCH RAMP"), ("#lowCutKnob", "HIGH PASS"), ("#highCutKnob", "LOW PASS"), ("#filterCurveBtns", "FILTER CURVE"), ("#keyRootBtns", "KEY"), ("#keyModeBtns", "SCALE")], A,
         crops=[("panel", "#advPanel", 8)])
+    annotate("stutter_m_live", "stutter/live.png", [
+        ("#modeSwitch", "EDIT / LIVE"), ("#timelinePanel", "The channel"), ("#liveAuto", "AUTO"),
+        ("#livePads", "Pads"), ("#liveTrigBtns", "TRIGGER"), ("#liveCatchBtns", "CATCH"), ("#liveMidi", "MIDI")], A)
+    annotate("stutter_m_livehold", "stutter/livehold.png", [("#liveHold", "HOLD")], A)
+    annotate("stutter_m_complex", "stutter/complex.png", [
+        ("#complexBtn", "COMPLEX"), ("#cxLane", "Step row"), ("#complexSourceBtns", "FOLLOW / HOLD / HITS"),
+        ("#cxDice", "DICE"), ("#cxEditor", "Step editor")], A)
     plain("stutter", "stutter/empty.png"); plain("stutter_about", "stutter/about.png")
     plain("stutter_m_menu", "stutter/menu.png")
     # ------------------------------------------------------------ STUCKER

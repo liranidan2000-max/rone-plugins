@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "2a", "product": "RONE 2A", "eyebrow": "OPTICAL LEVELING AMPLIFIER",
-        "title_html": "RONE <i>2A</i>", "accent": "#E04E38", "version": "0.9.5",
+        "title_html": "RONE <i>2A</i>", "accent": "#E04E38", "version": "0.9.12",
         "tagline": "The optical leveler behind a thousand vocals and bass tracks - two big knobs, a switch, and a smooth, program-dependent hand on the level. With a SCOPE that shows the wave and the gain reduction locked to the bar.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE 2A.vst3", "au": "RONE 2A.component", "exe": "RONE 2A.exe",
         "pdf": "RONE 2A - User Manual.pdf", "cover_img": "2a/main.png",

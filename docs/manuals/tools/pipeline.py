@@ -57,6 +57,10 @@ STATES = [
     # 1.5.0: the preset list open, on Tremolo 1 Bar (the menu is plain DOM, no transition)
     ("stutter_m", "_menu", "js:window.__scn_stutter(true);applyPreset(10);renderPresetMenu();document.getElementById('preset-menu').classList.add('open')", None),
     ("stutter_m", "_adv", "js:window.__scn_stutter(true);setAdvanced(true);state.keyRoot=5;state.keyMode=0;updateSegUI();document.getElementById('advPanel').classList.add('open');document.getElementById('extrasToggle').classList.add('open')", None),
+    # 2.0 LIVE: the deck with AUTO, then with HOLD; 1.7 COMPLEX with a step open
+    ("stutter_m", "_live", "js:window.__scn_stutter_live(0)", None),
+    ("stutter_m", "_livehold", "js:window.__scn_stutter_live(1)", None),
+    ("stutter_m", "_complex", "js:window.__scn_stutter_complex()", None),
     ("stucker", "", "js:state.keyRoot=10;landMidi=69;renderRide()", None),
     ("stucker", "_adv", "js:state.keyRoot=10;landMidi=69;renderRide(),click:advToggle", None),
     ("stucker", "_ride", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);state.keyRoot=10;landMidi=69;state.rideBars=2;ridePhase=2;rideEff=0.58;engineEngaged=true;engineDepth=0.58;engineLoopMs=19.4;renderRide();renderKnob();renderEngine()", None),

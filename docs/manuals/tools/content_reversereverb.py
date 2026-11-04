@@ -156,7 +156,7 @@ def manual(G):
 </ul>
 """})
 
-    S.append(G["conventions_section"](m, note("MIDI", "Route a MIDI track to the plugin to trigger playback: note on plays the result from the start, note off stops it. This works in the VST3 and AU versions.")))
+    S.append(G["conventions_section"](m, note("MIDI", "Route a MIDI track to the plugin to trigger playback: note on plays the result from the start, note off stops it. This works in the VST3 and AU versions.") + G["logic_midi"]("RONE Reverse Reverb", "its MIDI triggers")))
 
     S.append(G["support_section"](m, [
         ("The file does not load", "Files longer than 8 seconds are rejected. Trim the sound in your DAW and try again. WAV, AIFF, FLAC and MP3 are supported."),
@@ -164,7 +164,7 @@ def manual(G):
         ("PLAY is greyed out", "No sound is loaded yet, or the render is still running (very long tails take a moment)."),
         ("The swell sounds a semitone or so too high or too low", "Fixed in 1.0.1: files are now resampled to the session's sample rate. If an old project still sounds off, re-drop the source file once."),
         ("The DAW says a dropped clip is missing", "Clips are saved to <code>Documents\\RONE Plugins\\Exports\\RONE Reverse Reverb</code>; point the DAW there. Versions before 1.0.1 wrote to the temp folder - re-export those clips once."),
-        ("I hear nothing when I send MIDI", "The MIDI must reach the plugin's channel; in some DAWs an effect plugin needs a MIDI routing or a 'MIDI to plugin' setting. The PLAY button works regardless."),
+        ("I hear nothing when I send MIDI", "The MIDI must reach the plugin's channel; in some DAWs an effect plugin needs a MIDI routing or a 'MIDI to plugin' setting. The PLAY button works regardless. In Logic: see MIDI in Logic Pro in Interface conventions."),
     ]))
 
     m["sections"] = S

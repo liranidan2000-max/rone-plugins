@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "rise", "product": "RONE Rise", "eyebrow": "ONE KNOB. THE WHOLE BUILD-UP.",
-        "title_html": "RONE <i>Rise</i>", "accent": "#E0449A", "version": "1.0.15",
+        "title_html": "RONE <i>Rise</i>", "accent": "#E0449A", "version": "1.0.16",
         "tagline": "Turn one knob up over the phrase and the mix becomes a build-up - the lows leave, the reverb opens, the echoes climb. Snap it to zero and the drop hits, with the tail still spilling into it. Or press GO and let it land on the bar by itself.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Rise.vst3", "au": "RONE Rise.component", "exe": "RONE Rise.exe",
         "pdf": "RONE Rise - User Manual.pdf", "cover_img": "rise/tour_knob.png",
@@ -144,6 +144,7 @@ def manual(G):
 <li><strong>Stop means quiet.</strong> When the song stops, Rise lets its tail go and rests at zero until you press play or touch the knob, so a build left half-way never colours what you audition next.</li>
 <li><strong>Presets are starting points.</strong> Every macro works in every mode: add DIVE to ORBIT, a GATE to LIFTOFF - then SAVE it.</li>
 </ul>
+{G["logic_midi"]("RONE Rise", "GO on MIDI C1")}
 <h3>Troubleshooting</h3>
 {table(["Symptom", "Cause", "Fix"], [
  ["Nothing happens", "INTENSITY is at 0 (the plugin nulls there)", "Turn it up, or press GO with LAND ON BAR set"],

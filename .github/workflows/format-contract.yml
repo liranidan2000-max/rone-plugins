@@ -1,0 +1,21 @@
+# Every night: what is live, compared with what every product promises (the live .pkg of
+# each product against scripts/ci/format_contract.py, the manifest and the site). A red run
+# mails the owner. It reads only and publishes nothing.
+name: Format contract
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check every live product
+        run: python3 scripts/ci/format_contract.py live

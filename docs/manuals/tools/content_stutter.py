@@ -2,18 +2,19 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "stutter", "product": "RONE Stutter", "eyebrow": "TEMPO-LOCKED STUTTER ENGINE",
-        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "1.6",
+        "title_html": "RONE <i>Stutter</i>", "accent": "#FFD02B", "version": "2.0",
         "tagline": "Drop a sound in and it is already a stutter - rendered on the first hit, bar-exact, ready to pull straight out of the waveform into your arrangement.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Stutter.vst3", "au": "RONE Stutter.component", "exe": "RONE Stutter.exe",
         "pdf": "RONE Stutter - User Manual.pdf", "cover_img": "stutter/tour_grid.png" and "stutter/empty.png",
-        "latency": "None (offline render, playback only)",
+        "latency": "None (EDIT renders offline; LIVE adds none)",
     }
     m["cover_img"] = "stutter/empty.png"
     S = []
 
     S.append({"title": "Welcome to RONE Stutter", "sub": "what it is, when to reach for it", "html": f"""
-<p><strong>RONE Stutter</strong> is a stutter <em>renderer</em>, not a live chopper. You give it a sound, tell it which moment of that sound to grab and which note value to repeat it on, and it writes a finished, bar-exact stutter fill. The result is auditioned inside the plugin and then exported, or simply dragged into your DAW as an audio clip.</p>
-<p>That workflow is deliberate. Live stutter effects are great on stage; in a production session they cost you automation clips, timing corrections and re-renders. Stutter gives you a printed clip that lands exactly on the grid, every time.</p>
+<p><strong>RONE Stutter</strong> works in two ways, and a big <span class='pill'>EDIT</span> / <span class='pill'>LIVE</span> switch beside the logo chooses.</p>
+<p><strong>EDIT</strong> is a stutter <em>renderer</em>. You give it a sound, tell it which moment of that sound to grab and which note value to repeat it on, and it writes a finished, bar-exact stutter fill. The result is auditioned inside the plugin and then exported, or simply dragged into your DAW as an audio clip. In a production session that saves you automation clips, timing corrections and re-renders: a printed clip lands exactly on the grid, every time.</p>
+<p><strong>LIVE</strong> stutters whatever plays through the channel, in real time and with no latency, and it sounds exactly like the fill you built in EDIT. Most of this manual is about EDIT, because every control you learn there shapes LIVE too; the <strong>LIVE</strong> chapter covers the rest.</p>
 <div class="two">
 <div>
 <h3>Where it shines</h3>
@@ -46,7 +47,7 @@ def manual(G):
 {steps([
  "<strong>Insert the plugin</strong> on any mixer channel. An empty channel is ideal, because the plugin plays its previews through that channel. In the standalone app just open it.",
  "<strong>Load a file.</strong> Drag a WAV, AIFF, FLAC or MP3 onto the waveform, double-click the waveform to browse, or press <span class='pill'>BROWSE</span>. The header shows the file name, length and sample rate.",
- "<strong>Choose the moment</strong> - if the automatic one is not the one you wanted. Stutter starts on the first transient that actually sounds; <span class='pill'>&#9664; PREV</span> / <span class='pill'>NEXT &#9654;</span> re-roll the fill from the neighbouring hits, and clicking the ORIGINAL waveform sets the start by hand. Every one of those renders again immediately.",
+ "<strong>Choose the moment</strong> - if the automatic one is not the one you wanted. Stutter starts on the first transient that actually sounds; <span class='pill'>&#9664; PREV</span> / <span class='pill'>NEXT &#9654;</span> re-roll the fill from the neighbouring hits, and clicking the ORIGINAL waveform sets the start by hand. Every one of those renders again immediately, and on ORIGINAL the hit you picked plays at once, up to the next transient, so you hear what you chose.",
  "<strong>Set the rhythm.</strong> GRID is the note value of one repeat (1/16 is the classic roll). The SLICE chip tells you how long one repeat is at the current BPM. BARS is the length of the finished clip.",
  "<strong>Check BPM.</strong> Inside a DAW the tempo is read from the host and the chip shows <em>DAW</em>. In the standalone app, or if the host reports no tempo, type the BPM into the box (the chip shows <em>MANUAL</em>).",
  "<strong>Shape it.</strong> FADE IN / FADE OUT soften each repeat; STEREO bounces alternating repeats left and right.",
@@ -57,18 +58,19 @@ def manual(G):
 """})
 
     S.append({"title": "Interface tour", "sub": "every element on screen", "html": f"""
-<p>The page opens <strong>minimal</strong>: the waveform, GRID, SLICE, BARS, FADE OUT, STEREO, one transport and EXPORT. That is the whole plugin for most fills. <span class='pill'>ADVANCED</span> in the footer brings the rest of the controls bar and the <span class='pill'>STUTTER</span> button back; <span class='pill'>EXTRAS</span>, which appears beside it, opens the drawer. The picture shows everything unfolded.</p>
+<p>The page opens <strong>minimal</strong>, in EDIT: the waveform, GRID, SLICE, BARS, FADE OUT, STEREO, one transport and EXPORT. That is the whole plugin for most fills. <span class='pill'>ADVANCED</span> in the footer brings the rest of the controls bar and the <span class='pill'>STUTTER</span> button back; <span class='pill'>EXTRAS</span>, which appears beside it, opens the drawer. The picture shows everything unfolded.</p>
 {img("stutter/tour.png", "RONE Stutter with a drum loop loaded, ADVANCED on.")}
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
  ("Loaded file", "name, duration and sample rate of the source"),
- ("PRESETS", "&#9664; / &#9654; step through the factory presets, the name opens the list (see Presets)"),
+ ("EDIT / LIVE", "EDIT renders a file, LIVE stutters the channel as it plays (see LIVE)"),
+ ("PRESETS", "&#9664; / &#9654; step through the 54 factory presets, the name opens the list (see Presets)"),
  ("MACRO SLOTS", "six slots of your own: hold one to store the current settings, tap it to recall them"),
  ("BROWSE", "open a file dialog (you can also drop files or double-click the waveform)"),
- ("Waveform", "the source or the result; click to set the slice start, scroll to zoom, and pull the result out of the lower part into your DAW"),
- ("PREV / NEXT", "re-roll the fill from the previous / next transient"),
+ ("Waveform", "the source or the result; click to set the slice start, drag the right edge of the CHUNK to set its length, scroll to zoom, and pull the result out of the lower part into your DAW"),
+ ("PREV / NEXT", "re-roll the fill from the transient before / after your point"),
  ("ORIGINAL / RESULT", "which of the two the waveform shows - and therefore what the transport plays"),
- ("GRID", "note value of one repeat, 1/2 to 1/32 - or FREE, a length in milliseconds off the tempo grid"),
+ ("GRID", "note value of one repeat, 1/2 to 1/32 - or FREE, a length in milliseconds off the tempo grid, or COMPLEX, a row of steps (see COMPLEX)"),
  ("RAMP TO", "OFF, 1/16, 1/32 or 1/64: the roll accelerates from the GRID to this value across the bars"),
  ("CURVE", "LIN: every stage takes the same time; EXP: each finer stage takes half the time"),
  ("SLICE", "length of one repeat in milliseconds at the current BPM"),
@@ -81,17 +83,18 @@ def manual(G):
  ("STEREO AUTO", "the same for STEREO - 100 % and down starts in full ping-pong and lands in the centre"),
  ("PLAY", "audition whatever the waveform is showing"),
  ("ON BAR", "when lit and the song is playing, playback starts on the next bar line so the fill is heard in context"),
+ ("PLAY LOCK", "the padlock: the preview keeps looping, so you can flip through presets and hear each one at once"),
  ("STUTTER", "force a render; normally every change renders itself"),
  ("EXPORT", "save the rendered clip as a WAV file"),
  ("ADVANCED", "unfold the rest of the controls bar and the STUTTER button"),
- ("EXTRAS", "open the drawer: MIX, fade curves, global fades, PITCH, PITCH RAMP, KEY and SCALE"),
+ ("EXTRAS", "open the drawer: MIX, fade curves, global fades, PITCH, PITCH RAMP, HIGH PASS, LOW PASS, KEY and SCALE"),
  ("Status line", "what the plugin is doing and what it expects next"),
  ("Resize grip", "drag to resize the window"),
 ])}
 """})
 
     S.append({"title": "Presets", "sub": "the builds from the tutorial, one click away", "html": f"""
-<p>The preset bar in the header holds fourteen factory presets - the fills the RONE Stutter tutorial builds, with the exact values heard in it. <span class='pill'>&#9664;</span> and <span class='pill'>&#9654;</span> step through them; clicking the name opens the list, sorted by what the fill is for. A preset changes the stutter and nothing else, and the fill on the waveform re-renders the moment you pick one.</p>
+<p>The preset bar in the header holds 54 factory presets. The fourteen in the table below are the fills the RONE Stutter tutorial builds, with the exact values heard in it. The other forty came with COMPLEX: TREMOLO GATES and PSYCHEDELIC, then COMPLEX CATCHES, COMPLEX TAPE, COMPLEX GLITCH, COMPLEX BUILDS and COMPLEX PSYCHEDELIC, which are ready rows of steps. <span class='pill'>&#9664;</span> and <span class='pill'>&#9654;</span> step through them; clicking the name opens the list, sorted by what the fill is for. A preset changes the stutter and nothing else, and the fill on the waveform re-renders the moment you pick one.</p>
 {img("stutter/menu.png", "<b>The preset list.</b> Categories in yellow; the preset you are on is highlighted.", "w60")}
 {table(["Preset", "What it is", "Settings"], [
  ["<b>Init</b>", "the plain roll", "GRID 1/16, BARS 2, everything else off"],
@@ -119,7 +122,8 @@ def manual(G):
 <h3>Source and selection</h3>
 {ctl("Waveform", "click: set slice start<br>scroll: zoom<br>drag scrollbar: pan", "<p>Shows the source (grey) or the result (yellow). Clicking sets the start of the slice that will be repeated; the selection is shown as a bright line. Detected transients are marked with triangles above the waveform. The time ruler under the waveform follows zoom.</p>", "Zoom in for precision on fast material - a snare has its energy in the first few milliseconds, and starting a few milliseconds early gives a cleaner attack.")}
 {ctl("PREV / NEXT", "transient navigation", "<p>Moves the selection to the previous / next detected transient. The status line tells you how many transients were found. If the detector finds nothing (pads, noise), click the waveform to select manually.</p>")}
-{ctl("BROWSE", "file dialog", "<p>Loads WAV, AIFF, FLAC, MP3 or OGG. Stereo and mono files are both fine; a mono file renders a mono clip.</p>")}
+{ctl("CHUNK", "drag its right edge<br>on ORIGINAL", "<p>The bright part of the source that gets repeated. Dragging its right edge sets its length: it snaps to the grid (1/2 to 1/32), or sets the milliseconds on FREE.</p>")}
+{ctl("BROWSE", "file dialog", "<p>Loads WAV, AIFF, FLAC, MP3 or OGG. Stereo and mono files are both fine; a mono file still comes out in stereo, so STEREO works on one-shots too.</p>")}
 <h3>Rhythm</h3>
 {img("stutter/tour_grid.png", "<b>GRID, SLICE, BARS and BPM.</b>", "w80")}
 {ctl("GRID", "1/2 &middot; 1/4 &middot; 1/6 &middot; 1/8 &middot; 1/12 &middot; 1/16 &middot; 1/32 &middot; FREE<br>default 1/16", "<p>The note value of one repeat. 1/6 and 1/12 are triplet values. The repeat length is calculated from the BPM: at 120 BPM a 1/16 repeat is 125 ms, at 128 BPM it is 117 ms.</p>", "Automate nothing - render two clips (1/16 and 1/32) and cut between them in the arrangement. It is faster and always in time.")}
@@ -136,11 +140,14 @@ def manual(G):
 {ctl("FADE OUT", "0 to 100 % of a repeat<br>default 0 %<br>curve: quadratic", "<p>A fade at the end of every repeat. Use it to make each repeat decay before the next one, which gives the classic 'gated' roll.</p>", "FADE OUT around 60-80 % with 1/32 GRID sounds like a machine-gun roll; 0 % sounds like a hard loop.")}
 {ctl("STEREO", "0 to 100 %<br>default 0 %", "<p>Ping-pong: even repeats are attenuated in the right channel and odd repeats in the left, by the amount you set. 100 % alternates fully left / right; 30 % gives gentle movement that still sums to mono without holes.</p>", "Check the mix in mono when you push STEREO high - full ping-pong at 1/32 turns into a buzz in mono.")}
 {ctl("AUTO", "OFF &middot; up &middot; down<br>under FADE OUT and STEREO<br>default OFF", "<p>Moves the knob by itself across the clip. The knob is where the clip <em>starts</em>; up walks it to 100 % and down to 0 %, repeat by repeat, following CURVE (LIN: a straight line, EXP: slow first, fast at the end). The last repeat always gets the full value.</p><p>Two knobs have it because they are the two that tell a story over a fill. STEREO 100 % with AUTO down opens in full left / right ping-pong and closes in the centre, right into the drop. FADE OUT 0 % with AUTO up starts with repeats that ring into each other and ends with tight, gated hits.</p><p>A thin ring outside the knob's arc shows the stretch it will travel, and while the RESULT plays a dot rides that ring at the value the repeat under the playhead got - the same idea as an LFO display in a synth. On the RESULT waveform the stereo colouring (yellow / white repeats) fades along with it.</p>", "STEREO 100 % down + FADE OUT 20 % up on a 1/16 snare roll: it starts wide and loose, and lands narrow and tight.")}
-<h3>Pitch and key (ADVANCED)</h3>
-{img("stutter/adv.png", "<b>The ADVANCED drawer.</b> MIX, the two fade curves and the global fades were host-only parameters until 1.2; PITCH, PITCH RAMP, KEY and SCALE are new.")}
+{ctl("AUTO RANGE", "drag the handle at the end of the ring<br>double-click: all the way", "<p>By default AUTO walks all the way to 100 % or 0 %. Drag the small handle at the end of the outer ring to set where it stops instead.</p>")}
+<h3>Pitch, key and filter (EXTRAS)</h3>
+{img("stutter/adv.png", "<b>The EXTRAS drawer.</b> 1 MIX &middot; 2 IN CURVE &middot; 3 OUT CURVE &middot; 4 GLOBAL IN &middot; 5 GLOBAL OUT &middot; 6 PITCH &middot; 7 PITCH RAMP &middot; 8 HIGH PASS &middot; 9 LOW PASS &middot; 10 FILTER CURVE &middot; 11 KEY &middot; 12 SCALE.")}
 {ctl("PITCH", "-12 to +12 semitones<br>default 0", "<p>Every repeat is re-pitched by this amount - the content moves, the grid does not. The slice is read faster or slower from the transient, so a repeat pitched up contains more of the source and one pitched down contains less.</p>", "+7 (a fifth) on a snare roll is the classic 'psy' fill; -12 on a vocal chop is a different singer.")}
 {ctl("PITCH RAMP", "-24 to +24 semitones<br>default 0", "<p>Added to PITCH across the clip, from nothing at the start to the full amount on the last repeat (following the CURVE). A rising roll that also rises in pitch is the build; a falling one is the drop.</p>")}
 {ctl("KEY and SCALE", "KEY: OFF, C .. B<br>SCALE: Phrygian, Phrygian dominant, harmonic minor, minor, major, root + 5th<br>default OFF / Phrygian", "<p>At 1/64 and beyond, a roll repeats faster than 20 times a second and the ear hears it as a note - the note is the repeat rate, whatever the slice contains. With a KEY chosen, every stage fast enough to be a tone is nudged to the nearest note of the scale, so the buzz at the end of the fill is in key with the bass instead of a random pitch. Slower stages stay exactly on the grid.</p>", "At 128 BPM 1/64 is 34 Hz, between C#1 and D1; KEY D puts it on the root.")}
+{ctl("HIGH PASS / LOW PASS", "20 Hz to 20 kHz, 24 dB/oct<br>all the way out = OFF", "<p>Two filters baked into the rendered fill, saved with the project and the presets.</p>")}
+{ctl("Filter AUTO", "OFF &middot; up &middot; down<br>under each filter", "<p>Each filter can sweep across the fill: the knob is where it starts, up and down sweep it over the bars. Drag the handle at the end of the ring to set where the sweep stops (the readout shows the range, for example 100 &gt; 2.0k); double-click it for the full sweep. FILTER CURVE shapes the sweep: LIN evenly, EXP slow at first with most of the move at the end.</p>")}
 {ctl("MIX", "0 to 100 %<br>default 100 % (LOCK)", "<p>The preview level in the channel. At 100 % the result replaces the channel (LOCK); below that the channel stays at full level and the result is added on top - a send, not a crossfade. It never touches the export.</p>")}
 {ctl("IN CURVE / OUT CURVE", "0.1 to 4<br>default 2", "<p>The shape of FADE IN and FADE OUT on every repeat: 1 is linear, 2 a gentle curve, 4 sharp.</p>")}
 {ctl("GLOBAL IN / GLOBAL OUT", "0 to 95 % of the clip<br>default 0", "<p>A fade over the whole clip on top of the per-repeat fades. GLOBAL IN at 90 % is a two-bar swell from silence.</p><p>They are usually set on the waveform rather than here. In the top band of the RESULT view each fade is a full-height <strong>column</strong> you can grab at any height - hover and it lights up - and dragging it sideways sets the length. The dot on the curve below is the shape: pull it up or down (the cursor turns vertical) to go from a gentle curve to a sharp one. Clicking the bare left or right end of the band starts a fade that does not exist yet.</p>")}
@@ -148,11 +155,58 @@ def manual(G):
 {img("stutter/tour_transport.png", "<b>ORIGINAL, STUTTER, RESULT and EXPORT.</b>", "w80")}
 {ctl("&#9654; PLAY", "one transport", "<p>Plays whatever the waveform is showing, through the plugin's channel: the RESULT clip, or the source from the slice start when the view is on ORIGINAL. The label follows the view, the playback position is drawn on the waveform, and pressing it again stops. Switching the view while it plays stops playback rather than carrying on under the wrong name.</p>")}
 {ctl("STUTTER", "ADVANCED only", "<p>Forces a render with the current settings. You rarely need it: a file that lands is rendered immediately, and every later change - GRID, BARS, the fades, STEREO, a new transient - renders again on its own. The button is there for the times you want to re-roll deliberately, and it is hidden on the minimal page.</p>")}
+{ctl("PLAY LOCK", "the padlock beside the transport", "<p>The preview keeps playing in a loop, so you can flip through presets and hear each one at once. Every change starts the loop again from the top, or on the next bar with ON BAR while the song plays. Press it again to unlock.</p>")}
 {ctl("ON BAR", "default off", "<p>Off until you press it. When lit and the host is playing, ORIGINAL and RESULT do not start at the click but on the next bar line of the song. A fill previewed on the bar is heard exactly where it will sit in the arrangement. While it waits the play button pulses and reads NEXT BAR; press it again to call the preview off.</p><p>With the transport stopped - and in the standalone app - there is no bar to wait for, and playback starts at the click.</p><p>When the song stops, the preview stops with it, and a preview that was still waiting for the bar line is called off.</p>", "Start the DAW two bars before the drop, press RESULT: the roll plays into the drop, in time, before you have exported anything.")}
 {ctl("EXPORT", "save to the Exports folder", "<p>Saves the rendered clip into <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> as <em>&lt;source&gt;_stutter_&lt;grid&gt;_&lt;bars&gt;_&lt;date&gt;_&lt;time&gt;.wav</em>, at the session's sample rate. The status line shows the file name. Nothing is ever deleted from that folder by the plugin.</p>")}
 {ctl("Drag out of the waveform", "lower part of the RESULT view", "<p>Press the mouse anywhere on the lower part of the result and pull: the plugin writes the clip and hands it to your DAW as an audio drop. A small <strong>DRAG TO EXPORT</strong> badge marks the area. The file is saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter\\</code> first - a permanent folder that is never cleaned up - so a project that references it always finds it again, even if your DAW does not copy dropped files into the project folder. It works into Explorer / Finder too.</p><p>The top of the waveform belongs to the fades, so a press there moves a fade instead of starting a drag. Nothing is ambiguous: the two areas do not overlap.</p>", "Drop it at the bar line where the fill should start. Because the clip is exactly N bars long, its end lands on the next bar line.")}
 <h3>Host parameters</h3>
 <p>Everything above is a host parameter: visible in the DAW's parameter list, automatable, mappable to a controller and saved with the project. Since 1.2 a project that is reopened also shows its file and selection in the window straight away.</p>
+"""})
+
+    S.append({"title": "COMPLEX", "sub": "a row of steps instead of one grid", "html": f"""
+<p><span class='pill'>COMPLEX</span>, the last button of the GRID row, turns the fill into a row of steps, each with its own job: roll, get stuck, play on, slow down, come back up. RAMP TO, CURVE and SLICE step aside for the row; BARS, the fades, STEREO, PITCH and the filters work as usual, and the row repeats until BARS is full. Each step's colour runs along the top of the waveform, so you see where it falls in the fill.</p>
+{img("stutter/complex.png", "<b>COMPLEX with a step open.</b> 1 COMPLEX &middot; 2 the step row, click a step to edit it &middot; 3 FOLLOW / HOLD / HITS &middot; 4 DICE &middot; 5 the step editor.", "w80")}
+{table(["Step", "What it does"], [
+ ["<b>ROLL</b>", "a stutter on its own grid: 1/4, 1/8, 1/12, 1/16, 1/24 or 1/32"],
+ ["<b>STUCK</b>", "a tiny 1/64 grain repeats: the catch"],
+ ["<b>PLAY</b>", "the sample plays on"],
+ ["<b>SLOW</b>", "a tape stop inside the step"],
+ ["<b>RISE</b>", "the tape comes back up to speed"],
+ ["<b>REV</b>", "the step backwards"],
+ ["<b>GAP</b>", "silence"],
+])}
+<h3>The step editor</h3>
+<p>Click a step and the editor opens over the controls. The top row sets its type. <strong>LENGTH</strong> is in 16ths and <strong>PITCH</strong> in semitones (shift = an octave). <span class='pill'>SPLIT</span> cuts the step in two, <span class='pill'>JOIN</span> joins it with the next one, <span class='pill'>COPY</span> repeats it after itself, <span class='pill'>DELETE</span> removes it and <span class='pill'>DONE</span> closes the editor.</p>
+<h3>Where each step reads the sample</h3>
+{table(["Mode", "What it does"], [
+ ["<b>FOLLOW</b>", "PLAY, SLOW and RISE move on through the sample; ROLL and STUCK catch where it got to"],
+ ["<b>HOLD</b>", "every step starts at the picked transient"],
+ ["<b>HITS</b>", "every step jumps to the next transient after the picked one"],
+])}
+{note("Do not know where to start?", "The die, <b>DICE</b>, rolls a new row. Or open the COMPLEX categories in the preset list and take one of the ready rows apart.")}
+"""})
+
+    S.append({"title": "LIVE", "sub": "the stutter on the channel, as it plays", "html": f"""
+<p>In LIVE, RONE Stutter works on whatever plays through its channel: no file, no latency, nothing to drag. Put it on a channel, switch to <span class='pill'>LIVE</span> and press play. A fill sounds exactly as it does in EDIT, because it uses the same controls: every preset, GRID, RAMP TO, COMPLEX row, KEY, filter and fade. The waveform becomes a scrolling picture of the channel, with each caught fill marked CATCH.</p>
+{img("stutter/live.png", "<b>LIVE, on AUTO.</b> 1 EDIT / LIVE &middot; 2 the channel &middot; 3 AUTO, with EVERY and FILL AT &middot; 4 the six pads &middot; 5 TRIGGER &middot; 6 CATCH &middot; 7 the MIDI lamp.")}
+<h3>TRIGGER: three ways to play it</h3>
+{ctl("AUTO", "the default<br>EVERY: 1, 2, 4 or 8 bars<br>FILL AT: END or START", "<p>Play the song and the fills come by themselves, on its bars. EVERY is how often. Each fill is BARS long. On <strong>END</strong> it comes at the end of the phrase and lands on the next downbeat; on <strong>START</strong> it opens the phrase. With BARS as long as EVERY, or longer, it never stops. Nothing happens until the song plays: the deck says PLAY THE SONG, then counts down to the next fill. The pads play on top, and a pad you are holding wins over a fill that is due.</p>", "EVERY 4, END, BARS 1 is a fill into every fourth bar with nobody touching anything.")}
+{ctl("HOLD", "press and hold", "<p>The channel stutters while you hold, with the sound on the panel. Let go and the channel is back.</p>")}
+{img("stutter/livehold.png", "<b>LIVE, on HOLD.</b> 1 the HOLD pad takes AUTO's place.", "w80")}
+{ctl("ONE-SHOT", "one press", "<p>One press plays the whole BARS, however short the press was.</p>")}
+<h3>Pads</h3>
+<p>The six pads are your macro slots: pad 1 plays slot 1, and so on, the same slots as in the header. An empty slot plays a ready sound instead: Roll 1/16, Speed-Up, Gate 1/16, Catch &amp; Roll, Drop Brake and Alien Talk. Store your own in a slot (hold its number in the header) and the pad shows its name. KEY and SCALE stay with the panel, because they belong to your track, not to the pad.</p>
+<h3>CATCH</h3>
+{ctl("CATCH", "OFF &middot; 1/16 &middot; 1/4 &middot; BAR<br>default 1/16", "<p>While the song plays, a press waits for the next 1/16, beat or bar, so it always lands in time; the pad blinks while it waits. A press you let go before that line still plays, for one step of the catch. OFF starts at once, and with the song stopped there is nothing to wait for, so it starts at once too.</p>")}
+<h3>Playing it from the DAW</h3>
+{table(["From", "What it does"], [
+ ["<b>MIDI, VST3</b>", "route a MIDI track to RONE Stutter: C3 to F3 play pads 1 to 6, any other note plays the sound on the panel. The MIDI lamp lights on every note"],
+ ["<b>AU, Logic Pro</b>", "the AU version takes no MIDI, so the pads do not answer notes. The pads on screen, AUTO and the automation all work"],
+ ["<b>Automation</b>", "the <em>Live Trigger</em> parameter acts like a press on the panel's sound: on presses, off lets go. It works in every host"],
+])}
+<p>LIVE's choices are host parameters too: <em>Mode</em>, <em>Live Trigger Mode</em>, <em>Live Catch</em>, <em>Live Auto Every</em> and <em>Live Auto Place</em>. They are saved with the project.</p>
+{note("When the song stops, LIVE lets go", "A fill in progress fades out and the channel passes through as before, so nothing is left hanging. MIX works as in EDIT: at 100 % the fill replaces the channel, below that the channel stays and the fill is added on top.")}
+{note("The standalone app", "The standalone has no channel, so in LIVE it plays the loaded file in a loop as the channel and runs a song clock at the BPM you typed. Load a file with BROWSE first; the display asks for one until you do.")}
 """})
 
     S.append({"title": "Step-by-step workflows", "sub": "recipes you will use every week", "html": f"""
@@ -178,6 +232,13 @@ def manual(G):
   "GRID 1/32, BARS 4, FADE IN 0 %, FADE OUT 0 %, STEREO 100 %.",
   "Render. You get a pitched, buzzing texture that sits hard left / right on alternate repeats.",
   "Render again with STEREO 0 % and layer both; low-pass the mono one, high-pass the wide one.",
+ ]))}
+{recipe("A fill into every fourth bar, hands off", "LIVE on a vocal, a lead or a drum bus",
+ steps([
+  "Put Stutter on the channel and press LIVE. TRIGGER is already on AUTO.",
+  "Pick a preset, or build the sound in EDIT first and switch over.",
+  "EVERY 4, FILL AT END, BARS 1. Press play: the last bar of every four stutters into the next downbeat.",
+  "Hold pad 5 (Drop Brake) when you want something else there: the pad wins over the fill.",
  ]))}
 {recipe("Triplet edit", "Trap, hip-hop, breaks",
  steps([
@@ -217,6 +278,8 @@ def manual(G):
         ("The roll is out of time in my DAW", "Check the BPM chip. If it says MANUAL inside a DAW, the host is not sending tempo (some hosts only do so while playing); type the project tempo and render again."),
         ("Dragging out does nothing", "Check you are on the RESULT view - ORIGINAL is not a drag source, so that clicking a transient stays instant - and that the press started on the lower part of the waveform. The top band belongs to the fades."),
         ("A fade moved when I meant to drag the clip out", "The press started in the top 40 % of the waveform, which is the fades' band. Start lower down - the DRAG TO EXPORT badge sits in the area that drags."),
+        ("LIVE does nothing on AUTO", "AUTO only runs while the song plays. The deck says PLAY THE SONG until it does."),
+        ("MIDI notes do nothing in LIVE", "Route a MIDI track to the plugin (VST3). The AU version takes no MIDI: use the pads on screen, AUTO or the Live Trigger automation."),
         ("No transients are found", "The material is too soft or sustained for the detector. Click the waveform to place the selection by hand; everything else works the same."),
         ("The DAW says a dropped clip is missing", "Clips are saved to <code>Documents\\RONE Plugins\\Exports\\RONE Stutter</code>; point the DAW there. Versions before 1.1.1 wrote to the temp folder, which Windows and macOS clean up - re-export those clips once."),
     ]))

@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "delay", "product": "RONE Delay", "eyebrow": "THE SIMPLE DELAY",
-        "title_html": "RONE <i>Delay</i>", "accent": "#B39352", "version": "1.1.1",
+        "title_html": "RONE <i>Delay</i>", "accent": "#B39352", "version": "1.1.2",
         "tagline": "One TIME dial with every note value written on it, a filter inside the loop, four knobs - and a screen that shows the sound going in and every echo coming out.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Delay.vst3", "au": "RONE Delay.component", "exe": "RONE Delay.exe",
         "pdf": "RONE Delay - User Manual.pdf", "cover_img": "delay/main.png",
