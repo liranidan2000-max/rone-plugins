@@ -4,7 +4,7 @@ def manual(G):
         "id": "flanger", "product": "RONE Flanger", "eyebrow": "TRANSITION RISER FLANGER",
         "title_html": "RONE <i>Flanger</i>", "accent": "#FF3D6E", "version": "2.0",
         "tagline": "A flanger you play by hand. Sweep the comb yourself, or engage INFINITE for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate.",
-        "formats": ["VST3", "Standalone"], "vst3": "RONE Flanger.vst3", "au": "", "exe": "RONE Flanger.exe",
+        "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Flanger.vst3", "au": "RONE Flanger.component", "exe": "RONE Flanger.exe",
         "pdf": "RONE Flanger - User Manual.pdf", "cover_img": "flanger/tour_knobs.png",
     }
     S = []
