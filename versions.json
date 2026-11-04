@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-04T19:08:24Z",
+  "last_updated": "2026-11-04T19:08:54Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-370.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-370.5.dmg",
@@ -363,7 +363,7 @@
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.1.9.371",
+      "version": "2.1.10.373",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -377,9 +377,9 @@
       "au_bundle": "RONE Flanger.component",
       "manual": "RONE Flanger - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-371.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-373.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-371.1.pkg",
-      "sha256": "e495a87137b041f8543ff55bcd0e299b2cbc1f4bb01f8ed0803df73b5f11434d",
+      "sha256": "189ceaa151b15fba35cd3079d3175b8d6f7bff659345918695fc51909b54d122",
       "registry_key": "RoneFlanger",
       "sha256_mac": "374e09209d3da77f89bac7739771fd7fc12c0afb4b35d137fea12ee3f2a208d1",
       "price": 39,
@@ -405,7 +405,7 @@
           "description": "Un flanger de transición - barre a mano o activa el modo INFINITE para subidas y bajadas sin fin fijadas al compás, con feedback, offset estéreo y un gate rítmico"
         }
       },
-      "size": 5297951,
+      "size": 5289025,
       "size_mac": 14909248,
       "version_mac": "2.1.9.371"
     },
