@@ -208,7 +208,7 @@ export const usd = (n) => '$' + (Number.isInteger(n) ? n : Number(n).toFixed(2))
 // ---- Tips ----
 // One tip a week from the manifest's `tips`, the same for everyone that week.
 export function tipOfTheWeek (tips, now = Date.now()) {
-  const list = Array.isArray(tips) ? tips.filter(t => t && typeof t.text === 'string' && t.text.trim()) : []
+  const list = Array.isArray(tips) ? tips.filter(t => t && !t.start && typeof t.text === 'string' && t.text.trim()) : []
   if (!list.length) return null
   const week = Math.floor(now / (7 * 86400000))
   return list[week % list.length]
