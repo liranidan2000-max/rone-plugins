@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-04T17:23:14Z",
+  "last_updated": "2026-11-04T18:20:00Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-363.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-363.1.dmg",
@@ -363,7 +363,7 @@
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.1.8.369",
+      "version": "2.1.9.371",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -376,9 +376,9 @@
       "au_bundle": "",
       "manual": "RONE Flanger - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-371.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-356.1.pkg",
-      "sha256": "25ce4da90698eea4fe3d10f81e8a17acf4c6ac71566f41e842229a8c1190ea7b",
+      "sha256": "e495a87137b041f8543ff55bcd0e299b2cbc1f4bb01f8ed0803df73b5f11434d",
       "registry_key": "RoneFlanger",
       "sha256_mac": "1e67c2a246f10fa113bc424c0428a748eb20884bf9844bf6ac152fbbfe922f47",
       "price": 39,
@@ -404,7 +404,7 @@
           "description": "Un flanger de transición - barre a mano o activa el modo INFINITE para subidas y bajadas sin fin fijadas al compás, con feedback, offset estéreo y un gate rítmico"
         }
       },
-      "size": 5296483,
+      "size": 5297951,
       "size_mac": 10457430,
       "version_mac": "2.1.7.356"
     },
