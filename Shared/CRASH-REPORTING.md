@@ -112,7 +112,8 @@ Two routes, because neither alone is enough:
   Its header comment lists every rule. The proof is `Shared/tests/crash-guard` (a
   fake plugin and a host that catches everything, like FL Studio does), one process
   per case, and it takes a real plugin as an argument too. Every defence in the guard
-  has a case that fails without it, checked by taking them out one at a time.
+  has a case that fails without it, checked by taking them out one at a time. `fl-test/` beside
+  it builds the two plugins for what no fake host can answer: the guard inside a real DAW.
 - **`RonePluginsCenter/Source/OsCrashScanner.cpp`** (Windows and macOS). Reads what
   the OS recorded (Application Error events, `.ips` files) and files `OS_CRASH`
   reports for crashes whose faulting module is ours. Needs nothing in the plugin, so
