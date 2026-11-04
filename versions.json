@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-04T19:21:39Z",
+  "last_updated": "2026-11-04T19:34:30Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-370.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-370.5.dmg",
@@ -567,10 +567,10 @@
       "manual": "RONE 2A - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=t4_3shj3aBs",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-369.9.pkg",
       "sha256": "0fa95f35e30ff1e97a7a714ca9f88fa3c363dc4d95ab0c845747c37b5e671c9f",
       "registry_key": "Rone2A",
-      "sha256_mac": "1f8b9f2e8eecda73c48ceeb9033bb1f03dcd1e4e2a32575206ed4dd066e77ec6",
+      "sha256_mac": "a8e9e3985b88390c7560179eb84eed32e03e547c75e411b858215531768ecbee",
       "store_url": "https://roneaudio.com/products/rone-2a.html",
       "subscription_only": true,
       "category": [
@@ -586,8 +586,8 @@
       "accent": "#FF6F59",
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
       "size": 5330240,
-      "size_mac": 15141471,
-      "version_mac": "0.9.11.356"
+      "size_mac": 15142215,
+      "version_mac": "0.9.12.369"
     },
     {
       "id": "RoneSidechain",
