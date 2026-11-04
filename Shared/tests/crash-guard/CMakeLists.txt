@@ -2,6 +2,7 @@
 #   cmake -S Shared/tests/crash-guard -B build -A x64
 #   cmake --build build --config Release
 #   build/Release/guard_proof.exe
+#   powershell -File mutate.ps1 build      takes each defence out and shows which case notices
 cmake_minimum_required(VERSION 3.22)
 project(CrashGuardProof LANGUAGES CXX ASM_MASM)
 set(CMAKE_CXX_STANDARD 17)
