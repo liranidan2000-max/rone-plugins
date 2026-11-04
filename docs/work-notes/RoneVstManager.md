@@ -7,6 +7,7 @@
 - Not tested in a DAW: Live one-click MIDI (needs Live restarted once for the new script); RONE RACK only in REAPER.
 
 ## Done
+- [x] 04.11.2026 — "לפעמים שאני לוחץ על פלאגין, הוא כותב לי את ההודעה הזאת ... וגם יצא מצב ... הוא הגביר לי שם במיקסר את הווליום ... העכבר הולך לשם, ניסה לפתוח, אבל בטעות הוא הגביר בכלל את הווליום" (screenshots: "RONE Clipper did not load", FL mixer EQ band at 16.0k +18) → one click in FL fails at times, and the mouse landed on the mixer EQ and moved a fader. Never click a spot it has not verified. **Done in 0.9.19, RoneVstManager aa83c55 (NOT released). The one click presses on a window of ours over the Mixer EQ; a moving hand sent the press to FL and the load failed. Fake mixer + moving cursor: old 8 of 8 presses reached it, new 0. Quiet hand: 6 of 6 loaded on both. NOT tested in real FL.**
 
 - [x] 02.11.2026 — "בבריאות, כשאני מסיר פלאגין ולוחץ, הדף קופץ לשנייה, חוזר, ורק אחרי כמה זמן השורה נעלמת" → row leaves at once, scroll kept, one check-up instead of two → 0.9.13 b1d6d7c (RELEASED 2.11)
 - [x] 02.11.2026 — "בעמודה הצדדית: אם אני מרחיב, שיתחילו שתי שורות של ריבועים" → strip ≥360 px = tile grid (container query) → 0.9.13 b1d6d7c
