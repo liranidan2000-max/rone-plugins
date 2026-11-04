@@ -521,6 +521,8 @@ jobs:
           # doesn't depend on a specific Visual Studio generator version (the runner
           # image moves between VS 2022/18/… over time).
           $flags = @("-B","build-ci","-G","Ninja","-DCMAKE_BUILD_TYPE=Release")
+          # Symbols and the DAW crash guard, for every plugin (Shared/RoneBuildHooks.cmake).
+          $flags += "-DCMAKE_PROJECT_INCLUDE=$("${{ github.workspace }}".Replace('\','/'))/Shared/RoneBuildHooks.cmake"
           if ($env:RONE_ASIO_SDK_ROOT) {
             # The documented interface: the SDK *root*, and a hard requirement -
             # the first attempt passed an internal variable the CMakeLists
@@ -565,6 +567,39 @@ jobs:
       - name: CMake build
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel
+
+      # Symbols are what turn a crash report's module+offset into a file and line.
+      # This repo is public, so they go to the private crash tracker's release, one
+      # zip per binary, named by the PDB id that the crash report carries. No token,
+      # or any failure here, and the release goes on without them.
+      - name: Upload symbols
+        continue-on-error: true
+        working-directory: ${{ matrix.folder }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.SYMBOLS_TOKEN }}
+        run: |
+          if (-not $env:GH_TOKEN) { Write-Host "SYMBOLS_TOKEN not set, skipping"; exit 0 }
+          $repo = "liranidan2000-max/rone-crash-reports"
+          gh release view symbols --repo $repo *> $null
+          if ($LASTEXITCODE -ne 0) { gh release create symbols --repo $repo --title "Symbols" --notes "PDBs of shipped builds, by PDB id." }
+          $binaries = Get-ChildItem build-ci -Recurse -Include *.vst3,*.exe -File | Where-Object { $_.FullName -notmatch '_deps|CMakeFiles' }
+          foreach ($bin in $binaries) {
+            # JUCE puts a VST3's PDB beside its bundle, and the Standalone's of the same name
+            # elsewhere: the nearest one up from the binary is the right one, any other lies.
+            $dir = Split-Path $bin.FullName
+            while ($dir -and -not (Test-Path (Join-Path $dir ($bin.BaseName + ".pdb")))) { $dir = Split-Path $dir }
+            if (-not $dir) { continue }
+            $pdb = Join-Path $dir ($bin.BaseName + ".pdb")
+            $line = dumpbin /headers $bin.FullName | Select-String 'Format: RSDS, \{([0-9A-F-]+)\}, (\d+)' | Select-Object -First 1
+            if (-not $line) { continue }
+            $id = "$($line.Matches[0].Groups[1].Value.Replace('-',''))-$('{0:X}' -f [int]$line.Matches[0].Groups[2].Value)"
+            $zip = "$id.zip"
+            Compress-Archive -Path $pdb -DestinationPath $zip -Force
+            gh release upload symbols $zip --repo $repo --clobber
+            # The build cache is already at GitHub's 10 GB limit; it needs no PDBs.
+            Remove-Item $pdb, $zip -Force
+          }
 
       # Log only (audit R129): a binary older than this job came out of the
       # restored build cache, not this build - the suspected cause of #147.

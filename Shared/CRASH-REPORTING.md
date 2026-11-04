@@ -33,6 +33,7 @@ through the Plugins Center.
     a stack backtrace. Installed ONLY in processes we own: every standalone
     (guarded by `wrapperType == wrapperType_Standalone`) and the Center.
     Never in a DAW — the host process's crash handling is not ours to take.
+    Crashes inside a DAW have their own route, see "Crashes inside a DAW".
   - `reportError(product, version, wrapper, code, message, details)` — for
     non-fatal "why didn't it work" events. Throttled: identical code+message
     at most once per 12h per machine.
@@ -96,13 +97,55 @@ repo).
 - Liran approves → fix lands → release via CI → issue closed with
   "fixed in build #N" → testers just press Update.
 
-## Not in v1 (known gaps)
+## Crashes inside a DAW
 
-- Crashes of the VST3 **inside a DAW** are not captured (would require
-  out-of-process crashpad-style tooling; the host owns the process).
-- Stacks are module+offset only (Release builds without PDBs). Claude maps
-  offsets by rebuilding the exact tag locally; shipping PDB artifacts from CI
-  is a future improvement.
+Two routes, because neither alone is enough:
+
+- **`Shared/RoneDawCrashGuard.cpp`** (Windows VST3). Compiled into every plugin by
+  `Shared/RoneBuildHooks.cmake`, which CI passes with `-DCMAKE_PROJECT_INCLUDE`, so
+  no plugin's CMakeLists changes. A vectored handler that only watches: it always
+  passes the exception on, ignores C++ exceptions, and reports only when our module
+  is at the crash or on the crashing stack. It writes one `DAW_CRASH` report per
+  process, once in 12 hours per crash, from a helper thread the crash waits for at
+  most 1.5 s. The hook also moves the DLL's entry point to the guard
+  (`/ENTRY:roneGuardEntry`), so the handler is gone before any destructor can fault.
+  Its header comment lists every rule. The proof is `Shared/tests/crash-guard` (a
+  fake plugin and a host that catches everything, like FL Studio does), one process
+  per case, and it takes a real plugin as an argument too. Every defence in the guard
+  has a case that fails without it, checked by taking them out one at a time.
+- **`RonePluginsCenter/Source/OsCrashScanner.cpp`** (Windows and macOS). Reads what
+  the OS recorded (Application Error events, `.ips` files) and files `OS_CRASH`
+  reports for crashes whose faulting module is ours. Needs nothing in the plugin, so
+  it covers versions already installed, and it is the only Mac route: a signal
+  handler in a plugin would fight the DAW's own. `Shared/tests/os-scan` runs it on
+  the local machine and sends nothing. Crashes inside the VST Manager count only
+  when the faulting module is ours, since it hosts other people's plugins on purpose.
+
+The Support Center groups both by module+offset, so one crash that arrives by both
+routes is one issue.
+
+## From an offset to a line
+
+`RoneBuildHooks.cmake` also gives every Windows binary a PDB (`/Z7`, `/DEBUG:FULL`,
+with `/OPT:REF,ICF` kept so the code does not change). This repo is public, so CI
+uploads each PDB to the `symbols` release of the private tracker repo, as
+`<pdb id>.zip`, which is the id a `DAW_CRASH` report carries on its `build:` line.
+That needs the `SYMBOLS_TOKEN` secret (contents: write on rone-crash-reports), and
+that repo needs at least one commit, since GitHub refuses a release on an empty repo.
+Without them the step skips or fails on its own and the release goes on. The Support
+Center fetches the zip and resolves the stack with `tools\symbolize`.
+
+## Known gaps
+
+- macOS stacks stay module+offset: dSYMs are not stored yet.
+- Only `DAW_CRASH` reports carry a PDB id. An `OS_CRASH` report stays module+offset,
+  and a Standalone or Center crash keeps JUCE's plain backtrace.
+- A crash the OS never logs, such as a host killed by a watchdog, leaves no trace.
+- A fault in a plugin's own static constructor or destructor is not reported: the
+  Windows loader swallows it and the guard is not armed at that moment.
+- An offset moves with every build, so the same bug opens a new group per version.
+  Grouping by function after symbols are resolved would close that.
+- Reports wait for the Center to run. A customer who removed it sends nothing.
 - No dedup at intake - every report is its own issue. The admin console's
   Crashes tab groups them (same product + code + message) and triages each
-  group; Claude dedupes the rest during triage.
+  group; the Support Center groups them further.
