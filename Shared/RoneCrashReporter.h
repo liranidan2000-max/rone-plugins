@@ -20,7 +20,8 @@
 //                                                 JucePlugin_VersionString,
 //                                                 "Standalone");
 //     (Never install the crash handler from a plugin running inside a DAW —
-//      the process and its crash handling belong to the host.)
+//      the process and its crash handling belong to the host. Crashes inside
+//      a DAW are RoneDawCrashGuard.cpp's job, which only watches.)
 //   - Anywhere, for non-fatal problems worth telling the devs about:
 //         RoneCrashReporter::reportError ("RONE Plugins Center", version,
 //                                         "Center", "INSTALL_FAILED", msg);
