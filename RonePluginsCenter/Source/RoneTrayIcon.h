@@ -3,6 +3,7 @@
 #include <BinaryData.h>
 #include "AutoStart.h"
 #include "MainComponent.h"
+#include "RoneMenuLook.h"
 
 class RoneTrayIcon : public juce::SystemTrayIconComponent,
                      private juce::Timer
@@ -129,16 +130,23 @@ private:
     {
         stopTimer();
 
+        const auto red = juce::Colour (0xffFF8A8A);
         juce::PopupMenu menu;
-        menu.addItem (1, "Open RONE Plugins Center");
+        menu.setLookAndFeel (&look);
+        menu.addCustomItem (-1, std::make_unique<rone::MenuHeader> ("RONE", "PLUGINS CENTER"));
         menu.addSeparator();
+        menu.addItem (juce::PopupMenu::Item ("Open RONE Plugins Center").setID (1)
+                          .setImage (rone::menuIcon ("M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z")));
        #if JUCE_MAC
-        menu.addItem (3, "Open at login", AutoStart::isSupported(), AutoStart::isEnabled());
+        const juce::String startItem ("Open at login");
        #else
-        menu.addItem (3, "Start with Windows", AutoStart::isSupported(), AutoStart::isEnabled());
+        const juce::String startItem ("Start with Windows");
        #endif
+        menu.addItem (juce::PopupMenu::Item (startItem).setID (3).setEnabled (AutoStart::isSupported()).setTicked (AutoStart::isEnabled())
+                          .setImage (rone::menuIcon ("M12 7v5l3.5 2 M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18")));
         menu.addSeparator();
-        menu.addItem (2, "Quit");
+        menu.addItem (juce::PopupMenu::Item ("Quit").setID (2).setColour (red)
+                          .setImage (rone::menuIcon ("M12 3v9 M6.3 6.8a8 8 0 1 0 11.4 0", red)));
 
         menu.showMenuAsync (juce::PopupMenu::Options(),
             [this] (int result)
@@ -185,6 +193,7 @@ private:
 
     juce::DocumentWindow& mainWindow;
     juce::Image baseImage;
+    rone::MenuLook look;
     int shownCount = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RoneTrayIcon)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RonePluginsCenter VERSION 2.1.23 LANGUAGES C CXX)
+project(RonePluginsCenter VERSION 2.1.24 LANGUAGES C CXX)
 
 # Build nonce 2026-09-02-a. The v1.3.0 release push never produced a run: its
 # commit body quoted the CI skip token while explaining an earlier commit, and
@@ -80,6 +80,7 @@ target_sources(RonePluginsCenter PRIVATE
     Source/LicenseHandler.cpp
     Source/AccountClient.cpp
     Source/RoneTrayIcon.h
+    Source/RoneMenuLook.h
     Source/CustomTitleBar.h
     Source/ControlPort.h
     Source/WinMidiLoopback.h
