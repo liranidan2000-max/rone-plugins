@@ -23,14 +23,25 @@
 // So: 30 times a second this looks at the plug-in's real window and hides the
 // WebView (JUCE setVisible -> put_IsVisible(false), the page stays loaded) when
 //   - the window is hidden, minimised or entirely off every screen, or
-//   - the mouse is over the plug-in's area but another window is on top there
-//     (the mixer, the browser, another program): that click is not the plug-in's.
+//   - the mouse is over the plug-in's area, another window is on top there
+//     (the mixer, the browser, another program) and the rest of the plug-in is
+//     covered too: nothing of it can be seen, that click is not the plug-in's.
 // and shows it again as soon as neither holds. Nothing changes while a mouse
 // button is held (a knob drag that slides over the mixer keeps going), and
 // nothing happens on macOS (WKWebView is a real child view there).
+//
+// A plug-in only PARTLY covered stays on screen (Liran 2026-11-04, FL, seen in
+// nearly every plug-in, measured with two Stutter windows): hiding it there
+// blacked the whole window while the mouse crossed whatever overlapped it. The
+// page keeps showing; only the invisible overlays over it let clicks through
+// (WS_EX_TRANSPARENT) for as long as the mouse is on the window above.
+//
+// The WebView also starts on the RONE dark instead of WebView2's white, which
+// showed before the page's first paint and at every show.
 // ============================================================================
 
 #include <map>
+#include <set>
 #include <juce_core/juce_core.h>
 #include <juce_events/juce_events.h>
 #include <juce_gui_extra/juce_gui_extra.h>
@@ -52,7 +63,10 @@ public:
     // browser to about:blank and the page would reload on every show).
     static juce::WebBrowserComponent::Options addTo (juce::WebBrowserComponent::Options options)
     {
-        return options.withKeepPageLoadedWhenBrowserIsHidden();
+        const auto winOptions = options.getWinWebView2BackendOptions()
+                                       .withBackgroundColour (juce::Colour (0xff0d0d12));
+        return options.withKeepPageLoadedWhenBrowserIsHidden()
+                      .withWinWebView2Options (winOptions);
     }
 
     void attach (juce::WebBrowserComponent& b)
@@ -68,6 +82,9 @@ private:
     void detach()
     {
         stopTimer();
+       #if JUCE_WINDOWS
+        releaseOverlays();
+       #endif
         if (browser != nullptr && hiding)
             browser->setVisible (true);
         hiding = false;
@@ -89,7 +106,13 @@ private:
             return;
 
         const auto hwnd = (HWND) peer->getNativeHandle();
-        const bool hide = ! reallyShown (hwnd) || coveredUnderMouse (hwnd);
+        const bool covered = coveredUnderMouse (hwnd);
+        const bool hide = ! reallyShown (hwnd) || (covered && entirelyCovered (hwnd));
+
+        if (covered && ! hide)
+            passOverlays (hwnd);
+        else
+            releaseOverlays();
 
         if (hide != hiding)
         {
@@ -125,6 +148,27 @@ private:
         if (! GetCursorPos (&pt) || ! GetWindowRect (hwnd, &mine) || ! PtInRect (&mine, pt))
             return false;
 
+        return coveredAt (hwnd, pt);
+    }
+
+    // Nothing of the window shows: a grid of points over it, each under another window.
+    bool entirelyCovered (HWND hwnd)
+    {
+        RECT r {};
+        if (! GetWindowRect (hwnd, &r))
+            return false;
+
+        for (int y = 0; y < 3; ++y)
+            for (int x = 0; x < 3; ++x)
+                if (! coveredAt (hwnd, { r.left + 4 + (r.right - r.left - 9) * x / 2,
+                                         r.top + 4 + (r.bottom - r.top - 9) * y / 2 }))
+                    return false;
+
+        return true;
+    }
+
+    bool coveredAt (HWND hwnd, POINT pt)
+    {
         for (HWND level = hwnd; level != nullptr; )
         {
             for (HWND above = GetWindow (level, GW_HWNDPREV); above != nullptr; above = GetWindow (above, GW_HWNDPREV))
@@ -138,6 +182,43 @@ private:
         }
 
         return false;
+    }
+
+    // Clicks go through the invisible overlays over this window while it stays on
+    // screen under another one. Looked up again now and then: they come and go.
+    void passOverlays (HWND hwnd)
+    {
+        if (overlayLookup++ % 10 != 0)
+            return;
+
+        struct Search { RoneWebViewGuard* self; RECT mine; };
+        Search search { this, {} };
+        if (! GetWindowRect (hwnd, &search.mine))
+            return;
+
+        EnumWindows ([] (HWND w, LPARAM arg) -> BOOL
+        {
+            auto& s = *reinterpret_cast<Search*> (arg);
+            RECT r {}, overlap {};
+            const auto ex = GetWindowLongPtrW (w, GWL_EXSTYLE);
+            if ((ex & WS_EX_LAYERED) != 0 && (ex & WS_EX_TRANSPARENT) == 0 && IsWindowVisible (w)
+                && GetWindowRect (w, &r) && IntersectRect (&overlap, &r, &s.mine)
+                && s.self->isWebView2Window (w))
+            {
+                SetWindowLongPtrW (w, GWL_EXSTYLE, ex | WS_EX_TRANSPARENT);
+                s.self->passingOverlays.insert (w);
+            }
+            return TRUE;
+        }, (LPARAM) &search);
+    }
+
+    void releaseOverlays()
+    {
+        overlayLookup = 0;
+        for (auto w : passingOverlays)
+            if (IsWindow (w))
+                SetWindowLongPtrW (w, GWL_EXSTYLE, GetWindowLongPtrW (w, GWL_EXSTYLE) & ~(LONG_PTR) WS_EX_TRANSPARENT);
+        passingOverlays.clear();
     }
 
     // A window that really is on screen at pt and would take a click there.
@@ -263,6 +344,8 @@ private:
     }
 
     std::map<DWORD, bool> processCache;
+    std::set<HWND> passingOverlays;
+    int overlayLookup = 0;
    #endif
 
     juce::WebBrowserComponent* browser = nullptr;
