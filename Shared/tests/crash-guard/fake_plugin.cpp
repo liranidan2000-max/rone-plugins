@@ -6,6 +6,8 @@
 
 #define EXPORT extern "C" __declspec(dllexport)
 
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+
 namespace
 {
 bool asked (const char* name)
@@ -33,6 +35,16 @@ struct OnFirstUse
 };
 
 int staticData[16];
+
+// sends itself the message it just got, as JUCE 8.0.4 does with WM_IME_SETCONTEXT: most of each turn is
+// user32, so the stack runs out in system code with our frames just above it
+LRESULT CALLBACK sendsItself (HWND h, UINT message, WPARAM w, LPARAM l)
+{
+    if (message == WM_APP)
+        return SendMessageW (h, WM_APP, w, l) + 1;
+
+    return DefWindowProcW (h, message, w, l);
+}
 }
 
 EXPORT void touch_late_static()
@@ -73,6 +85,17 @@ EXPORT __declspec(noinline) int crash_recursion (int n)
     volatile char pad[4096];
     pad[0] = (char) n;
     return crash_recursion (n + 1) + pad[0];
+}
+
+EXPORT __declspec(noinline) void crash_through_user32()
+{
+    WNDCLASSW type {};
+    type.lpfnWndProc = sendsItself;
+    type.hInstance = reinterpret_cast<HINSTANCE> (&__ImageBase);
+    type.lpszClassName = L"RoneGuardTest";
+    RegisterClassW (&type);
+    const auto window = CreateWindowExW (0, type.lpszClassName, L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, type.hInstance, nullptr);
+    SendMessageW (window, WM_APP, 0, 0);
 }
 
 EXPORT __declspec(noinline) int call_host (int (*callback)())

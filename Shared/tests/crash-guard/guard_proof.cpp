@@ -236,20 +236,101 @@ void sameCrashAgain()
     check (reports().size() == 1, "one report, however many runs share this queue");
 }
 
-void stackOverflow()
+DWORD WINAPI recurseInPlugin (void* m)
 {
-    Loaded p;
+    const auto recurse = (RecurseFn) fn ((HMODULE) m, "crash_recursion");
+    return hostCall ([&] { recurse (0); });
+}
+
+DWORD onItsOwnThread (LPTHREAD_START_ROUTINE body, void* argument)
+{
     DWORD code = 0;
-    const auto thread = CreateThread (nullptr, 0, [] (void* m) -> DWORD
-    {
-        const auto recurse = (RecurseFn) fn ((HMODULE) m, "crash_recursion");
-        return hostCall ([&] { recurse (0); });
-    }, p.m, 0, nullptr);
+    const auto thread = CreateThread (nullptr, 0, body, argument, 0, nullptr);
     WaitForSingleObject (thread, 10000);
     GetExitCodeThread (thread, &code);
     CloseHandle (thread);
-    check (code == EXCEPTION_STACK_OVERFLOW, "the host got it");
+    return code;
+}
+
+void stackOverflow()
+{
+    Loaded p;
+    check (onItsOwnThread (recurseInPlugin, p.m) == EXCEPTION_STACK_OVERFLOW, "the host got it");
     check (reports().size() == 1, "reported");
+}
+
+void overflowInSystemCode()
+{
+    Loaded p;
+    const auto code = onItsOwnThread ([] (void* m) -> DWORD
+    {
+        const auto send = (VoidFn) fn ((HMODULE) m, "crash_through_user32");
+        return hostCall ([&] { send(); });
+    }, p.m);
+    check (code == EXCEPTION_STACK_OVERFLOW, "the host got it");
+    auto r = reports();
+    check (r.size() == 1, "reported, though the fault is outside the plugin");
+    if (! r.empty())
+    {
+        puts (r[0].c_str());
+        check (validJson (r[0]), "valid JSON");
+        check (r[0].find ("\"message\":\"RONE GuardTest.vst3+0x") != std::string::npos, "the message names our frame");
+        check (r[0].find ("stack overflow") != std::string::npos, "and says what happened");
+        check (r[0].find ("crashed at: RONE GuardTest") == std::string::npos, "the fault really was in system code");
+    }
+}
+
+#pragma warning (disable: 4717)
+__declspec(noinline) int recurseInHost (int n)
+{
+    volatile char pad[4096];
+    pad[0] = (char) n;
+    return recurseInHost (n + 1) + pad[0];
+}
+
+void overflowInTheHost()
+{
+    Loaded p;
+    const auto code = onItsOwnThread ([] (void*) -> DWORD { return hostCall ([] { recurseInHost (0); }); }, nullptr);
+    check (code == EXCEPTION_STACK_OVERFLOW, "the host got it");
+    Sleep (200);
+    check (reports().empty(), "no report: our frames are not on that stack");
+    check (hostSurvivesAnotherException(), "the host lives on");
+}
+
+// A thread can neither start nor end while the loader lock is elsewhere, so this one starts first,
+// and says what it saw before it tries to end.
+HANDLE overflowReady = nullptr, overflowGo = nullptr, overflowSeen = nullptr;
+std::atomic<DWORD> overflowCode { 0 };
+
+DWORD WINAPI recurseAndSay (void* m)
+{
+    SetEvent (overflowReady);
+    WaitForSingleObject (overflowGo, INFINITE);
+    overflowCode = recurseInPlugin (m);
+    SetEvent (overflowSeen);
+    return 0;
+}
+
+void hostUnloadsAfterOverflow()
+{
+    overflowReady = CreateEventW (nullptr, TRUE, FALSE, nullptr);
+    overflowGo = CreateEventW (nullptr, TRUE, FALSE, nullptr);
+    overflowSeen = CreateEventW (nullptr, TRUE, FALSE, nullptr);
+    const auto m = LoadLibraryW (plugin.c_str());
+    CloseHandle (CreateThread (nullptr, 0, recurseAndSay, m, 0, nullptr));
+    WaitForSingleObject (overflowReady, 10000);
+    {
+        LoaderLockElsewhere lock;   // the helper cannot start, so the crashing thread stops waiting for it
+        SetEvent (overflowGo);
+        WaitForSingleObject (overflowSeen, 10000);
+    }
+    check (overflowCode == EXCEPTION_STACK_OVERFLOW, "the host got it");
+    FreeLibrary (m);
+    check (GetModuleHandleW (L"RONE GuardTest.vst3") != nullptr, "the plugin stays mapped for the helper");
+    Sleep (300);
+    check (reports().empty(), "the helper gave up: the stack it would walk is gone");
+    check (hostSurvivesAnotherException(), "the host lives on");
 }
 
 void crashHoldingLoaderLock()
@@ -459,6 +540,9 @@ const Case cases[] =
     { "a foreign crash with a pointer to our data on the stack", foreignCrashWithOurDataOnTheStack },
     { "a broken frame pointer", brokenFrame },
     { "a broken frame pointer with two plugins loaded", twoPluginsLoaded },
+    { "a stack overflow with the fault in system code", overflowInSystemCode },
+    { "a stack overflow in the host, plugin loaded", overflowInTheHost },
+    { "the host unloads the plugin after a stack overflow, before the helper ran", hostUnloadsAfterOverflow },
 };
 
 LONG WINAPI lastResort (EXCEPTION_POINTERS* e)

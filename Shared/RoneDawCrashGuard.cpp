@@ -13,7 +13,9 @@
 //   - It looks at fatal hardware exceptions only. C++ exceptions are not on the
 //     list, so a plugin or host using them for control flow costs nothing.
 //   - It reports only if our module is at the crash address or on the crashing
-//     stack. Another plugin's crash is not ours to report.
+//     stack. Another plugin's crash is not ours to report. A stack overflow leaves
+//     the crashing thread too little stack to look, so the helper thread below does
+//     it: the fault of a runaway recursion is as likely to be in Windows as in us.
 //   - It stands last among the vectored handlers, so a fault the host repairs in
 //     its own handler never gets this far.
 //   - One report per process, static buffers, no heap: the heap may be what broke.
@@ -80,6 +82,8 @@ struct
 } crash;
 
 CONTEXT walkContext;
+DWORD64 stackLow = 0, stackHigh = 0;
+std::atomic<bool> walkGivenUp { false };
 char report[32 * 1024];
 
 bool isFatal (DWORD code)
@@ -123,14 +127,10 @@ bool inModule (DWORD64 pc)
 // host must see nothing this file did. A frame counts as ours only if it has unwind
 // data: with none the walk reads raw stack, where a pointer to our data looks like
 // a return address. Rip is 0 on the first frame after a call through a null pointer.
-int walkStack (const CONTEXT& start, bool& ours)
+// Starts from walkContext, inside stackLow and stackHigh, which say whose stack it is.
+int walkStack (bool& ours)
 {
-    const auto* tib = reinterpret_cast<const NT_TIB*> (NtCurrentTeb());
-    const auto stackLow = reinterpret_cast<DWORD64> (tib->StackLimit);
-    const auto stackHigh = reinterpret_cast<DWORD64> (tib->StackBase);
-
     int n = 0;
-    walkContext = start;
 
     __try
     {
@@ -439,6 +439,22 @@ DWORD WINAPI writeReport (void*)
     return 0;
 }
 
+// The walk of a stack overflow, on a stack of its own. If the crashing thread stopped waiting, the
+// stack to walk may be gone, so the report goes with it.
+DWORD WINAPI walkThenWrite (void*)
+{
+    if (walkGivenUp.load())
+        return 0;
+
+    bool found = inModule (walkContext.Rip);
+    crash.frames = walkStack (found);
+
+    if (found && ! reported.exchange (true))
+        writeReport (nullptr);
+
+    return 0;
+}
+
 bool pinModule()
 {
     HMODULE self = nullptr;
@@ -457,8 +473,10 @@ void watch (EXCEPTION_POINTERS* info)
     if (! busyThread.compare_exchange_strong (idle, GetCurrentThreadId()))
         return;     // this thread's walk faulted, or another thread is in here
 
-    const auto pc = reinterpret_cast<DWORD64> (record->ExceptionAddress);
-    bool ours = inModule (pc);
+    const auto* tib = reinterpret_cast<const NT_TIB*> (NtCurrentTeb());
+    stackLow = reinterpret_cast<DWORD64> (tib->StackLimit);
+    stackHigh = reinterpret_cast<DWORD64> (tib->StackBase);
+    walkContext = *info->ContextRecord;
 
     crash.code = record->ExceptionCode;
     crash.thread = GetCurrentThreadId();
@@ -468,20 +486,31 @@ void watch (EXCEPTION_POINTERS* info)
 
     if (record->ExceptionCode == EXCEPTION_STACK_OVERFLOW)
     {
-        crash.pcs[0] = pc;      // almost no stack left to walk with
-        crash.frames = 1;
+        // Pinned before anyone knows whose crash this is: a host that catches it and unloads us must
+        // not pull the helper's code away.
+        if (pinModule())
+        {
+            if (const HANDLE helper = CreateThread (nullptr, 128 * 1024, walkThenWrite, nullptr, STACK_SIZE_PARAM_IS_A_RESERVATION, nullptr))
+            {
+                if (WaitForSingleObject (helper, writerTimeoutMs) == WAIT_TIMEOUT)
+                    walkGivenUp.store (true);
+
+                CloseHandle (helper);
+            }
+        }
     }
     else
     {
-        crash.frames = walkStack (*info->ContextRecord, ours);
-    }
+        bool ours = inModule (walkContext.Rip);
+        crash.frames = walkStack (ours);
 
-    if (ours && ! reported.exchange (true) && pinModule())
-    {
-        if (const HANDLE writer = CreateThread (nullptr, 128 * 1024, writeReport, nullptr, STACK_SIZE_PARAM_IS_A_RESERVATION, nullptr))
+        if (ours && ! reported.exchange (true) && pinModule())
         {
-            WaitForSingleObject (writer, writerTimeoutMs);
-            CloseHandle (writer);
+            if (const HANDLE writer = CreateThread (nullptr, 128 * 1024, writeReport, nullptr, STACK_SIZE_PARAM_IS_A_RESERVATION, nullptr))
+            {
+                WaitForSingleObject (writer, writerTimeoutMs);
+                CloseHandle (writer);
+            }
         }
     }
 

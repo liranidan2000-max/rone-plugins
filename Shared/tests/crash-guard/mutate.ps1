@@ -3,14 +3,18 @@
 # any change to RoneDawCrashGuard.cpp. A pattern that no longer matches is reported, not skipped.
 #   powershell -File mutate.ps1 <the build folder of this CMake project>
 #
-# Expected, 2026-11-04:
-#   no-wait-on-unload  17
-#   no-pin             11
-#   first-in-line      18
-#   any-frame-is-ours  19
-#   no-stack-bounds    20, 21
-#   rip-zero-stops     13
-#   stays-armed        12, 15, 16, 17
+# Expected, 2026-11-05:
+#   no-wait-on-unload       17
+#   no-pin                  11
+#   first-in-line           18
+#   any-frame-is-ours       19
+#   no-stack-bounds         20, 21
+#   rip-zero-stops          13
+#   stays-armed             12, 15, 16, 17
+#   no-walk-after-overflow  22
+#   any-overflow-is-ours    23
+#   no-pin-on-overflow      24
+#   walks-a-dead-stack      24
 # Case 17 is a race, so judge it on repeat runs.
 param([Parameter(Mandatory = $true)] [string] $Build)
 
@@ -31,6 +35,10 @@ $mutants = [ordered]@{
   'no-stack-bounds'     = @("if (frameBase < stackLow || frameBase + 8 > stackHigh)", "if (false)")
   'rip-zero-stops'      = @("(walkContext.Rip != 0 || n == 0)", "walkContext.Rip != 0")
   'stays-armed'         = @("        disarm (reserved == nullptr);", "        (void) reserved;")
+  'no-walk-after-overflow' = @("crash.frames = walkStack (found);", "crash.pcs[0] = walkContext.Rip; crash.frames = 1;")
+  'any-overflow-is-ours'   = @("if (found && ! reported.exchange (true))", "if (! reported.exchange (true))")
+  'no-pin-on-overflow'     = @("        if (pinModule())", "        if (true)")
+  'walks-a-dead-stack'     = @("if (walkGivenUp.load())", "if (false)")
 }
 $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 $vc = "$vs\VC\Auxiliary\Build\vcvars64.bat"
