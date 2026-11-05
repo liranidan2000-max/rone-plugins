@@ -106,6 +106,15 @@ public:
         return withinGrace (state, PERPETUAL_GRACE_MS);
     }
 
+    // ---- A product sold apart: owned outright, ALL ACCESS does NOT cover it --
+    // (KALIFONIC is its own product.) Same parse, same token rule and the same
+    // perpetual window as an owned product above; only the bundle shortcut is gone.
+    static bool isProductOwnedApart (const juce::String& productId)
+    {
+        const auto state = readLicenseState();
+        return state.valid && ownsProduct (state.products, productId) && withinGrace (state, PERPETUAL_GRACE_MS);
+    }
+
     // Helper: get the license file path (shared with Center app)
     static juce::File getLicenseFile()
     {
