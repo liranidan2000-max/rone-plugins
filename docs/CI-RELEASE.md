@@ -129,6 +129,18 @@ test a branch's `main.yml` before it reaches `main`.
 current workflow, but a tag on a commit older than the release guard (8fded85)
 runs that commit's old workflow, which re-releases everything.
 
+## Format contract (blocks)
+
+Every plugin installs VST3 + AU + Standalone, or is listed in `EXCEPTIONS` in
+`scripts/ci/format_contract.py` with its reason (the Analyzer is). *Format contract* in the Mac
+leg fails the build when the `.pkg` does not hold that. `.github/workflows/format-contract.yml`
+runs every night on what is live: each pkg against the contract, `formats` and `au_bundle` in
+the manifest, the Mac version against the Windows one, and the format chips on the product
+pages and in `assets/fx.js`. A red run mails the owner.
+
+A new `au_bundle` goes in the manifest only after the `.pkg` with that AU is live: the Center
+checks every bundle on disk after an install, so the old pkg would count as a failed install.
+
 ## Checks that only warn today, and what makes them block
 
 | Check | Where | Next step |

@@ -71,6 +71,33 @@ window.__scn_stutter_free = function () {
   window.__mockEmit('waveformData', { type: 'processed', samples: P, lengthSamples: 90000 });
   window.__mockEmit('renderComplete', { success: true });
 };
+// ---- Scenario: Stutter 2.0 LIVE. The scope is fed as the host would: a channel running, bar and beat
+// marks, one caught fill (flags: 1 fill, 2 first slice, 4 beat, 8 bar, 16 catch). trig: 0 AUTO, 1 HOLD ----
+window.__scn_stutter_live = function (trig) {
+  window.__scn_stutter(false);
+  setLiveMode(true, true);
+  state.liveTrigMode = trig; updateLiveSegs();
+  window.__mockEmit('livePads', { pads: [
+    { name: 'Roll 1/16', user: false }, { name: 'Speed-Up', user: false }, { name: 'Gate 1/16', user: false },
+    { name: 'Catch & Roll', user: false }, { name: 'Drop Brake', user: false }, { name: 'Alien Talk', user: false }] });
+  var rnd = window.__mockRand(3), N = 860, cols = '', hop = 12, fillAt = 560, fillLen = 200;
+  function hex(v) { return ('0' + v.toString(16)).slice(-2); }
+  for (var i = 0; i < N; i++) {
+    var beat = i % 48, bar = i % 192 === 0, inFill = i >= fillAt && i < fillAt + fillLen, u = (i - fillAt) % 12;
+    var a = (0.16 + 0.80 * Math.exp(-beat / 11)) * (0.6 + 0.4 * rnd());
+    if (inFill) a = 0.78 * Math.exp(-u / 7) + 0.08;
+    var f = (beat === 0 ? 4 : 0) | (bar ? 8 : 0) | (inFill ? (i < fillAt + 12 ? 2 : 1) : 0) | (i === fillAt ? 16 : 0);
+    cols += hex(Math.min(255, Math.round(Math.sqrt(a) * 255))) + hex(f);
+  }
+  window.__mockEmit('liveState', { cols: cols, active: -1, waiting: -1, midi: 0, needsFile: false, rolling: true, toAuto: 6 });
+};
+// ---- Scenario: Stutter COMPLEX, its first preset's row on the lane, step 2 open in the editor ----
+window.__scn_stutter_complex = function () {
+  window.__scn_stutter(true);
+  setAdvanced(true);
+  document.getElementById('complexBtn').click();
+  if (window.openCxEditor) openCxEditor(1);
+};
 window.__scn_stutter = function (processed) {
   var N = 1800, rnd = window.__mockRand(11), s = [];
   var hits = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
@@ -115,7 +142,7 @@ window.__scn_clipper = function (view) {
       t += 1 / bps; var a = Math.pow(10, env(t) / 20); var ph = Math.sin(2 * Math.PI * 55 * t) * a;
       b.push(Math.min(ph, -a * 0.3 * rnd()), Math.max(ph, a * 0.3 * rnd()));
     }
-    onFrame({ bps: bps, sr: 44100, ch: 2, os: 2, transition: false, latency: 384, inPk: 0.5, outPk: 0.6, tp: 0.62, wetPk: 0.6, inSq: 1, outSq: 0.9, sqN: 2, buckets: b });
+    onFrame({ bps: bps, sr: 44100, ch: 2, os: 0, transition: false, latency: 384, inPk: 0.5, outPk: 0.6, tp: 0.62, wetPk: 0.6, inSq: 1, outSq: 0.9, sqN: 2, buckets: b });
   }
   if (view === 'peaks') setView('peaks');
   if (view === 'detail') {

@@ -1113,6 +1113,19 @@ jobs:
             rm -rf staging
           fi
 
+      # --- Every plugin installs VST3 + AU + Standalone, or says why not ---
+      # BLOCKING, on purpose. RONE Flanger shipped with no AU for its whole life: every
+      # layer agreed with the others, and the "no .component" line above was only an echo.
+      - name: Format contract
+        if: matrix.plugin_id != 'plugins_center'
+        run: |
+          for p in build-output/*.pkg; do
+            [ -f "$p" ] || { echo "::error::no .pkg to check"; exit 1; }
+            x="$RUNNER_TEMP/contract"; rm -rf "$x"
+            pkgutil --expand-full "$p" "$x"
+            python3 scripts/ci/format_contract.py payload --id "${{ matrix.installer_name }}" --root "$x/Payload"
+          done
+
       # --- What no Mac tester sees before a customer does (audit R077) ---
       # Warnings only: both architectures in every binary, the minimum macOS
       # each slice asks for (10.15 Intel, 11.0 Apple silicon), the .pkg's

@@ -2,14 +2,14 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-04T15:37:01Z",
+  "last_updated": "2026-11-04T19:41:17Z",
   "center_installer": {
-    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-363.1.exe",
-    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-363.1.dmg",
-    "version": "2.1.23.363",
-    "sha256": "70a5e60cc94179e4d6ed0832e994d87c2c06f98649a14540306a38ed6ded300b",
-    "sha256_mac": "a50b2f9420d8c96d558c10057548ba873cb326892477bfe6f74c6855fc3a1520",
-    "whats_new": "2.1.23: RONE VST MANAGER on the Library banner - every plugin you own in one library, with Install and its full video guide. 2.1.22: updating RONE VST MANAGER no longer asks you to close it - the Center closes it, updates it and opens it again by itself (Windows). 2.1.21: the Center opens with its logo drawing itself - the R writes its line in purple light, then the library opens (Windows). 2.1.20: the light on the new-drop banner sweeps across the unit in one smooth loop. 2.1.19: RONE Control's LINK works again on Windows 11 with the new Windows MIDI system - the \"RONE Control\" MIDI port now comes from Windows itself, so FL Studio, Live and REAPER hear it with no restart and no extra driver. 2.1.18: RONE VST MANAGER has its own place in the sidebar - one click opens it (or installs it first). 2.1.17: RONE VST MANAGER also reaches ALL ACCESS members and everyone who unlocked it with a story. 2.1.16: a gift for every RONE customer who bought a plugin or ALL ACCESS - RONE VST MANAGER, every plug-in on your computer in one library with pictures, loaded onto your track in one click. Install it from the card at the top of the Library. 2.1.14: a calmer, brighter Library - white is the Center's colour, each plugin card glows in its own neon with its 3D unit faintly at its edge, the new-drop banner turns its unit slowly in the light, and plugin and Center updates share one bar. The preview player is gone. 2.1.12: the Center wears the RONE PLUGINS colours - white on graphite - and each plugin keeps its own. 2.1.11: updates reach Windows as soon as they are ready, and on a Mac each update shows its own version. 2.1.10: RONE Sidechain arrives with its own icon and its 3D unit. 2.1.9: your plugins stay unlocked even if our licence server has a hiccup, and if a computer ever needs you to sign in again to keep them unlocked, the Center says so. 2.1.8: behind the scenes, the Center tells us which RONE versions this computer runs - so when an update matters (like the new INFINITE bars in Flanger) we make sure it reaches you. 2.1.7: the RONE Analyzer card wears its new cyan icon. 2.1.6: an update that waits for a program to close now says exactly which one - including FL Studio's own plug-in hosts (ilbridge.exe and the scanner) - and when one of those is left running after FL Studio itself has closed, the Center ends it and installs. 2.1.5: your own prices - right after a purchase, one plugin picked for it at $19 for a day (its tutorial plays muted until you tap the speaker); an owner price on every RONE plugin you don't have yet; a first plugin offer for a free account; and a Settings switch to hear about deals first. 2.1.3 (Mac): Settings > Updates without a password. One button moves your RONE plugins from the system folders into your own (one last password), and from then on every update installs with no password. 2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
+    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-374.1.exe",
+    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-374.1.dmg",
+    "version": "2.1.25.374",
+    "sha256": "4b27f64429430ab08d816ce837084159da8a1f35a329be81a0b18c84e3707b3a",
+    "sha256_mac": "fec21e3304d8de50aff1cd8f54cf15eb2b4492e24e86b1a3445e63ff7fb8ef50",
+    "whats_new": "2.1.25: Learn gets a Start Here row with the install videos, the trial reads 14 days everywhere, and RONE 1176 and 2A stand in My Rack with their hardware. 2.1.24: a cleaner tray menu, in the RONE look. 2.1.23: RONE VST MANAGER on the Library banner - every plugin you own in one library, with Install and its full video guide. 2.1.22: updating RONE VST MANAGER no longer asks you to close it - the Center closes it, updates it and opens it again by itself (Windows). 2.1.21: the Center opens with its logo drawing itself - the R writes its line in purple light, then the library opens (Windows). 2.1.20: the light on the new-drop banner sweeps across the unit in one smooth loop. 2.1.19: RONE Control's LINK works again on Windows 11 with the new Windows MIDI system - the \"RONE Control\" MIDI port now comes from Windows itself, so FL Studio, Live and REAPER hear it with no restart and no extra driver. 2.1.18: RONE VST MANAGER has its own place in the sidebar - one click opens it (or installs it first). 2.1.17: RONE VST MANAGER also reaches ALL ACCESS members and everyone who unlocked it with a story. 2.1.16: a gift for every RONE customer who bought a plugin or ALL ACCESS - RONE VST MANAGER, every plug-in on your computer in one library with pictures, loaded onto your track in one click. Install it from the card at the top of the Library. 2.1.14: a calmer, brighter Library - white is the Center's colour, each plugin card glows in its own neon with its 3D unit faintly at its edge, the new-drop banner turns its unit slowly in the light, and plugin and Center updates share one bar. The preview player is gone. 2.1.12: the Center wears the RONE PLUGINS colours - white on graphite - and each plugin keeps its own. 2.1.11: updates reach Windows as soon as they are ready, and on a Mac each update shows its own version. 2.1.10: RONE Sidechain arrives with its own icon and its 3D unit. 2.1.9: your plugins stay unlocked even if our licence server has a hiccup, and if a computer ever needs you to sign in again to keep them unlocked, the Center says so. 2.1.8: behind the scenes, the Center tells us which RONE versions this computer runs - so when an update matters (like the new INFINITE bars in Flanger) we make sure it reaches you. 2.1.7: the RONE Analyzer card wears its new cyan icon. 2.1.6: an update that waits for a program to close now says exactly which one - including FL Studio's own plug-in hosts (ilbridge.exe and the scanner) - and when one of those is left running after FL Studio itself has closed, the Center ends it and installs. 2.1.5: your own prices - right after a purchase, one plugin picked for it at $19 for a day (its tutorial plays muted until you tap the speaker); an owner price on every RONE plugin you don't have yet; a first plugin offer for a free account; and a Settings switch to hear about deals first. 2.1.3 (Mac): Settings > Updates without a password. One button moves your RONE plugins from the system folders into your own (one last password), and from then on every update installs with no password. 2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
   },
   "plugins": [
     {
@@ -30,10 +30,10 @@
       "manual": "RONE Reverse Reverb - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=gNoltmk77DM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-369.8.pkg",
       "sha256": "6e345d0b45f7747f5e5f06f8d50e0dd022d334a9b336d7db6085133041e4e8c9",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "23c7c0886c5a708127d15e4e2d029ba978ed496188aa6d0652bda58c9888fa4f",
+      "sha256_mac": "cdd0f174cfea3a839f2503e857d0408312f6dfcf8d8cd07af4ec2aebb8346618",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/reverse-reverb.html",
@@ -59,8 +59,8 @@
         }
       },
       "size": 5576208,
-      "size_mac": 17458981,
-      "version_mac": "1.2.9.356"
+      "size_mac": 17460416,
+      "version_mac": "1.2.10.369"
     },
     {
       "id": "RoneStutter",
@@ -80,10 +80,10 @@
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-366.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-369.2.pkg",
       "sha256": "cde2a17ddf7d45337fbc04fac7c2222605b82ff32a2301148a9dad336c00734b",
       "registry_key": "RoneStutter",
-      "sha256_mac": "cee33ed1421d29b5a014a3ce189c7e833257603b7fb7c97dffe94bdb9524a469",
+      "sha256_mac": "ef76c443436006c91527db8ae5d906fa65bf3f52207f161922b35f1e9992a043",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
@@ -108,8 +108,8 @@
         }
       },
       "size": 6417427,
-      "size_mac": 19218383,
-      "version_mac": "2.0.2.366"
+      "size_mac": 19227453,
+      "version_mac": "2.0.3.369"
     },
     {
       "id": "RoneStucker",
@@ -129,10 +129,10 @@
       "manual": "RONE Stucker - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=l6_cvuOajI4",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-369.7.pkg",
       "sha256": "92c36bf8b4f9d817e126dde52a35c15d79c02aafef6c2cf406665c3c5a756aa3",
       "registry_key": "RoneStucker",
-      "sha256_mac": "e5f53ae6fc19eb38301ea43d9f001e1e4302d6afbb9b46cfbd1c83dde3877ec2",
+      "sha256_mac": "51149f45415cc54f2aed5d7e90861f229b63e1d96992d370c8c792ed9913dc5d",
       "price": 29,
       "launch_price": 29,
       "store_url": "https://roneaudio.com/products/rone-stucker.html",
@@ -158,8 +158,8 @@
         }
       },
       "size": 5030809,
-      "size_mac": 14124967,
-      "version_mac": "1.4.6.356"
+      "size_mac": 14125759,
+      "version_mac": "1.4.7.369"
     },
     {
       "id": "RoneThrow",
@@ -179,10 +179,10 @@
       "manual": "RONE Throw - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=htrhBnLIBtQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-369.2.pkg",
       "sha256": "1394a64981612bb1bb7b0f870e09bc093aa734cc4b455def66a42ad1158e0e34",
       "registry_key": "RoneThrow",
-      "sha256_mac": "620097cfa4a58e89109d8c5691918149c1c7dbe6717aa99745e554cb3207a002",
+      "sha256_mac": "b656ef9897ef0aee0154e00a1a49e33ae00b4bb7210edceab006a5a29763f4c7",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 39,
@@ -207,8 +207,8 @@
         }
       },
       "size": 5104169,
-      "size_mac": 13697059,
-      "version_mac": "1.8.10.356"
+      "size_mac": 13700429,
+      "version_mac": "1.8.11.369"
     },
     {
       "id": "RoneClipper",
@@ -228,10 +228,10 @@
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-369.3.pkg",
       "sha256": "e31019d9e328d438bdfaebd2091b35d552937c28951c59725c398684b45a91a0",
       "registry_key": "RoneClipper",
-      "sha256_mac": "0335e6961acb44d6c268808d985c602bdca62dca8d8e3b6ba59388500cb4ffc9",
+      "sha256_mac": "84c073e6ddee70229a11570bb89ef9fe2aa17e608ed6f63c8050a35e970fc342",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
       "price": 0,
       "launch_price": 0,
@@ -257,8 +257,8 @@
         }
       },
       "size": 5008319,
-      "size_mac": 13537976,
-      "version_mac": "1.0.12.356"
+      "size_mac": 13539602,
+      "version_mac": "1.0.13.369"
     },
     {
       "id": "RoneRise",
@@ -278,10 +278,10 @@
       "manual": "RONE Rise - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-369.2.pkg",
       "sha256": "1f1e40d94385d5464cd298f28bdbe936272721f8c7e2144b848240534386b826",
       "registry_key": "RoneRise",
-      "sha256_mac": "c4a81fbf741775075e449cfa6c882eb8c1c092612562a0db28c2d42d8f346d4d",
+      "sha256_mac": "bb262d3b8a69916924cca30d2fc42c4d9f1540bbfc020f0a1a77d6de835d6dcf",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
       "launch_price": 39,
@@ -307,8 +307,8 @@
         }
       },
       "size": 5348515,
-      "size_mac": 14241263,
-      "version_mac": "1.0.15.356"
+      "size_mac": 14243205,
+      "version_mac": "1.0.16.369"
     },
     {
       "id": "RoneIron",
@@ -328,10 +328,10 @@
       "manual": "RONE Iron - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=tZ-BhB5T5Os",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-369.3.pkg",
       "sha256": "8118be57362edf6e26c8443d32780b74922350c3070453a9059aa5708a38216a",
       "registry_key": "RoneIron",
-      "sha256_mac": "d08dd87cf41f8b06b5caaee11005215e43f29d21a5c3e1dcf0aa46a5ce54021d",
+      "sha256_mac": "ffc50e15d8dbd129bbd4164106ed974b25bfca33233b8110ff87a23394b3974d",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
       "launch_price": 39,
@@ -357,30 +357,31 @@
         }
       },
       "size": 7472795,
-      "size_mac": 21120784,
-      "version_mac": "1.0.13.356"
+      "size_mac": 21122309,
+      "version_mac": "1.0.14.369"
     },
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.1.8.369",
+      "version": "2.1.10.373",
       "type": "plugin",
       "formats": [
         "VST3",
+        "AU",
         "Standalone"
       ],
       "description": "A transition riser flanger - sweep it by hand or engage INFINITE barberpole mode for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate",
-      "whats_new": "2.1.8 - FIX: the plugin window no longer goes black or white for a moment when another window overlaps it, for example with two plugins open. It stays on screen now, and it opens on the dark background instead of white. 2.1.7 - FIX: the plugin window no longer goes black when the mouse is over it. Yesterday's update hid the page whenever another window seemed to sit on top, and it took the invisible overlays of NVIDIA, Discord, Steam or the Xbox Game Bar for one - now only a real window in front counts. 2.1.6 - With the plugin window minimised, closed or behind another window (in FL Studio, the mixer), the place where it sat no longer catches the mouse: the DAW's own buttons and faders there can be clicked again. 2.1.5 - the knobs and the popover lists now work on older Macs too (macOS before Big Sur): on those Macs the page could stop loading and the lists did not open. 2.1.4 - the RONE look is now one across the line: the knob of Reverse Reverb / Flanger with the value inside it, keys without the grey frame, selectors that glide, lists that open as a RONE popover instead of the system list, and the glow only where you touch. INFINITE and GATE are switches. 2.1.3 - The plugin carries its own fonts, so it looks the same with no internet connection, and text you need to read is never the faint grey. 2.1.2 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 2.1.1 - AUTO GAIN keeps working in hosts that send empty audio blocks, at high FEEDBACK the ring now stops when you stop the song while bounces keep the real tail, a user preset saved under a factory preset's name now loads, and the Windows standalone has an AUDIO button for audio and MIDI settings. 2.1.0 - INFINITE starts its sweep from the same point every time you switch it on - by hand, by automation, or when you press play with it already on - instead of wherever the song happened to be in the cycle, which could start a riser in the middle or at the end. Automate INFINITE on the bar where the rise should begin and it climbs the same way every time; the start lands on the nearest 1/16, so automation drawn on the bar line starts exactly there. A loop that jumps back before that point starts the sweep again. 2.0.9 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 2.0.8 - INFINITE has three new lengths: 32 BAR and 16 BAR for long builds, 1/4 (one beat) for a fast shimmer - eight in all, from 32 bars down to a quarter bar. Projects and presets saved with an older version open on the length they had; only automation drawn on the sweep length in an older project needs redrawing. 2.0.7 - FIX: OUTPUT works while you play. Turning it, or automating it, now changes the level at once (with a 20 ms ramp) instead of only after the audio restarted. GATE no longer clicks: the effect fades in and out over 5 ms right on the grid line, where it used to switch hard on the edge of the audio buffer (up to a whole buffer late), and the flanger keeps running while the gate is closed, so every pulse comes back clean. 2.0.6 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 2.0.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable. Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
+      "whats_new": "2.1.10 - RONE Flanger now works on mono tracks too: mono, and mono in with stereo out, where STEREO still adds width. In Logic it shows up on mono channel strips as well. Stereo tracks sound exactly as before. 2.1.9 - Mac: RONE Flanger now also comes as an Audio Unit, so it opens in Logic Pro and GarageBand. Update it from the RONE Plugins Center and rescan your plugins if it does not show up at once. 2.1.8 - FIX: the plugin window no longer goes black or white for a moment when another window overlaps it, for example with two plugins open. It stays on screen now, and it opens on the dark background instead of white. 2.1.7 - FIX: the plugin window no longer goes black when the mouse is over it. Yesterday's update hid the page whenever another window seemed to sit on top, and it took the invisible overlays of NVIDIA, Discord, Steam or the Xbox Game Bar for one - now only a real window in front counts. 2.1.6 - With the plugin window minimised, closed or behind another window (in FL Studio, the mixer), the place where it sat no longer catches the mouse: the DAW's own buttons and faders there can be clicked again. 2.1.5 - the knobs and the popover lists now work on older Macs too (macOS before Big Sur): on those Macs the page could stop loading and the lists did not open. 2.1.4 - the RONE look is now one across the line: the knob of Reverse Reverb / Flanger with the value inside it, keys without the grey frame, selectors that glide, lists that open as a RONE popover instead of the system list, and the glow only where you touch. INFINITE and GATE are switches. 2.1.3 - The plugin carries its own fonts, so it looks the same with no internet connection, and text you need to read is never the faint grey. 2.1.2 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 2.1.1 - AUTO GAIN keeps working in hosts that send empty audio blocks, at high FEEDBACK the ring now stops when you stop the song while bounces keep the real tail, a user preset saved under a factory preset's name now loads, and the Windows standalone has an AUDIO button for audio and MIDI settings. 2.1.0 - INFINITE starts its sweep from the same point every time you switch it on - by hand, by automation, or when you press play with it already on - instead of wherever the song happened to be in the cycle, which could start a riser in the middle or at the end. Automate INFINITE on the bar where the rise should begin and it climbs the same way every time; the start lands on the nearest 1/16, so automation drawn on the bar line starts exactly there. A loop that jumps back before that point starts the sweep again. 2.0.9 - On older Macs (Safari before 14.1) the window's controls now sit where they belong: labels inside their knobs, rows spaced, nothing in a corner. 2.0.8 - INFINITE has three new lengths: 32 BAR and 16 BAR for long builds, 1/4 (one beat) for a fast shimmer - eight in all, from 32 bars down to a quarter bar. Projects and presets saved with an older version open on the length they had; only automation drawn on the sweep length in an older project needs redrawing. 2.0.7 - FIX: OUTPUT works while you play. Turning it, or automating it, now changes the level at once (with a 20 ms ramp) instead of only after the audio restarted. GATE no longer clicks: the effect fades in and out over 5 ms right on the grid line, where it used to switch hard on the edge of the audio buffer (up to a whole buffer late), and the flanger keeps running while the gate is closed, so every pulse comes back clean. 2.0.6 - UPDATE NOTICE: when a newer version is out, the plugin says so as it opens. UPDATE hands it to the Plugins Center, which installs it as soon as your DAW lets go of the plugin (closing the DAW always does); until then the plugin is grey and your settings stay as they are. LATER hides the note for three days. 2.0.5 - the mouse wheel moves every knob (shift = fine); the About panel's texts are readable. Host automation now moves the knobs. The interface follows the plugin's own parameters live, so an automation clip, a host preset recall or a second open window all show up on screen instead of leaving the controls frozen where you last left them. Every move you make is also wrapped in an automation gesture now, so hosts in Touch or Latch record it properly.",
       "standalone_exe": "RONE Flanger.exe",
       "vst3_bundle": "RONE Flanger.vst3",
-      "au_bundle": "",
+      "au_bundle": "RONE Flanger.component",
       "manual": "RONE Flanger - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-356.1.pkg",
-      "sha256": "25ce4da90698eea4fe3d10f81e8a17acf4c6ac71566f41e842229a8c1190ea7b",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-373.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-373.1.pkg",
+      "sha256": "189ceaa151b15fba35cd3079d3175b8d6f7bff659345918695fc51909b54d122",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "1e67c2a246f10fa113bc424c0428a748eb20884bf9844bf6ac152fbbfe922f47",
+      "sha256_mac": "f986d80eab894b7c570a6e7655591adc6abbc1a1b1b52c10201fc9743cd720b9",
       "price": 39,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-flanger.html",
@@ -404,9 +405,9 @@
           "description": "Un flanger de transición - barre a mano o activa el modo INFINITE para subidas y bajadas sin fin fijadas al compás, con feedback, offset estéreo y un gate rítmico"
         }
       },
-      "size": 5296483,
-      "size_mac": 10457430,
-      "version_mac": "2.1.7.356"
+      "size": 5289025,
+      "size_mac": 14901200,
+      "version_mac": "2.1.10.373"
     },
     {
       "id": "RoneAfterspace",
@@ -426,10 +427,10 @@
       "manual": "RONE AFTERSPACE - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=lbKXq6iuctM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-369.3.pkg",
       "sha256": "c2c1d38c86e1731fd160ad2392067fdc490b611dbfbe039f9c9f31fc478efe35",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "79cbb7128f3291d9dc63ab6f22ea4373b1ff3114788d76a417986a840d3bf4fd",
+      "sha256_mac": "b7311e0173e87b7031086bbf4197073632eb6ceb05be57845be9ae710ddc3110",
       "price": 59,
       "launch_price": 59,
       "store_url": "https://roneaudio.com/products/afterspace.html",
@@ -454,28 +455,30 @@
         }
       },
       "size": 5465086,
-      "size_mac": 15478192,
-      "version_mac": "1.0.11.356"
+      "size_mac": 15481767,
+      "version_mac": "1.0.12.369"
     },
     {
       "id": "RONEAnalyzer",
       "name": "RONE Analyzer",
-      "version": "1.3.53.369",
+      "version": "1.3.54.372",
       "type": "standalone",
       "formats": [
-        "Standalone"
+        "Standalone",
+        "VST3",
+        "AU"
       ],
       "description": "Professional measurement suite: 30-band spectrum with reference-track comparison, vectorscope, level meters, EBU R128 loudness and bit statistics",
-      "whats_new": "1.3.53 - FIX: the plugin window no longer goes black or white for a moment when another window overlaps it, for example with two plugins open. It stays on screen now, and it opens on the dark background instead of white. 1.3.49 - Internal tidy-up: no change to the sound, the measurements or the screen. 1.3.48 - FIX: the plugin window no longer goes black when the mouse is over it. Yesterday's update hid the page whenever another window seemed to sit on top, and it took the invisible overlays of NVIDIA, Discord, Steam or the Xbox Game Bar for one - now only a real window in front counts. 1.3.47 - With the plugin window minimised, closed or behind another window (in FL Studio, the mixer), the place where it sat no longer catches the mouse: the DAW's own buttons and faders there can be clicked again. 1.3.46 - The meters, the spectrum and the vectorscopes draw again on older Macs (macOS before Big Sur), where 1.3.43-1.3.45 showed no graphs while the buttons still worked. 1.3.45 - The second vectorscope has its own CORRELATION meter and stands the same size as the first, so the two read side by side. 1.3.44 - The reference now shows its own level: muting a channel in your track no longer moves the reference bars or the FULL wave. SOLO BAND and MONO now work on the reference too, so you hear it filtered like your mix. MIX is a chip in the CHANNELS row - drag it to choose who is drawn in front. A + on the vectorscope opens a second vectorscope beside it, showing the loaded reference or any Channel in its own colour (update the RONE Analyzer Channel with the app). 1.3.43 - the RONE look is now one across the line: the knob of Reverse Reverb / Flanger with the value inside it, keys without the grey frame, selectors that glide, lists that open as a RONE popover instead of the system list, and the glow only where you touch. The app carries the RONE fonts (Sora, Manrope, IBM Plex Mono). 1.3.42 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.3.41 - However many channels you put in, every channel chip is reachable: the chips shrink to fit, and past that the CHANNELS row scrolls sideways when you roll the wheel over it, with a fade on the side that has more. 1.3.40 - BAR SCOPE: roll the mouse wheel over the scope to stretch the wave taller, up to 16 times, to see exactly where the kick hands over to the bass; the HEIGHT chip shows how far and puts it back. A beat looped in your DAW under 1/4 BAR no longer draws the bass (or the kick) with a doubled outline - each pass now replaces the last. To reorder the channel chips, hold one: it lifts, the others wobble and make room, and it settles where you drop it. The NOTE pop-out button sits under the word NOTE, and SCOPE has moved to the bottom right of the vectorscope. 1.3.39 - NOTE pops out: the small button at the end of the NOTE row opens the note in a little window of its own that stays on top of everything - put it over your EQ, in front of your eyes. Drag it anywhere; its X and grip show when the mouse is on it. A MIX chip in the CHANNELS row hides the master on the spectrogram, so you see only your channels. Drag the channel chips left and right to choose which one is drawn on top - the one on the right. 1.3.38 - The update notice and the menus are in the Analyzer's cyan, like its icon. 1.3.37 - The SIDES chip on the spectrogram turns off again with a second click, and the vectorscope on SIDES no longer paints the side spectrum over the bars. 1.3.36 - The BAR SCOPE keeps a RONE Analyzer Channel's wave whole: in FL Studio it kept wiping itself, so only a sliver of the bar - one bass note - stayed on screen. 1.3.35 - The BAR SCOPE draws your RONE Analyzer Channels on the bar, each in its own colour - a Channel on the kick and one on the bass show as two waves over the master. A new chip picks MIX + CH, CHANNELS alone or MIX alone, and the channel chips over the spectrogram pick which channels; with only the channels it works without the Bridge. A channel on the spectrogram now moves as fast as the master. A band solo shades the same distance either side of the point you hold. The vectorscope chip goes STEREO, SIDES, MONO: SIDES shows only the side signal, and with the Bridge your DAW plays it. Reopen your DAW project once after this update so it loads the new Channel and Bridge. 1.3.34 - A new icon in the RONE cyan with a thin wave, the same mark as the header. The level meter's 0 dB row is red, the line nothing should cross. The stray MON caption under the spectrum is gone. 1.3.33 - RONE Analyzer Channel: a small plugin for any mixer channel - name it KICK, BASS, VOX, pick its colour - and the analyzer draws that channel's spectrum over the master's, in its colour, exactly as the master is drawn (LED columns in BARS, the FFT curve in WAVES), up to eight channels. A CHANNELS row over the spectrogram: click a chip to show or hide it, S to see it alone, right-click to hear it alone through the Bridge. The Bridge and the Channel share one new face in the RONE cyan. 1.3.31 - FIXED keeps the spectrogram and the level meter one shape with the bar scope open or closed and with the chrome hidden: the window follows instead of stretching them. The level meter has two red OVR rows over 0 dB and yellow rows from -3 dB up, fills its height, and the peak bar settles before it falls. The rules are a step fainter. The frequencies sit right under the plot, the zone names under them. The Bridge becomes the source the moment it appears in the DAW, and a Bridge loaded before an update keeps working until the DAW reloads it. The reference in WAVES is measured with the same FFT as the live curve. A new default theme, RONE. 1.3.30 - HINT: a tour of everything (Menu > Hints, or F1), a step per control with a short animation of the gesture. Ten new themes, each with its own RMS, peak and SIDES colours: Graphite, Ice, Phosphor, Ember, Fjord, Tokyo, Mocha, Rose, Solar, Mono. The level meter has ten LEDs between one number and the next, as the classic hardware has it. The bar scope stays live while you zoom and draws the zoom from the samples. Loading a reference no longer runs the analyser over the record; only the reference strip shows the progress. The right-click browser menu is gone. 1.3.29 - RULES chip on the spectrogram: a click hides the 5 dB rows, the next hides the 10 dB rows too, the next brings them all back. In BARS every zone (SUB, BASS, LOW MID...) is whole bars, its border in the gap between two bars, and a zone solo shades whole bars. A held peak is a whole LED in the peak colour, on the analyser and on the level meter. The menu's highlight stays inside the menu. 1.3.28 - The yellow rules sit on the numbered rows: a level's row is the LED lit when the signal reaches it, the number sits on it and the rule takes it, in the spectrum and in the level meter. The 5 dB marks are LED rows too, fainter. The level meter's rules stay inside each column. Every menu now hangs from the chip that opened it, flush with its edge, with one soft shadow. 1.3.27 - DAW / REF: with a reference loaded on the RONE Bridge, a round switch where PLAY was flips between your track and the reference - the DAW is muted while the reference plays and the meters show it (reopen the Bridge in your DAW once after this update). REF FULL works in WAVES too, as a spectrum in the reference colour. The 10 dB rules are LED rows now, as in the classic hardware, lit with the bar and dim over the dark LEDs; the LEDs fill the plot to the top; the menus and the Setup lists are drawn in the house look. 1.3.26 - Lighter on the computer: the same picture for less than half the work. The meters draw at about 60 frames a second on any screen (a 144 Hz monitor used to get 144), the LED bars and peak caps are drawn once and reused, and when nothing is playing the panels rest until something moves. 1.3.25 - The yellow 10 dB rules and the fainter 5 dB lines are back over the Spectrogram's bars, and with them the reference lines, the live average and the readout under the pointer - 1.3.23 had stopped drawing them in BARS. 1.3.24 - Settings live on their panels, the way the classic hardware lays them out: the spectrogram's gear opens the Spectrum Analyser settings, a new gear on the level meters opens the Level Meter settings, and the vectorscope's gear the Goniometer settings (in WAVES the spectrogram's gear is the FFT's own settings). the FFT's Routing - Stereo, Mid, Side, Left, Right - is in WAVES' settings. A large Block Size no longer leaves the WAVES curve standing still: it moves at least 24 times a second, with the same levels. The analyser and the level meters stand on whole screen pixels like the classic: every LED the same size at any window size, the plot growing a whole LED at a time as the window is resized. MAX PEAK and MAX RMS are readings now, not buttons. 1.3.23 - In WAVES the spectrogram's gear opens the FFT's own settings: Type, Window, Block Size, Overlap, Avg Time, a second spectrum, Filled display, Anti-alias, Align 0 dB, Offset, Smooth, Freq and Range limits and Slope, with the FFT's choices and a DEFAULT that brings back the FFT's factory mode - so whoever comes from the FFT analyser sets it the way they know (in BARS the gear is the classic Setup, as before). The vectorscope draws like a beam: threads of light that are bright where the signal moves slowly and faint where it jumps, with a soft glow. A right click on a zone name under the spectrum solos that zone alone; right click it again for the whole mix. 1.3.22 - Stability: the RONE Analyzer Bridge lets go of its fonts safely when a DAW unloads it (FL Studio could crash on exit after its window had been open), ignores empty audio blocks, and turns a NaN coming from a plug-in before it into silence instead of passing it on. A DAW that changes its sample rate no longer reconfigures the Analyzer from its audio thread. On a Mac the source is no longer closed and opened again by one passing licence check, which made macOS ask for permission again (the repeated Allow prompts). 1.3.21 - WAVES is now the familiar FFT analysers as the FFT analyser opens: the same FFT (2048, Hann, 50 % overlap), the same 2-second average, the same 4.5 dB per octave slope and the FFT's own scale, -78 to -18 dB with its numbers, so a frequency reads in WAVES what it reads in the FFT analyser. In Ableton Live the BAR SCOPE lines up on the kick: Live gives every plug-in the same song position whatever latency sits before it (a limiter, a linear-phase EQ), so the picture ran late; the scope now measures that from the kick and slides the picture back, and says by how much. The BAR SCOPE opens with HOLD off. FIXED size now sits on whole screen pixels instead of between them, so it draws sharper. On a Mac, listening to what the Mac plays through a multichannel interface reads that interface's own output pair at its real level, and an interface with many inputs no longer hides the capture. 1.3.20 - The zones under the spectrum - SUB, BASS, LOW MID, MID, HIGH MID, PRESENCE, AIR - are buttons now: click one and only that range plays through the RONE Analyzer Bridge, click more to add them, click a lit one to take it out, Escape for the whole mix again. MAX PEAK and MAX RMS show the live figure, the highest of the last two seconds, so there is no RESET to press. The vectorscope is sharp again: Release is the time a dot takes to fade, the dots are single pixels, and the diamond fills its panel. REF FULL draws the reference in the same column as your mix: above it where the record is louder, as a line inside it where your mix is. 1.3.19 - WAVES now reads what the bars read: every point is the power in a third of an octave, with the bars' own release, so a frequency shows the same dB in both views (the FFT's per-bin levels and 4.5 dB slope sat 15 dB under the bars). The maximum is a thin line over the curve instead of a second filled body. 1.3.18 - NOTE: the note under the mix - the fundamental of the bass or the kick - reads under the reference strip, with its octave, hertz and cents. The Spectrogram has a BARS / WAVES switch (W): WAVES draws an FFT spectrum the way the FFT analyser draws one - the real-time average filled, the real-time maximum behind it, the FFT's 4.5 dB per octave slope - so anyone used to the FFT analyser reads it at once; the bars are exactly what they were. The frequency zones - SUB, BASS, LOW MID, MID, HIGH MID, PRESENCE, AIR - are named along the bottom of the plot. Reference curves can be saved by name and brought back later without loading the record again (REFERENCE, or CURVES under the strip), and REF LINE / FULL draws the reference as a line over the bars or as bars of its own beside them. While a record is being read the strip shows its progress, and says so in red when a file cannot be read. The header is cleaner: SOURCE holds the channel pairs, and FILE, RESET and SETUP live in the menu. 1.3.17 - The vectorscope is back to its classic dot picture. On a Mac, choosing a sound card as the source opens it once instead of twice, so macOS has fewer reasons to ask for permission again. 1.3.16 - The reference plays: PLAY under the strip plays its 16 bars round and round on your computer's output (stop your DAW to compare), and CLEAR takes the record away. The strip now opens on the loop where every band is lit - the drop with the hats and percussion in - rather than wherever the kick and bass are loudest. 1.3.15 - REFERENCE has a strip of its own under the correlation meter: load a record and its waveform comes up with the tempo found for you; the curve on the Spectrogram is taken from a loop of 16 bars - it opens on the loudest one, the arrows move it 16 bars at a time and a click puts it anywhere, so you compare against the part with every layer in. The vectorscope draws the signal as a glowing trace with a soft cloud around it. Appearance > Customize sets the SIDES colour. The overs are two red clip lamps. The bar scope stays on the sum. On a Mac the title bar no longer shows a title that sat off to one side. 1.3.14 - MAX PEAK and MAX RMS now sit at the top of the LEVEL METERS, read exactly the way StandardCLIP reads them - the largest sample, and the RMS averaged over 217 ms, louder channel - so a kick shows the same numbers in both; click either to reset them. SIDES on the Spectrogram paints the side signal over the bars in violet: what is wide, band by band. Fainter lines at every 5 dB (Appearance > Spectrum 5 dB lines hides them). In the BAR SCOPE, a slide off the grid now shows as an amber OFFSET chip - click it to put the kicks back on the beat. On older Macs the bar scope and the level meters draw whole again (they showed only the tips of each kick, or nothing). The correlation meter's white tick is gone. 1.3.13 - The meters keep drawing on older Macs, a second Analyzer Bridge no longer scrambles the readings, the window always opens on screen, and if the Analyzer ever crashes the report reaches us through the Plugins Center.",
+      "whats_new": "1.3.54 - FIX: the correlation meter no longer lets the quiet tail of a sound outweigh its hit. A clap or a snare with a wide tail could read negative while the sound as a whole sits safely positive; the reading now follows where the energy is. 1.3.53 - FIX: the plugin window no longer goes black or white for a moment when another window overlaps it, for example with two plugins open. It stays on screen now, and it opens on the dark background instead of white. 1.3.49 - Internal tidy-up: no change to the sound, the measurements or the screen. 1.3.48 - FIX: the plugin window no longer goes black when the mouse is over it. Yesterday's update hid the page whenever another window seemed to sit on top, and it took the invisible overlays of NVIDIA, Discord, Steam or the Xbox Game Bar for one - now only a real window in front counts. 1.3.47 - With the plugin window minimised, closed or behind another window (in FL Studio, the mixer), the place where it sat no longer catches the mouse: the DAW's own buttons and faders there can be clicked again. 1.3.46 - The meters, the spectrum and the vectorscopes draw again on older Macs (macOS before Big Sur), where 1.3.43-1.3.45 showed no graphs while the buttons still worked. 1.3.45 - The second vectorscope has its own CORRELATION meter and stands the same size as the first, so the two read side by side. 1.3.44 - The reference now shows its own level: muting a channel in your track no longer moves the reference bars or the FULL wave. SOLO BAND and MONO now work on the reference too, so you hear it filtered like your mix. MIX is a chip in the CHANNELS row - drag it to choose who is drawn in front. A + on the vectorscope opens a second vectorscope beside it, showing the loaded reference or any Channel in its own colour (update the RONE Analyzer Channel with the app). 1.3.43 - the RONE look is now one across the line: the knob of Reverse Reverb / Flanger with the value inside it, keys without the grey frame, selectors that glide, lists that open as a RONE popover instead of the system list, and the glow only where you touch. The app carries the RONE fonts (Sora, Manrope, IBM Plex Mono). 1.3.42 - In Ableton Live the plugin now fills its window: with Auto-Scale Plug-In Window on and a screen scaled above 100 %, the interface no longer sits in a corner with a white band, and it refits when you move it to a monitor with a different scale. 1.3.41 - However many channels you put in, every channel chip is reachable: the chips shrink to fit, and past that the CHANNELS row scrolls sideways when you roll the wheel over it, with a fade on the side that has more. 1.3.40 - BAR SCOPE: roll the mouse wheel over the scope to stretch the wave taller, up to 16 times, to see exactly where the kick hands over to the bass; the HEIGHT chip shows how far and puts it back. A beat looped in your DAW under 1/4 BAR no longer draws the bass (or the kick) with a doubled outline - each pass now replaces the last. To reorder the channel chips, hold one: it lifts, the others wobble and make room, and it settles where you drop it. The NOTE pop-out button sits under the word NOTE, and SCOPE has moved to the bottom right of the vectorscope. 1.3.39 - NOTE pops out: the small button at the end of the NOTE row opens the note in a little window of its own that stays on top of everything - put it over your EQ, in front of your eyes. Drag it anywhere; its X and grip show when the mouse is on it. A MIX chip in the CHANNELS row hides the master on the spectrogram, so you see only your channels. Drag the channel chips left and right to choose which one is drawn on top - the one on the right. 1.3.38 - The update notice and the menus are in the Analyzer's cyan, like its icon. 1.3.37 - The SIDES chip on the spectrogram turns off again with a second click, and the vectorscope on SIDES no longer paints the side spectrum over the bars. 1.3.36 - The BAR SCOPE keeps a RONE Analyzer Channel's wave whole: in FL Studio it kept wiping itself, so only a sliver of the bar - one bass note - stayed on screen. 1.3.35 - The BAR SCOPE draws your RONE Analyzer Channels on the bar, each in its own colour - a Channel on the kick and one on the bass show as two waves over the master. A new chip picks MIX + CH, CHANNELS alone or MIX alone, and the channel chips over the spectrogram pick which channels; with only the channels it works without the Bridge. A channel on the spectrogram now moves as fast as the master. A band solo shades the same distance either side of the point you hold. The vectorscope chip goes STEREO, SIDES, MONO: SIDES shows only the side signal, and with the Bridge your DAW plays it. Reopen your DAW project once after this update so it loads the new Channel and Bridge. 1.3.34 - A new icon in the RONE cyan with a thin wave, the same mark as the header. The level meter's 0 dB row is red, the line nothing should cross. The stray MON caption under the spectrum is gone. 1.3.33 - RONE Analyzer Channel: a small plugin for any mixer channel - name it KICK, BASS, VOX, pick its colour - and the analyzer draws that channel's spectrum over the master's, in its colour, exactly as the master is drawn (LED columns in BARS, the FFT curve in WAVES), up to eight channels. A CHANNELS row over the spectrogram: click a chip to show or hide it, S to see it alone, right-click to hear it alone through the Bridge. The Bridge and the Channel share one new face in the RONE cyan. 1.3.31 - FIXED keeps the spectrogram and the level meter one shape with the bar scope open or closed and with the chrome hidden: the window follows instead of stretching them. The level meter has two red OVR rows over 0 dB and yellow rows from -3 dB up, fills its height, and the peak bar settles before it falls. The rules are a step fainter. The frequencies sit right under the plot, the zone names under them. The Bridge becomes the source the moment it appears in the DAW, and a Bridge loaded before an update keeps working until the DAW reloads it. The reference in WAVES is measured with the same FFT as the live curve. A new default theme, RONE. 1.3.30 - HINT: a tour of everything (Menu > Hints, or F1), a step per control with a short animation of the gesture. Ten new themes, each with its own RMS, peak and SIDES colours: Graphite, Ice, Phosphor, Ember, Fjord, Tokyo, Mocha, Rose, Solar, Mono. The level meter has ten LEDs between one number and the next, as the classic hardware has it. The bar scope stays live while you zoom and draws the zoom from the samples. Loading a reference no longer runs the analyser over the record; only the reference strip shows the progress. The right-click browser menu is gone. 1.3.29 - RULES chip on the spectrogram: a click hides the 5 dB rows, the next hides the 10 dB rows too, the next brings them all back. In BARS every zone (SUB, BASS, LOW MID...) is whole bars, its border in the gap between two bars, and a zone solo shades whole bars. A held peak is a whole LED in the peak colour, on the analyser and on the level meter. The menu's highlight stays inside the menu. 1.3.28 - The yellow rules sit on the numbered rows: a level's row is the LED lit when the signal reaches it, the number sits on it and the rule takes it, in the spectrum and in the level meter. The 5 dB marks are LED rows too, fainter. The level meter's rules stay inside each column. Every menu now hangs from the chip that opened it, flush with its edge, with one soft shadow. 1.3.27 - DAW / REF: with a reference loaded on the RONE Bridge, a round switch where PLAY was flips between your track and the reference - the DAW is muted while the reference plays and the meters show it (reopen the Bridge in your DAW once after this update). REF FULL works in WAVES too, as a spectrum in the reference colour. The 10 dB rules are LED rows now, as in the classic hardware, lit with the bar and dim over the dark LEDs; the LEDs fill the plot to the top; the menus and the Setup lists are drawn in the house look. 1.3.26 - Lighter on the computer: the same picture for less than half the work. The meters draw at about 60 frames a second on any screen (a 144 Hz monitor used to get 144), the LED bars and peak caps are drawn once and reused, and when nothing is playing the panels rest until something moves. 1.3.25 - The yellow 10 dB rules and the fainter 5 dB lines are back over the Spectrogram's bars, and with them the reference lines, the live average and the readout under the pointer - 1.3.23 had stopped drawing them in BARS. 1.3.24 - Settings live on their panels, the way the classic hardware lays them out: the spectrogram's gear opens the Spectrum Analyser settings, a new gear on the level meters opens the Level Meter settings, and the vectorscope's gear the Goniometer settings (in WAVES the spectrogram's gear is the FFT's own settings). the FFT's Routing - Stereo, Mid, Side, Left, Right - is in WAVES' settings. A large Block Size no longer leaves the WAVES curve standing still: it moves at least 24 times a second, with the same levels. The analyser and the level meters stand on whole screen pixels like the classic: every LED the same size at any window size, the plot growing a whole LED at a time as the window is resized. MAX PEAK and MAX RMS are readings now, not buttons. 1.3.23 - In WAVES the spectrogram's gear opens the FFT's own settings: Type, Window, Block Size, Overlap, Avg Time, a second spectrum, Filled display, Anti-alias, Align 0 dB, Offset, Smooth, Freq and Range limits and Slope, with the FFT's choices and a DEFAULT that brings back the FFT's factory mode - so whoever comes from the FFT analyser sets it the way they know (in BARS the gear is the classic Setup, as before). The vectorscope draws like a beam: threads of light that are bright where the signal moves slowly and faint where it jumps, with a soft glow. A right click on a zone name under the spectrum solos that zone alone; right click it again for the whole mix. 1.3.22 - Stability: the RONE Analyzer Bridge lets go of its fonts safely when a DAW unloads it (FL Studio could crash on exit after its window had been open), ignores empty audio blocks, and turns a NaN coming from a plug-in before it into silence instead of passing it on. A DAW that changes its sample rate no longer reconfigures the Analyzer from its audio thread. On a Mac the source is no longer closed and opened again by one passing licence check, which made macOS ask for permission again (the repeated Allow prompts). 1.3.21 - WAVES is now the familiar FFT analysers as the FFT analyser opens: the same FFT (2048, Hann, 50 % overlap), the same 2-second average, the same 4.5 dB per octave slope and the FFT's own scale, -78 to -18 dB with its numbers, so a frequency reads in WAVES what it reads in the FFT analyser. In Ableton Live the BAR SCOPE lines up on the kick: Live gives every plug-in the same song position whatever latency sits before it (a limiter, a linear-phase EQ), so the picture ran late; the scope now measures that from the kick and slides the picture back, and says by how much. The BAR SCOPE opens with HOLD off. FIXED size now sits on whole screen pixels instead of between them, so it draws sharper. On a Mac, listening to what the Mac plays through a multichannel interface reads that interface's own output pair at its real level, and an interface with many inputs no longer hides the capture. 1.3.20 - The zones under the spectrum - SUB, BASS, LOW MID, MID, HIGH MID, PRESENCE, AIR - are buttons now: click one and only that range plays through the RONE Analyzer Bridge, click more to add them, click a lit one to take it out, Escape for the whole mix again. MAX PEAK and MAX RMS show the live figure, the highest of the last two seconds, so there is no RESET to press. The vectorscope is sharp again: Release is the time a dot takes to fade, the dots are single pixels, and the diamond fills its panel. REF FULL draws the reference in the same column as your mix: above it where the record is louder, as a line inside it where your mix is. 1.3.19 - WAVES now reads what the bars read: every point is the power in a third of an octave, with the bars' own release, so a frequency shows the same dB in both views (the FFT's per-bin levels and 4.5 dB slope sat 15 dB under the bars). The maximum is a thin line over the curve instead of a second filled body. 1.3.18 - NOTE: the note under the mix - the fundamental of the bass or the kick - reads under the reference strip, with its octave, hertz and cents. The Spectrogram has a BARS / WAVES switch (W): WAVES draws an FFT spectrum the way the FFT analyser draws one - the real-time average filled, the real-time maximum behind it, the FFT's 4.5 dB per octave slope - so anyone used to the FFT analyser reads it at once; the bars are exactly what they were. The frequency zones - SUB, BASS, LOW MID, MID, HIGH MID, PRESENCE, AIR - are named along the bottom of the plot. Reference curves can be saved by name and brought back later without loading the record again (REFERENCE, or CURVES under the strip), and REF LINE / FULL draws the reference as a line over the bars or as bars of its own beside them. While a record is being read the strip shows its progress, and says so in red when a file cannot be read. The header is cleaner: SOURCE holds the channel pairs, and FILE, RESET and SETUP live in the menu. 1.3.17 - The vectorscope is back to its classic dot picture. On a Mac, choosing a sound card as the source opens it once instead of twice, so macOS has fewer reasons to ask for permission again. 1.3.16 - The reference plays: PLAY under the strip plays its 16 bars round and round on your computer's output (stop your DAW to compare), and CLEAR takes the record away. The strip now opens on the loop where every band is lit - the drop with the hats and percussion in - rather than wherever the kick and bass are loudest. 1.3.15 - REFERENCE has a strip of its own under the correlation meter: load a record and its waveform comes up with the tempo found for you; the curve on the Spectrogram is taken from a loop of 16 bars - it opens on the loudest one, the arrows move it 16 bars at a time and a click puts it anywhere, so you compare against the part with every layer in. The vectorscope draws the signal as a glowing trace with a soft cloud around it. Appearance > Customize sets the SIDES colour. The overs are two red clip lamps. The bar scope stays on the sum. On a Mac the title bar no longer shows a title that sat off to one side. 1.3.14 - MAX PEAK and MAX RMS now sit at the top of the LEVEL METERS, read exactly the way StandardCLIP reads them - the largest sample, and the RMS averaged over 217 ms, louder channel - so a kick shows the same numbers in both; click either to reset them. SIDES on the Spectrogram paints the side signal over the bars in violet: what is wide, band by band. Fainter lines at every 5 dB (Appearance > Spectrum 5 dB lines hides them). In the BAR SCOPE, a slide off the grid now shows as an amber OFFSET chip - click it to put the kicks back on the beat. On older Macs the bar scope and the level meters draw whole again (they showed only the tips of each kick, or nothing). The correlation meter's white tick is gone. 1.3.13 - The meters keep drawing on older Macs, a second Analyzer Bridge no longer scrambles the readings, the window always opens on screen, and if the Analyzer ever crashes the report reaches us through the Plugins Center.",
       "standalone_exe": "RONE Analyzer.exe",
       "vst3_bundle": "",
       "au_bundle": "",
       "manual": "RONE Analyzer - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-368.1.pkg",
-      "sha256": "50cea3dffc3762b5278ebf697e81020e5cc3e2b6fbc66e1fbe9537683751e8b6",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-372.1.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-372.1.pkg",
+      "sha256": "4594c3f9ee4497907e6e4f9f38f743f376c4a65a7185fc01894d5bfc7e4469e3",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "6635b3661e4f837b25ee79ea93532996f0671751d4ca431a5c72c804bcad25ea",
+      "sha256_mac": "0a21d8bfa466c4dc8c9ea2a06b0fadefefa5b6cea229f7d3ecc8417581ced9e5",
       "price": 80,
       "video": "https://www.youtube.com/watch?v=P-_F4gYPY9E",
       "launch_price": 80,
@@ -500,9 +503,9 @@
           "description": "Suite de medición profesional: espectro de 30 bandas con comparación con una pista de referencia, vectorscopio, medidores de nivel, loudness EBU R128 y estadísticas de bits"
         }
       },
-      "size": 9515561,
-      "size_mac": 52023796,
-      "version_mac": "1.3.52.368"
+      "size": 9515726,
+      "size_mac": 52024444,
+      "version_mac": "1.3.54.372"
     },
     {
       "id": "Rone1176",
@@ -521,11 +524,12 @@
       "vst3_bundle": "RONE 1176.vst3",
       "au_bundle": "RONE 1176.component",
       "manual": "RONE 1176 - User Manual.pdf",
+      "video": "https://www.youtube.com/watch?v=BW3FRyUCcp8",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-369.2.pkg",
       "sha256": "56376b39a069c677a1efc971c762ca4e0e294608c6c5668657e1848d6698a939",
       "registry_key": "Rone1176",
-      "sha256_mac": "db79dde3b761915246c09938fed9d2517909c35d4b26338e34730ef51c983dc5",
+      "sha256_mac": "27ce3ae146e9834cad067a5c19e96e4134340f614f7276fdb5a5bafee394ad73",
       "store_url": "https://roneaudio.com/products/rone-1176.html",
       "subscription_only": true,
       "category": [
@@ -541,8 +545,8 @@
       "accent": "#FF8C2E",
       "inno_app_id": "{3C6B2F8A-9D41-4E7B-A0C5-7E1176C0DE01}",
       "size": 5253729,
-      "size_mac": 14577779,
-      "version_mac": "0.9.10.356"
+      "size_mac": 14578125,
+      "version_mac": "0.9.11.369"
     },
     {
       "id": "Rone2A",
@@ -561,11 +565,12 @@
       "vst3_bundle": "RONE 2A.vst3",
       "au_bundle": "RONE 2A.component",
       "manual": "RONE 2A - User Manual.pdf",
+      "video": "https://www.youtube.com/watch?v=t4_3shj3aBs",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-356.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-369.9.pkg",
       "sha256": "0fa95f35e30ff1e97a7a714ca9f88fa3c363dc4d95ab0c845747c37b5e671c9f",
       "registry_key": "Rone2A",
-      "sha256_mac": "1f8b9f2e8eecda73c48ceeb9033bb1f03dcd1e4e2a32575206ed4dd066e77ec6",
+      "sha256_mac": "a8e9e3985b88390c7560179eb84eed32e03e547c75e411b858215531768ecbee",
       "store_url": "https://roneaudio.com/products/rone-2a.html",
       "subscription_only": true,
       "category": [
@@ -581,8 +586,8 @@
       "accent": "#FF6F59",
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
       "size": 5330240,
-      "size_mac": 15141471,
-      "version_mac": "0.9.11.356"
+      "size_mac": 15142215,
+      "version_mac": "0.9.12.369"
     },
     {
       "id": "RoneSidechain",
@@ -601,11 +606,12 @@
       "vst3_bundle": "RONE Sidechain.vst3",
       "au_bundle": "RONE Sidechain.component",
       "manual": "RONE Sidechain - User Manual.pdf",
+      "video": "https://www.youtube.com/watch?v=WqbiD2pWe6Y",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-367.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-369.2.pkg",
       "sha256": "449bd5d242c44f5c4fea31031a766b444d15edb84776663cee35e3fcd14cfef6",
       "registry_key": "RoneSidechain",
-      "sha256_mac": "199659c7540449a74e1a8f50de916b873bfe29e54fc849c4757ba41157c3e466",
+      "sha256_mac": "c4c6f3fa5e947ed269636f2994cecfb46a5f23abd4b058b344380c153559cb09",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
       "category": [
         "mix"
@@ -620,8 +626,8 @@
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
       "size": 6518325,
-      "size_mac": 18041980,
-      "version_mac": "1.0.6.367"
+      "size_mac": 18044117,
+      "version_mac": "1.0.7.369"
     },
     {
       "id": "RoneDelay",
@@ -640,11 +646,12 @@
       "vst3_bundle": "RONE Delay.vst3",
       "au_bundle": "RONE Delay.component",
       "manual": "RONE Delay - User Manual.pdf",
+      "video": "https://www.youtube.com/watch?v=hk-LnCfmupM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-369.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-357.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-369.2.pkg",
       "sha256": "896994a5c00cd22175b09c62f4f37b7b953b50dad9de96693172c24f5c468458",
       "registry_key": "RoneDelay",
-      "sha256_mac": "3531e0dd008d969168c84a039b6e756f8534ea3fb47ce06869708f5b2be79c69",
+      "sha256_mac": "2786ff2905eaa85a90383985f7a9fe77139db39df520ad45504165dbdd2099eb",
       "store_url": "https://roneaudio.com/products/rone-delay.html",
       "category": [
         "space"
@@ -659,15 +666,15 @@
       "accent": "#E9D6A6",
       "inno_app_id": "{04213AF9-9AD6-4447-B6AE-7F544C41994C}",
       "size": 5914219,
-      "version_mac": "1.1.1.357",
-      "size_mac": 14363452
+      "version_mac": "1.1.2.369",
+      "size_mac": 14366614
     }
   ],
   "apps": [
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.20",
+      "version": "0.9.21",
       "type": "standalone",
       "formats": [
         "App"
@@ -676,14 +683,15 @@
       "whats_new": "0.9.19 - FL Studio: one click no longer presses on the Mixer by mistake (an EQ band could jump if the mouse was still moving), and when FL is busy the plugin is sent once more instead of failing. 0.9.16 - The language you pick stays, at every start and after every update; the first-run tour shows only once, to someone new; VST MANAGER never runs twice at the same time. 0.9.15 - Build your side strip your way: your own groups (Vocals, Mastering...) each with its title and colour, first in the strip; drag plugins and presets straight from the big window into a group and see the strip as you build it; a zoom for the tiles - smaller tiles show more rows in the strip along the bottom. 0.9.14 - Your projects in every DAW: Health reads FL Studio, Cubase, REAPER, Studio One and Bitwig projects as well as Live sets, and Will it open? shows what a project from a friend needs that is not on your computer (drop it on the window). New Insights page: your month, plugins you never loaded, Before you buy (what you already own for that job), where your disk goes, every installer in one place, and updates for RONE and popular plugins. Smarter search (typos, the job a plugin does, Hebrew), your own tags and notes, Ctrl or Shift to pick many cards, Ctrl+Z undoes any change. All presets: every preset file of every plugin, Serum's too. Share a rack as one file. Back up to your RONE account, and a move kit for a new computer. The phone and Stream Deck get racks, favourites and MIDI; MIDI files get tags, key and tempo filters and better sounds. The bottom strip fills two rows and fades in on its own screen. 0.9.13 - The official RONE logo in the title bar. In a rack, click a plug-in's picture to open it with the rack's sound and save your changes into the rack. Widen the side strip and it turns into tiles; one button docks it along the bottom of the screen like a device rack. Removing a plug-in in Health takes it off the list at once, keeps the newest version of duplicates and says why a plug-in won't load. Recently used, sort by Recent or Newest (click again to reverse), a short tour on first start, and a load that fails now tells you what to try. 0.9.12 - FL Studio: a click on an effect puts it on the Mixer track you selected (in its first free slot), not on the Master. Keep FL's Mixer open (F9). 0.9.11 - Stream Deck and the iPad/phone remote now get your whole plugin list on a Mac (a long list was cut off, so the Stream Deck list stayed empty and pairing seemed to hang). A lightning bolt on the card the moment you click it. The search box shows any maker or category filter still on, with one click to clear it, and a search that finds nothing inside a filter offers Search all plugins. Right-click a plugin > Use my own picture. In FL Studio an effect lands on the Mixer track you selected, not the Master. 0.9.9 - The side strip key now puts you straight in its search: press it and start typing, no click. The key is yours to change in Setup (Ctrl+Alt+V is only the default). 0.9.8 - Every producer can try VST MANAGER free for 14 days: a quiet counter in the title bar, and when the trial ends your library, favourites and racks stay - any RONE plugin keeps VST MANAGER yours forever. RONE customers: invite a producer from Setup - your friend gets 15% off their first RONE plugin, you get a month of ALL ACCESS free. 0.9.7 - Logic Pro and Pro Tools: on a Mac one click puts a plug-in on the track you selected (Logic Pro 11.1 or newer; allow VST MANAGER once under Accessibility). Your AAX plug-ins are in the library on Mac and Windows, with an AAX filter. Mac 0.9.6 - Everything in 0.9.6, and on the Mac: Ableton Live finds RONE VST Manager under Control Surface also when your User Library is in a folder of your own; the Stream Deck keys install from the app. 0.9.6 - The app opens with its icon building itself, and about 8 seconds faster; star your MIDI files as favourites; My presets live under YOURS, with one click to import every preset you saved in FL Studio. 0.9.5 - One click loads into Cubase and Nuendo too; the DAW scripts install when the app starts; help windows. Mac 0.9.4 - RONE VST MANAGER on the Mac: Audio Units, VST3, VST2 and CLAP in one library, signed and notarized by Apple. 0.9.3 - Nothing opens a plug-in for a picture unless you ask (and the app says why some plug-ins pop up an activation window); a sharper R in the title bar; the Remote page shows how to set your network to Private. 0.9.2 - Opens for every RONE buyer and ALL ACCESS member, and for a story that tags @roneplugins. 0.9.1 - A new icon; the app now unlocks with a RONE purchase. 0.9.0 - First release: the library of every VST3, VST2 and CLAP on this computer, with a picture of each one; one click loads a plug-in onto the selected track in REAPER, Live, Bitwig and FL Studio; the side strip (Ctrl+Alt+V); key mapping; a health check of your projects; the phone remote and Stream Deck keys.",
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
+      "video": "https://www.youtube.com/watch?v=5O7U35jwAzI",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.19.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.18.22.pkg",
-      "sha256": "cfeb518ef329ae4e15d29a40e58ec1955df71104f2d93b4db43bff8625f98977",
-      "sha256_mac": "c54c6683d7e9530d29b3452972c30bb1a94d936e0ace9829d9e826b2d0eae85e",
-      "size": 5175510,
-      "size_mac": 10236259,
-      "version_mac": "0.9.18.22",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.21.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.21.25.pkg",
+      "sha256": "dde5adc73ff8502aef789bce42c3af5ac0be5d2251be79dfe6638e74e0912f0e",
+      "sha256_mac": "24d17d5efd6e36454d148bc94f80e089cbffe25cbe42591fa7026506dff6dd27",
+      "size": 5186665,
+      "size_mac": 10259447,
+      "version_mac": "0.9.21.25",
       "released": "2026-11-04"
     }
   ],

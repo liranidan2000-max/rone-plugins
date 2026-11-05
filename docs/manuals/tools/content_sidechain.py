@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "sidechain", "product": "RONE Sidechain", "eyebrow": "DRAWN SIDECHAIN · PHASE · SPACE",
-        "title_html": "RONE <i>Sidechain</i>", "accent": "#7B8CFF", "version": "1.0.0",
+        "title_html": "RONE <i>Sidechain</i>", "accent": "#7B8CFF", "version": "1.0.7",
         "tagline": "Draw the duck on your bass and let every kick restart it - silent at the kick's first sample, open exactly where you drew it. Then turn the bass's sub to meet the kick, and cut only where the two really collide.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Sidechain.vst3", "au": "RONE Sidechain.component", "exe": "RONE Sidechain.exe",
         "pdf": "RONE Sidechain - User Manual.pdf", "cover_img": "sidechain/main.png",

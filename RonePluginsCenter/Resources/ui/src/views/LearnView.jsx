@@ -7,6 +7,8 @@ import { openExternal } from '../bridge'
 export default function LearnView ({ t, plugins, tips, onManualPdf, onDetail }) {
   const tip = tipOfTheWeek(tips)
   const tipPlugin = tip && plugins.find(p => p.id === tip.plugin)
+  // The manifest's `tips` entries marked `start` are the install and first-steps videos: new ones need no Center release.
+  const start = (tips || []).filter(x => x && x.start && x.url && x.text)
 
   return (
     <div>
@@ -24,6 +26,15 @@ export default function LearnView ({ t, plugins, tips, onManualPdf, onDetail }) 
           {(tip.url || tipPlugin?.videoUrl) && (
             <button className="btn btn-out" onClick={() => openExternal(tip.url || tipPlugin.videoUrl)}><Icon.play className="w-3 h-3" />{t('hero.watch')}</button>
           )}
+        </div>
+      )}
+
+      {start.length > 0 && (
+        <div className="mb-5">
+          <div className="mb-2 text-[11px] font-extrabold tracking-[0.18em] uppercase text-rone-text-dim">{t('learn.start')}</div>
+          <div className="flex flex-wrap gap-2">
+            {start.map(x => (<button key={x.url} className="btn btn-out" onClick={() => openExternal(x.url)}><Icon.play className="w-3 h-3" />{x.text}</button>))}
+          </div>
         </div>
       )}
 

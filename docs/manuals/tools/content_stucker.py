@@ -153,7 +153,7 @@ def manual(G):
 </ul>
 """})
 
-    S.append(G["conventions_section"](m, note("Standalone", "Without a DAW clock there is no grid to sync to. Use FREE mode in the standalone app - or feed it a fixed tempo source and switch to SYNC once the host provides a clock.")))
+    S.append(G["conventions_section"](m, note("Standalone", "Without a DAW clock there is no grid to sync to. Use FREE mode in the standalone app - or feed it a fixed tempo source and switch to SYNC once the host provides a clock.") + G["logic_midi"]("RONE Stucker", "the RIDE notes (C2 starts it, C#2 stops it)")))
 
     S.append(G["support_section"](m, [
         ("The loop does not start on the beat", "Switch to SYNC and make sure the DAW is playing (the grid comes from the host transport). In FREE mode the loop starts exactly when you engage."),
@@ -163,7 +163,7 @@ def manual(G):
         ("GO is greyed out", "RIDE is OFF. Pick a length (1/4, 1/2, 1, 2, 4 or 8 bars) first."),
         ("The ride landed early or late", "GO measures from the downbeat of the bar you pressed it in. Press it inside the bar the rise should start in; a press just after a downbeat and one just before the next both count for the same bar."),
         ("LANDS shows a note but the scream lands elsewhere", "The landing note is exact at the top of the knob; if your automation stops at 90 % the run has not finished. Ride, or automate all the way to 100 %."),
-        ("MIDI C2 does nothing", "Route a MIDI track (or a pad) to the plugin; C2 (note 48) arms the ride, with a RIDE length set. A second C2 during a ride restarts it from that note; C#2 (note 49) stops it."),
+        ("MIDI C2 does nothing", "Route a MIDI track (or a pad) to the plugin; C2 (note 48) arms the ride, with a RIDE length set. A second C2 during a ride restarts it from that note; C#2 (note 49) stops it. In Logic: see MIDI in Logic Pro in Interface conventions."),
     ]))
 
     m["sections"] = S

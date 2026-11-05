@@ -2,9 +2,9 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "flanger", "product": "RONE Flanger", "eyebrow": "TRANSITION RISER FLANGER",
-        "title_html": "RONE <i>Flanger</i>", "accent": "#FF3D6E", "version": "2.0",
+        "title_html": "RONE <i>Flanger</i>", "accent": "#FF3D6E", "version": "2.1",
         "tagline": "A flanger you play by hand. Sweep the comb yourself, or engage INFINITE for endless bar-locked rises and falls, with feedback, stereo offset and a rhythmic gate.",
-        "formats": ["VST3", "Standalone"], "vst3": "RONE Flanger.vst3", "au": "", "exe": "RONE Flanger.exe",
+        "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Flanger.vst3", "au": "RONE Flanger.component", "exe": "RONE Flanger.exe",
         "pdf": "RONE Flanger - User Manual.pdf", "cover_img": "flanger/tour_knobs.png",
     }
     S = []
@@ -93,7 +93,7 @@ def manual(G):
 {ctl("1 BAR &middot; 1/2 &middot; 1/4 &middot; 1/8 &middot; 1/16 &middot; 1/32", "default 1/8", "<p>Gate rate. The LED row shows where you are in the pattern; the gate follows the host transport so it stays aligned to the bar.</p>")}
 <h3>ADVANCED drawer</h3>
 {img("flanger/adv_drawer.png", "<b>STEREO and OUTPUT.</b>", "w60")}
-{ctl("STEREO", "0 to 3 ms<br>default 0", "<p>Offsets the delay time of the right channel from the left. Even 0.5 ms puts the notches at different frequencies in each channel, which reads as width; 2-3 ms gives a wide, swirling image.</p>", "Check mono compatibility above 1.5 ms - the two combs partly cancel when summed.")}
+{ctl("STEREO", "0 to 3 ms<br>default 0", "<p>Offsets the delay time of the right channel from the left. Even 0.5 ms puts the notches at different frequencies in each channel, which reads as width; 2-3 ms gives a wide, swirling image. On a mono track with a stereo output both sides start from the one input, so STEREO still adds width; on a fully mono track it has no effect.</p>", "Check mono compatibility above 1.5 ms - the two combs partly cancel when summed.")}
 {ctl("OUTPUT", "-12 to +12 dB<br>default 0 dB", "<p>Output trim after the effect, for matching levels between presets or against the bypassed signal.</p>")}
 <h3>Presets</h3>
 <p>Fifteen factory presets are built in, in four groups: <strong>Risers</strong> (Riser 4 Bars, Riser 8 Bars, Drop Fall 2 Bars), <strong>Classic</strong> (Classic Jet, Subtle Shimmer, Deep Sweep, Metallic), <strong>Character</strong> (Wide Stereo, Negative Flange, Hollow Tube, Resonant Peak) and <strong>Gated</strong> (Gate Pulse 1/8, Gate Chop 1/16, Slow Gate), plus Default. Click the preset name to open the menu, save your own presets there, and delete user presets you no longer need. User presets are stored in your user folder and survive updates.</p>

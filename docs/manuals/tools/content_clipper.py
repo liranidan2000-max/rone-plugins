@@ -63,7 +63,7 @@ def manual(G):
  ("Graph", "the last 8 seconds; drag up / down = time zoom, the dashed line is CLIP"),
  ("CLIP", "the threshold, -24 to 0 dBFS"),
  ("CLIP value", "double-click to type a value"),
- ("LOW CUT", "the band below this frequency bypasses the clipper; double-click = off"),
+ ("LOW CUT", "the band below this frequency bypasses the clipper (so it can exceed CLIP); double-click = off"),
  ("ADVANCED", "opens the section below the knob"),
  ("Resize grip", "drag to resize the window"),
 ])}
@@ -73,7 +73,7 @@ def manual(G):
     S.append({"title": "Controls reference", "sub": "what every control does, its range and default", "html": f"""
 {img("clipper/tour_knob.png", "<b>CLIP.</b> The white dot is the threshold; the arc lights up as it comes down.", "w60")}
 {ctl("CLIP", "-24 to 0 dBFS<br>default 0<br>automatable, smoothed (10 ms)", "<p>The threshold of the clamp, inside the oversampled stage. Everything above +CLIP or below -CLIP is cut flat; everything in between is untouched. It is drawn on the graph as the dashed line, so you set it by eye against the peaks as much as by ear.</p><p>It is not an output ceiling: after the reconstruction filter a clipped transient can overshoot the threshold by up to about a decibel (the Gibbs ringing every oversampled clipper has). The output peak in ADVANCED tells the truth.</p>", "Double-click the knob for 0 dBFS. Double-click the value to type one. Right-click for the host's automation menu. The mouse wheel moves it too (Shift = fine).")}
-{ctl("LOW CUT", "off / 20 to 400 Hz<br>default off<br>automatable", "<p>Everything below this frequency bypasses the clipper and is added back untouched, through a Linkwitz-Riley crossover that keeps the sum exact when nothing clips. Only the band above it gets clipped.</p><p>Clipping the upper band also generates low-frequency products of its own (a clipped hat loop grows a bump between 20 and 400 Hz that was never in the source). Those are removed too, with a linear-phase filter, so the clipped peaks stay exactly where the threshold put them and nothing new appears below LOW CUT.</p>", "150-250 Hz on a kick or a bass keeps the fundamental whole while the click gets shaped. Note the graph shows what enters the clipper: with LOW CUT up, the lows disappear from the picture on purpose.")}
+{ctl("LOW CUT", "off / 20 to 400 Hz<br>default off<br>automatable", "<p>Everything below this frequency bypasses the clipper and is added back untouched, through a Linkwitz-Riley crossover that keeps the sum exact when nothing clips. Only the band above it gets clipped.</p><p>Clipping the upper band also generates low-frequency products of its own (a clipped hat loop grows a bump between 20 and 400 Hz that was never in the source). Those are removed too, with a linear-phase filter, so the clipped peaks stay exactly where the threshold put them and nothing new appears below LOW CUT.</p><p><strong>LOW CUT turns the clipper from a ceiling into a shaper.</strong> The lows are never clipped, so once they are added back the output can peak above CLIP by as much as the lows add at that moment, and the crossover shifts the phase around its frequency, which changes the shape of the peaks a little too. That is the point of it: use LOW CUT when you want the transient tops shaved for loudness and punch while the kick and the sub stay round, and let a limiter later in the chain hold the final peak. When the clipper itself has to be the last ceiling (the end of a master chain), keep LOW CUT OFF.</p>", "150-250 Hz on a kick or a bass keeps the fundamental whole while the click gets shaped. Note the graph shows what enters the clipper: with LOW CUT up, the lows disappear from the picture on purpose.")}
 {ctl("DELTA", "on / off<br>automatable", "<p>The output becomes only the part the clipper removed - the input minus the clipped signal. It is the quickest way to judge a setting: transient tops and clicks are what you want to be cutting; a tone or a pitched bass means the threshold is in the body of the sound.</p>", "BYPASS wins over DELTA.")}
 {ctl("BYPASS", "", "<p>Latency-matched dry signal with a 10 ms crossfade, so A/B comparison lands sample-accurately. The engine keeps running underneath.</p>")}
 <h3>The graph</h3>
@@ -85,7 +85,7 @@ def manual(G):
 {ctl("FREEZE / Reset", "", "<p>FREEZE holds the graph and a snapshot of the raw samples for DETAIL; audio and the meters keep running and the badge says FROZEN. Reset clears the history and the held maximum.</p>")}
 <h3>ADVANCED</h3>
 {img("clipper/adv_panel.png", "<b>OS, SAVED, INPUT / OUTPUT and AUTO GAIN.</b>", "w60")}
-{ctl("OS", "1x 2x 4x 8x 16x<br>default 4x<br>not automatable", "<p>How many times the sample rate the clip stage runs at. A hard clip creates harmonics without end; oversampling keeps them from folding back into the audible band as aliasing. Measured on a clipped 9.7 kHz tone the aliased energy is -9 dB at 1x, -29 at 2x, -43 at 4x, -54 at 8x and -66 at 16x. The latency is the same at every setting and the same setting is used in playback and export.</p>", "4x costs under one percent of a core and is the default. 8x for a master. 1x only when you want the aliasing as a colour.")}
+{ctl("OS", "1x 2x 4x 8x 16x<br>default 1x<br>not automatable", "<p>How many times the sample rate the clip stage runs at. A hard clip creates harmonics without end; oversampling keeps them from folding back into the audible band as aliasing. Measured on a clipped 9.7 kHz tone the aliased energy is -9 dB at 1x, -29 at 2x, -43 at 4x, -54 at 8x and -66 at 16x. The latency is the same at every setting and the same setting is used in playback and export.</p>", "1x is the default and the lightest. 4x costs under one percent of a core and keeps the highs clean; 8x for a master.")}
 {ctl("SAVED", "dB, last second", "<p>How much the peaks came down through the clipper: the pre-clip peak against the peak after reconstruction, before OUTPUT gain. Raise OUTPUT by this much and the RMS goes up by the same amount. MAX is held since the last reset; click it to clear.</p>")}
 {ctl("INPUT", "-24 to +24 dB<br>default 0<br>automatable", "<p>Gain before the clip stage - the drive. The bar beside the fader is the incoming host level before this gain. Double-click the well to type a value.</p>")}
 {ctl("OUTPUT", "-24 to +12 dB<br>default 0<br>automatable", "<p>Gain after reconstruction; it never changes what gets clipped. The bar beside it is the actual final output level.</p>")}
@@ -113,6 +113,12 @@ def manual(G):
   "Clip 1-2 dB off the peaks (watch SAVED).",
   "Lower the limiter's input by the same amount. The limiter now works less, and the transients keep their edge.",
  ]))}
+{recipe("The last ceiling", "When nothing comes after the clipper",
+ steps([
+  "Keep LOW CUT OFF: every frequency goes through the clip stage, so the threshold holds for the whole signal.",
+  "Set CLIP to the ceiling you need and OS to 8x or 16x.",
+  "Watch the output peak in ADVANCED: the only overshoot left is the reconstruction ringing of about 1 dB at most. If you need an exact true-peak ceiling, a true-peak limiter after the clipper is still the tool.",
+ ]))}
 """})
 
     S.append({"title": "Tips, tricks and troubleshooting", "sub": "", "html": f"""
@@ -127,6 +133,7 @@ def manual(G):
 {table(["Symptom", "Cause", "Fix"], [
  ["The graph says WAITING FOR AUDIO", "No signal has reached the plugin yet", "Play the track; the graph starts on the first sample"],
  ["The output peaks above CLIP", "Reconstruction overshoot after the oversampling filter (up to about 1 dB on hard transients)", "Expected. Use a limiter after the clipper if a hard ceiling is required"],
+ ["With LOW CUT on, the output peaks well above CLIP", "The band below LOW CUT is not clipped and is added back after the clip stage - by design", "For a hard ceiling set LOW CUT to OFF, or keep it and put a limiter after the clipper"],
  ["LOW CUT makes the graph emptier", "The band below LOW CUT bypasses the clipper and is not drawn", "Intended - the graph shows what enters the clipper"],
  ["Latency", "384 samples at 48 kHz (8 ms): the oversampling plus the linear-phase LOW CUT filter, constant in every setting", "The host compensates it automatically"],
  ["Aliasing on bright material at 1x", "A hard clip at the base rate folds its harmonics back", "Use 4x or 8x"],

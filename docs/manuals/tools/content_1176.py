@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "1176", "product": "RONE 1176", "eyebrow": "FET LIMITING AMPLIFIER",
-        "title_html": "RONE <i>1176</i>", "accent": "#E0701A", "version": "0.9.4",
+        "title_html": "RONE <i>1176</i>", "accent": "#E0701A", "version": "0.9.11",
         "tagline": "The FET limiter that made vocals jump out and drums hit harder - INPUT drives it, OUTPUT makes up, four ratio buttons and the famous ALL. With a SCOPE that shows the wave and the gain reduction locked to the bar.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE 1176.vst3", "au": "RONE 1176.component", "exe": "RONE 1176.exe",
         "pdf": "RONE 1176 - User Manual.pdf", "cover_img": "1176/main.png",

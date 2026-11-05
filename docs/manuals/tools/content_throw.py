@@ -165,7 +165,7 @@ def manual(G):
 </ul>
 """})
 
-    S.append(G["conventions_section"](m, note("Standalone", "Without a DAW clock there is no tempo to lock to, so the grid runs at 120 BPM in the standalone app. In a DAW the divisions follow the host tempo, including tempo changes.")))
+    S.append(G["conventions_section"](m, note("Standalone", "Without a DAW clock there is no tempo to lock to, so the grid runs at 120 BPM in the standalone app. In a DAW the divisions follow the host tempo, including tempo changes.") + G["logic_midi"]("RONE Throw", "the macro slots (C1-F1) and KILL (D2)")))
 
     S.append(G["support_section"](m, [
         ("Nothing is added when I turn the knob", "Check MIX is not at 0 % and BYPASS is off. If the window shows a sign-in screen, the plugin is locked - sign in through the RONE Plugins Center."),
@@ -176,7 +176,7 @@ def manual(G):
         ("It gets loud at 100 %", "That is the send adding on top of the untouched dry - the source itself is never reduced. Pull MIX down to taste."),
         ("NOTE shows only semitones, no note names", "The tracker found no single clear note in the throw - a chord, noise or an empty tail. The shift still lands on the interval you set; the names appear the moment a lead or a vocal is thrown."),
         ("DUCK KEY says NO SIDECHAIN ROUTED", "The host has not connected anything to the plugin's sidechain input. Route the kick (or any signal) to Throw's sidechain in the DAW's plugin routing; until then DUCK falls back to the input."),
-        ("MIDI notes do nothing", "Route a MIDI track (or a pad) to the plugin. C1-F1 recall macro slots 1-6, D2 kills the tail."),
+        ("MIDI notes do nothing", "Route a MIDI track (or a pad) to the plugin. C1-F1 recall macro slots 1-6, D2 kills the tail. In Logic: see MIDI in Logic Pro in Interface conventions."),
     ]))
 
     m["sections"] = S

@@ -163,7 +163,7 @@ def install_section(m):
 {img("center/tour.png", "<b>RONE Plugins Center.</b> 1 Navigation &middot; 2 Your account and licence &middot; 3 Sync status &middot; 4 Search &middot; 5 Refresh &middot; 6 Settings &middot; 7 Updates summary &middot; 8 UPDATE ALL &middot; 9 Filters &middot; 10 Sort &middot; 11 A plugin card &middot; 12 Card menu (Details, Open, Manual) &middot; 13 OPEN the standalone app &middot; 14 INSTALL &middot; 15 Your plan", "w80")}
 <h3>Step by step</h3>
 {steps([
- "Download the Center from <a href='https://roneaudio.com'>roneaudio.com</a> and run the installer (Windows: <code>RONE_Plugins_Center_Installer.exe</code>, macOS: <code>RONE_Plugins_Center.dmg</code>). On Windows the installer also adds the Microsoft WebView2 runtime if your PC does not have it yet; it is required for the plugin interfaces. On macOS (10.15 Catalina or later, Intel and Apple Silicon) the first launch may be blocked because the installer is not yet Apple-notarized: open <strong>System Settings &rarr; Privacy &amp; Security</strong>, scroll to the message about the blocked app and press <strong>Open Anyway</strong>, then confirm. If macOS calls the file <em>damaged</em>, run <code>xattr -cr \"/Applications/RONE Plugins Center.app\"</code> in Terminal once.",
+ "Download the Center from <a href='https://roneaudio.com'>roneaudio.com</a> and run the installer (Windows: <code>RONE_Plugins_Center_Installer.exe</code>, macOS: <code>RONE_Plugins_Center.dmg</code>). On Windows the installer also adds the Microsoft WebView2 runtime if your PC does not have it yet; it is required for the plugin interfaces. On macOS (10.15 Catalina or later, Intel and Apple Silicon) open the .dmg and drag the Center onto Applications. It is signed and notarized by Apple, so macOS only asks once whether you want to open an app downloaded from the internet: press <strong>Open</strong>.",
  f"Open the Center and sign in with your <strong>roneaudio.com account</strong> (the same e-mail and password you used on the website). Your licences and device slots are checked automatically: an active <strong>ALL ACCESS</strong> plan unlocks every plugin, and a <strong>lifetime licence</strong> unlocks the plugin it was bought for &mdash; so {m['product']} opens either way.",
  f"Find <strong>{m['product']}</strong> in the list and press <span class='pill'>INSTALL</span>. The Center downloads the signed installer, verifies its checksum, installs it silently and registers the version.",
  "When the card shows <span class='pill'>INSTALLED</span>, start (or restart) your DAW and rescan plugins if it does not pick up new plugins automatically. All RONE plugins appear next to each other in your plugin list because every name starts with <strong>RONE</strong>.",
@@ -192,6 +192,10 @@ def install_section(m):
         body = re.sub(r"A lifetime licence keeps working offline.*?to confirm it\.",
                       "The Center needs to reach the internet now and then to confirm your plan.", body, flags=re.S)
     return {"title": "Installation with the RONE Plugins Center", "sub": "Center, account, file locations", "html": body}
+
+def logic_midi(product, what):
+    """Logic gives an effect in an Audio FX slot no MIDI: the steps for the plugins with MIDI triggers (AU type aumf)."""
+    return note("MIDI in Logic Pro", f"Logic sends no MIDI to a plugin in an Audio FX slot. To reach {what}, load it on an <b>instrument track</b>: Instrument slot &rarr; <b>AU MIDI-controlled Effects</b> &rarr; RonePlugins &rarr; {product}. In the plugin window set <b>Side Chain</b> to the track with the sound, then set that track's output to <b>No Output</b> so you hear it only once. Play or draw the notes on the instrument track. In a normal Audio FX slot {product} works as usual, only without MIDI.")
 
 def conventions_section(m, extras=""):
     body = f"""
