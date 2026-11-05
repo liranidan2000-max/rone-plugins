@@ -1,0 +1,783 @@
+<title>RONE Stutter LIVE</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@500;700;800&family=IBM+Plex+Mono:wght@500;600&family=Heebo:wght@400;600;800&display=swap">
+<style>
+/* Layout: the plugin window as it ships (RoneStutter WebUI tokens), the new LIVE half in the same grammar, Hebrew notes under it. Single dark look on purpose: it is the plugin. */
+:root {
+  --ground:#14161A; --panel:#17191E; --card:#101216; --drawer:#1B1E23;
+  --line:#23262C; --line2:#2A2E35; --line3:#383D45;
+  --text:#E8EAED; --sec:#B9BDC4; --dim:#7A7F88; --faint:#4E535B;
+  --neon:#FFD02B; --neon-rgb:255,208,43; --ink:#0F1114; --live:#F4F6F8;
+  --font-display:'Sora','Segoe UI',sans-serif;
+  --font-ui:'Manrope','Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',Consolas,monospace;
+  --font-he:'Heebo','Segoe UI',Arial,sans-serif;
+  color-scheme:dark;
+}
+* { box-sizing:border-box; }
+html,body { background:#0B0C0F; color:var(--text); }
+body { font-family:var(--font-ui); padding-block:24px 40px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:22px; }
+button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+button:focus-visible, .pad:focus-visible, .knob:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+.label { font-size:10px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); }
+
+/* ---------- the plugin ---------- */
+.plugin { background:linear-gradient(180deg,var(--panel),var(--ground)); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.55); }
+.hdr { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:14px 18px; border-bottom:1px solid var(--line); }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand b { font-family:var(--font-display); font-weight:800; font-size:20px; letter-spacing:.16em; }
+.brand b span { color:var(--neon); }
+.file { font-size:12px; font-weight:700; color:var(--sec); white-space:nowrap; }
+.file small { color:var(--dim); font-family:var(--font-mono); font-weight:500; margin-left:6px; }
+.grow { flex:1 1 auto; }
+
+/* the new big switch */
+.mode { display:flex; background:var(--card); border:1px solid var(--line2); border-radius:12px; padding:4px; gap:4px; }
+.mode button { min-width:104px; padding:11px 18px; border-radius:9px; font-family:var(--font-display); font-weight:800; letter-spacing:.2em; font-size:14px; color:var(--dim); display:flex; align-items:center; justify-content:center; gap:8px; transition:background .18s, color .18s; }
+.mode button.on { background:var(--neon); color:var(--ink); box-shadow:0 0 22px rgba(var(--neon-rgb),.35); }
+.mode .dot { width:8px; height:8px; border-radius:50%; background:currentColor; opacity:.35; }
+.mode button.on .dot { opacity:1; background:#E0222B; box-shadow:0 0 8px #E0222B; animation:blink 1.2s infinite; }
+.mode button[data-m="edit"].on .dot { animation:none; background:var(--ink); box-shadow:none; }
+@keyframes blink { 50% { opacity:.35; } }
+
+.seg { display:inline-flex; background:var(--card); border:1px solid var(--line); border-radius:9px; padding:3px; gap:2px; flex-wrap:wrap; }
+.seg button { padding:7px 11px; border-radius:7px; font-weight:800; font-size:12px; letter-spacing:.08em; color:var(--sec); }
+.seg button.on { background:var(--neon); color:var(--ink); }
+.seg button:hover:not(.on) { color:var(--text); }
+.chip { background:var(--card); border:1px solid var(--line); border-radius:9px; padding:8px 12px; font-weight:800; font-size:12px; letter-spacing:.12em; color:var(--sec); display:inline-flex; align-items:center; gap:8px; }
+.chip.btn:hover { color:var(--text); border-color:var(--line3); }
+.chip.on { color:var(--ink); background:var(--neon); border-color:var(--neon); }
+.chip .v { font-family:var(--font-display); font-size:15px; color:var(--text); letter-spacing:0; }
+.macros button { width:34px; font-family:var(--font-display); }
+.macros button.lit { color:var(--neon); }
+.macros button.hit { background:var(--neon); color:var(--ink); }
+
+/* display */
+.disp { margin:16px 18px 0; background:var(--card); border:1px solid var(--line); border-radius:12px; position:relative; height:300px; overflow:hidden; }
+.disp canvas { position:absolute; inset:0; width:100%; height:100%; }
+.disp .tl { position:absolute; left:16px; top:12px; display:flex; gap:12px; align-items:center; pointer-events:none; }
+.disp .tr { position:absolute; right:12px; top:10px; display:flex; gap:8px; align-items:center; }
+.disp .bl { position:absolute; left:14px; bottom:12px; display:flex; gap:8px; }
+.counter { font-family:var(--font-mono); font-size:13px; color:var(--text); background:rgba(16,18,22,.85); border:1px solid var(--line2); border-radius:8px; padding:7px 10px; }
+.drop { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(var(--neon-rgb),.08); border:2px dashed var(--neon); border-radius:12px; font-weight:800; letter-spacing:.2em; color:var(--neon); }
+.disp.dragover .drop { display:flex; }
+
+/* controls */
+.ctl { padding:16px 18px 6px; display:grid; grid-template-columns:1fr auto; gap:14px 24px; align-items:start; }
+.row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.col { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.knobs { display:flex; gap:20px; }
+.knob { width:88px; display:flex; flex-direction:column; align-items:center; gap:6px; touch-action:none; cursor:ns-resize; user-select:none; }
+.knob .face { width:78px; height:78px; position:relative; }
+.knob svg { position:absolute; inset:0; overflow:visible; }
+.knob .body { position:absolute; inset:11px; border-radius:50%; background:radial-gradient(circle at 38% 30%,#363B42 0%,#26292F 52%,#1A1C21 100%); box-shadow:0 10px 20px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.07); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:14px; }
+.knob .lab { font-size:10px; font-weight:800; letter-spacing:.18em; color:var(--dim); text-align:center; }
+.knob.sm { width:72px; } .knob.sm .face { width:60px; height:60px; } .knob.sm .body { inset:9px; font-size:11px; }
+
+/* live deck */
+.deck { margin:10px 18px 0; display:grid; grid-template-columns:minmax(220px,300px) 1fr auto; gap:14px; align-items:stretch; }
+.pad { border-radius:14px; border:1px solid var(--line3); background:radial-gradient(circle at 50% 35%, #2A2D33, #191B20 70%); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:150px; user-select:none; touch-action:none; cursor:pointer; position:relative; transition:transform .06s, box-shadow .15s, background .15s; }
+.pad .big { font-family:var(--font-display); font-weight:800; font-size:22px; letter-spacing:.14em; }
+.pad .sub { font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--dim); }
+.pad.wait { border-color:var(--neon); box-shadow:0 0 0 1px var(--neon) inset; }
+.pad.down { transform:scale(.985); background:radial-gradient(circle at 50% 35%, #FFE27A, var(--neon) 70%); color:var(--ink); box-shadow:0 0 40px rgba(var(--neon-rgb),.45); }
+.pad.down .sub { color:var(--ink); opacity:.7; }
+.slots { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.slot { min-height:70px; border-radius:11px; border:1px solid var(--line2); background:var(--drawer); display:flex; flex-direction:column; justify-content:space-between; padding:8px 10px; text-align:left; user-select:none; touch-action:none; cursor:pointer; }
+.slot .n { display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--dim); }
+.slot .n b { color:var(--neon); font-family:var(--font-display); font-size:13px; }
+.slot .nm { font-weight:800; font-size:12px; letter-spacing:.1em; }
+.slot.down { background:var(--neon); color:var(--ink); border-color:var(--neon); }
+.slot.down .n, .slot.down .n b { color:var(--ink); }
+.side { display:flex; flex-direction:column; gap:10px; }
+.side .label { margin-bottom:-4px; }
+
+.adv { margin:14px 18px 0; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:rgba(16,18,22,.5); display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; }
+.adv .grp { display:flex; flex-direction:column; gap:6px; }
+.pattern { font-family:var(--font-mono); font-size:11px; color:var(--sec); max-width:330px; line-height:1.5; }
+
+.foot { display:flex; align-items:center; gap:14px; padding:14px 18px; margin-top:14px; border-top:1px solid var(--line); flex-wrap:wrap; }
+.status { flex:1; text-align:center; font-size:11px; font-weight:800; letter-spacing:.2em; color:var(--sec); min-width:200px; }
+.status.live { color:var(--neon); }
+.rp { font-size:11px; font-weight:800; letter-spacing:.35em; color:var(--dim); }
+[hidden] { display:none !important; }
+
+/* ---------- Hebrew notes ---------- */
+.notes { direction:rtl; font-family:var(--font-he); background:#111317; border:1px solid var(--line); border-radius:14px; padding:20px 24px; display:grid; grid-template-columns:1fr 1fr; gap:10px 36px; }
+.notes h2 { font-size:17px; font-weight:800; margin:0 0 6px; grid-column:1/-1; color:var(--text); }
+.notes h3 { font-size:13px; font-weight:800; color:var(--neon); margin:6px 0 2px; }
+.notes ul { margin:0; padding:0 18px 0 0; display:flex; flex-direction:column; gap:6px; color:var(--sec); font-size:14px; line-height:1.55; }
+.notes kbd { font-family:var(--font-mono); direction:ltr; display:inline-block; background:var(--drawer); border:1px solid var(--line3); border-radius:5px; padding:0 6px; font-size:12px; color:var(--text); }
+.legend { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-1px; margin-left:4px; }
+
+@media (max-width:900px) {
+  .ctl { grid-template-columns:1fr; }
+  .deck { grid-template-columns:1fr; }
+  .notes { grid-template-columns:1fr; }
+  .disp { height:220px; }
+}
+@media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+
+<div class="wrap">
+<div class="plugin" id="plugin">
+  <div class="hdr">
+    <div class="brand">
+      <svg width="46" height="26" viewBox="0 0 46 26" fill="none" stroke="#FFD02B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h17a6.5 6.5 0 0 1 0 13H8l9 7h26"/></svg>
+      <b>STUT<span>TER</span></b>
+    </div>
+    <div class="mode" role="tablist" aria-label="Mode">
+      <button data-m="edit" id="mEdit"><span class="dot"></span>EDIT</button>
+      <button data-m="live" id="mLive" class="on"><span class="dot"></span>LIVE</button>
+    </div>
+    <div class="file" id="fileName">Psy_Loop_140.wav<small id="fileInfo">2 bars | 140 BPM</small></div>
+    <div class="grow"></div>
+    <div class="chip"><span style="opacity:.6">◀</span><span id="presetName" style="min-width:110px;text-align:center;color:var(--text)">INIT</span><span style="opacity:.6">▶</span></div>
+    <div class="seg macros" id="macroStrip"></div>
+  </div>
+
+  <div class="disp" id="disp">
+    <canvas id="cv"></canvas>
+    <div class="tl"><span class="label" id="dispTitle">LIVE INPUT · CHANNEL</span></div>
+    <div class="tr" id="trLive">
+      <button class="chip btn" id="songBtn">▶ SONG</button>
+      <span class="counter" id="counter">1.1.1</span>
+    </div>
+    <div class="tr" id="trEdit" hidden>
+      <div class="seg" id="viewSeg"><button data-v="orig">ORIGINAL</button><button data-v="res" class="on">RESULT</button></div>
+    </div>
+    <div class="bl"><span class="chip" style="font-size:10px">DROP A LOOP HERE TO USE YOUR OWN</span></div>
+    <div class="drop">DROP AUDIO</div>
+  </div>
+
+  <div class="ctl">
+    <div class="col">
+      <span class="label">GRID</span>
+      <div class="row">
+        <div class="seg" id="gridSeg"></div>
+        <span class="chip">SLICE <span class="v" id="sliceMs">107 ms</span></span>
+        <span class="chip">BARS <button id="barsDn" aria-label="Fewer bars">−</button><span class="v" id="barsV">1</span><button id="barsUp" aria-label="More bars">+</button></span>
+      </div>
+      <div class="row" id="editRow" hidden>
+        <button class="chip btn" id="playRes">▶ RESULT</button>
+        <button class="chip btn" title="Not in the mockup">ON BAR</button>
+        <button class="chip btn" title="Not in the mockup">EXPORT</button>
+      </div>
+    </div>
+    <div class="knobs" id="mainKnobs"></div>
+  </div>
+
+  <div class="deck" id="deck">
+    <div class="pad" id="mainPad" tabindex="0" role="button" aria-label="Hold to stutter">
+      <span class="big">HOLD</span><span class="sub" id="padSub">TO STUTTER · SPACE</span>
+    </div>
+    <div class="col">
+      <span class="label">MACRO PADS · KEYS 1–6 · MIDI C3–F3</span>
+      <div class="slots" id="slots"></div>
+    </div>
+    <div class="side">
+      <span class="label">TRIGGER</span>
+      <div class="seg" id="trigSeg"><button data-v="hold" class="on">HOLD</button><button data-v="shot">ONE-SHOT</button></div>
+      <span class="label">CATCH ON</span>
+      <div class="seg" id="quantSeg"><button data-v="0">OFF</button><button data-v="0.25" class="on">1/16</button><button data-v="1">1/4</button><button data-v="4">BAR</button></div>
+      <button class="chip btn" id="midiBtn">MIDI · CONNECT</button>
+    </div>
+  </div>
+
+  <div class="adv">
+    <div class="grp"><span class="label">RAMP TO</span><div class="seg" id="rampSeg"><button data-v="0">OFF</button><button data-v="16">1/16</button><button data-v="32">1/32</button><button data-v="64">1/64</button></div></div>
+    <div class="grp"><span class="label">CURVE</span><div class="seg" id="curveSeg"><button data-v="0">LIN</button><button data-v="1">EXP</button></div></div>
+    <div class="knobs" id="advKnobs"></div>
+    <div class="grp"><span class="label">HIGH PASS AUTO</span><div class="seg" id="hpSeg"><button data-v="0">OFF</button><button data-v="1">▲ UP</button></div></div>
+    <div class="grp"><span class="label">COMPLEX</span><div class="seg" id="cxSeg"><button data-v="0">OFF</button><button data-v="1">ON</button></div></div>
+    <div class="pattern" id="pattern" hidden></div>
+  </div>
+
+  <div class="foot">
+    <span class="chip">☰ ADVANCED</span>
+    <span class="status" id="status">LIVE · PRESS ▶ SONG, THEN HOLD THE PAD</span>
+    <span class="rp">RONE PLUGINS</span>
+  </div>
+</div>
+
+<div class="notes">
+  <h2>הדמיה: RONE Stutter במצב LIVE</h2>
+  <div>
+    <h3>מה לנסות</h3>
+    <ul>
+      <li><b>▶ SONG</b> מדמה את הערוץ בדאו: לופ פסיי של 140 BPM נכנס לפלאגין.</li>
+      <li>להחזיק את <b>HOLD</b> או <kbd>Space</kbd>: הסטאטר נתפס על ה-1/16 הבא ונמשך כל עוד מחזיקים.</li>
+      <li><kbd>1</kbd>–<kbd>6</kbd> במקלדת או נוטות <kbd>C3–F3</kbd> מקלדת MIDI: כל פד מפעיל סלוט מאקרו אחר, ממש כמו לנגן על דראם-פד.</li>
+      <li><b>ONE-SHOT</b>: לחיצה אחת מנגנת את ה-BARS עד הסוף (כולל ה-RAMP), ואז חוזרים לסאונד הנקי.</li>
+      <li>לעבור ל-<b>EDIT</b>: אותו לופ כקובץ ואותו מנוע. מכוונים שם, ונשמע בלייב אותו דבר.</li>
+      <li>אפשר לגרור לחלון לופ משלך (WAV/MP3). ה-BPM נקבע לפי 2 תיבות.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>מה רואים בגל</h3>
+    <ul>
+      <li><span class="legend" style="background:#4a4322"></span> צהוב כהה: הסאונד הנקי של הערוץ.</li>
+      <li><span class="legend" style="background:#F4F6F8"></span> לבן: החזרה הראשונה, שעוברת חיה מהכניסה. בזכותה אין latency בכלל.</li>
+      <li><span class="legend" style="background:#FFD02B"></span> צהוב: הסטאטר, מהחזרה השנייה והלאה.</li>
+      <li>הקו <b>CATCH</b> מסמן איפה הסאונד נתפס. החלק משמאל לקו NOW הוא העתיד, כבר מתוזמן.</li>
+    </ul>
+    <h3>מה עוד לא בהדמיה</h3>
+    <ul>
+      <li>FREE, KEY, LOW PASS ו-FADE IN נשארים בפלאגין, פשוט לא הוכנסו לכאן. המנוע עצמו הוא העתקה של <span dir="ltr">renderStutterEffect</span> מ-1.7.1.</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ======================= state =======================
+const SLOTS = [
+  { name:'ROLL 1/16',  p:{ grid:16, bars:1, fadeOut:.15 } },
+  { name:'RAMP 1/64',  p:{ grid:8,  bars:1, rampTo:64, rampExp:1, fadeOut:.1 } },
+  { name:'TAPE DOWN',  p:{ grid:8,  bars:1, pitchRamp:-12, fadeOut:.25 } },
+  { name:'COMPLEX',    p:{ complex:1, bars:2 } },
+  { name:'STUCK WIDE', p:{ grid:32, bars:1, stereo:.7, rampTo:64, fadeOut:.2 } },
+  { name:'GATE RISE',  p:{ grid:16, bars:2, fadeOut:.6, hpAuto:1, hpEnd:.72, pitchRamp:7 } },
+];
+const DEF = { grid:16, bars:1, rampTo:0, rampExp:0, fadeIn:0, fadeInCurve:1, fadeOut:.15, fadeOutCurve:1,
+  stereo:0, pitch:0, pitchRamp:0, hp:0, hpAuto:0, hpEnd:1, complex:0,
+  pattern:'PLAY:4 STUCK:2 ROLL:2:16 PLAY:4 STUCK:2 ROLL:2:32 PLAY:4 SLOW:6 RISE:6' };
+const P = Object.assign({}, DEF);
+const GRIDS = [2,4,6,8,12,16,32];
+const BARS = [0.125,0.25,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8];
+let mode = 'live', trig = 'hold', quantBeats = 0.25, presetName = 'INIT';
+
+let ctx = null, sr = 48000, bpm = 140;
+let loopL, loopR, loopLen, loopPeaks, loopHits = [];
+let master, dryGain, loopSrc = null, t0 = 0, songOn = false, songStop = 0;
+let voices = [];          // live stutters, newest last
+let editPoint = 0, editRes = null, editView = 'res', preview = null;
+
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const spBar = () => 60 / bpm * 4;          // seconds per bar
+
+// ======================= the engine: renderStutterEffect (PluginProcessor.cpp 1.7.1) =======================
+function stageEnds(total, spb, n, exp) {
+  if (n <= 1 || total <= 0) return Array(Math.max(1,n)).fill(total);
+  const need = exp ? Math.pow(2, Math.min(n-1, 12)) : n;
+  let unit = spb;
+  for (let i = 0; i < 4 && total/unit + 1e-6 < need; ++i) unit *= .5;
+  const units = total/unit, whole = Math.floor(units + 1e-6);
+  const ends = []; let prev = 0;
+  for (let k = 0; k < n-1; ++k) {
+    const at = exp ? units*(1 - Math.pow(2, -(k+1))) : units*(k+1)/n;
+    let b = exp ? Math.round(at) : Math.ceil(at - 1e-6);
+    b = Math.min(b, whole - (n-1-k)); b = Math.max(b, prev+1); b = Math.min(b, whole);
+    ends.push(Math.min(total, Math.round(b*unit))); prev = b;
+  }
+  ends.push(total); return ends;
+}
+function parsePattern(text) {
+  const out = [], grids = [2,4,6,8,12,16,24,32,48,64];
+  for (let tok of text.split(/[ ,;]+/)) {
+    tok = tok.trim().toUpperCase(); if (!tok) continue;
+    let semis = 0; const sign = Math.max(tok.lastIndexOf('+'), tok.lastIndexOf('-'));
+    if (sign > 0) { semis = parseInt(tok.slice(sign)) || 0; tok = tok.slice(0, sign); }
+    const parts = tok.split(':'), t = parts[0];
+    if (!['ROLL','STUCK','PLAY','SLOW','RISE','REV','GAP'].includes(t)) continue;
+    const s = { type:t, len:clamp(parts[1] ? parseInt(parts[1]) || 4 : 4, 1, 64), grid:16, semis:clamp(semis,-24,24) };
+    if (parts[2] && grids.includes(parseInt(parts[2]))) s.grid = parseInt(parts[2]);
+    out.push(s);
+  }
+  return out;
+}
+const tapeSpeed = (t, x) => t === 'SLOW' ? 1 - .85*Math.pow(x,.7) : t === 'RISE' ? .2 + .8*Math.pow(x,.8) : 1;
+const sweepEnd = (mode, start, end) => mode === 1 ? (end > start + .001 ? end : 1) : mode === 2 ? (end < start - .001 ? end : 0) : start;
+const cutoffHz = k => 20 * Math.pow(1000, clamp(k,0,1));
+
+// src = [L,R] read from index 0 (the catch point). bufLen >= the BARS length: a held LIVE
+// stutter keeps going on its last stage (the ramp is still spread over BARS).
+function render(src, p, bufLen) {
+  const avail = src[0].length;
+  const spw = 60 / bpm * 4 * sr;
+  const total = Math.max(1, Math.round(p.bars * spw));
+  const len = Math.max(total, bufLen || 0);
+  const out = [new Float32Array(len), new Float32Array(len)];
+  const exp = !!p.rampExp, shaped = t => exp ? t*t : t;
+  const d0 = p.grid, d1 = p.rampTo > 0 ? Math.max(d0, p.rampTo) : d0;
+  const stageDiv = [d0];
+  while (stageDiv[stageDiv.length-1] < d1 - 1e-9 && stageDiv.length < 8) stageDiv.push(Math.min(stageDiv[stageDiv.length-1]*2, d1));
+  const tuned = l => Math.max(64, Math.round(l));
+  const ends = stageEnds(total, spw, stageDiv.length, exp);
+  const fadeOutEnd = p.fadeOut, stereoEnd = p.stereo;   // FADE OUT / STEREO AUTO: not in the mockup
+  let firstEnd = -1;
+
+  const fadeIn = (pos, l, amt, curve) => {
+    const fl = Math.min(l, Math.floor(l*amt)); if (amt <= 0 || fl <= 0) return;
+    for (const d of out) for (let s = 0; s < fl; ++s) d[pos+s] *= Math.pow(s/fl, curve);
+  };
+  const fadeOut = (pos, l, amt, curve) => {
+    const fl = Math.min(l, Math.floor(l*amt)); if (amt <= 0 || fl <= 0) return;
+    const st = pos + l - fl;
+    for (const d of out) for (let s = 0; s < fl; ++s) d[st+s] *= Math.pow(1 - s/fl, curve);
+  };
+  const stereoGain = (pos, l, idx, amt) => {
+    if (amt <= 0) return; const d = out[idx % 2 === 0 ? 1 : 0], g = 1 - amt;
+    for (let i = 0; i < l; ++i) d[pos+i] *= g;
+  };
+  const writeSlice = (wp, l, idx) => {
+    if (firstEnd < 0) firstEnd = wp + l;
+    const t = clamp(wp / Math.max(1, total - l), 0, 1);
+    const ratio = Math.pow(2, (p.pitch + p.pitchRamp*shaped(t)) / 12);
+    for (let ch = 0; ch < 2; ++ch) {
+      const s = src[ch], d = out[ch];
+      for (let i = 0; i < l; ++i) {
+        const q = i*ratio, i0 = q|0, fr = q - i0;
+        d[wp+i] = i0 + 1 >= avail ? 0 : s[i0] + (s[i0+1] - s[i0])*fr;
+      }
+    }
+    fadeIn(wp, l, p.fadeIn, p.fadeInCurve);
+    fadeOut(wp, l, p.fadeOut + (fadeOutEnd - p.fadeOut)*shaped(t), p.fadeOutCurve);
+    stereoGain(wp, l, idx, p.stereo + (stereoEnd - p.stereo)*shaped(t));
+  };
+
+  let wp = 0, idx = 0;
+  if (p.complex) {
+    let steps = parsePattern(p.pattern); if (!steps.length) steps = parsePattern(DEF.pattern);
+    const unit = spw / 16, dk0 = Math.max(1, Math.round(sr*.002));
+    const readAt = (s, q) => { const i0 = Math.floor(q); if (i0 < 0 || i0+1 >= avail) return 0; const fr = q - i0; return s[i0] + (s[i0+1]-s[i0])*fr; };
+    const tAt = (pos, l) => clamp(pos / Math.max(1, total - l), 0, 1);
+    const ratioAt = (t, semis) => Math.pow(2, (p.pitch + p.pitchRamp*shaped(t) + semis) / 12);
+    const finish = (pos, l, fades, t, index) => {
+      const foHere = p.fadeOut + (fadeOutEnd - p.fadeOut)*shaped(t);
+      if (fades) { fadeIn(pos, l, p.fadeIn, p.fadeInCurve); fadeOut(pos, l, foHere, p.fadeOutCurve); }
+      const dk = Math.min(dk0, l >> 1), tailDone = fades && Math.floor(l*foHere) >= dk;
+      for (const d of out) for (let i = 0; i < dk; ++i) { const g = i/dk; d[pos+i] *= g; if (!tailDone) d[pos+l-1-i] *= g; }
+      stereoGain(pos, l, index, p.stereo + (stereoEnd - p.stereo)*shaped(t));
+    };
+    const slice = (pos, l, from, rev, semis, fades, index) => {
+      if (firstEnd < 0) firstEnd = pos + l;
+      const t = tAt(pos, l), r = ratioAt(t, semis);
+      for (let ch = 0; ch < 2; ++ch) for (let i = 0; i < l; ++i) out[ch][pos+i] = readAt(src[ch], from + (rev ? l-1-i : i)*r);
+      finish(pos, l, fades, t, index);
+    };
+    const tape = (pos, l, from, type, semis, index) => {
+      if (firstEnd < 0) firstEnd = pos + l;
+      const t = tAt(pos, l), r = ratioAt(t, semis); let q = from;
+      for (let i = 0; i < l; ++i) { out[0][pos+i] = readAt(src[0], q); out[1][pos+i] = readAt(src[1], q); q += tapeSpeed(type, i/l)*r; }
+      finish(pos, l, false, t, index); return q;
+    };
+    let read = 0, posU = 0;
+    for (let k = 0; ; ++k) {
+      const s = steps[k % steps.length], pos = Math.round(posU*unit);
+      if (pos >= len) break;
+      posU += s.len;
+      const end = Math.min(len, Math.round(posU*unit)), l = end - pos;
+      if (l <= 0) continue;
+      if (read >= avail - 1) read = 0;
+      if (k === 0 && s.type === 'GAP') firstEnd = 0;
+      if (s.type === 'ROLL' || s.type === 'STUCK') {
+        const g = tuned(spw / (s.type === 'STUCK' ? 64 : s.grid));
+        for (let w = pos; w < end; ) { let ln = Math.min(g, end - w); if (end - (w+ln) < 2*dk0) ln = end - w; slice(w, ln, read, false, s.semis, true, idx++); w += ln; }
+      } else if (s.type === 'PLAY' || s.type === 'SLOW' || s.type === 'RISE') read = tape(pos, l, read, s.type, s.semis, idx++);
+      else if (s.type === 'REV') slice(pos, l, read, true, s.semis, false, idx++);
+    }
+  } else {
+    for (let k = 0; k < stageDiv.length; ++k) {
+      const c = tuned(spw / stageDiv[k]), se = Math.min(total, ends[k]);
+      while (wp < se) { const l = Math.min(c, se - wp); writeSlice(wp, l, idx++); wp += l; }
+    }
+    const c = tuned(spw / stageDiv[stageDiv.length-1]);          // LIVE HOLD: the last stage goes on
+    while (wp < len) { const l = Math.min(c, len - wp); writeSlice(wp, l, idx++); wp += l; }
+  }
+
+  // FILTER: one run over the fill, 4th-order Butterworth (two biquads), AUTO sweeps the knob
+  const hp0 = p.hp, hp1 = sweepEnd(p.hpAuto, hp0, p.hpEnd);
+  if (Math.max(hp0, hp1) > .001) {
+    const sweeping = Math.abs(hp1 - hp0) > 1e-6;
+    for (const q of [0.54119610, 1.30656296]) for (const d of out) {
+      let b0, b1, a1, a2, z1 = 0, z2 = 0;
+      const design = k => { const hz = clamp(cutoffHz(k), 10, sr*.45), w = 2*Math.PI*hz/sr, cw = Math.cos(w), al = Math.sin(w)/(2*q), a0 = 1+al;
+        b1 = -(1+cw)/a0; b0 = (1+cw)*.5/a0; a1 = -2*cw/a0; a2 = (1-al)/a0; };
+      design(hp0);
+      for (let s = 0; s < len; ++s) {
+        if (sweeping && s % 32 === 0) { const t = Math.min(1, s/total); design(hp0 + (hp1-hp0)*(p.rampExp ? t*t : t)); }
+        const x = d[s], y = b0*x + z1; z1 = b1*x - a1*y + z2; z2 = b0*x - a2*y; d[s] = y;
+      }
+    }
+  }
+  return { out, total, len, firstEnd: Math.max(0, firstEnd), peaks: peaks(out, 64) };
+}
+
+function peaks(ch, hop) {
+  const n = Math.ceil(ch[0].length / hop), pk = new Float32Array(n);
+  for (let i = 0; i < n; ++i) { let m = 0; const e = Math.min(ch[0].length, (i+1)*hop);
+    for (let s = i*hop; s < e; ++s) { const a = Math.max(Math.abs(ch[0][s]), Math.abs(ch[1][s])); if (a > m) m = a; } pk[i] = m; }
+  return pk;
+}
+function detectHits(L, R) {
+  const hop = 256, n = Math.floor(L.length/hop), e = new Float32Array(n), hits = [];
+  for (let i = 0; i < n; ++i) { let s = 0; for (let j = i*hop; j < (i+1)*hop; ++j) s += L[j]*L[j] + R[j]*R[j]; e[i] = s; }
+  let last = -1e9;
+  for (let i = 4; i < n; ++i) { let avg = 0; for (let k = 1; k <= 4; ++k) avg += e[i-k]; avg /= 4;
+    if (e[i] > avg*2.2 && e[i] > 2 && (i - last)*hop > sr*.06) { hits.push(i*hop); last = i; } }
+  if (!hits.length || hits[0] > sr*.02) hits.unshift(0);
+  return hits;
+}
+
+// ======================= the channel: a synthesised psy loop (2 bars, 140) =======================
+function synthLoop() {
+  bpm = 140;
+  const beat = 60/bpm, s16 = beat/4; loopLen = Math.round(8*beat*sr);
+  const L = new Float32Array(loopLen), R = new Float32Array(loopLen);
+  const add = (t0s, dur, fn, pan = .5) => { const st = Math.round(t0s*sr), n = Math.round(dur*sr);
+    for (let i = 0; i < n; ++i) { const v = fn(i/sr, i/n), j = (st+i) % loopLen; L[j] += v*(1-pan)*2*.5; R[j] += v*pan*2*.5; } };
+  let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647 * 2 - 1;
+  for (let b = 0; b < 8; ++b) {
+    const tb = b*beat;
+    let ph = 0; add(tb, .3, (t) => { ph += 2*Math.PI*(47 + 120*Math.exp(-t*30))/sr; return Math.tanh(1.8*Math.sin(ph)*Math.exp(-t*8.5))*.95; });
+    const note = (b === 7) ? 49 : 41.2;
+    for (let k = 1; k < 4; ++k) {
+      let ph2 = 0, y1 = 0, y2 = 0;
+      add(tb + k*s16, s16*.92, (t, x) => { ph2 = (ph2 + note/sr) % 1; const saw = 2*ph2 - 1;
+        const fc = 180 + 900*Math.exp(-t*30), a = 1 - Math.exp(-2*Math.PI*fc/sr); y1 += a*(saw - y1); y2 += a*(y1 - y2);
+        return y2 * Math.min(1, t*500) * (1 - Math.pow(x, 4)) * .55; });
+    }
+    add(tb + 2*s16, .05, (t) => rnd()*Math.exp(-t*90)*.22, b % 2 ? .25 : .75);
+    for (let k = 0; k < 4; ++k) if (k !== 2) add(tb + k*s16, .02, (t) => rnd()*Math.exp(-t*220)*.07, .6);
+    if (b % 2 === 1) { let y = 0; add(tb, .14, (t) => { const n = rnd(); y += .35*(n - y); return (n - y)*Math.exp(-t*28)*.5; }, .5); }
+  }
+  const scale = [329.6, 392, 493.9, 659.3, 349.2, 392, 493.9, 587.3, 329.6, 440, 523.3, 659.3, 349.2, 392, 466.2, 587.3];
+  for (let k = 0; k < 32; ++k) {
+    const f = scale[(k*3) % 16] * (k >= 16 ? 1 : .5), pan = k % 2 ? .3 : .7; let ph = 0, y = 0;
+    add(k*s16, s16*.6, (t, x) => { ph = (ph + f/sr) % 1; const sq = ph < .5 ? 1 : -1; y += .18*(sq - y); return y*(1 - x)*.13; }, pan);
+  }
+  normalise(L, R); setLoop(L, R, 'Psy_Loop_140.wav');
+}
+function normalise(L, R) { let m = 0; for (let i = 0; i < L.length; ++i) m = Math.max(m, Math.abs(L[i]), Math.abs(R[i])); const g = .9 / (m || 1); for (let i = 0; i < L.length; ++i) { L[i] *= g; R[i] *= g; } }
+function setLoop(L, R, name) {
+  loopL = L; loopR = R; loopLen = L.length; loopPeaks = peaks([L, R], 64); loopHits = detectHits(L, R);
+  editPoint = loopHits[0] || 0;
+  $('fileName').firstChild.nodeValue = name;
+  $('fileInfo').textContent = `${(loopLen/sr).toFixed(2)}s | ${bpm.toFixed(1).replace(/\.0$/,'')} BPM`;
+  if (mode === 'edit') renderEdit();
+}
+
+// ======================= audio graph + transport =======================
+function ensureAudio() {
+  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+  ctx = new (window.AudioContext || window.webkitAudioContext)(); sr = ctx.sampleRate;
+  master = ctx.createGain(); master.gain.value = .8; master.connect(ctx.destination);
+  dryGain = ctx.createGain(); dryGain.connect(master);
+  synthLoop();
+}
+function ramp(param, v, at, dur) {
+  if (param.cancelAndHoldAtTime) param.cancelAndHoldAtTime(at); else { param.cancelScheduledValues(at); param.setValueAtTime(param.value, at); }
+  param.linearRampToValueAtTime(v, at + dur);
+}
+function startSong() {
+  ensureAudio(); if (songOn) return;
+  loopSrc = ctx.createBufferSource(); const b = ctx.createBuffer(2, loopLen, sr);
+  b.copyToChannel(loopL, 0); b.copyToChannel(loopR, 1); loopSrc.buffer = b; loopSrc.loop = true; loopSrc.connect(dryGain);
+  t0 = ctx.currentTime + .05; dryGain.gain.cancelScheduledValues(0); dryGain.gain.setValueAtTime(1, 0);
+  loopSrc.start(t0); songOn = true; songStop = Infinity;
+  $('songBtn').textContent = '■ STOP'; $('songBtn').classList.add('on'); setStatus();
+}
+function stopSong() {
+  if (!songOn) return; const now = ctx.currentTime;
+  // REST ON STOP: the stop edge kills the stutter too
+  for (const v of voices) endVoice(v, now);
+  ramp(dryGain.gain, 0, now, .006); loopSrc.stop(now + .02); songOn = false; songStop = now;
+  $('songBtn').textContent = '▶ SONG'; $('songBtn').classList.remove('on'); setStatus();
+}
+
+// ======================= LIVE: catch forward, first slice passes live =======================
+let held = null;            // { kind:'main'|slot, voice }
+function trigger(kind) {
+  ensureAudio(); if (!songOn) startSong();
+  const now = ctx.currentTime, lead = .03;
+  let T = now + lead;
+  if (quantBeats > 0) { const q = quantBeats * 60/bpm; T = t0 + Math.ceil((T - t0)/q - 1e-9) * q; }
+  for (const v of voices) if (v.endAt > T) endVoice(v, T);
+
+  // what the recorder will have from T on: the channel, read forward (twice its length, for FOLLOW)
+  const pos = ((Math.round((T - t0)*sr) % loopLen) + loopLen) % loopLen;
+  const cap = [new Float32Array(loopLen*2), new Float32Array(loopLen*2)];
+  for (let i = 0; i < loopLen*2; ++i) { const j = (pos + i) % loopLen; cap[0][i] = loopL[j]; cap[1][i] = loopR[j]; }
+  const p = Object.assign({}, P);
+  const r = render(cap, p, trig === 'hold' ? Math.round(16*spBar()*sr) : 0);
+
+  const Ts = T + r.firstEnd/sr;           // slice 1 is the live input itself: the render takes over here
+  const b = ctx.createBuffer(2, r.len, sr); b.copyToChannel(r.out[0], 0); b.copyToChannel(r.out[1], 1);
+  const src = ctx.createBufferSource(), g = ctx.createGain(); src.buffer = b; src.connect(g); g.connect(master);
+  g.gain.setValueAtTime(1, 0);
+  src.start(Ts, r.firstEnd/sr);
+  ramp(dryGain.gain, 0, Ts, .003);
+  const v = { T, Ts, endAt: Infinity, src, g, r, kind, name: kind === 'main' ? 'PAD' : SLOTS[kind].name };
+  const natural = T + (trig === 'shot' ? r.total : r.len)/sr;
+  scheduleEnd(v, natural);
+  voices.push(v); if (voices.length > 8) voices.shift();
+  return v;
+}
+function scheduleEnd(v, at) {
+  v.endAt = at;
+  if (at <= v.Ts) { try { v.src.stop(); } catch (e) {} ramp(dryGain.gain, 1, Math.max(ctx.currentTime, at), .003); return; }
+  ramp(v.g.gain, 0, at - .006, .006); ramp(dryGain.gain, 1, at - .006, .006);
+  try { v.src.stop(at + .02); } catch (e) {}
+}
+function endVoice(v, at) { if (at < v.endAt) scheduleEnd(v, Math.max(at, ctx.currentTime + .006)); }
+function press(kind) {
+  if (held) return;
+  if (kind !== 'main') loadSlot(kind);
+  const v = trigger(kind); held = { kind, v };
+  (kind === 'main' ? $('mainPad') : slotEls[kind]).classList.add('down');
+  if (kind !== 'main') macroEls[kind].classList.add('hit');
+}
+function release(kind) {
+  if (!held || held.kind !== kind) return;
+  if (trig === 'hold') endVoice(held.v, ctx.currentTime + .005);
+  (kind === 'main' ? $('mainPad') : slotEls[kind]).classList.remove('down');
+  if (kind !== 'main') macroEls[kind].classList.remove('hit');
+  held = null;
+}
+
+// ======================= EDIT: the file, a picked point, RESULT =======================
+let editTimer = 0;
+function renderEdit() {
+  if (!ctx) return;
+  clearTimeout(editTimer);
+  editTimer = setTimeout(() => {
+    const src = [loopL.subarray(editPoint), loopR.subarray(editPoint)];
+    editRes = render(src, Object.assign({}, P), 0);
+    const hi = loopHits.indexOf(editPoint) + 1;
+    $('status').textContent = `STUTTER APPLIED — TRANSIENT ${hi}/${loopHits.length}`;
+  }, 40);
+}
+function playPreview() {
+  ensureAudio(); stopPreview();
+  const ch = editView === 'res' && editRes ? editRes.out : [loopL, loopR];
+  const b = ctx.createBuffer(2, ch[0].length, sr); b.copyToChannel(ch[0], 0); b.copyToChannel(ch[1], 1);
+  const s = ctx.createBufferSource(); s.buffer = b; s.connect(master); const at = ctx.currentTime + .02; s.start(at);
+  preview = { s, at, len: ch[0].length/sr }; s.onended = () => { if (preview && preview.s === s) stopPreview(); };
+  $('playRes').textContent = '■ STOP';
+}
+function stopPreview() { if (preview) { try { preview.s.stop(); } catch (e) {} preview = null; } $('playRes').textContent = editView === 'res' ? '▶ RESULT' : '▶ ORIGINAL'; }
+
+// ======================= drawing =======================
+const cv = $('cv'), g2 = cv.getContext('2d');
+function fit() { const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1; cv.width = Math.round(r.width*d); cv.height = Math.round(r.height*d); }
+new ResizeObserver(fit).observe(cv);
+const NEON = '#FFD02B', DRY = 'rgba(255,208,43,.30)', LIVE = '#F4F6F8';
+
+function drawLive() {
+  const W = cv.width, H = cv.height, d = devicePixelRatio || 1, mid = H*.54, amp = H*.36;
+  g2.clearRect(0, 0, W, H);
+  if (!ctx) { hint('PRESS ▶ SONG OR HOLD THE PAD'); return; }
+  const now = ctx.currentTime, win = 2*spBar(), tA = now - win*.8, nowX = W*.8;
+  // bar + beat lines
+  if (songOn || songStop > tA) {
+    const beat = 60/bpm;
+    for (let k = Math.floor((tA - t0)/beat); ; ++k) {
+      const t = t0 + k*beat, x = (t - tA)/win*W; if (x > W) break; if (x < 0 || t < t0) continue;
+      g2.fillStyle = k % 4 === 0 ? '#2E323A' : '#1E2127'; g2.fillRect(Math.round(x), 0, k % 4 === 0 ? 2*d : d, H);
+      if (k % 4 === 0) { g2.fillStyle = '#4E535B'; g2.font = `${10*d}px IBM Plex Mono`; g2.fillText(String(k/4 + 1), x + 4*d, H - 8*d); }
+    }
+  }
+  // the output, column by column: dry / slice 1 live / stutter
+  const hop = 64;
+  for (let x = 0; x < W; x += d) {
+    const t = tA + x/W*win, t2 = tA + (x + d)/W*win;
+    if (t < t0 || t > songStop) continue;
+    let v = null; for (let i = voices.length - 1; i >= 0; --i) { const q = voices[i]; if (t >= q.T && t < q.endAt) { v = q; break; } }
+    let peak, col;
+    if (v && t >= v.Ts) {
+      const a = Math.floor((t - v.T)*sr/hop), b = Math.max(a+1, Math.floor((t2 - v.T)*sr/hop));
+      peak = 0; for (let i = a; i < b && i < v.r.peaks.length; ++i) peak = Math.max(peak, v.r.peaks[i]); col = NEON;
+    } else {
+      const n = loopPeaks.length, a = Math.floor(((t - t0)*sr/hop)), b = Math.max(a+1, Math.floor((t2 - t0)*sr/hop));
+      peak = 0; for (let i = a; i < b; ++i) peak = Math.max(peak, loopPeaks[((i % n) + n) % n]);
+      col = v ? LIVE : DRY;
+    }
+    g2.globalAlpha = t > now ? .38 : 1; g2.fillStyle = col;
+    const h = Math.max(d, peak*amp); g2.fillRect(x, mid - h, d, 2*h);
+  }
+  g2.globalAlpha = 1;
+  // catch markers
+  g2.font = `800 ${10*d}px Manrope`;
+  for (const v of voices) {
+    const x = (v.T - tA)/win*W; if (x < -60*d || x > W) continue;
+    g2.fillStyle = LIVE; g2.fillRect(Math.round(x), 0, d, H);
+    g2.fillText('CATCH · ' + v.name, x + 5*d, 22*d);
+  }
+  // NOW
+  g2.fillStyle = 'rgba(232,234,237,.55)'; g2.fillRect(Math.round(nowX), 0, d, H);
+  g2.fillStyle = '#7A7F88'; g2.fillText('NOW', nowX + 5*d, H - 8*d);
+  // counter
+  if (songOn) { const beat = 60/bpm, b16 = Math.max(0, Math.floor((now - t0)/(beat/4)));
+    $('counter').textContent = `${Math.floor(b16/16) % 2 + 1}.${Math.floor(b16/4) % 4 + 1}.${b16 % 4 + 1}`; }
+}
+function drawEdit() {
+  const W = cv.width, H = cv.height, d = devicePixelRatio || 1, mid = H*.5, amp = H*.38;
+  g2.clearRect(0, 0, W, H);
+  if (!ctx) { hint('CLICK TO LOAD THE FILE'); return; }
+  const res = editView === 'res' && editRes;
+  const pk = res ? editRes.peaks : loopPeaks, n = pk.length;
+  g2.fillStyle = NEON;
+  for (let x = 0; x < W; x += d) {
+    const a = Math.floor(x/W*n), b = Math.max(a+1, Math.floor((x+d)/W*n)); let m = 0;
+    for (let i = a; i < b; ++i) m = Math.max(m, pk[i]); const h = Math.max(d*.5, m*amp); g2.fillRect(x, mid - h, d, 2*h);
+  }
+  if (!res) {
+    for (const h of loopHits) { const x = h/loopLen*W; g2.fillStyle = h === editPoint ? LIVE : 'rgba(232,234,237,.18)'; g2.fillRect(Math.round(x), h === editPoint ? 0 : H*.82, h === editPoint ? 2*d : d, h === editPoint ? H : H*.1); }
+  }
+  if (preview) { const x = clamp((ctx.currentTime - preview.at)/preview.len, 0, 1)*W; g2.fillStyle = LIVE; g2.fillRect(x, 0, d, H); }
+}
+function hint(text) { const d = devicePixelRatio || 1; g2.fillStyle = '#4E535B'; g2.font = `800 ${12*d}px Manrope`; g2.textAlign = 'center'; g2.fillText(text, cv.width/2, cv.height/2); g2.textAlign = 'left'; }
+function frame() {
+  if (mode === 'live') drawLive(); else drawEdit();
+  // pads light while a quantised catch is still waiting
+  const waiting = ctx && voices.some(v => v.T > ctx.currentTime);
+  $('padSub').textContent = waiting ? 'WAITING FOR THE GRID…' : 'TO STUTTER · SPACE';
+  requestAnimationFrame(frame);
+}
+
+// ======================= controls =======================
+function seg(el, items, get, set) {
+  if (items) el.innerHTML = items.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('');
+  const sync = () => el.querySelectorAll('button').forEach(b => b.classList.toggle('on', String(get()) === b.dataset.v));
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; set(b.dataset.v); refresh(); });
+  syncs.push(sync);
+}
+const syncs = [];
+function knob(parent, o) {
+  const el = document.createElement('div'); el.className = 'knob' + (o.sm ? ' sm' : ''); el.tabIndex = 0;
+  el.innerHTML = `<div class="face"><svg viewBox="0 0 100 100"><path d="${arc(0,1)}" stroke="#23262C" stroke-width="6" fill="none" stroke-linecap="round"/><path class="lit" stroke="${NEON}" stroke-width="6" fill="none" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(255,208,43,.5))"/></svg><div class="body"></div></div><div class="lab">${o.label}</div>`;
+  parent.appendChild(el);
+  const lit = el.querySelector('.lit'), body = el.querySelector('.body');
+  const norm = () => (o.get() - o.min)/(o.max - o.min);
+  const sync = () => { const n = norm(), c = o.min < 0 ? (0 - o.min)/(o.max - o.min) : 0; lit.setAttribute('d', arc(Math.min(c, n), Math.max(c, n))); body.textContent = o.fmt(o.get()); };
+  let y0, v0;
+  el.addEventListener('pointerdown', e => { if (e.button) return; el.setPointerCapture(e.pointerId); y0 = e.clientY; v0 = norm(); });
+  el.addEventListener('pointermove', e => { if (y0 == null) return; const k = e.shiftKey ? .1 : 1; o.set(o.min + clamp(v0 + (y0 - e.clientY)/180*k, 0, 1)*(o.max - o.min)); refresh(); });
+  el.addEventListener('pointerup', () => { y0 = null; });
+  el.addEventListener('wheel', e => { e.preventDefault(); const k = e.shiftKey ? .004 : .02; o.set(clamp(o.get() + (e.deltaY < 0 ? k : -k)*(o.max - o.min), o.min, o.max)); refresh(); }, { passive:false });
+  el.addEventListener('dblclick', () => { o.set(o.def); refresh(); });
+  syncs.push(sync);
+}
+function arc(a, b) {
+  const A = -135 + 270*a, B = -135 + 270*b, r = 44, c = 50;
+  const pt = deg => [c + r*Math.sin(deg*Math.PI/180), c - r*Math.cos(deg*Math.PI/180)];
+  const [x1, y1] = pt(A), [x2, y2] = pt(Math.max(B, A + .01));
+  return `M${x1} ${y1} A${r} ${r} 0 ${B - A > 180 ? 1 : 0} 1 ${x2} ${y2}`;
+}
+const pct = v => Math.round(v*100) + '%', st = v => (v > 0 ? '+' : '') + Math.round(v) + ' st';
+function refresh(fromSlot) {
+  syncs.forEach(f => f());
+  $('barsV').textContent = P.bars < 1 ? (P.bars === .5 ? '½' : '1/' + Math.round(1/P.bars)) : String(P.bars);
+  $('sliceMs').textContent = P.complex ? 'COMPLEX' : Math.round(spBar()*1000/P.grid) + ' ms';
+  $('pattern').hidden = !P.complex; $('pattern').textContent = P.pattern;
+  if (!fromSlot) { presetName = 'INIT *'; }
+  $('presetName').textContent = presetName;
+  if (mode === 'edit') renderEdit();
+}
+
+seg($('gridSeg'), GRIDS.map(g => [g, '1/' + g]), () => P.grid, v => { P.grid = +v; P.complex = 0; });
+seg($('rampSeg'), null, () => P.rampTo, v => P.rampTo = +v);
+seg($('curveSeg'), null, () => P.rampExp, v => P.rampExp = +v);
+seg($('hpSeg'), null, () => P.hpAuto, v => { P.hpAuto = +v; if (P.hpAuto && P.hpEnd <= P.hp) P.hpEnd = .72; });
+seg($('cxSeg'), null, () => P.complex, v => P.complex = +v);
+seg($('trigSeg'), null, () => trig, v => trig = v);
+seg($('quantSeg'), null, () => quantBeats, v => quantBeats = +v);
+seg($('viewSeg'), null, () => editView, v => { editView = v; stopPreview(); });
+knob($('mainKnobs'), { label:'FADE OUT', min:0, max:1, def:.15, get:() => P.fadeOut, set:v => P.fadeOut = v, fmt:pct });
+knob($('mainKnobs'), { label:'STEREO', min:0, max:1, def:0, get:() => P.stereo, set:v => P.stereo = v, fmt:pct });
+knob($('advKnobs'), { sm:1, label:'PITCH', min:-12, max:12, def:0, get:() => P.pitch, set:v => P.pitch = Math.round(v), fmt:st });
+knob($('advKnobs'), { sm:1, label:'P. RAMP', min:-24, max:24, def:0, get:() => P.pitchRamp, set:v => P.pitchRamp = Math.round(v), fmt:st });
+knob($('advKnobs'), { sm:1, label:'HIGH PASS', min:0, max:1, def:0, get:() => P.hp, set:v => P.hp = v,
+  fmt:v => v < .002 ? 'OFF' : (h => h >= 1000 ? (h/1000).toFixed(1) + 'k' : Math.round(h) + '')(cutoffHz(v)) });
+$('barsDn').onclick = () => { P.bars = BARS[Math.max(0, BARS.indexOf(P.bars) - 1)]; refresh(); };
+$('barsUp').onclick = () => { P.bars = BARS[Math.min(BARS.length-1, BARS.indexOf(P.bars) + 1)]; refresh(); };
+
+// macro slots: header strip + the six pads
+const macroEls = [], slotEls = [], NOTES = ['C3','C#3','D3','D#3','E3','F3'];
+SLOTS.forEach((s, i) => {
+  const m = document.createElement('button'); m.textContent = i + 1; m.className = 'lit'; m.title = s.name;
+  m.addEventListener('click', () => { loadSlot(i); }); $('macroStrip').appendChild(m); macroEls.push(m);
+  const el = document.createElement('div'); el.className = 'slot'; el.tabIndex = 0;
+  el.innerHTML = `<div class="n"><b>${i+1}</b><span>${NOTES[i]}</span></div><div class="nm">${s.name}</div>`;
+  el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); if (mode === 'live') press(i); });
+  el.addEventListener('pointerup', () => release(i)); el.addEventListener('pointercancel', () => release(i));
+  $('slots').appendChild(el); slotEls.push(el);
+});
+function loadSlot(i) { Object.assign(P, DEF, SLOTS[i].p); presetName = 'MACRO ' + (i+1) + ' · ' + SLOTS[i].name; refresh(true); }
+
+const pad = $('mainPad');
+pad.addEventListener('pointerdown', e => { e.preventDefault(); pad.setPointerCapture(e.pointerId); press('main'); });
+pad.addEventListener('pointerup', () => release('main')); pad.addEventListener('pointercancel', () => release('main'));
+addEventListener('keydown', e => {
+  if (e.repeat || mode !== 'live') return;
+  if (e.code === 'Space') { e.preventDefault(); press('main'); }
+  const n = parseInt(e.key); if (n >= 1 && n <= 6) press(n - 1);
+});
+addEventListener('keyup', e => {
+  if (e.code === 'Space') release('main');
+  const n = parseInt(e.key); if (n >= 1 && n <= 6) release(n - 1);
+});
+$('songBtn').onclick = () => { ensureAudio(); songOn ? stopSong() : startSong(); };
+$('playRes').onclick = () => preview ? stopPreview() : playPreview();
+
+// MIDI: C3..F3 (60-65) play the six macro pads, any other note the main pad
+$('midiBtn').onclick = async () => {
+  const b = $('midiBtn');
+  if (!navigator.requestMIDIAccess) { b.textContent = 'MIDI · NOT IN THIS VIEWER'; return; }
+  try {
+    const acc = await navigator.requestMIDIAccess(); ensureAudio();
+    const hook = () => { let n = 0; acc.inputs.forEach(inp => { n++; inp.onmidimessage = onMidi; }); b.textContent = n ? `MIDI · ${n} IN` : 'MIDI · NO DEVICE'; b.classList.toggle('on', n > 0); };
+    acc.onstatechange = hook; hook();
+  } catch (e) { b.textContent = 'MIDI · BLOCKED HERE'; }
+};
+function onMidi(m) {
+  if (mode !== 'live') return;
+  const [st, note, vel] = m.data, cmd = st & 0xF0, k = note >= 60 && note <= 65 ? note - 60 : 'main';
+  if (cmd === 0x90 && vel > 0) press(k); else if (cmd === 0x80 || cmd === 0x90) release(k);
+}
+
+// the big switch
+function setMode(m) {
+  mode = m; $('mEdit').classList.toggle('on', m === 'edit'); $('mLive').classList.toggle('on', m === 'live');
+  const live = m === 'live';
+  $('deck').hidden = !live; $('trLive').hidden = !live; $('trEdit').hidden = live; $('editRow').hidden = live;
+  $('dispTitle').textContent = live ? 'LIVE INPUT · CHANNEL' : 'WAVEFORM';
+  if (live) { stopPreview(); } else { ensureAudio(); stopSong(); renderEdit(); }
+  setStatus();
+}
+function setStatus() {
+  const s = $('status'); s.classList.toggle('live', mode === 'live' && songOn);
+  if (mode === 'live') s.textContent = songOn ? 'LIVE — HOLD THE PAD, 1–6 OR A MIDI NOTE' : 'LIVE · PRESS ▶ SONG, THEN HOLD THE PAD';
+}
+$('mEdit').onclick = () => setMode('edit'); $('mLive').onclick = () => setMode('live');
+cv.addEventListener('click', e => {
+  if (mode !== 'edit') return; ensureAudio(); if (editView === 'res') return;
+  const r = cv.getBoundingClientRect(), s = (e.clientX - r.left)/r.width*loopLen;
+  let best = loopHits[0]; for (const h of loopHits) if (Math.abs(h - s) < Math.abs(best - s)) best = h;
+  editPoint = best; renderEdit();
+});
+
+// your own loop
+const disp = $('disp');
+['dragenter','dragover'].forEach(t => disp.addEventListener(t, e => { e.preventDefault(); disp.classList.add('dragover'); }));
+['dragleave','drop'].forEach(t => disp.addEventListener(t, e => { e.preventDefault(); disp.classList.remove('dragover'); }));
+disp.addEventListener('drop', async e => {
+  const f = e.dataTransfer.files[0]; if (!f) return; ensureAudio(); stopSong();
+  try {
+    const ab = await ctx.decodeAudioData(await f.arrayBuffer());
+    const L = ab.getChannelData(0).slice(), R = (ab.numberOfChannels > 1 ? ab.getChannelData(1) : ab.getChannelData(0)).slice();
+    let b = 240 / (L.length/sr) * 2; while (b > 180) b /= 2; while (b < 70) b *= 2; bpm = b;   // assume a whole number of bars
+    setLoop(L, R, f.name); refresh();
+  } catch (err) { $('status').textContent = 'COULD NOT READ THAT FILE — TRY A WAV OR MP3'; }
+});
+
+refresh(true); setMode('live'); fit(); requestAnimationFrame(frame);
+})();
+</script>
