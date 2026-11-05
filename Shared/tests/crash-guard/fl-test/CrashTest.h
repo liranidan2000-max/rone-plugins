@@ -4,6 +4,7 @@
 
 #include <JuceHeader.h>
 #include <atomic>
+#include <functional>
 
 namespace CrashTest
 {
@@ -18,6 +19,28 @@ inline void checkInAudio()
         crashOnAudioThread();
 }
 
+// Fires when the mouse rests on it, so nothing is pressed. A press is what the first FL test tripped on:
+// JUCE 8.0.4 takes keyboard focus on mouse down, which FL Studio's message thread does not survive, so
+// the crash that was meant to be tested never ran. See README.md.
+class RestZone : public juce::Component,
+                 private juce::Timer
+{
+public:
+    RestZone (juce::String text, std::function<void()> action);
+
+    void fire() { action(); }
+
+    void paint (juce::Graphics&) override;
+    void mouseEnter (const juce::MouseEvent&) override;
+    void mouseExit (const juce::MouseEvent&) override;
+
+private:
+    void timerCallback() override;
+
+    juce::String text;
+    std::function<void()> action;
+};
+
 class Strip : public juce::Component
 {
 public:
@@ -28,6 +51,7 @@ public:
     void resized() override;
 
 private:
-    juce::TextButton ui { "UI crash" }, audio { "Audio crash" };
+    RestZone ui, audio;
+    juce::TextButton press { "Press" };
 };
 }

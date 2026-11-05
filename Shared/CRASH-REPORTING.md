@@ -107,7 +107,9 @@ Two routes, because neither alone is enough:
   passes the exception on, ignores C++ exceptions, and reports only when our module
   is at the crash or on the crashing stack. It writes one `DAW_CRASH` report per
   process, once in 12 hours per crash, from a helper thread the crash waits for at
-  most 1.5 s. The hook also moves the DLL's entry point to the guard
+  most 1.5 s. After a stack overflow that helper does the walk too: the crashing
+  thread has no stack left for it, and the fault is as likely to be in Windows as
+  in us (FL Studio, 2026-11-05). The hook also moves the DLL's entry point to the guard
   (`/ENTRY:roneGuardEntry`), so the handler is gone before any destructor can fault.
   Its header comment lists every rule. The proof is `Shared/tests/crash-guard` (a
   fake plugin and a host that catches everything, like FL Studio does), one process
