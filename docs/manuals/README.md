@@ -51,6 +51,11 @@ Intermediate files live in `docs/manuals/work/` (git-ignored):
 - `work/docimg/` – annotated tour images and detail crops (`tools/annotate.py`);
 - `work/html/` – the generated HTML, handy for proofreading in a browser.
 
+The same manuals are published as web pages on roneaudio.com (`/manuals/<plugin>/`,
+since 5.11.2026). They are generated from these content modules by the site's
+`WEBSITE RONE AUDIO\scriptsuild-web-manuals.py` - after rebuilding a PDF here, run
+that script and deploy the site, or the web manual drifts from the PDF.
+
 Only the PDFs need rebuilding after editing text:
 
 ```
