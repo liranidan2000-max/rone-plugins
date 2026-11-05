@@ -44,6 +44,7 @@ static const std::map<juce::String, juce::String>& innoAppIds()
         { "RoneRise",       "{E4F73C6B-63EB-4D37-9E02-0C6E91F7E9CE}" },   // installer/RoneRise.iss
         { "RoneIron",       "{DAFDABED-2E84-4166-86BB-EC4810E01F1F}" },   // installer/RoneIron.iss
         { "RoneDelay",      "{04213AF9-9AD6-4447-B6AE-7F544C41994C}" },   // installer/RoneDelay.iss (same AppId as the dev builds)
+        { "RoneGater",      "{6720533E-A799-4898-9EFA-0AAFEEDFDD7E}" },   // installer/RoneGater.iss
         { "RoneFlanger",    "{E5F6A7B8-C9D0-1234-EFAB-345678901234}" },
         { "RoneAfterspace", "{A1B2C3D4-E5F6-7890-ABCD-AFTERSPACE01}" },
         { "RONEAnalyzer",   "{E7F8A9B0-C1D2-3456-EF01-6789ABCDEF01}" },
