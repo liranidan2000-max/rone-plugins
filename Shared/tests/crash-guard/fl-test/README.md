@@ -36,6 +36,21 @@ taught the guard.
 2026-10-23. Every WinMM call then hangs on the whole PC and only a reboot helps. So run this by hand, once,
 never in a loop, and if a DAW freezes on start afterwards, reboot before suspecting the guard.
 
+## What FL Studio did, 26.1.7, 2026-11-05
+
+| Part | FL Studio | Guard's report |
+|---|---|---|
+| Rest: UI | Its Error dialog, then it needs a restart | One, with the line |
+| Rest: Audio | "crashed while processing. Disabled.", and it runs on | One, with the line |
+| Press | Freezes and dies | One, a stack overflow pointing at the JUCE line |
+
+Plain behaved the same in the first two, and in the press on the first test. FL lives through Rest: Audio,
+so restart it before Press: the guard reports once per process. With nothing touched, FL quits normally.
+
+Deleting the plugin after Rest: Audio hangs FL, in Guard and in Plain alike. JUCE's VST3 wrapper takes
+`FLStudioDIYSpecificationEnforcementLock` in `process()` and in `setActive()`, in FL only. FL catches the fault,
+the lock is never released, and `setActive()` waits for it for ever.
+
 ## Installing
 
 Into `C:\Program Files\Common Files\VST3\_CrashTest`, and into no other folder. The Test Bench takes

@@ -144,6 +144,9 @@ Center fetches the zip and resolves the stack with `tools\symbolize`.
 - Only `DAW_CRASH` reports carry a PDB id. An `OS_CRASH` report stays module+offset,
   and a Standalone or Center crash keeps JUCE's plain backtrace.
 - A crash the OS never logs, such as a host killed by a watchdog, leaves no trace.
+- FL Studio catches a fault on its message or audio thread itself: no Windows event and
+  no dump, so `OsCrashScanner` never sees it and the guard is the only witness. Only a
+  stack overflow gets past FL to Windows.
 - A fault in a plugin's own static constructor or destructor is not reported: the
   Windows loader swallows it and the guard is not armed at that moment.
 - An offset moves with every build, so the same bug opens a new group per version.
