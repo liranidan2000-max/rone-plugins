@@ -60,6 +60,8 @@ private:
     bool open = false, shrink = false;
     bool pendingReopen = false;                            // the window reopened with the rack open last time
     int expectW = 0;
+    int waitTicks = 0;                                     // 120 ms checks while the host answers the wider window
+    bool lateGrantQueued = false;
 
     JUCE_DECLARE_NON_COPYABLE (EditorHelper)
 };

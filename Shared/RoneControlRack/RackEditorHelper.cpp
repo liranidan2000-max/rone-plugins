@@ -99,6 +99,23 @@ void EditorHelper::layout (juce::Rectangle<int> bounds)
         if (view != nullptr) view->setVisible (false);
         return;
     }
+    if (shrink && expectW > 0 && bounds.getWidth() >= expectW - 2 && ! lateGrantQueued)
+    {
+        // The host gave the wider window after all, only late (FL Studio: the first open also builds the rack's
+        // WebView2 on the message thread, and FL's resize lands after the check gave up). Back to GROW, or the
+        // plugin's face stays squeezed in a window that already has room for both (Liran 28.10.2026, all but Rise).
+        lateGrantQueued = true;
+        juce::Component::SafePointer<juce::AudioProcessorEditor> safe (&ed);
+        juce::MessageManager::callAsync ([this, safe]
+        {
+            if (safe == nullptr) return;
+            lateGrantQueued = false;
+            if (! open || ! shrink) return;
+            shrink = false;
+            if (onToggle) onToggle();
+            ed.resized();
+        });
+    }
     int rp = rackPx (bounds.getHeight());
     if (shrink) rp = juce::jmin (rp, juce::roundToInt (bounds.getWidth() * 0.38));
     auto right = bounds.removeFromRight (rp);
@@ -126,7 +143,8 @@ void EditorHelper::setOpen (bool shouldOpen)
             if (onToggle) onToggle();                      // the limits widen FIRST, or the window clamps the new width
             expectW = w + rackPx (h);
             ed.setSize (expectW, h);                       // the host is asked for a wider window ...
-            startTimer (180);                              // ... and checked a moment later
+            waitTicks = 0;
+            startTimer (120);                              // ... and watched for up to ~2 s
         }
         else if (onToggle) onToggle();
     }
@@ -148,11 +166,12 @@ void EditorHelper::setOpen (bool shouldOpen)
 
 void EditorHelper::timerCallback()
 {
+    if (pendingReopen) { stopTimer(); pendingReopen = false; setOpen (true); return; }
+    if (! open || shrink) { stopTimer(); return; }
+    if (ed.getWidth() >= expectW - 2) { stopTimer(); return; }   // the host gave it
+    if (++waitTicks < 16) return;                          // a slow host (FL's first open) answers late: keep watching
     stopTimer();
-    if (pendingReopen) { pendingReopen = false; setOpen (true); return; }
-    if (! open || shrink) return;
-    if (ed.getWidth() != expectW)                          // the host refused: the plugin makes room instead
-    {
+    {                                                      // the host refused: the plugin makes room instead
         shrink = true;
         if (onToggle) onToggle();
         ed.resized();

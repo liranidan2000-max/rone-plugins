@@ -4,10 +4,42 @@
 #include "Version.h"
 #include <random>
 
+#if JUCE_WINDOWS
+extern "C" __declspec(dllimport) unsigned long __stdcall GetEnvironmentVariableW (const wchar_t*, wchar_t*, unsigned long);
+extern "C" __declspec(dllimport) int __stdcall SetEnvironmentVariableW (const wchar_t*, const wchar_t*);
+#else
+ #include <cstdlib>
+#endif
+
 namespace RoneCtl
 {
 namespace
 {
+    // Which LinkHub owns the link INSIDE this process. Every RONE plug-in is its own module with its own LinkHub, and the
+    // inter-process lock does not tell them apart (a Windows mutex is recursive on the thread that holds it, a POSIX
+    // record lock belongs to the whole process): in one FL Studio every rack that opened became an owner, started its
+    // own link and took the phone's room from the last one - the phone reconnected and the new rack showed the QR
+    // (Liran 28.10.2026). The process environment is shared by every module, so the claim lives there.
+    const char* kClaimVar = "RONE_CONTROL_LINK_OWNER";
+    juce::String processClaim()
+    {
+       #if JUCE_WINDOWS
+        wchar_t buf[128] = {};
+        const auto n = GetEnvironmentVariableW (L"RONE_CONTROL_LINK_OWNER", buf, 128);
+        return n > 0 && n < 128 ? juce::String (buf) : juce::String();
+       #else
+        const char* v = std::getenv (kClaimVar);
+        return v != nullptr ? juce::String (v) : juce::String();
+       #endif
+    }
+    void setProcessClaim (const juce::String& token)
+    {
+       #if JUCE_WINDOWS
+        SetEnvironmentVariableW (L"RONE_CONTROL_LINK_OWNER", token.isEmpty() ? nullptr : token.toWideCharPointer());
+       #else
+        if (token.isEmpty()) unsetenv (kClaimVar); else setenv (kClaimVar, token.toRawUTF8(), 1);
+       #endif
+    }
     juce::File pairingFile()  { return controlDataFolder().getChildFile ("pairing.json"); }
     juce::File settingsFile() { return controlDataFolder().getChildFile ("settings.json"); }
     juce::File statusFile()   { return controlDataFolder().getChildFile ("link-status.json"); }   // the owner's real state, for the peers
@@ -133,6 +165,7 @@ LinkHub::~LinkHub()
     peer = nullptr;
     peerServer = nullptr;
     ownerLock = nullptr;
+    if (processClaim() == claimToken) setProcessClaim ({});   // a peer in this process may take the link over now
 }
 
 bool LinkHub::becomeOwner()
@@ -140,7 +173,13 @@ bool LinkHub::becomeOwner()
     if (ownerLock == nullptr)
         ownerLock = std::make_unique<juce::InterProcessLock> ("RONE_Control_Link_"
                         + juce::String::toHexString (controlDataFolder().getFullPathName().toLowerCase().hashCode64()));
-    return ownerLock->enter (0);
+    if (claimToken.isEmpty())
+        claimToken = juce::String::toHexString ((juce::pointer_sized_int) this) + "-" + juce::String (juce::Time::getMillisecondCounter());
+    const auto c = processClaim();
+    if (c.isNotEmpty() && c != claimToken) return false;     // another RONE plug-in in this process has the link
+    if (! ownerLock->enter (0)) return false;                // another program has it
+    setProcessClaim (claimToken);
+    return true;
 }
 
 void LinkHub::startPeer()
