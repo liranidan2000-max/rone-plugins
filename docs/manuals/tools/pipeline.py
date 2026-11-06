@@ -79,7 +79,7 @@ STATES = [
     ("clipper", "", "js:window.__scn_clipper('wave')", None),
     ("clipper", "_peaks", "js:window.__scn_clipper('peaks')", None),
     ("clipper", "_detail", "js:window.__scn_clipper('detail')", None),
-    ("clipper", "_adv", "js:window.__scn_clipper('wave');window.__scn_clipper_adv()", (340, 980)),
+    ("clipper", "_adv", "js:window.__scn_clipper('wave');window.__scn_clipper_adv()", None),
     ("clipper", "_about", "click:pLogo", None),
     # Rise: the page runs without a host (the knob shows state / frame), so the states pose it
     # directly: a LAND run at bar 5 of 8, and UPLIFT at 70 % with ADVANCED open.

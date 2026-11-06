@@ -51,7 +51,7 @@ def manual(G):
     S.append({"title": "Interface tour", "sub": "every element on screen", "html": f"""
 <div class="two">
 {img("clipper/tour.png", "Compact view: WAVE with a drum loop clipping at -4.5 dBFS.")}
-{img("clipper/adv.png", "ADVANCED open: the window grows to hold the faders.")}
+{img("clipper/adv.png", "ADVANCED open: the faders open inside the window, the graph and the knob make room.")}
 </div>
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
@@ -64,7 +64,7 @@ def manual(G):
  ("CLIP", "the threshold, -24 to 0 dBFS"),
  ("CLIP value", "double-click to type a value"),
  ("LOW CUT", "the band below this frequency bypasses the clipper (so it can exceed CLIP); double-click = off"),
- ("ADVANCED", "opens the section below the knob"),
+ ("ADVANCED", "opens OS, the faders and AUTO GAIN in the same window"),
  ("Resize grip", "drag to resize the window"),
 ])}
 <p>In ADVANCED: <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#3D8BFF;color:#101216;font-weight:800;font-size:8pt">1</span> OS &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#3D8BFF;color:#101216;font-weight:800;font-size:8pt">2</span> SAVED &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#3D8BFF;color:#101216;font-weight:800;font-size:8pt">3</span> INPUT &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#3D8BFF;color:#101216;font-weight:800;font-size:8pt">4</span> OUTPUT &nbsp; <span class="b" style="display:inline-flex;align-items:center;justify-content:center;width:5mm;height:5mm;border-radius:50%;background:#3D8BFF;color:#101216;font-weight:800;font-size:8pt">5</span> AUTO GAIN.</p>
