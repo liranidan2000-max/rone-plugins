@@ -98,3 +98,4 @@ Type: filesandordirs; Name: "{commoncf}\VST3\RONE Clipper.vst3"
 ; that build, not this one - RONE Reverse Reverb's said "Instrument|Synth", so FL Studio kept
 ; listing 1.1.7, an effect, as a synth. These builds ship no manifest: drop the old one first.
 Type: files; Name: "{commoncf}\VST3\RONE\RONE Clipper.vst3\Contents\Resources\moduleinfo.json"
+; 1.0.14: rebuilt so the Mac leg ships it (run #379 could not fetch the submodule on the Mac)
