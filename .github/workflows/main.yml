@@ -814,9 +814,13 @@ jobs:
             echo "::notice::$FOLDER is not a submodule (in-repo sources)"
             exit 0
           fi
-          rule="url.https://${GH_PAT}@github.com/.insteadOf"
-          trap 'git config --global --unset-all "$rule" || true' EXIT
-          git config --global "$rule" "https://github.com/"
+          # A header, not a token in the URL: since runner image 20261102 GitHub answers such a
+          # clone with a redirect on the Mac, git drops the URL's credentials and asks for a user (run #379).
+          auth="$(printf 'x-access-token:%s' "$GH_PAT" | base64 | tr -d '\n')"
+          echo "::add-mask::$auth"
+          key="http.https://github.com/.extraheader"
+          trap 'git config --global --unset-all "$key" || true' EXIT
+          git config --global "$key" "AUTHORIZATION: basic $auth"
           for i in 1 2 3; do
             if git submodule update --init --depth 1 -- "$FOLDER"; then exit 0; fi
             echo "::warning::submodule $FOLDER could not be fetched (try $i)"
