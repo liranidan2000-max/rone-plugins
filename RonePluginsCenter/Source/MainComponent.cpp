@@ -3257,8 +3257,18 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
         juce::Timer::callAfterDelay (120000, [safe = juce::Component::SafePointer<MainComponent> (this), pluginId]
         {
             if (safe == nullptr) return;
+            // Only while the card still shows that error: the user may have clicked
+            // Update meanwhile (and it installed - a second startInstall would download
+            // and install the same build again, with its permission prompt).
+            bool stillError = false;
+            {
+                juce::ScopedLock sl (safe->pluginDataLock);
+                for (auto& p : safe->pluginData)
+                    if (p.id == pluginId) { stillError = p.status == PluginStatus::Error; break; }
+            }
+            if (! stillError) return;
             juce::String ignored;
-            safe->startInstall (pluginId, ignored);   // "Already on its way" if the user clicked meanwhile
+            safe->startInstall (pluginId, ignored);
         });
     }
     else
