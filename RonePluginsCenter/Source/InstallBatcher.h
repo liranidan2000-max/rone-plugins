@@ -253,15 +253,31 @@ public:
             }
 
             // Only an installer the Center downloaded beside this job file.
-            const bool sane = id.containsOnly ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
-                           && source.getParentDirectory() == jobFile.getParentDirectory()
-                           && source.getFileName().endsWithIgnoreCase ("_Installer.exe")
-                           && source.existsAsFile() && sha.length() == 64;
+            // 2.1.27 (support #99): which test said no, so a -3 report is no longer one
+            // sentence about antivirus. The first 2.1.26 report had no staging note at all,
+            // so the copy never ran - a test here refused it. Short words, no paths: the
+            // reason ends up in the report's title, and a path would split one problem
+            // into one issue per user name.
+            juce::String notSane;
+            if (! id.containsOnly ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"))
+                notSane = "not staged: unexpected plugin id";
+            else if (source.getParentDirectory() != jobFile.getParentDirectory())
+                notSane = "not staged: installer outside the download folder";
+            else if (! source.getFileName().endsWithIgnoreCase ("_Installer.exe"))
+                notSane = "not staged: unexpected installer name";
+            else if (! source.existsAsFile())
+                notSane = "not staged: the downloaded installer was gone";
+            else if (sha.length() != 64)
+                notSane = "not staged: no hash in the install job";
+            const bool sane = notSane.isEmpty();
+            juce::String copyErrors;
 
             auto stageDir = cacheDir;
             auto copy = stageDir.getChildFile (id + "_Installer.exe");
             copy.deleteFile();
             bool copied = sane && source.copyFileTo (copy);
+            if (sane && ! copied)
+                copyErrors << "Program Files error " << (int) GetLastError();
 
             // Audit R048 (review): staging in Program Files must never be why an install
             // fails where 2.1.3, which staged in ProgramData, would have run it - an
@@ -275,6 +291,8 @@ public:
                 copy = stageDir.getChildFile (id + "_Installer.exe");
                 copy.deleteFile();
                 copied = source.copyFileTo (copy);
+                if (! copied)
+                    copyErrors << ", ProgramData error " << (int) GetLastError();
                 r->setProperty ("cacheNote", (cacheNote.isNotEmpty() ? cacheNote + "; " : juce::String())
                                                 + "the copy into Program Files failed - used ProgramData");
             }
@@ -287,6 +305,7 @@ public:
             if (! copied)
             {
                 r->setProperty ("exitCode", -3);
+                r->setProperty ("detail", notSane.isNotEmpty() ? notSane : "copy failed: " + copyErrors);
             }
             else
             {
@@ -756,6 +775,10 @@ private:
                                                 " or download it from roneaudio.com/account."; }
         else if (exitCode == -2)  { r.code = "hash";
                                     r.message = item.name + ": the installer changed after it was checked - nothing was installed. Try again."; }
+        else if (exitCode == -3 && detail.startsWith ("not staged"))
+                                  { r.code = "failed";
+                                    r.message = item.name + ": the downloaded installer was not ready when the install began"
+                                                " - nothing was installed. Try again."; }
         else if (exitCode == -3)  { r.code = "failed";
                                     r.message = item.name + ": the installer could not be copied into Program Files\\RONE Plugins\\InstallCache"
                                                 " (antivirus?) - nothing was installed. Try again."; }
