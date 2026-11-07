@@ -1,0 +1,15 @@
+# Release line per product folder - read by the CI step "Submodule is on its release line"
+# (.github/workflows/main.yml, both build legs) and by scripts/hooks/pre-commit.
+#
+# Format: <folder><TAB><branch>. A folder that is not listed is on main.
+# A submodule pointer committed to the monorepo must be a commit on this branch of
+# the submodule's repo (origin/<branch>), or CI refuses to build it and the hook
+# refuses the commit. When a product's line moves, change it here in the SAME commit
+# as the pointer bump. In-repo folders (RONE AFTER SPACE, RonePluginsCenter) have no line.
+#
+# Verified 2026-11-05 (git ls-remote): RoneDelay 44e0fa0 = tip of release (its main is
+# a different line); rone-flanger- c1f40ae = tip of release/2.1.4 (its main is the
+# unreleased 2.2.0 line); every other recorded gitlink = tip of main (RONEAnalyzer: main,
+# not its older master).
+RoneDelay	release
+rone-flanger-	release/2.1.4

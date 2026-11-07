@@ -175,10 +175,43 @@ checks every bundle on disk after an install, so the old pkg would count as a fa
 versions.json* also leaves an entry alone when a product built on only one of
 its platforms.
 
+## Release lines (reset audit, 2026-11-05)
+
+CI builds and releases whatever commit a submodule pointer (gitlink) names on
+`main`, and the release guard only asks for a *higher* version - a dev branch
+has one. Every plugin submodule in the monorepo working tree sits on its
+`rack-dev` branch while the rack is in development, so one `git add -A` /
+`git commit -a` would stage eleven dev pointers and ship them, each missing
+the hotfixes customers already have. Two guards read one file:
+
+- **`scripts/ci/release-lines.txt`** - `<folder><TAB><branch>`, `#` comments;
+  a folder that is not listed is on `main`. Today: `RoneDelay` -> `release`,
+  `rone-flanger-` -> `release/2.1.4`, every other submodule `main`
+  (`RONEAnalyzer` included - not its older `master`). When a product's line
+  moves, change this file **in the same commit** as the pointer bump.
+- **CI - *Submodule is on its release line*** - both build legs, right after
+  *Init submodule*, dry runs included. Fetches `origin/<line>` in the
+  initialized submodule and fails the leg when the gitlink is not an ancestor
+  of it (`git merge-base --is-ancestor`), so Release publishes nothing for that
+  product. In-repo folders (`RONE AFTER SPACE`, `RonePluginsCenter`) have no
+  line and are skipped. The PAT reaches only this fetch (audit R027).
+- **Hook - `scripts/hooks/pre-commit`** - the earlier, local catch; active
+  wherever `core.hooksPath` is `scripts/hooks` (the main checkout and its
+  worktrees, same as `commit-msg`). For every *staged* gitlink it fetches that
+  one branch and refuses the commit unless the new commit is on it. A fetch
+  that fails, or a submodule that is not initialized, refuses too (fail
+  closed). Nothing staged as a gitlink: exit 0 at once, no network.
+  Deliberate exception: `RONE_ALLOW_DEV_POINTER=1 git commit ...`.
+
+The rule: **never `git add -A` / `git add .` / `git commit -a` in the
+monorepo.** A release commit bumps **one** submodule pointer to a commit on its
+release line, by explicit path, pushed alone and without the CI skip token.
+
 ## Tests
 
 ```
 sh scripts/hooks/commit-msg.test.sh
+sh scripts/hooks/pre-commit.test.sh          # the release-line hook against a throwaway monorepo
 python scripts/ci/tests/workflow_syntax_test.py   # bash -n / PowerShell parser on every run block
 python scripts/ci/tests/ci_release_test.py        # the Release step against a fake gh
 python scripts/ci/tests/manifest_plan_test.py     # Update versions.json against a scratch origin

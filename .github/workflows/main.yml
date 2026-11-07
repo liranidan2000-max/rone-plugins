@@ -417,6 +417,48 @@ jobs:
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
           exit 1
 
+      # A pointer that is not on the product's release line is a dev build (reset audit,
+      # 2026-11-05): every plugin submodule in the monorepo working tree sits on its rack-dev
+      # branch, one careless `git add -A` would ship eleven of them, and the release guard
+      # cannot tell - a dev version number is higher. The line per folder is
+      # scripts/ci/release-lines.txt (default main; scripts/hooks/pre-commit reads the same
+      # file). The gitlink must be an ancestor of origin/<line>, or nothing is built for the
+      # product. Dry runs included. The PAT reaches only this fetch and is removed on exit,
+      # as in Init submodule (audit R027). In-repo folders have no line and are skipped.
+      - name: Submodule is on its release line
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FOLDER: ${{ matrix.folder }}
+        run: |
+          link=$(git ls-files --stage -- "$FOLDER" | awk '$1 == "160000" { print $2; exit }')
+          if [ -z "$link" ]; then
+            echo "$FOLDER is not a submodule (in-repo sources) - no release line to check"
+            exit 0
+          fi
+          if [ ! -e "$FOLDER/.git" ]; then
+            echo "::error::$FOLDER: the submodule is not initialized, its release line cannot be checked - not built"
+            exit 1
+          fi
+          line=""
+          if [ -f scripts/ci/release-lines.txt ]; then
+            line=$(awk -F "$(printf '\t')" -v f="$FOLDER" '$0 !~ /^[ \t]*#/ && $1 == f { print $2; exit }' scripts/ci/release-lines.txt)
+          fi
+          line=${line:-main}
+          rule="url.https://${GH_PAT}@github.com/.insteadOf"
+          trap 'git config --global --unset-all "$rule" || true' EXIT
+          git config --global "$rule" "https://github.com/"
+          if ! git -C "$FOLDER" fetch --no-tags origin "+refs/heads/$line:refs/remotes/origin/$line"; then
+            echo "::error::$FOLDER: could not fetch its release line origin/$line (does the branch exist? scripts/ci/release-lines.txt) - not built"
+            exit 1
+          fi
+          tip=$(git -C "$FOLDER" rev-parse "refs/remotes/origin/$line")
+          if ! git -C "$FOLDER" merge-base --is-ancestor "$link" "$tip"; then
+            echo "::error::$FOLDER: the submodule pointer $link is NOT on its release line '$line' (origin/$line is at $tip) - a dev-branch pointer reached the monorepo; not built. Point '$FOLDER' at a commit on $line, or move the line in scripts/ci/release-lines.txt in the same commit if the product really ships from another branch."
+            exit 1
+          fi
+          echo "$FOLDER: pointer $link is on its release line '$line' (origin/$line $tip) - ok"
+
       # The hand model for a plugin with a RONE Control rack (Source/rack.json in its folder): the
       # installer's "hands" block ships it into <Program Files>\RONE Plugins\Hands, one folder for every
       # rack plugin (Rack-first, 26.10.2026; Shared/RoneControlRack/README.md). RONE Control itself
@@ -828,6 +870,48 @@ jobs:
           done
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
           exit 1
+
+      # A pointer that is not on the product's release line is a dev build (reset audit,
+      # 2026-11-05): every plugin submodule in the monorepo working tree sits on its rack-dev
+      # branch, one careless `git add -A` would ship eleven of them, and the release guard
+      # cannot tell - a dev version number is higher. The line per folder is
+      # scripts/ci/release-lines.txt (default main; scripts/hooks/pre-commit reads the same
+      # file). The gitlink must be an ancestor of origin/<line>, or nothing is built for the
+      # product. Dry runs included. The PAT reaches only this fetch and is removed on exit,
+      # as in Init submodule (audit R027). In-repo folders have no line and are skipped.
+      - name: Submodule is on its release line
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FOLDER: ${{ matrix.folder }}
+        run: |
+          link=$(git ls-files --stage -- "$FOLDER" | awk '$1 == "160000" { print $2; exit }')
+          if [ -z "$link" ]; then
+            echo "$FOLDER is not a submodule (in-repo sources) - no release line to check"
+            exit 0
+          fi
+          if [ ! -e "$FOLDER/.git" ]; then
+            echo "::error::$FOLDER: the submodule is not initialized, its release line cannot be checked - not built"
+            exit 1
+          fi
+          line=""
+          if [ -f scripts/ci/release-lines.txt ]; then
+            line=$(awk -F "$(printf '\t')" -v f="$FOLDER" '$0 !~ /^[ \t]*#/ && $1 == f { print $2; exit }' scripts/ci/release-lines.txt)
+          fi
+          line=${line:-main}
+          rule="url.https://${GH_PAT}@github.com/.insteadOf"
+          trap 'git config --global --unset-all "$rule" || true' EXIT
+          git config --global "$rule" "https://github.com/"
+          if ! git -C "$FOLDER" fetch --no-tags origin "+refs/heads/$line:refs/remotes/origin/$line"; then
+            echo "::error::$FOLDER: could not fetch its release line origin/$line (does the branch exist? scripts/ci/release-lines.txt) - not built"
+            exit 1
+          fi
+          tip=$(git -C "$FOLDER" rev-parse "refs/remotes/origin/$line")
+          if ! git -C "$FOLDER" merge-base --is-ancestor "$link" "$tip"; then
+            echo "::error::$FOLDER: the submodule pointer $link is NOT on its release line '$line' (origin/$line is at $tip) - a dev-branch pointer reached the monorepo; not built. Point '$FOLDER' at a commit on $line, or move the line in scripts/ci/release-lines.txt in the same commit if the product really ships from another branch."
+            exit 1
+          fi
+          echo "$FOLDER: pointer $link is on its release line '$line' (origin/$line $tip) - ok"
 
       # --- The Center's page (audit R032/R197) ---
       # CMake embeds the committed Resources/ui/dist as it is, so dist/ must be

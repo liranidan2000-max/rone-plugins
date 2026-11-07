@@ -1,0 +1,102 @@
+#!/bin/sh
+# pre-commit hook: refuse a submodule pointer that is not on the product's release line.
+#
+# CI builds and RELEASES whatever commit a submodule gitlink names on main, and the
+# release guard (scripts/ci/release-guard.sh) only asks for a HIGHER version - a dev
+# branch has one. Every plugin submodule in the monorepo working tree sits on its
+# rack-dev branch while the rack is in development (reset audit, 2026-11-05), so one
+# `git add -A` / `git commit -a` would stage eleven dev pointers and ship them to every
+# customer. This hook checks every STAGED gitlink: the new commit must be an ancestor
+# of origin/<line>, <line> read from scripts/ci/release-lines.txt (default main) -
+# the same file the CI step 'Submodule is on its release line' reads.
+#
+# Activate once per clone (worktrees share it):
+#   git config core.hooksPath scripts/hooks
+# Deliberate exception (you mean it): RONE_ALLOW_DEV_POINTER=1 git commit ...
+# No gitlink staged = exit 0 at once, no network.
+#
+# Fail closed: a submodule that is not initialized here, a fetch that fails, or a
+# commit the submodule does not have all refuse the commit - the line cannot be proven.
+
+lines_file="scripts/ci/release-lines.txt"
+tab=$(printf '\t')
+
+top=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$top" || exit 0
+
+against=$(git rev-parse --verify -q HEAD) || against=$(git hash-object -t tree /dev/null)
+
+# Staged gitlinks, one per line: "<new sha><TAB><path>". diff-index raw:
+# ":<old mode> <new mode> <old sha> <new sha> <status><TAB><path>". A deleted
+# submodule has new mode 000000 and is not a pointer to check.
+staged=$(git -c core.quotePath=false diff-index --cached --raw --no-renames "$against" \
+  | awk -F "$tab" '{ split($1, m, " "); if (m[2] == "160000") print m[4] "\t" $2 }')
+[ -z "$staged" ] && exit 0
+
+release_line() { # $1 = folder -> its branch (main when not listed)
+  l=""
+  [ -f "$lines_file" ] && l=$(awk -F "$tab" -v f="$1" '$0 !~ /^[ \t]*#/ && $1 == f { print $2; exit }' "$lines_file")
+  printf '%s' "${l:-main}"
+}
+
+short() { printf '%s' "$1" | cut -c1-7; }
+
+if [ "${RONE_ALLOW_DEV_POINTER:-0}" = 1 ]; then
+  {
+    echo "pre-commit: RONE_ALLOW_DEV_POINTER=1 - the release-line check is SKIPPED for:"
+    printf '%s\n' "$staged" | while IFS="$tab" read -r new path; do
+      echo "  $path -> $(short "$new") (line: $(release_line "$path"))"
+    done
+    echo "  Pushed to main, CI builds and releases exactly these commits."
+  } >&2
+  exit 0
+fi
+
+bad=""
+add_bad() { bad="$bad  $1
+"; }
+
+while IFS="$tab" read -r new path; do
+  [ -n "$path" ] || continue
+  line=$(release_line "$path")
+  if [ ! -e "$path/.git" ]; then
+    add_bad "$path -> $(short "$new"): the submodule is not initialized here (no $path/.git), its line '$line' cannot be checked"
+    continue
+  fi
+  if ! err=$(git -C "$path" fetch -q --no-tags origin "+refs/heads/$line:refs/remotes/origin/$line" 2>&1); then
+    add_bad "$path -> $(short "$new"): could not fetch origin/$line - $(printf '%s' "$err" | tr '\n' ' ')"
+    continue
+  fi
+  tip=$(git -C "$path" rev-parse -q --verify "refs/remotes/origin/$line^{commit}") || {
+    add_bad "$path -> $(short "$new"): origin/$line is not a commit after the fetch"
+    continue
+  }
+  if ! git -C "$path" cat-file -e "$new^{commit}" 2>/dev/null; then
+    add_bad "$path -> $(short "$new"): the staged commit is not in the submodule's object store"
+    continue
+  fi
+  if ! git -C "$path" merge-base --is-ancestor "$new" "$tip"; then
+    add_bad "$path -> $(short "$new") (checked out: $(git -C "$path" rev-parse --abbrev-ref HEAD 2>/dev/null)): NOT on its release line '$line' - origin/$line is at $(short "$tip")"
+    continue
+  fi
+  echo "pre-commit: $path -> $(short "$new") is on its release line '$line' (origin/$line $(short "$tip")) - ok"
+done <<EOF
+$staged
+EOF
+
+[ -z "$bad" ] && exit 0
+
+{
+  echo "pre-commit: a staged submodule pointer is not proven to be on its release line:"
+  printf '%s' "$bad"
+  echo
+  echo "Pushed to main, CI would build and RELEASE that commit to every customer: the"
+  echo "release guard only asks for a higher version, and a dev branch has one."
+  echo "Never 'git add -A' / 'git add .' / 'git commit -a' in the monorepo. A release"
+  echo "commit bumps ONE submodule pointer to a commit on its release line"
+  echo "(scripts/ci/release-lines.txt, default main), by explicit path."
+  echo
+  echo "Unstage the pointer:   git reset -q -- \"<folder>\""
+  echo "Deliberate exception:  RONE_ALLOW_DEV_POINTER=1 git commit ..."
+} >&2
+exit 1
