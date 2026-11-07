@@ -899,9 +899,14 @@ jobs:
             line=$(awk -F "$(printf '\t')" -v f="$FOLDER" '$0 !~ /^[ \t]*#/ && $1 == f { print $2; exit }' scripts/ci/release-lines.txt)
           fi
           line=${line:-main}
-          rule="url.https://${GH_PAT}@github.com/.insteadOf"
-          trap 'git config --global --unset-all "$rule" || true' EXIT
-          git config --global "$rule" "https://github.com/"
+          # A header, not a token in the URL - the same as Init submodule above: on the Mac runner
+          # GitHub answers with a redirect, git drops the URL's credentials and asks for a user
+          # (run #381, Sidechain 1.0.10: "could not read Username").
+          auth="$(printf 'x-access-token:%s' "$GH_PAT" | base64 | tr -d '\n')"
+          echo "::add-mask::$auth"
+          key="http.https://github.com/.extraheader"
+          trap 'git config --global --unset-all "$key" || true' EXIT
+          git config --global "$key" "AUTHORIZATION: basic $auth"
           if ! git -C "$FOLDER" fetch --no-tags origin "+refs/heads/$line:refs/remotes/origin/$line"; then
             echo "::error::$FOLDER: could not fetch its release line origin/$line (does the branch exist? scripts/ci/release-lines.txt) - not built"
             exit 1
