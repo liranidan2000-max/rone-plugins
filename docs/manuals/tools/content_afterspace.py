@@ -40,7 +40,7 @@ def manual(G):
     S.append({"title": "Quick start", "sub": "a big clean vocal space in a minute", "html": f"""
 {img("afterspace/tour.png", "<b>RONE AFTERSPACE.</b> The default preset INIT - CLEAN SPACE.")}
 {steps([
- "<strong>Insert</strong> AFTERSPACE on the vocal channel. As an insert, use MIX to balance; on a send, set MIX to 100 % and use the send level.",
+ "<strong>Insert</strong> RONE AFTERSPACE on the vocal channel. As an insert, use MIX to balance; on a send, set MIX to 100 % and use the send level.",
  "<strong>Start from a preset.</strong> Step through them with &#9664; &#9654; or click the name for the list. <em>Huge Clean Vocal</em>, <em>Psy Lead Space</em> and <em>Festival Hall</em> are good starting points; <em>Init - Clean Space</em> is the neutral setting.",
  "<strong>Set the room.</strong> SIZE is how big the space feels; DECAY is how long the tail rings (0.2 s to 30 s). AUTO GAIN keeps the wet level steady while you change them.",
  "<strong>Keep it clean.</strong> Raise DUCK until the tail steps back while the vocal is singing and returns in the gaps. The DUCK chip in the display shows the gain reduction in dB; the envelope in the DUCK module draws it over time. SMART mode (default) ducks where the source is, leaving the rest of the atmosphere alive.",
@@ -87,7 +87,7 @@ def manual(G):
 {img("afterspace/tour_knobs.png", "<b>SIZE, DECAY, BLOOM, SILK, MIX.</b>")}
 {ctl("SIZE", "0 to 100 %<br>default 55 %", "<p>The dimensions of the space: early reflections spread out, the tail becomes denser and wider. Small values give rooms and plates; large values give halls and cathedrals.</p>", "Change SIZE with the source playing; the visualiser grows with it and AUTO GAIN keeps the level constant so you judge the size, not the loudness.")}
 {ctl("DECAY", "0.2 s to 30 s<br>default 2.2 s", "<p>How long the tail takes to die away. The range is musically curved: the first half of the knob covers up to about 3 s, the rest stretches to 30 s.</p>", "For vocals, set DECAY so the tail ends just before the next phrase, then use DUCK to keep it out of the words.")}
-{ctl("BLOOM", "0 to 100 %<br>default 10 %", "<p>The creative identity of AFTERSPACE. Instead of only decaying, the late tail <em>opens up</em> after the note: diffusion, width and modulation increase over time so the room seems to grow behind the source. 0 % is a conventional reverb; 25-50 % is an audible expansion that does not sound like chorus; 100 % is a full atmosphere generator.</p>", "BLOOM plus a long DECAY plus FREEZE is the fastest way to make a pad from a single vocal note.")}
+{ctl("BLOOM", "0 to 100 %<br>default 10 %", "<p>The creative identity of RONE AFTERSPACE. Instead of only decaying, the late tail <em>opens up</em> after the note: diffusion, width and modulation increase over time so the room seems to grow behind the source. 0 % is a conventional reverb; 25-50 % is an audible expansion that does not sound like chorus; 100 % is a full atmosphere generator.</p>", "BLOOM plus a long DECAY plus FREEZE is the fastest way to make a pad from a single vocal note.")}
 {ctl("SILK", "0 to 100 %<br>default 35 %", "<p>A de-esser on the reverb input and tail. It stops sibilance and harsh transients from turning into a wash of hiss, without darkening the whole reverb the way a high cut would.</p>")}
 {ctl("MIX", "0 to 100 %<br>default 25 %", "<p>Dry / wet balance. On a send set it to 100 %.</p>")}
 <h3>DUCK module</h3>
@@ -142,7 +142,7 @@ def manual(G):
  ]))}
 {recipe("End-of-phrase throw", "Vocal throws, FX hits",
  steps([
-  "On a duplicate of the vocal, insert AFTERSPACE with MIX 100 % and load <em>End Of Phrase Throw</em>.",
+  "On a duplicate of the vocal, insert RONE AFTERSPACE with MIX 100 % and load <em>End Of Phrase Throw</em>.",
   "Automate MIX (or the send) to open only on the last word of the phrase.",
   "Automate FREEZE on for the last beat of the bar and off on the next downbeat.",
  ]))}
@@ -163,7 +163,7 @@ def manual(G):
 <div class="dos">
 <div><h4>Do</h4><ul>
 <li>Use DUCK instead of automating the send. It reacts to the performance, so it is right on every take.</li>
-<li>Leave AUTO GAIN and MONO LOW on unless you have a reason not to. They are why AFTERSPACE stays clean at large sizes.</li>
+<li>Leave AUTO GAIN and MONO LOW on unless you have a reason not to. They are why RONE AFTERSPACE stays clean at large sizes.</li>
 <li>Reach for SILK before HIGH CUT when the tail is harsh - it removes the splashes and keeps the air.</li>
 <li>Use CHARACTER as your first move when a preset is close but not quite: it changes many parameters musically at once.</li>
 <li>Try ECHO routing INSIDE on sustained material; it is the setting that makes repeats feel like part of the room.</li>
@@ -184,7 +184,7 @@ def manual(G):
 </ul>
 """})
 
-    S.append(G["conventions_section"](m, note("Beta release", "AFTERSPACE is in public beta. The parameter set is final and sessions will load in every future version; what will still improve is the fine tuning of the algorithms behind the same controls.")))
+    S.append(G["conventions_section"](m))
 
     S.append(G["support_section"](m, [
         ("The reverb sounds distant and small even at high SIZE", "Check MIX (25 % default on an insert) and the send level. Also raise PRE-DLY: a space with 0 ms pre-delay reads as further away."),

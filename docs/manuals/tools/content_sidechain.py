@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "sidechain", "product": "RONE Sidechain", "eyebrow": "DRAWN SIDECHAIN · PHASE · SPACE",
-        "title_html": "RONE <i>Sidechain</i>", "accent": "#7B8CFF", "version": "1.0.7",
+        "title_html": "RONE <i>Sidechain</i>", "accent": "#7B8CFF", "version": "1.0.9",
         "tagline": "Draw the duck on your bass and let every kick restart it - silent at the kick's first sample, open exactly where you drew it. Then turn the bass's sub to meet the kick, and cut only where the two really collide.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Sidechain.vst3", "au": "RONE Sidechain.component", "exe": "RONE Sidechain.exe",
         "pdf": "RONE Sidechain - User Manual.pdf", "cover_img": "sidechain/main.png",
@@ -54,7 +54,7 @@ def manual(G):
  "<strong>Shape it:</strong> pick another shape, drag a point or a line, set <span class='pill'>RATE</span> to the length of your bass pattern and <span class='pill'>DEPTH</span> to how far it closes.",
  "<strong>Optional:</strong> switch to the PHASE and SPACE pages. Both start working as soon as there is a kick; AUTO turns the sub by itself.",
 ])}
-{note("No sidechain in your DAW?", "Drop your kick sample on the plugin (or press LOAD KICK&hellip;). It plays silently on the host's beat, so the curve follows the beat and PHASE and SPACE know your kick - no routing at all.")}
+{note("No sidechain in your DAW?", "Drop your kick sample on the plugin (or press LOAD KICK&hellip;). It plays silently on the host's beat, so the curve follows the beat and PHASE and SPACE know your kick - no routing at all. In Cubase you can also drag an audio event from the project window or a clip from the Pool onto the plugin and it loads.")}
 """})
 
     S.append({"title": "Interface tour", "sub": "every element on screen", "html": f"""
