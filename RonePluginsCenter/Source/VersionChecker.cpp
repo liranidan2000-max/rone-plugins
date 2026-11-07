@@ -45,6 +45,16 @@ static const std::map<juce::String, juce::String>& innoAppIds()
         { "RoneIron",       "{DAFDABED-2E84-4166-86BB-EC4810E01F1F}" },   // installer/RoneIron.iss
         { "RoneDelay",      "{04213AF9-9AD6-4447-B6AE-7F544C41994C}" },   // installer/RoneDelay.iss (same AppId as the dev builds)
         { "RoneGater",      "{6720533E-A799-4898-9EFA-0AAFEEDFDD7E}" },   // installer/RoneGater.iss
+        // 2.1.26: the four products released after the manifest's inno_app_id took
+        // over (Center 2.0) were never added here. The elevated UNINSTALL copy has
+        // no manifest, so for them it found no uninstaller, deleted the files and
+        // left the Uninstall entry (support issue #10, 4 machines). The AppId now
+        // also travels on the command line (PluginUninstaller.h --app-id); this
+        // table stays the fallback for an offline Center with an old manifest.
+        { "RoneSidechain",  "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}" },   // installer/RoneSidechain.iss
+        { "Rone1176",       "{3C6B2F8A-9D41-4E7B-A0C5-7E1176C0DE01}" },   // installer/Rone1176.iss
+        { "Rone2A",         "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}" },   // installer/Rone2A.iss
+        { "RoneVstManager", "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}" },   // RoneVstManager/installer/RoneVstManager.iss
         { "RoneFlanger",    "{E5F6A7B8-C9D0-1234-EFAB-345678901234}" },
         { "RoneAfterspace", "{A1B2C3D4-E5F6-7890-ABCD-AFTERSPACE01}" },
         { "RONEAnalyzer",   "{E7F8A9B0-C1D2-3456-EF01-6789ABCDEF01}" },
@@ -613,6 +623,12 @@ juce::File VersionChecker::findApp (const juce::String& exeName)
     return {};
 }
 #endif
+
+juce::StringArray VersionChecker::analyzerBundleNames()
+{
+    // installer/RONEAnalyzer.iss and scripts/ci/format_contract.py name the same two.
+    return { "RONE Analyzer Bridge", "RONE Analyzer Channel" };
+}
 
 bool VersionChecker::isStandaloneInstalled (const juce::String& exeName)
 {

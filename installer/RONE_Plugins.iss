@@ -141,9 +141,11 @@ Filename: "{app}\RONE Plugins Center.exe"; \
 // The Center (Source/Main.cpp) holds the mutex "RonePluginsCenterRunning" for
 // as long as it runs. With /RELAUNCH=1, setup creates "RoneCenterUpdateGo" -
 // the Center's sign that permission was given and it should quit - then waits
-// up to 30 s for the Center's mutex to go before it replaces the exe. An older
-// Center (1.6.x) waits for its own exit before it starts setup and passes no
-// /RELAUNCH, so nothing here changes for it.
+// up to 120 s for the Center's mutex to go before it replaces the exe (30 s
+// until Center 2.1.26: the Center's shutdown joins can add up to ~25 s, and an
+// exe still running made setup abort with exit 5). An older Center (1.6.x) waits
+// for its own exit before it starts setup and passes no /RELAUNCH, so nothing
+// here changes for it.
 function WantRelaunch: Boolean;
 begin
   Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
@@ -158,7 +160,7 @@ begin
   begin
     CreateMutex('RoneCenterUpdateGo');
     Waited := 0;
-    while CheckForMutexes('RonePluginsCenterRunning') and (Waited < 150) do
+    while CheckForMutexes('RonePluginsCenterRunning') and (Waited < 600) do
     begin
       Sleep(200);
       Waited := Waited + 1;

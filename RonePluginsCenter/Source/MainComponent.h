@@ -73,7 +73,9 @@ public:
                              const juce::File& localFile,
                              bool success,
                              bool cancelled,
-                             const juce::String& errorMessage) override;
+                             const juce::String& errorMessage,
+                             const juce::String& sha256,
+                             const juce::String& version) override;
 
 private:
     // ---- Resource provider ----
@@ -171,7 +173,10 @@ private:
     void reportCenterUpdateOutcome();                  // after a restart: did the update land?
 
     // ---- Installs ----
-    void handBatcher (const juce::String& pluginId, const juce::File& installer);
+    // verifiedSha / version: the identity the file was downloaded and verified
+    // with (the job's, never the live card's - 2.1.26, issue #5).
+    void handBatcher (const juce::String& pluginId, const juce::File& installer,
+                      const juce::String& verifiedSha, const juce::String& version);
     void onBatchStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor);
     void onBatchResult (const InstallBatcher::Result& result);
     void setStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor = {});
@@ -189,9 +194,12 @@ private:
     // ---- Emit helper ----
     void emitPluginsUpdated();
     // `code` + `params` let the page say it in the user's language; `text` is the
-    // English it falls back to (and what an error report carries).
+    // English it falls back to (and what an error report carries). `details` goes
+    // into the error report only (2.1.26): the installer's log, exit code, the
+    // machine's state - never shown on the page.
     void emitStatusMessage (const juce::String& text, const juce::String& type,
-                            const juce::String& code = {}, const juce::var& params = {});
+                            const juce::String& code = {}, const juce::var& params = {},
+                            const juce::String& details = {});
     juce::var manifestStateVar() const;
 
     // ---- Members ----
@@ -220,10 +228,19 @@ private:
     // ---- Center 2.0 state (message thread only) ----
     InstallBatcher            batcher;
 
-    // Background pre-downloads that finished: the verified installer, kept for
-    // the version it was fetched for, so Update goes straight to installing.
-    struct Prefetched { juce::String version; juce::File file; };
+    // Background pre-downloads that finished: the verified installer, kept with
+    // the hash it was verified against and the version it was fetched for, so
+    // Update goes straight to installing. Keyed by the HASH everywhere (2.1.26):
+    // a same-version build with a new hash (a dev re-upload, a hand-edited
+    // manifest) must not pass as "downloaded".
+    struct Prefetched { juce::String version, sha256; juce::File file; };
     std::map<juce::String, Prefetched> prefetched;
+
+    // 2.1.26, one-shot guards per plugin id: a download handed to the batch whose
+    // card moved to a newer build meanwhile is re-queued once for that build
+    // (handBatcher); a download that met a busy server (5xx) is retried once by
+    // itself two minutes later (onDownloadComplete).
+    juce::StringArray          handoffRequeued, busyRetried;
 
     bool                      manifestFromCache = false;   // offline: showing the last manifest that arrived
     bool                      manifestEverLoaded = false;

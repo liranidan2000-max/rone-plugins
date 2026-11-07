@@ -88,7 +88,7 @@ Source: "..\RONEAnalyzer\Resources\fonts\OFL-JetBrainsMono.txt"; DestDir: "{app}
 ; docs/manuals/tools). The Center's "Manual" menu entry opens it from here.
 Source: "..\docs\manuals\RONE Analyzer - User Manual.pdf"; \
   DestDir: "{app}\Manuals"; \
-  Flags: ignoreversion
+  Flags: ignoreversion restartreplace
 
 ; ============================================================================
 ; Shortcuts — a standalone application, unlike the plugins, is something you

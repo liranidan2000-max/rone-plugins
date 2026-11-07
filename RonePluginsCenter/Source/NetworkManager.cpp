@@ -246,6 +246,7 @@ juce::String NetworkManager::untrustedInstallerUrlReason (const juce::String& ur
 void NetworkManager::downloadInstaller (const juce::String& pluginId,
                                          const juce::String& url,
                                          const juce::String& sha256,
+                                         const juce::String& version,
                                          bool prefetch,
                                          bool isDev)
 {
@@ -265,7 +266,7 @@ void NetworkManager::downloadInstaller (const juce::String& pluginId,
                 return;
             }
 
-        DownloadJob job { pluginId, url, sha256, prefetch, isDev };
+        DownloadJob job { pluginId, url, sha256, version, prefetch, isDev };
 
         // What the user asked for goes before what the Center fetches on its own.
         if (prefetch)
@@ -397,6 +398,28 @@ namespace
     constexpr int downloadAttempts = 3;
     constexpr int retryBackoffMs   = 1500;
 
+    // 2.1.26: a 5xx from the download server (GitHub's edge returned 504 to four
+    // machines inside eight minutes on 5.11, issue #82) is a blip that outlasts
+    // 1.5 + 3 s. One more attempt and longer waits - but bounded: this worker is
+    // the ONE download thread, and a plugin stuck here would hold every other
+    // download, prefetch and the Center's own update behind it. The long wait (two
+    // minutes) is MainComponent's, on the message thread, once per plugin.
+    constexpr int busyAttempts = 4;
+    constexpr int busyBackoffMs[] = { 2000, 5000, 10000 };
+
+    // 404/410 = the file is gone or the link is wrong; 5xx = the server, not the
+    // link; anything else = the request was refused.
+    juce::String httpFailureText (int statusCode)
+    {
+        if (statusCode >= 500)
+            return "Download failed - the download server is busy right now (HTTP " + juce::String (statusCode)
+                 + "). Nothing is wrong with your computer or the installer; try again in a few minutes.";
+        if (statusCode == 404 || statusCode == 410)
+            return "Download failed - the server returned HTTP " + juce::String (statusCode)
+                 + ". This installer may have been moved or removed.";
+        return "Download failed - the server rejected the request (HTTP " + juce::String (statusCode) + ").";
+    }
+
     juce::String describeSize (juce::int64 bytes)
     {
         if (bytes < 1024 * 1024)
@@ -446,19 +469,24 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
         success = fis.openedOk() && juce::SHA256 (fis).toHexString().equalsIgnoreCase (job.sha256);
     }
 
-    for (int attempt = 1; ! success && dirMade.wasOk() && attempt <= downloadAttempts; ++attempt)
+    for (int attempt = 1; ! success && dirMade.wasOk(); ++attempt)
     {
         if (shouldAbortDownload())
             break;
 
         bool retryable = false;
-        success = attemptDownload (job, partFile, errorMsg, retryable);
+        int httpStatus = 0;
+        success = attemptDownload (job, partFile, errorMsg, retryable, httpStatus);
 
-        if (success || ! retryable || attempt == downloadAttempts)
+        // A busy server gets one attempt more and longer waits (see busyAttempts).
+        const bool serverBusy = httpStatus >= 500;
+        if (success || ! retryable || attempt >= (serverBusy ? busyAttempts : downloadAttempts))
             break;
 
         // Back off before trying again, in short slices so a cancel still lands quickly.
-        for (int waited = 0; waited < retryBackoffMs * attempt && ! shouldAbortDownload(); waited += 100)
+        const int backoff = serverBusy ? busyBackoffMs[juce::jmin (attempt - 1, juce::numElementsInArray (busyBackoffMs) - 1)]
+                                       : retryBackoffMs * attempt;
+        for (int waited = 0; waited < backoff && ! shouldAbortDownload(); waited += 100)
             juce::Thread::sleep (100);
     }
 
@@ -491,9 +519,10 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
     if (downloadWorker.threadShouldExit())
         return;
 
-    post ([this, pid = job.pluginId, file = success ? tempFile : juce::File(), success, cancelled, err = errorMsg]
+    post ([this, pid = job.pluginId, file = success ? tempFile : juce::File(), success, cancelled, err = errorMsg,
+           sha = job.sha256, version = job.version]
     {
-        listeners.call (&Listener::onDownloadComplete, pid, file, success, cancelled, err);
+        listeners.call (&Listener::onDownloadComplete, pid, file, success, cancelled, err, sha, version);
     });
 }
 
@@ -506,9 +535,11 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
 bool NetworkManager::attemptDownload (const DownloadJob& job,
                                       const juce::File& tempFile,
                                       juce::String& errorMessage,
-                                      bool& retryable)
+                                      bool& retryable,
+                                      int& httpStatus)
 {
     retryable = false;
+    httpStatus = 0;
     errorMessage.clear();
 
     if (tempFile.existsAsFile())
@@ -598,20 +629,28 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
     if (exitCode != 0)
     {
         tempFile.deleteFile();
-
-        // curl exit 22 is "-f" firing on an HTTP >= 400: the link itself is
-        // wrong or the asset is gone, and retrying will not change that.
-        // Everything else here is a transport failure worth another go.
-        retryable = (exitCode != 22);
-
         auto detail = curlStderr.trim();
-        errorMessage = retryable
-                         ? juce::String ("Download interrupted - ")
-                             + (detail.isNotEmpty() ? detail
-                                                    : juce::String ("the connection dropped."))
-                             + " Check your internet connection and try again."
-                         : juce::String ("Download failed - the server rejected the request. "
-                                         "This installer may have been moved or removed.");
+
+        // curl exit 22 is "-f" firing on an HTTP >= 400. Its stderr names the
+        // status ("curl: (22) The requested URL returned error: 504"): a 5xx is the
+        // server, not the link, and worth another go (2.1.26, issue #82); 404/410
+        // means the asset is gone and retrying will not change that. Everything
+        // else here is a transport failure worth another go.
+        if (exitCode == 22)
+        {
+            httpStatus = detail.fromLastOccurrenceOf ("returned error:", false, true).trim()
+                               .upToFirstOccurrenceOf (" ", false, false).getIntValue();
+            retryable = httpStatus >= 500;
+            errorMessage = httpStatus >= 400 ? httpFailureText (httpStatus)
+                                             : juce::String ("Download failed - the server rejected the request. "
+                                                             "This installer may have been moved or removed.");
+            return false;
+        }
+
+        retryable = true;
+        errorMessage = juce::String ("Download interrupted - ")
+                     + (detail.isNotEmpty() ? detail : juce::String ("the connection dropped."))
+                     + " Check your internet connection and try again.";
         return false;
     }
 
@@ -639,9 +678,8 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
         // refused to hand us the body of an error response.
         if (statusCode >= 400)
         {
-            errorMessage = "Download failed - the server returned HTTP "
-                         + juce::String (statusCode)
-                         + ". This installer may have been moved or removed.";
+            httpStatus = statusCode;
+            errorMessage = httpFailureText (statusCode);
             retryable = (statusCode >= 500);
         }
         else
@@ -658,9 +696,8 @@ bool NetworkManager::attemptDownload (const DownloadJob& job,
     // to disk is exactly how a "corrupt 0 KB installer" used to be born.
     if (statusCode != 0 && (statusCode < 200 || statusCode >= 300))
     {
-        errorMessage = "Download failed - the server returned HTTP "
-                     + juce::String (statusCode)
-                     + ". This installer may have been moved or removed.";
+        httpStatus = statusCode;
+        errorMessage = httpFailureText (statusCode);
         retryable = (statusCode >= 500);
         return false;
     }

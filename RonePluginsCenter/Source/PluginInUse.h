@@ -140,8 +140,9 @@ namespace PluginInUse
         return juce::File (exePath).getFileNameWithoutExtension();
     }
 
-    // Does this process have the bundle or the exe loaded? Adds it to `result` if so.
-    inline void check (DWORD pid, const juce::String& bundlePath, const juce::String& exePath, Holders& result)
+    // Does this process have one of the bundles or the exe loaded? Adds it to `result` if so.
+    // bundlePaths: full paths, lower-case (a module inside the bundle folder counts).
+    inline void check (DWORD pid, const juce::StringArray& bundlePaths, const juce::String& exePath, Holders& result)
     {
         HANDLE modules = CreateToolhelp32Snapshot (TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
         if (modules == INVALID_HANDLE_VALUE)
@@ -159,8 +160,9 @@ namespace PluginInUse
                 mainModule = path;
 
             const auto lower = path.toLowerCase();
-            holds = (bundlePath.isNotEmpty() && (lower == bundlePath || lower.startsWith (bundlePath + "\\")))
-                 || (exePath.isNotEmpty() && lower == exePath);
+            holds = exePath.isNotEmpty() && lower == exePath;
+            for (int b = 0; b < bundlePaths.size() && ! holds; ++b)
+                holds = lower == bundlePaths[b] || lower.startsWith (bundlePaths[b] + "\\");
         }
 
         CloseHandle (modules);
@@ -186,23 +188,27 @@ namespace PluginInUse
    #endif
 
     // Every process when `onlyThese` is null, else just those processes (the cheap re-check).
-    inline Holders find (const juce::File& vst3Bundle, const juce::File& standaloneExe,
+    // Several bundles at once (2.1.26): the Analyzer ships a Bridge and a Channel
+    // VST3, and a DAW may hold either.
+    inline Holders find (const juce::Array<juce::File>& vst3Bundles, const juce::File& standaloneExe,
                          const juce::Array<juce::uint32>* onlyThese = nullptr)
     {
         Holders result;
 
        #if JUCE_WINDOWS
-        const auto bundlePath = vst3Bundle == juce::File() ? juce::String()
-                                                           : vst3Bundle.getFullPathName().toLowerCase();
+        juce::StringArray bundlePaths;
+        for (const auto& b : vst3Bundles)
+            if (b != juce::File())
+                bundlePaths.add (b.getFullPathName().toLowerCase());
         const auto exePath = standaloneExe == juce::File() ? juce::String()
                                                            : standaloneExe.getFullPathName().toLowerCase();
-        if (bundlePath.isEmpty() && exePath.isEmpty())
+        if (bundlePaths.isEmpty() && exePath.isEmpty())
             return result;
 
         if (onlyThese != nullptr)
         {
             for (auto pid : *onlyThese)
-                check ((DWORD) pid, bundlePath, exePath, result);
+                check ((DWORD) pid, bundlePaths, exePath, result);
             return result;
         }
 
@@ -216,14 +222,24 @@ namespace PluginInUse
 
         for (BOOL ok = Process32FirstW (processes, &pe); ok; ok = Process32NextW (processes, &pe))
             if (pe.th32ProcessID != 0 && pe.th32ProcessID != self)
-                check (pe.th32ProcessID, bundlePath, exePath, result);
+                check (pe.th32ProcessID, bundlePaths, exePath, result);
 
         CloseHandle (processes);
        #else
-        juce::ignoreUnused (vst3Bundle, standaloneExe, onlyThese);
+        juce::ignoreUnused (vst3Bundles, standaloneExe, onlyThese);
        #endif
 
         return result;
+    }
+
+    // One bundle (OldVersionCleaner, and anything that has exactly one file to ask about).
+    inline Holders find (const juce::File& vst3Bundle, const juce::File& standaloneExe,
+                         const juce::Array<juce::uint32>* onlyThese = nullptr)
+    {
+        juce::Array<juce::File> bundles;
+        if (vst3Bundle != juce::File())
+            bundles.add (vst3Bundle);
+        return find (bundles, standaloneExe, onlyThese);
     }
 
     /** Ends FL Studio helper programs that hold the files while no FL Studio is
