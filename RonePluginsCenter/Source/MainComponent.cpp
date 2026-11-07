@@ -82,6 +82,17 @@ static juce::String withoutHome (const juce::String& text)
     return text.replace (juce::File::getSpecialLocation (juce::File::userHomeDirectory).getFullPathName(), "~");
 }
 
+// The installer hash of this platform: sha256_mac carries the .pkg's (empty for a
+// leg that was not built), sha256 the Windows installer's.
+static juce::String platformSha (const PluginInfo& p)
+{
+   #if JUCE_MAC
+    return p.sha256Mac;
+   #else
+    return p.sha256;
+   #endif
+}
+
 // ============================================================================
 // Resource provider — serves embedded HTML/CSS/JS + logos
 // ============================================================================
@@ -671,7 +682,7 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
 
     // Downloaded in the background already: Update goes straight to installing.
     const auto pre = prefetched.find (info.id);
-    if (pre != prefetched.end() && pre->second.version == info.remoteVersion && pre->second.file.existsAsFile())
+    if (pre != prefetched.end() && pre->second.sha256.equalsIgnoreCase (platformSha (info)) && pre->second.file.existsAsFile())
         obj->setProperty ("downloaded", true);
 
     return juce::var (obj);
@@ -791,6 +802,7 @@ static bool isEnvironmentalStatus (const juce::String& text)
         || text.startsWith ("Could not reach the download server")         // R101, R123: GitHub's assets blocked, not a bug
         || text.startsWith ("Download interrupted")                        // R123: the connection dropped
         || text.startsWith ("Download failed - could not write")           // R284: a full disk
+        || text.contains ("the download server is busy")                   // 2.1.26: GitHub's edge said 5xx (issue #82)
         || text.contains ("Windows needs a restart before")                 // R195: Inno exit 8
         || text.contains ("did not let the Center replace itself")        // R201: the designed Finder fallback
         || text.endsWith (": License required")                           // R246: the account's state, not a bug
@@ -798,7 +810,8 @@ static bool isEnvironmentalStatus (const juce::String& text)
 }
 
 void MainComponent::emitStatusMessage (const juce::String& text, const juce::String& type,
-                                       const juce::String& code, const juce::var& params)
+                                       const juce::String& code, const juce::var& params,
+                                       const juce::String& details)
 {
     auto* obj = new juce::DynamicObject();
     obj->setProperty ("text", text);
@@ -843,11 +856,17 @@ void MainComponent::emitStatusMessage (const juce::String& text, const juce::Str
     // The report carries the home folder as "~" (review of R195/R202): 2.1.4's
     // messages name the download folder and quote the installer's own log, and a
     // Windows user name has no place in the tracker. The page shows the full text.
+    //
+    // 2.1.26: `details` rides along (the reporter stores 8000 characters, the
+    // tracker shows them) - the installer's exit code and log, the self-update's
+    // last step, the machine's state - so a report can be read without writing
+    // to the customer. The code stays CENTER_ERROR: the Support Center groups by
+    // code + message, and a new code would split every open issue in two.
     if (type == "error" && ! isEnvironmentalStatus (text))
     {
         RoneCrashReporter::reportError ("RONE Plugins Center",
                                         JUCE_APPLICATION_VERSION_STRING,
-                                        "Center", "CENTER_ERROR", withoutHome (text));
+                                        "Center", "CENTER_ERROR", withoutHome (text), withoutHome (details));
         CrashReportUploader::uploadPendingAsync();
     }
 }
@@ -1000,12 +1019,15 @@ bool MainComponent::startInstall (const juce::String& pluginId, juce::String& er
         }
     }
 
-    // Already downloaded in the background for this version: install it now
-    // (the batch hashes it once more before it runs).
+    // Already downloaded in the background for this very file (same hash): install
+    // it now (the batch hashes it once more before it runs). A pre-download of
+    // another build - the card moved on since - is not it, and a fresh download
+    // follows (applyCatalog drops it anyway).
     const auto pre = prefetched.find (pluginId);
-    if (pre != prefetched.end() && pre->second.version == version && pre->second.file.existsAsFile())
+    if (pre != prefetched.end() && pre->second.sha256.equalsIgnoreCase (sha) && sha.isNotEmpty()
+        && pre->second.file.existsAsFile())
     {
-        handBatcher (pluginId, pre->second.file);
+        handBatcher (pluginId, pre->second.file, pre->second.sha256, version);
         return true;
     }
 
@@ -1018,7 +1040,7 @@ bool MainComponent::startInstall (const juce::String& pluginId, juce::String& er
     }
 
     setStatus (pluginId, PluginStatus::Queued);
-    networkManager.downloadInstaller (pluginId, url, sha, false, isDev);
+    networkManager.downloadInstaller (pluginId, url, sha, version, false, isDev);
     return true;
 }
 
@@ -1073,9 +1095,19 @@ void MainComponent::restoreIdleState (const juce::String& id)
     emitPluginsUpdated();
 }
 
-void MainComponent::handBatcher (const juce::String& pluginId, const juce::File& installer)
+void MainComponent::handBatcher (const juce::String& pluginId, const juce::File& installer,
+                                 const juce::String& verifiedSha, const juce::String& version)
 {
+    // The item carries the identity the file was VERIFIED with (the job's hash and
+    // version), not the card's live values. applyCatalog replaces the card on every
+    // manifest refresh - including the one a release triggers minutes after the user
+    // clicked Update - and a file installed under the card's NEW hash failed the
+    // batch's second check as "the installer changed after it was checked" (issue
+    // #5: 6 reports, 4 machines, Windows and Mac). The Center's own update has done
+    // it this way since R025 (centerUpdateExpectedSha).
     InstallBatcher::Item item;
+    juce::String liveSha, liveUrl, liveVersion;
+    bool isDev = false;
     {
         juce::ScopedLock sl (pluginDataLock);
         for (auto& p : pluginData)
@@ -1084,15 +1116,19 @@ void MainComponent::handBatcher (const juce::String& pluginId, const juce::File&
                 item.id            = p.id;
                 item.name          = p.name;
                 item.registryKey   = p.registryKey;
-                item.version       = p.remoteVersion;
+                item.version       = version.isNotEmpty() ? version : p.remoteVersion;
+                item.sha256        = verifiedSha;
                 item.vst3Bundle    = p.vst3Bundle;
                 item.auBundle      = p.auBundle;
                 item.standaloneExe = p.standaloneExe;
+                liveSha            = platformSha (p);
                #if JUCE_MAC
-                item.sha256        = p.sha256Mac;
+                liveUrl            = p.downloadUrlMac;
                #else
-                item.sha256        = p.sha256;
+                liveUrl            = p.downloadUrl;
                #endif
+                liveVersion        = p.remoteVersion;
+                isDev              = p.dev;
                 break;
             }
     }
@@ -1100,8 +1136,36 @@ void MainComponent::handBatcher (const juce::String& pluginId, const juce::File&
     if (item.id.isEmpty())
         return;
 
-    item.installer = installer;
     prefetched.erase (pluginId);
+
+    // The card moved to another build while this one downloaded. The verified
+    // file would install fine, but the user would get the older build with the
+    // newer one offered right after - so, once, fetch the newer one instead (the
+    // same choice the stale-hash retry makes). No hash for this platform (a dev
+    // entry whose leg was not built, the Windows-first gap) or already re-queued
+    // once (a flapping manifest): back to idle, with a word.
+    if (! liveSha.equalsIgnoreCase (verifiedSha))
+    {
+        auto* params = new juce::DynamicObject();
+        params->setProperty ("name", item.name);
+        if (liveSha.isEmpty() || liveUrl.isEmpty() || handoffRequeued.contains (pluginId))
+        {
+            handoffRequeued.removeString (pluginId);
+            restoreIdleState (pluginId);
+            emitStatusMessage ("A newer build of " + item.name + " is on its way - check again in a minute.",
+                               "info", "newer_build_pending", juce::var (params));
+            return;
+        }
+        handoffRequeued.add (pluginId);
+        setStatus (pluginId, PluginStatus::Queued);
+        emitStatusMessage ("A newer build of " + item.name + " just came out - downloading it.",
+                           "info", "newer_build_downloading", juce::var (params));
+        networkManager.downloadInstaller (pluginId, liveUrl, liveSha, liveVersion, false, isDev);
+        return;
+    }
+    handoffRequeued.removeString (pluginId);
+
+    item.installer = installer;
     setStatus (pluginId, PluginStatus::ReadyToInstall);
     batcher.add (item);
     batcher.poke();
@@ -1192,6 +1256,12 @@ void MainComponent::onBatchResult (const InstallBatcher::Result& r)
     params->setProperty ("id", r.id);
     params->setProperty ("version", version);
     params->setProperty ("exitCode", r.exitCode);
+    // 2.1.26: the program that holds the files and the file Inno could not
+    // replace, for the page's in_use_host / install_locked lines.
+    if (r.heldBy.isNotEmpty())
+        params->setProperty ("host", r.heldBy);
+    if (r.lockedFile.isNotEmpty())
+        params->setProperty ("file", juce::File (r.lockedFile).getFileName());
 
     // What the installer itself said (Inno's log, the Mac installer's stderr -
     // audit R195, R281): on the page beside the translated line, and in the report.
@@ -1202,7 +1272,26 @@ void MainComponent::onBatchResult (const InstallBatcher::Result& r)
         message << " (" << r.reason << ")";
     }
 
-    emitStatusMessage (message, r.ok ? "success" : (r.declined ? "info" : "error"), r.code, juce::var (params));
+    // The report's details (2.1.26, issue #9): everything the page gets plus the
+    // machine's state the elevated copy saw - diagnosable without a reply from
+    // the customer. Only for a failure; never shown on the page.
+    juce::String details;
+    if (! r.ok && ! r.declined)
+    {
+        auto* d = new juce::DynamicObject();
+        d->setProperty ("id", r.id);
+        d->setProperty ("version", version);
+        d->setProperty ("code", r.code);
+        d->setProperty ("exitCode", r.exitCode);
+        if (r.reason.isNotEmpty())        d->setProperty ("reason", r.reason);
+        if (r.lockedFile.isNotEmpty())    d->setProperty ("lockedFile", r.lockedFile);
+        if (r.heldBy.isNotEmpty())        d->setProperty ("heldBy", r.heldBy);
+        if (r.diag.isNotEmpty())          d->setProperty ("machine", r.diag);
+        if (r.integrityNote.isNotEmpty()) d->setProperty ("integrity", r.integrityNote);
+        details = juce::JSON::toString (juce::var (d), true);
+    }
+
+    emitStatusMessage (message, r.ok ? "success" : (r.declined ? "info" : "error"), r.code, juce::var (params), details);
 
     // Audit R024 / R048 stage 1: an install job that did not match its hash, or a
     // staging folder that is not what it should be - reported, nothing refused.
@@ -1699,11 +1788,11 @@ void MainComponent::startBackgroundDownloads()
     for (auto& w : wants)
     {
         const auto pre = prefetched.find (w.id);
-        if (pre != prefetched.end() && pre->second.version == w.version && pre->second.file.existsAsFile())
+        if (pre != prefetched.end() && pre->second.sha256.equalsIgnoreCase (w.sha) && pre->second.file.existsAsFile())
             continue;
         if (w.sha.isEmpty() || networkManager.isDownloadQueued (w.id))
             continue;
-        networkManager.downloadInstaller (w.id, w.url, w.sha, true, w.dev);
+        networkManager.downloadInstaller (w.id, w.url, w.sha, w.version, true, w.dev);
     }
 }
 
@@ -2279,6 +2368,59 @@ static juce::File centerUpdateLog()
                .getChildFile ("RonePluginsCenter").getChildFile ("center-update.log");
 }
 
+// 2.1.26: how far the self-update got, kept in the marker itself ("step",
+// "stepAt", "stepDetail"). Thirteen "did not finish" reports (issue #4, 12
+// machines, mostly Mac) said nothing else, because the marker held only the
+// target version and the Mac path wrote no log at all. Not in center-update.log:
+// on Windows Inno overwrites that file when setup starts and holds it open.
+// A marker already settled (deleted by `failed`, manual() or the read-back) is
+// never brought back - that would report a finished attempt as unfinished.
+static void centerUpdateStep (const juce::String& step, const juce::String& detail = {})
+{
+    const auto marker = centerUpdateMarker();
+    if (! marker.existsAsFile())
+        return;
+    auto m = juce::JSON::parse (marker.loadFileAsString());
+    if (auto* o = m.getDynamicObject())
+    {
+        o->setProperty ("step", step);
+        o->setProperty ("stepAt", juce::Time::getCurrentTime().toISO8601 (true));
+        if (detail.isNotEmpty())
+            o->setProperty ("stepDetail", detail);
+        marker.replaceWithText (juce::JSON::toString (m, true));
+    }
+}
+
+// The marker's step line for a report ("step: setup_started at ..."), empty when there is none.
+static juce::String centerUpdateStepLine()
+{
+    const auto m = juce::JSON::parse (centerUpdateMarker().loadFileAsString());
+    const auto step = m.getProperty ("step", "").toString();
+    if (step.isEmpty())
+        return {};
+    auto line = "step: " + step + " at " + m.getProperty ("stepAt", "").toString();
+    const auto detail = m.getProperty ("stepDetail", "").toString();
+    if (detail.isNotEmpty())
+        line << " (" << detail << ")";
+    return line;
+}
+
+// The last `lines` lines of Inno's log of the self-update (Windows), or why there
+// are none. Inno creates the log before InitializeSetup, so a missing log means
+// setup never started logging at all - not that it stopped on the way.
+static juce::String centerUpdateLogTail (int lines)
+{
+    const auto log = centerUpdateLog();
+    if (! log.existsAsFile())
+        return "inno log: missing - setup never started (quit during the permission prompt?)";
+    const auto all = juce::StringArray::fromLines (log.loadFileAsString());
+    juce::String tail ("inno log, last lines:");
+    for (int i = juce::jmax (0, all.size() - lines); i < all.size(); ++i)
+        if (all[i].trim().isNotEmpty())
+            tail << "\n" << all[i].trim();
+    return tail;
+}
+
 void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion complete)
 {
     const auto info = networkManager.getCenterInstallerInfo();
@@ -2309,10 +2451,10 @@ void MainComponent::handleApplyCenterUpdate (NativeArgs, NativeCompletion comple
                        "center_update_downloading", juce::var (params));
    #if JUCE_MAC
     centerUpdateExpectedSha = info.sha256Mac;
-    networkManager.downloadInstaller ("__center__", info.urlMac, info.sha256Mac);
+    networkManager.downloadInstaller ("__center__", info.urlMac, info.sha256Mac, info.version);
    #else
     centerUpdateExpectedSha = info.sha256;
-    networkManager.downloadInstaller ("__center__", info.url, info.sha256);
+    networkManager.downloadInstaller ("__center__", info.url, info.sha256, info.version);
    #endif
     complete ("{\"started\":true}");
 }
@@ -2351,23 +2493,35 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
 {
     const auto info = networkManager.getCenterInstallerInfo();
 
-    // Read back after the restart (reportCenterUpdateOutcome): did it land?
+    // Read back after the restart (reportCenterUpdateOutcome): did it land? The
+    // marker also records each step reached (centerUpdateStep), so a Center quit
+    // mid-update says at the next start where it stopped.
     {
         auto* m = new juce::DynamicObject();
         m->setProperty ("version", info.version);
         m->setProperty ("from", juce::String (JUCE_APPLICATION_VERSION_STRING));
         m->setProperty ("at", (double) juce::Time::currentTimeMillis());
+        m->setProperty ("step", "requested");
+        m->setProperty ("stepAt", juce::Time::getCurrentTime().toISO8601 (true));
         centerUpdateMarker().getParentDirectory().createDirectory();
-        centerUpdateMarker().replaceWithText (juce::JSON::toString (juce::var (m)));
+        centerUpdateMarker().replaceWithText (juce::JSON::toString (juce::var (m), true));
     }
 
-    auto failed = [safe = juce::Component::SafePointer<MainComponent> (this)] (const juce::String& text, const juce::String& code)
+    // The attempt is over, here: say so, and file it (unless the code is one of the
+    // user's own situations - emitStatusMessage decides by the text). `details`
+    // (the installer's log tail, the exit code) goes into the report only, with the
+    // marker's last step; the marker itself is settled and removed.
+    auto failed = [safe = juce::Component::SafePointer<MainComponent> (this)] (const juce::String& text, const juce::String& code,
+                                                                                const juce::String& details = {},
+                                                                                const juce::var& params = {})
     {
-        juce::MessageManager::callAsync ([safe, text, code]
+        juce::MessageManager::callAsync ([safe, text, code, details, params]
         {
             if (safe == nullptr) return;
+            const auto step = centerUpdateStepLine();
             centerUpdateMarker().deleteFile();
-            safe->emitStatusMessage (text, code == "center_update_declined" ? "info" : "error", code);
+            safe->emitStatusMessage (text, code == "center_update_declined" ? "info" : "error", code, params,
+                                     (step.isNotEmpty() ? step + "\n" : juce::String()) + details);
         });
     };
 
@@ -2406,6 +2560,7 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
                                             "CENTER_INTEGRITY", problem + " (self-update, logged only)");
             CrashReportUploader::uploadPendingAsync();
         }
+        centerUpdateStep ("downloaded", problem.isNotEmpty() ? problem : "hash ok");
     }
 
     SHELLEXECUTEINFOW sei {};
@@ -2418,21 +2573,33 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
 
     if (! ShellExecuteExW (&sei) || sei.hProcess == nullptr)
     {
-        failed ("Could not start the Center update.", "center_update_failed");
+        // The stub itself could not start (antivirus, SmartScreen, the file gone).
+        // Not a refused prompt: the installer is asInvoker and asks for permission
+        // only once it runs, so a refusal comes back as its exit code below.
+        failed ("Could not start the Center update.", "center_update_failed",
+                "ShellExecuteEx error " + juce::String ((int) GetLastError()));
         return;
     }
 
+    centerUpdateStep ("setup_started");
     emitStatusMessage ("Restarting to finish the Center update...", "info", "center_update_restarting");
 
     const auto stub = sei.hProcess;
     juce::Thread::launch ([stub, failed]
     {
-        // Up to ten minutes for the permission prompt to be answered.
-        for (int waited = 0; waited < 600000; waited += 200)
+        // The stub's exit is the end of the attempt, so poll as long as it lives: a
+        // permission prompt answered late still works (before 2.1.26 a ten-minute
+        // cap then said "did not start" while setup could still run - and when it
+        // did, nobody quit for it). Windows itself dismisses an unanswered prompt
+        // after about two minutes; the cap below is for a stub that hangs, so the
+        // page is never stuck on "Restarting..." for good.
+        constexpr int capMs = 30 * 60 * 1000;
+        for (int waited = 0; waited < capMs; waited += 200)
         {
             if (centerSetupIsReady())
             {
                 CloseHandle (stub);
+                centerUpdateStep ("go_seen");
                 juce::MessageManager::callAsync ([] { juce::JUCEApplication::getInstance()->systemRequestedQuit(); });
                 return;
             }
@@ -2442,15 +2609,50 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
                 DWORD code = 0;
                 GetExitCodeProcess (stub, &code);
                 CloseHandle (stub);
-                // The setup ended without ever running elevated: the prompt was refused.
-                failed (code == 0 ? juce::String ("The Center update did not start.")
-                                  : juce::String ("Windows did not give permission - the Center was not updated."),
-                        code == 0 ? "center_update_failed" : "center_update_declined");
+                centerUpdateStep ("setup_exited", "code " + juce::String ((int) code));
+
+                // Setup ended while this Center is still here. Its code, mapped the way
+                // InstallBatcher::describe maps a plugin install - with the phrases
+                // isEnvironmentalStatus knows, so a file in use or a restart is nobody's
+                // bug - instead of "any non-zero = declined" (2.1.26, issue #6):
+                //   0     it says it finished, yet never created RoneCenterUpdateGo: it ran
+                //         against another folder or inside an antivirus sandbox (reported);
+                //   1, 2  it never reached its install phase: a refused permission prompt
+                //         (the stub is asInvoker and respawns elevated; the refusal comes
+                //         back as 1 "failed to initialize" or 2 "cancelled"). NOT measured
+                //         yet - a real init failure hides here until someone runs the
+                //         installer with /RELAUNCH=1, declines, and reads the code;
+                //   5     a file could not be replaced: this exe still running when the
+                //         installer's wait ran out, or held by something else;
+                //   8     Windows needs a restart first;
+                //   other failed (reported, with the log's last lines).
+                const auto tail = centerUpdateLogTail (6);
+                if (code == 0)
+                    failed ("The Center installer finished but never asked the Center to quit - it probably ran in an"
+                            " antivirus sandbox or against another install folder. The Center was not updated.",
+                            "center_update_not_asked", tail);
+                else if (code == 1 || code == 2)
+                    failed ("Windows did not give permission - the Center was not updated.", "center_update_declined");
+                else if (code == 5)
+                    failed ("Center update cancelled - a file was in use (installer code 5): the Center did not close"
+                            " in time. Close every RONE window, then update again.",
+                            "center_update_file_in_use", tail);
+                else if (code == 8)
+                    failed ("Windows needs a restart before the Center can be updated. Restart, then update again.",
+                            "center_update_restart_needed", tail);
+                else
+                {
+                    auto* params = new juce::DynamicObject();
+                    params->setProperty ("code", (int) code);
+                    failed ("The Center update failed (installer code " + juce::String ((int) code) + ").",
+                            "center_update_error", tail, juce::var (params));
+                }
                 return;
             }
         }
         CloseHandle (stub);
-        failed ("The Center update did not start.", "center_update_failed");
+        failed ("The Center update is still waiting for its installer after 30 minutes - the Center was not updated."
+                " Close the Center and open it again, then update.", "center_update_timeout", "stub alive at the cap");
     });
 
 #elif JUCE_MAC
@@ -2522,6 +2724,7 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
             {
                 if (safe == nullptr)
                     return;
+                const auto step = centerUpdateStepLine();
                 centerUpdateMarker().deleteFile();
                 juce::ChildProcess open;
                 open.start (juce::StringArray { "/usr/bin/open", dmg.getFullPathName() });
@@ -2530,7 +2733,7 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
                 safe->emitStatusMessage ("macOS did not let the Center replace itself. Quit the Center from its menu-bar icon, "
                                          "then in the Finder window that opened drag RONE Plugins Center onto Applications, "
                                          "choose Replace, and open it again.",
-                                         "error", "center_update_manual");
+                                         "error", "center_update_manual", {}, step);
             });
         };
 
@@ -2546,9 +2749,14 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
         const auto mount = tmp.getChildFile ("RONE_center_update_" + juce::Uuid().toString().substring (0, 8));
         mount.createDirectory();
 
+        // Each stage into the marker (2.1.26): the Mac path writes no log, and nine
+        // of the thirteen "did not finish" reports of issue #4 came from here.
+        centerUpdateStep ("attach");
+        juce::String attachOut;
         if (! run (juce::StringArray { "/usr/bin/hdiutil", "attach", "-nobrowse", "-noautoopen", "-quiet",
-                                       "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() }, 120000))
+                                       "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() }, 120000, &attachOut))
         {
+            centerUpdateStep ("attach_failed", attachOut.trim());
             mount.deleteRecursively();
             manual();
             return;
@@ -2570,6 +2778,7 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
             && ! (target.getFullPathName() + app.getFullPathName()).containsAnyOf ("'\"\\$`"))
         {
             // As this user: copy beside, then two renames.
+            centerUpdateStep ("swap");
             juce::String why;
             if (run (juce::StringArray { "/usr/bin/ditto", app.getFullPathName(), staged.getFullPathName() }, 300000, &why)
                 && run (juce::StringArray { "/bin/mv", target.getFullPathName(), backup.getFullPathName() }, 30000, &why))
@@ -2579,6 +2788,7 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
                     run (juce::StringArray { "/bin/mv", backup.getFullPathName(), target.getFullPathName() }, 30000);
             }
             staged.deleteRecursively();
+            centerUpdateStep (ok ? "swap_ok" : "swap_failed", why.trim());
 
             // "Permission denied" = the folder's permissions: the administrator can.
             // "Operation not permitted" = macOS protecting the app: nobody can, so no
@@ -2592,9 +2802,11 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
                                       + " && { /bin/mv " + q (staged) + " " + q (target)
                                       + " || { /bin/mv " + q (backup) + " " + q (target) + "; false; }; }"
                                       + " && /bin/rm -rf " + q (backup) + "; R=$?; /bin/rm -rf " + q (staged) + "; exit $R";
+                centerUpdateStep ("swap_admin");
                 const auto cmd = "osascript -e 'do shell script \"" + sh + "\" with administrator privileges'";
                 const int status = std::system (cmd.toRawUTF8());
                 ok = WIFEXITED (status) && WEXITSTATUS (status) == 0 && target.isDirectory();
+                centerUpdateStep (ok ? "swap_admin_ok" : "swap_admin_failed", "status " + juce::String (status));
             }
 
             if (ok)
@@ -2610,6 +2822,7 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
             return;
         }
 
+        centerUpdateStep ("relaunch");
         juce::MessageManager::callAsync ([target]
         {
             // Audit R198: "open -n" 400 ms before quitting raced the single-instance
@@ -2651,8 +2864,11 @@ void MainComponent::reportCenterUpdateOutcome()
     if (installed.isEmpty())
         installed = running;
 
+    const auto step = m.getProperty ("step", "").toString();
     auto* params = new juce::DynamicObject();
     params->setProperty ("version", target);
+    if (step.isNotEmpty())
+        params->setProperty ("step", step);
 
     // The bundle carries the base (1.6.3), the catalog the build (1.6.3.250).
     const bool landed = ! VersionChecker::isNewerVersion (installed, target)
@@ -2667,13 +2883,29 @@ void MainComponent::reportCenterUpdateOutcome()
         return;
     }
 
-    juce::String detail;
-    const auto lines = juce::StringArray::fromLines (centerUpdateLog().loadFileAsString());
-    for (int i = juce::jmax (0, lines.size() - 6); i < lines.size(); ++i)
-        detail << lines[i].trim() << "\n";
+    // Not landed. The page gets the short sentence (plus the step, so the next
+    // report of issue #4 names its branch); the report's details get everything
+    // there is: the marker (version, from, when, last step and its detail), what is
+    // installed and running, and Inno's log - or that there is none (2.1.26). A
+    // marker older than a week is an attempt long past: still an error for the
+    // user (the Center IS old), said as such in the details.
+    const auto at = (juce::int64) (double) m.getProperty ("at", 0.0);
+    const bool stale = at > 0 && juce::Time::currentTimeMillis() - at > 7LL * 24 * 3600 * 1000;
 
-    emitStatusMessage ("The Center update to v" + target + " did not finish." + (detail.isNotEmpty() ? "\n" + detail.trim() : juce::String()),
-                       "error", "center_update_unfinished", juce::var (params));
+    juce::String details;
+    if (stale)
+        details << "stale attempt from " << juce::Time (at).toISO8601 (true) << "\n";
+    details << "marker: " << juce::JSON::toString (m, true) << "\n"
+            << "installed: " << installed << "\nrunning: " << running << "\n";
+   #if JUCE_WINDOWS
+    details << centerUpdateLogTail (20);
+   #else
+    details << "no installer log on macOS - see the marker's step";
+   #endif
+
+    emitStatusMessage ("The Center update to v" + target + " did not finish."
+                           + (step.isNotEmpty() ? " Stopped after: " + step + "." : juce::String()),
+                       "error", "center_update_unfinished", juce::var (params), details);
 }
 
 // ============================================================================
@@ -2774,14 +3006,14 @@ void MainComponent::applyCatalog (const juce::Array<PluginInfo>& plugins, bool f
     if (! fromCache)
         offlineRetries = 0;
 
-    // Pre-downloads made for a version the catalog has since moved past are worthless.
+    // Pre-downloads of a file the catalog no longer names (by hash, 2.1.26) are worthless.
     {
         juce::ScopedLock sl (pluginDataLock);
         for (auto it = prefetched.begin(); it != prefetched.end();)
         {
             bool current = false;
             for (auto& p : pluginData)
-                if (p.id == it->first && p.remoteVersion == it->second.version)
+                if (p.id == it->first && platformSha (p).equalsIgnoreCase (it->second.sha256) && it->second.sha256.isNotEmpty())
                     current = true;
             it = current ? std::next (it) : prefetched.erase (it);
         }
@@ -2814,7 +3046,7 @@ void MainComponent::applyCatalog (const juce::Array<PluginInfo>& plugins, bool f
         const auto retryId = staleHashRetryId;
         staleHashRetryId.clear();
 
-        juce::String url, sha;
+        juce::String url, sha, version;
         bool isDev = false;
 
         if (retryId == "__center__")
@@ -2825,6 +3057,7 @@ void MainComponent::applyCatalog (const juce::Array<PluginInfo>& plugins, bool f
            #else
             url = info.url; sha = info.sha256;
            #endif
+            version = info.version;
             centerUpdateExpectedSha = sha;
         }
         else
@@ -2838,6 +3071,7 @@ void MainComponent::applyCatalog (const juce::Array<PluginInfo>& plugins, bool f
                    #else
                     url = p.downloadUrl;    sha = p.sha256;
                    #endif
+                    version = p.remoteVersion;
                     p.status = PluginStatus::Queued;
                     p.downloadProgress = 0.0;
                     isDev = p.dev;
@@ -2851,7 +3085,7 @@ void MainComponent::applyCatalog (const juce::Array<PluginInfo>& plugins, bool f
             // the hash again, that is the answer, not another round.
             staleHashRetryInFlight = retryId;
             emitPluginsUpdated();
-            networkManager.downloadInstaller (retryId, url, sha, false, isDev);
+            networkManager.downloadInstaller (retryId, url, sha, version, false, isDev);
         }
     }
 
@@ -2915,18 +3149,25 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
                                          const juce::File& localFile,
                                          bool success,
                                          bool cancelled,
-                                         const juce::String& errorMessage)
+                                         const juce::String& errorMessage,
+                                         const juce::String& sha256,
+                                         const juce::String& version)
 {
     // What was this download for? The status says: a card that is Queued or
     // Downloading wants an install; anything else was a background pre-download.
+    // sha256 / version are the JOB's - the identity the file was verified with -
+    // not the card's, which a refresh may have moved on meanwhile (2.1.26).
     PluginStatus status = PluginStatus::NotInstalled;
-    juce::String version, name = pluginId;
+    juce::String name = pluginId;
     {
         juce::ScopedLock sl (pluginDataLock);
         for (auto& p : pluginData)
-            if (p.id == pluginId) { status = p.status; version = p.remoteVersion; name = p.name; break; }
+            if (p.id == pluginId) { status = p.status; name = p.name; break; }
     }
     const bool wantsInstall = status == PluginStatus::Queued || status == PluginStatus::Downloading;
+
+    if (success)
+        busyRetried.removeString (pluginId);   // the next busy server gets its own retry
 
     if (cancelled)
     {
@@ -2983,10 +3224,13 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
 
     if (! wantsInstall)
     {
-        // A background pre-download: keep it for its version, quietly.
+        // A background pre-download: keep it under the hash and version it was
+        // fetched for, quietly. (Before 2.1.26 the card's version at COMPLETION was
+        // stored, so a card swapped mid-prefetch labelled the old file with the new
+        // version - and it passed the version check into the batch.)
         if (success)
         {
-            prefetched[pluginId] = { version, localFile };
+            prefetched[pluginId] = { version, sha256, localFile };
             emitPluginsUpdated();
         }
         batcher.poke();
@@ -2995,7 +3239,37 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
 
     if (success)
     {
-        handBatcher (pluginId, localFile);
+        handBatcher (pluginId, localFile, sha256, version);
+    }
+    else if (errorMessage.contains ("the download server is busy") && ! busyRetried.contains (pluginId))
+    {
+        // 2.1.26 (issue #82): the download server answered 5xx through all the
+        // worker's attempts - a blip at GitHub's edge, not this computer and not
+        // the file. Once per plugin, try again by itself two minutes later; the
+        // card shows Error meanwhile (a click starts it sooner), and a second
+        // failure stands as the error below.
+        busyRetried.add (pluginId);
+        setStatus (pluginId, PluginStatus::Error);
+        auto* params = new juce::DynamicObject();
+        params->setProperty ("name", name);
+        emitStatusMessage ("The download server is busy. The Center tries " + name + " again in two minutes.",
+                           "info", "download_retry_later", juce::var (params));
+        juce::Timer::callAfterDelay (120000, [safe = juce::Component::SafePointer<MainComponent> (this), pluginId]
+        {
+            if (safe == nullptr) return;
+            // Only while the card still shows that error: the user may have clicked
+            // Update meanwhile (and it installed - a second startInstall would download
+            // and install the same build again, with its permission prompt).
+            bool stillError = false;
+            {
+                juce::ScopedLock sl (safe->pluginDataLock);
+                for (auto& p : safe->pluginData)
+                    if (p.id == pluginId) { stillError = p.status == PluginStatus::Error; break; }
+            }
+            if (! stillError) return;
+            juce::String ignored;
+            safe->startInstall (pluginId, ignored);
+        });
     }
     else
     {

@@ -38,6 +38,7 @@
 namespace PluginUninstaller
 {
     static constexpr const char* kFlag = "--uninstall-plugin";
+    static constexpr const char* kAppIdFlag = "--app-id";   // follows the registry key; see runCommandLine
 
     struct Result
     {
@@ -64,11 +65,17 @@ namespace PluginUninstaller
         }
         if (p.id == "RONEAnalyzer")
         {
-           #if JUCE_WINDOWS
-            add (vst3Dir.getParentDirectory().getChildFile ("RONE Analyzer Bridge.vst3"));   // its installer puts it there
-           #else
-            add (vst3Dir.getChildFile ("RONE Analyzer Bridge.vst3"));
-           #endif
+            // Its installer puts both VST3s at the top of the VST3 folder (Windows):
+            // the Bridge on the master bus and, since 1.3.32, the per-track Channel.
+            // 2.1.26: the Channel was unknown here, so an uninstall left it behind.
+            for (const auto& name : VersionChecker::analyzerBundleNames())
+            {
+               #if JUCE_WINDOWS
+                add (vst3Dir.getParentDirectory().getChildFile (name + ".vst3"));
+               #else
+                add (vst3Dir.getChildFile (name + ".vst3"));
+               #endif
+            }
         }
 
        #if JUCE_MAC
@@ -95,11 +102,12 @@ namespace PluginUninstaller
         if (p.vst3Bundle.isNotEmpty())
             add (VersionChecker::getUserVst3Dir().getChildFile (p.vst3Bundle));
         if (p.id == "RONEAnalyzer")
-        {
-            add (VersionChecker::getUserVst3Dir().getChildFile ("RONE Analyzer Bridge.vst3"));
-            add (VersionChecker::getAUInstallDir().getChildFile ("RONE Analyzer Bridge.component"));
-            add (VersionChecker::getUserAUDir().getChildFile ("RONE Analyzer Bridge.component"));
-        }
+            for (const auto& name : VersionChecker::analyzerBundleNames())
+            {
+                add (VersionChecker::getUserVst3Dir().getChildFile (name + ".vst3"));
+                add (VersionChecker::getAUInstallDir().getChildFile (name + ".component"));
+                add (VersionChecker::getUserAUDir().getChildFile (name + ".component"));
+            }
        #else
         const auto appDir = VersionChecker::getStandaloneInstallDir();
         if (p.standaloneExe.isNotEmpty())
@@ -169,7 +177,20 @@ namespace PluginUninstaller
         const auto registryKey = tokens[at + 1].unquoted();
         juce::StringArray paths;
         for (int i = at + 2; i < tokens.size(); ++i)
+        {
+            // 2.1.26: "--app-id {GUID}" - the installer's AppId as the manifest names
+            // it. This elevated copy quits before any manifest is read, so a plugin
+            // missing from VersionChecker's built-in table had no uninstaller here:
+            // the files went, the Uninstall entry stayed, and the Center said "did
+            // not finish" (support issue #10: Sidechain, 4 machines). registerInnoAppId
+            // accepts the "{GUID}" shape only, so nothing else reaches a registry path.
+            if (tokens[i] == kAppIdFlag && i + 1 < tokens.size())
+            {
+                VersionChecker::registerInnoAppId (registryKey, tokens[++i].unquoted());
+                continue;
+            }
             paths.add (tokens[i].unquoted());
+        }
 
        #if JUCE_WINDOWS
         const auto exe = uninstallerExe (registryKey);
@@ -213,13 +234,15 @@ namespace PluginUninstaller
         // A DAW with the VST3 loaded holds the DLL: the uninstaller could not remove
         // it and the plugin would be half there. Say what to close instead.
         {
-            const auto bundle = p.vst3Bundle.isNotEmpty() ? VersionChecker::getVst3InstallDir().getChildFile (p.vst3Bundle)
-                              : p.id == "RONEAnalyzer" ? VersionChecker::getVst3InstallDir().getParentDirectory()
-                                                                          .getChildFile ("RONE Analyzer Bridge.vst3")
-                                                       : juce::File();
+            juce::Array<juce::File> bundles;
+            if (p.vst3Bundle.isNotEmpty())
+                bundles.add (VersionChecker::getVst3InstallDir().getChildFile (p.vst3Bundle));
+            if (p.id == "RONEAnalyzer")
+                for (const auto& name : VersionChecker::analyzerBundleNames())
+                    bundles.add (VersionChecker::getVst3InstallDir().getParentDirectory().getChildFile (name + ".vst3"));
             const auto exe = p.standaloneExe.isNotEmpty() ? VersionChecker::getStandaloneInstallDir().getChildFile (p.standaloneExe)
                                                           : juce::File();
-            const auto holders = PluginInUse::find (bundle, exe);
+            const auto holders = PluginInUse::find (bundles, exe);
             if (! holders.isEmpty())
             {
                 r.hosts = holders.hosts;
@@ -230,6 +253,10 @@ namespace PluginUninstaller
         }
 
         juce::String params = juce::String (kFlag) + " " + quoteArg (p.registryKey);
+        // The AppId the manifest carries, for the elevated copy (which has no manifest).
+        // Absent in an old manifest: the built-in table in VersionChecker.cpp answers.
+        if (p.innoAppId.isNotEmpty())
+            params << " " << kAppIdFlag << " " << quoteArg (p.innoAppId);
         for (const auto& f : files)
             if (f.exists())
                 params << " " << quoteArg (f.getFullPathName());
@@ -330,8 +357,12 @@ namespace PluginUninstaller
                     + (r.leftovers.isEmpty() ? juce::String() : ". Still there: " + r.leftovers.joinIntoString (", "));
         }
        #endif
+        // The Uninstall entry is still there: its uninstaller never ran or never
+        // finished. A restart changes nothing about that (2.1.26, issue #10) - the
+        // entry Windows itself lists is the way out.
         if (! r.ok && r.error.isEmpty())
-            r.error = ! entryGone ? juce::String ("The uninstaller did not finish. Restart the computer and try again.")
+            r.error = ! entryGone ? "The uninstaller did not finish. Remove " + p.name
+                                        + " from Windows Settings > Apps > Installed apps, then try again."
                                   : "Some files could not be removed: " + r.leftovers.joinIntoString (", ");
         return r;
     }

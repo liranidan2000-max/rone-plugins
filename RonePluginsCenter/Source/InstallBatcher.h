@@ -72,11 +72,18 @@ public:
         bool rebootNeeded = false;     // unused since 2.1.4: Inno's exit 8 means nothing was installed (R195)
         bool declined = false;         // the permission prompt was refused
         int  exitCode = 0;
-        juce::String code;             // for the page: "installed", "in_use", "declined", "hash", "failed",
-                                       // "restart_needed", "install_aborted"
+        juce::String code;             // for the page: "installed", "in_use", "in_use_host", "in_use_own", "declined",
+                                       // "hash", "failed", "restart_needed", "install_aborted", "install_locked",
+                                       // "installer_init_failed"
         juce::String message;          // English, for the page's fallback and the error report
         juce::String reason;           // what the installer itself said (its log / stderr), may be empty
         juce::String integrityNote;    // audit R024 stage 1: the job file did not match its hash (logged only)
+        // 2.1.26 (support issues #8, #9): what the elevated copy saw, for the page's
+        // params and the report's details - the programs holding the files (by
+        // product name), the file Inno could not replace, and the machine's state
+        // at a failure (free space, other installers) - the last one is for the
+        // report only, never for the customer's screen.
+        juce::String heldBy, lockedFile, diag;
     };
 
     // All three are called on the message thread.
@@ -214,6 +221,22 @@ public:
             const juce::File source (it.getProperty ("path", "").toString());
             const auto sha = it.getProperty ("sha256", "").toString();
 
+            // 2.1.26: the plugin's files a running program may hold (holderFiles,
+            // written into the job by the Center), so THIS copy can ask who holds
+            // them. It runs elevated and sees the module lists of a DAW started "as
+            // administrator", which the Center itself cannot inspect (PluginInUse.h)
+            // - five of the seven "install stopped midway" reports of issue #8 had
+            // such an invisible holder. Read-only: paths compared against module
+            // paths, nothing is ended from here.
+            const auto name = it.getProperty ("name", "").toString();
+            juce::Array<juce::File> holderBundles;
+            if (auto* b = it.getProperty ("bundles", {}).getArray())
+                for (auto& path : *b)
+                    if (path.toString().isNotEmpty())
+                        holderBundles.add (juce::File (path.toString()));
+            const auto holderExeName = it.getProperty ("exe", "").toString();
+            const juce::File holderExe = holderExeName.isNotEmpty() ? juce::File (holderExeName) : juce::File();
+
             auto* r = new juce::DynamicObject();
             r->setProperty ("id", id);
             if (jobHashState != "ok")    r->setProperty ("jobHash", jobHashState);
@@ -268,10 +291,20 @@ public:
             else
             {
                 juce::FileInputStream fis (copy);
+                const juce::int64 stagedSize = copy.getSize();
                 const bool matches = fis.openedOk() && juce::SHA256 (fis).toHexString().equalsIgnoreCase (sha);
+
+                // A program the Center could not see still holds the files: say who,
+                // and do not start an installer that would only roll back (exit 5).
+                const auto heldBefore = matches ? PluginInUse::find (holderBundles, holderExe) : PluginInUse::Holders();
 
                 if (! matches)
                     r->setProperty ("exitCode", -2);
+                else if (! heldBefore.isEmpty())
+                {
+                    r->setProperty ("exitCode", 5);
+                    r->setProperty ("heldBy", holderNames (heldBefore, name));
+                }
                 else
                 {
                     // /LOG (audit R195): what Inno itself says comes back with a failure.
@@ -288,23 +321,42 @@ public:
                         for (int waited = 0; setup.isRunning() && waited < kInstallerHangMs; waited += 250)
                             juce::Thread::sleep (250);
 
+                        int exitCode = 0;
                         if (setup.isRunning())
                         {
                             // R280: end it, and install nothing more in this batch. (This ends
                             // Inno's outer stub; a job object that ends its whole tree is stage 2.)
                             setup.kill();
                             hung = true;
-                            r->setProperty ("exitCode", -4);
+                            exitCode = -4;
                         }
                         else
-                            r->setProperty ("exitCode", (int) setup.getExitCode());
+                            exitCode = (int) setup.getExitCode();
+                        r->setProperty ("exitCode", exitCode);
 
-                        const auto detail = installerLogDetail (log);
+                        juce::String lockedFile;
+                        const auto detail = installerLogDetail (log, lockedFile);
                         if (detail.isNotEmpty())
                             r->setProperty ("detail", detail);
+                        if (lockedFile.isNotEmpty())
+                            r->setProperty ("lockedFile", lockedFile);
+
+                        // A file in use after all (the program opened between the check
+                        // and the install): name it from here, where it can be seen.
+                        if (exitCode == 5)
+                        {
+                            const auto heldAfter = PluginInUse::find (holderBundles, holderExe);
+                            if (! heldAfter.isEmpty())
+                                r->setProperty ("heldBy", holderNames (heldAfter, name));
+                        }
+                        if (exitCode != 0)
+                            r->setProperty ("diag", installDiagnostics (copy, stagedSize));
                     }
                     else
+                    {
                         r->setProperty ("exitCode", -5);   // R202: Windows would not start it - usually antivirus
+                        r->setProperty ("diag", installDiagnostics (copy, stagedSize));
+                    }
                 }
             }
 
@@ -366,42 +418,113 @@ private:
 
     // The lines of an Inno /LOG that say why it stopped (audit R195), newest last,
     // without their time stamps. Empty when it says nothing of the kind.
-    static juce::String installerLogDetail (const juce::File& log)
+    //
+    // 2.1.26: led by the file Inno was placing when the first of them came ("File:
+    // <path>") - Inno logs "Dest filename: <path>" before each file entry, and the
+    // locked file's name is the one thing seven "DeleteFile failed; code 5" reports
+    // lacked (support issue #8). First, because the report pipeline cuts the text
+    // at a few hundred characters. `lockedFile` gets that path alone.
+    static juce::String installerLogDetail (const juce::File& log, juce::String& lockedFile)
     {
         juce::StringArray why;
+        juce::String lastDest;
+        lockedFile.clear();
         for (auto line : juce::StringArray::fromLines (log.loadFileAsString()))
         {
             line = line.trim();
             // "2026-10-13 12:00:00.000   Message" -> "Message"
             if (line.length() > 24 && juce::CharacterFunctions::isDigit (line[0]) && line[4] == '-' && line[10] == ' ')
                 line = line.substring (23).trim();
+            if (line.startsWithIgnoreCase ("Dest filename:"))
+                lastDest = line.fromFirstOccurrenceOf (":", false, false).trim();
             if (line.containsIgnoreCase ("error") || line.containsIgnoreCase ("abort") || line.containsIgnoreCase ("failed"))
+            {
+                if (why.isEmpty())
+                    lockedFile = lastDest;   // the file entry the first failure came under
                 why.add (line);
+            }
         }
         while (why.size() > 3)
             why.remove (0);
-        return why.joinIntoString (" | ").substring (0, 400);
+        if (why.isEmpty())
+            return {};
+        return ((lockedFile.isNotEmpty() ? "File: " + lockedFile + " | " : juce::String())
+                + why.joinIntoString (" | ")).substring (0, 600);
     }
 
-    static void holderFiles (const Item& item, juce::File& bundle, juce::File& exe)
+    // The programs a holder scan found, by product name; our own app by the plugin's name.
+    static juce::String holderNames (const PluginInUse::Holders& h, const juce::String& ownName)
     {
-        // The Analyzer is an app, but its installer also replaces the VST3
-        // bridge a DAW keeps on its master bus - outside the RONE folder.
-        bundle = item.vst3Bundle.isNotEmpty() ? VersionChecker::getVst3InstallDir().getChildFile (item.vst3Bundle)
-               : item.id == "RONEAnalyzer"    ? VersionChecker::getVst3InstallDir().getParentDirectory()
-                                                    .getChildFile ("RONE Analyzer Bridge.vst3")
-                                              : juce::File();
+        auto hosts = h.hosts;
+        if (h.ownApp && ownName.isNotEmpty())
+            hosts.addIfNotAlreadyThere (ownName);
+        return hosts.joinIntoString (", ");
+    }
+
+    // 2.1.26: the machine as the installer left it, for the report only (support
+    // issue #9: seven "installer code 1" reports with nothing to go on - Inno's
+    // exit 1 is "Setup failed to initialize", before it opens its /LOG). Free
+    // space where the copy ran and in %TEMP% (Inno unpacks there), whether the
+    // staged copy survived setup (antivirus deletes it mid-run), and other
+    // installers still running - another Inno setup (its is-XXXX.tmp\*.tmp
+    // second stage) or msiexec.
+    static juce::String installDiagnostics (const juce::File& stagedCopy, juce::int64 stagedSize)
+    {
+        const auto gbFree = [] (const juce::File& f)
+        {
+            return juce::String (f.getBytesFreeOnVolume() / (1024.0 * 1024.0 * 1024.0), 1) + " GB free";
+        };
+        juce::StringArray d;
+        d.add ("InstallCache volume " + gbFree (stagedCopy.getParentDirectory()));
+        d.add ("TEMP volume " + gbFree (juce::File::getSpecialLocation (juce::File::tempDirectory)));
+        d.add ("staged copy " + juce::String (stagedSize) + " bytes"
+               + (stagedCopy.existsAsFile() ? juce::String() : juce::String (", gone after setup returned")));
+
+        juce::StringArray others;
+        HANDLE processes = CreateToolhelp32Snapshot (TH32CS_SNAPPROCESS, 0);
+        if (processes != INVALID_HANDLE_VALUE)
+        {
+            PROCESSENTRY32W pe {};
+            pe.dwSize = sizeof (pe);
+            for (BOOL ok = Process32FirstW (processes, &pe); ok; ok = Process32NextW (processes, &pe))
+            {
+                const juce::String exe (pe.szExeFile);
+                if (exe.endsWithIgnoreCase ("_Installer.exe") || exe.endsWithIgnoreCase ("_Installer.tmp")
+                    || exe.equalsIgnoreCase ("msiexec.exe"))
+                    others.addIfNotAlreadyThere (exe);
+            }
+            CloseHandle (processes);
+        }
+        d.add ("other installers running: " + (others.isEmpty() ? juce::String ("none") : others.joinIntoString (", ")));
+        return d.joinIntoString ("; ");
+    }
+
+    // The files of this plugin a running program may hold: its VST3 bundle(s)
+    // and its standalone exe.
+    static void holderFiles (const Item& item, juce::Array<juce::File>& bundles, juce::File& exe)
+    {
+        bundles.clear();
+        if (item.vst3Bundle.isNotEmpty())
+            bundles.add (VersionChecker::getVst3InstallDir().getChildFile (item.vst3Bundle));
+        // The Analyzer is an app, but its installer also replaces the VST3s a DAW
+        // keeps loaded - the Bridge on the master bus and (1.3.32) the Channel on
+        // any track - outside the RONE folder. 2.1.26: the Channel was unknown here,
+        // so a DAW holding only a Channel made the update fail with no program named.
+        if (item.id == "RONEAnalyzer")
+            for (const auto& name : VersionChecker::analyzerBundleNames())
+                bundles.add (VersionChecker::getVst3InstallDir().getParentDirectory().getChildFile (name + ".vst3"));
         exe = item.standaloneExe.isNotEmpty() ? VersionChecker::getStandaloneInstallDir().getChildFile (item.standaloneExe)
                                               : juce::File();
     }
 
-    // Exit 5 with a program still holding the files = "close the DAW"; without
-    // one it was something else (audit R195).
-    static bool isHeldNow (const Item& item)
+    // Exit 5 with a program still holding the files = "close <that program>";
+    // without one it was something else (audit R195). The programs' names, empty = none.
+    static juce::String heldNowBy (const Item& item)
     {
-        juce::File bundle, exe;
-        holderFiles (item, bundle, exe);
-        return ! PluginInUse::find (bundle, exe).isEmpty();
+        juce::Array<juce::File> bundles;
+        juce::File exe;
+        holderFiles (item, bundles, exe);
+        return holderNames (PluginInUse::find (bundles, exe), item.name);
     }
    #endif
 
@@ -427,27 +550,28 @@ private:
             if (e.state == State::waiting && now - e.lastCheckMs < 4000)
                 continue;
 
-            juce::File bundle, exe;
-            holderFiles (e.item, bundle, exe);
+            juce::Array<juce::File> bundles;
+            juce::File exe;
+            holderFiles (e.item, bundles, exe);
 
             // Cheap: only the processes that held the files. Once they all let
             // go, one full scan - another program may have loaded it meanwhile.
-            auto holders = e.state == State::waiting ? PluginInUse::find (bundle, exe, &e.holderPids)
-                                                     : PluginInUse::find (bundle, exe);
+            auto holders = e.state == State::waiting ? PluginInUse::find (bundles, exe, &e.holderPids)
+                                                     : PluginInUse::find (bundles, exe);
             if (e.state == State::waiting && holders.isEmpty())
-                holders = PluginInUse::find (bundle, exe);
+                holders = PluginInUse::find (bundles, exe);
 
             // 2.1.6: an FL Studio helper left holding the files after FL itself
             // closed (a crash, a stuck shutdown) would keep this waiting for good.
             if (PluginInUse::endOrphanedFlHelpers (holders) > 0)
-                holders = PluginInUse::find (bundle, exe);
+                holders = PluginInUse::find (bundles, exe);
 
             // Our own app, open on its own (no DAW holds it): the Center closes
             // it, installs and opens it again - nothing for the user to do.
             // Liran 1.11: "VST MANAGER is ours, no Close it to finish".
             if (closesForUpdate (e.item) && PluginInUse::endOwnApp (holders, exe) > 0)
             {
-                holders = PluginInUse::find (bundle, exe);
+                holders = PluginInUse::find (bundles, exe);
                 if (holders.isEmpty())
                 {
                     const juce::ScopedLock sl (lock);
@@ -577,9 +701,11 @@ private:
     }
 
     // ---- one batch ----------------------------------------------------------
-    // heldNow: for exit 5, whether a program still holds the plugin's files right
-    // after the batch (Windows; audit R195).
-    static Result describe (const Item& item, int exitCode, bool heldNow = false)
+    // heldBy: for exit 5, the programs that hold the plugin's files - seen by the
+    // elevated copy or right after the batch (Windows; audit R195, 2.1.26) - empty
+    // when none. lockedFile / detail: what Inno's log said (installerLogDetail).
+    static Result describe (const Item& item, int exitCode, const juce::String& heldBy = {},
+                            const juce::String& lockedFile = {}, const juce::String& detail = {})
     {
         Result r;
         r.id = item.id;
@@ -590,19 +716,44 @@ private:
         // in use with /SUPPRESSMSGBOXES answers Abort) and everything rolled back;
         // 8 = the Preparing to Install step found Windows must restart first - and
         // installed NOTHING (before 2.1.4 it counted as installed, R195); 2 =
-        // cancelled before installing. Below zero: the Center's own codes.
+        // cancelled before installing; 1 = Setup failed to initialize (before any
+        // log). Below zero: the Center's own codes.
+        //
+        // Every text that is nobody's bug starts with "Install cancelled" or carries
+        // "a file was in use" / "installer code 2)" - MainComponent's
+        // isEnvironmentalStatus keeps those out of the crash tracker.
+        r.heldBy = heldBy;
+        r.lockedFile = lockedFile;
         r.ok = exitCode == 0;
         if (r.ok)                 { r.code = "installed";
                                     r.message = item.name + " installed successfully!"; }
         else if (exitCode == 8)   { r.code = "restart_needed";
                                     r.message = item.name + ": Windows needs a restart before this can be installed. Restart, then update again."; }
-        else if (exitCode == 5 && heldNow)
-                                  { r.code = "in_use";
-                                    r.message = "Install cancelled - a file was in use. Close the DAW or standalone that has "
-                                                + item.name + " open, then update again."; }
+        else if (exitCode == 5 && heldBy.isNotEmpty() && heldBy == item.name)
+                                  { r.code = "in_use_own";
+                                    r.message = "Install cancelled - a file was in use. " + item.name
+                                                + " itself is still open. Close it, then update again."; }
+        else if (exitCode == 5 && heldBy.isNotEmpty())
+                                  { r.code = "in_use_host";
+                                    r.message = "Install cancelled - a file was in use. Close " + heldBy + " (it has "
+                                                + item.name + " open), then update again."; }
+        // Inno could not delete or move a file nobody visible holds: the file is
+        // named (2.1.26). "DeleteFile/MoveFileEx failed; code 5" is a loaded binary or
+        // a denial by antivirus; a copy failure ("copy a file") keeps the older text.
+        else if (exitCode == 5 && lockedFile.isNotEmpty()
+                 && (detail.containsIgnoreCase ("DeleteFile") || detail.containsIgnoreCase ("MoveFileEx")))
+                                  { r.code = "install_locked";
+                                    r.message = item.name + ": Windows would not let the installer replace "
+                                                + juce::File (lockedFile).getFileName()
+                                                + ". Close the program that uses it (a DAW - also one running as administrator - "
+                                                  "or a PDF reader), or pause the antivirus, then update again."; }
         else if (exitCode == 5)   { r.code = "install_aborted";
                                     r.message = item.name + ": the installer stopped before it finished and nothing was changed."
                                                 " Often antivirus, its manual PDF open in a reader, or a full disk."; }
+        else if (exitCode == 1)   { r.code = "installer_init_failed";
+                                    r.message = item.name + ": the installer could not start (installer code 1) - usually antivirus"
+                                                " blocked it or another installer is still running. Wait a minute and try again,"
+                                                " or download it from roneaudio.com/account."; }
         else if (exitCode == -2)  { r.code = "hash";
                                     r.message = item.name + ": the installer changed after it was checked - nothing was installed. Try again."; }
         else if (exitCode == -3)  { r.code = "failed";
@@ -619,9 +770,12 @@ private:
         else if (exitCode == -1)  { r.code = "failed";
                                     r.message = item.name + ": the installer did not finish."; }
         else                      { r.code = "failed";
-                                    r.message = "Install failed (installer code " + juce::String (exitCode) + ")."; }
+                                    // The name, like every other branch (2.1.26): the report's 12-hour
+                                    // throttle keys on the text, so without it a machine failing two
+                                    // plugins filed one report. "(installer code N)" stays for the tracker.
+                                    r.message = item.name + ": install failed (installer code " + juce::String (exitCode) + ")."; }
        #else
-        juce::ignoreUnused (item, heldNow);
+        juce::ignoreUnused (item, heldBy, lockedFile, detail);
        #endif
         return r;
     }
@@ -645,8 +799,9 @@ private:
         // Closed for this update: open again, the new one or (it failed) the old.
         if (reopen)
         {
-            juce::File bundle, exe;
-            holderFiles (item, bundle, exe);
+            juce::Array<juce::File> bundles;
+            juce::File exe;
+            holderFiles (item, bundles, exe);
             if (exe.existsAsFile())
                 exe.startAsProcess();
         }
@@ -998,6 +1153,19 @@ private:
             o->setProperty ("id", i.id);
             o->setProperty ("path", i.installer.getFullPathName());
             o->setProperty ("sha256", i.sha256);
+
+            // 2.1.26: the files a program may hold, for the elevated copy's own
+            // holder scan (it sees DAWs run as administrator; this Center cannot).
+            // Covered by the job hash like the rest.
+            juce::Array<juce::File> bundles;
+            juce::File exe;
+            holderFiles (i, bundles, exe);
+            juce::Array<juce::var> bundleVars;
+            for (const auto& b : bundles)
+                bundleVars.add (b.getFullPathName());
+            o->setProperty ("name", i.name);
+            o->setProperty ("bundles", bundleVars);
+            o->setProperty ("exe", exe == juce::File() ? juce::String() : exe.getFullPathName());
             items.add (juce::var (o));
         }
         auto* job = new juce::DynamicObject();
@@ -1055,9 +1223,16 @@ private:
                         {
                             reported.add (id);
                             const int exitCode = (int) r.getProperty ("exitCode", -1);
-                            auto res = describe (i, exitCode, exitCode == 5 && isHeldNow (i));
+                            const auto detail     = r.getProperty ("detail", "").toString().trim();
+                            const auto lockedFile = r.getProperty ("lockedFile", "").toString().trim();
+                            // Who holds the files: what the elevated copy saw, else one look from here.
+                            auto heldBy = r.getProperty ("heldBy", "").toString().trim();
+                            if (exitCode == 5 && heldBy.isEmpty())
+                                heldBy = heldNowBy (i);
+                            auto res = describe (i, exitCode, heldBy, lockedFile, detail);
                             if (! res.ok)
-                                res.reason = r.getProperty ("detail", "").toString().trim();
+                                res.reason = detail;
+                            res.diag = r.getProperty ("diag", "").toString().trim();
 
                             const auto jobHashState = r.getProperty ("jobHash", "ok").toString();
                             const auto cacheNote    = r.getProperty ("cacheNote", "").toString();
@@ -1190,7 +1365,7 @@ private:
                     r.message = r.ok ? i.name + " installed successfully!"
                               : code == -2 ? i.name + ": the installer changed after it was checked - nothing was installed. Try again."
                               : code == 0 ? juce::String ("Install verification failed - components not found.")
-                                          : "Install failed (installer code " + juce::String (code) + ").";
+                                          : i.name + ": install failed (installer code " + juce::String (code) + ").";
                     if (! r.ok && code != -2)
                         r.reason = rest.fromFirstOccurrenceOf (" ", false, false).trim().replace (home, "~");
 

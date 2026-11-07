@@ -43,11 +43,18 @@ public:
         virtual void onDownloadStarted (const juce::String& pluginId) = 0;
 
         // Message thread, when a download finishes. cancelled = cancelDownload() asked for it.
+        // sha256 / version: what the job was queued WITH - the hash the file was
+        // verified against and the version it was fetched for (2.1.26). The card's
+        // live values may have moved on since (a release or a manifest refresh
+        // mid-download), and a file installed under the card's new hash failed its
+        // second check as "the installer changed after it was checked" (issue #5).
         virtual void onDownloadComplete (const juce::String& pluginId,
                                          const juce::File& localFile,
                                          bool success,
                                          bool cancelled,
-                                         const juce::String& errorMessage) = 0;
+                                         const juce::String& errorMessage,
+                                         const juce::String& sha256,
+                                         const juce::String& version) = 0;
     };
 
     // ---- API ---------------------------------------------------------------
@@ -65,12 +72,15 @@ public:
     void fetchManifest (bool freshFromOrigin = false);
 
     // Queue a download (async — progress via listener). The file is verified
-    // against sha256, which must be present. A prefetch is a background
-    // pre-download: the caller keeps the file for the moment the user says Update.
+    // against sha256, which must be present. version: the catalog version this
+    // file is for - it travels with the job and comes back in onDownloadComplete.
+    // A prefetch is a background pre-download: the caller keeps the file for the
+    // moment the user says Update.
     // isDev: a DEV CHANNEL plug-in, served from roneaudio.com instead of GitHub.
     void downloadInstaller (const juce::String& pluginId,
                             const juce::String& url,
                             const juce::String& sha256,
+                            const juce::String& version,
                             bool isPrefetch = false,
                             bool isDev = false);
 
@@ -131,6 +141,7 @@ private:
         juce::String pluginId;
         juce::String url;
         juce::String sha256;
+        juce::String version;      // the catalog version the file is for (2.1.26)
         bool prefetch = false;
         bool dev = false;
     };
@@ -154,8 +165,10 @@ private:
 
     void fetchOnce (bool fromOrigin);                    // manifest thread
     void runDownloadJob (const DownloadJob& job);        // download thread
+    // httpStatus: the server's answer when it was one (5xx = busy, retried with a
+    // longer back-off), 0 when the failure was not an HTTP status.
     bool attemptDownload (const DownloadJob& job, const juce::File& tempFile,
-                          juce::String& errorMessage, bool& retryable);
+                          juce::String& errorMessage, bool& retryable, int& httpStatus);
     bool shouldAbortDownload() const;
 
     // Parse the raw JSON body into PluginInfo structs.

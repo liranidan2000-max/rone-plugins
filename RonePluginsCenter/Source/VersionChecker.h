@@ -126,6 +126,15 @@ public:
     static PluginStatus determineStatus (const juce::String& installed,
                                           const juce::String& remote);
 
+    // The RONE Analyzer's plug-in bundles, without extension: "RONE Analyzer
+    // Bridge" (master bus) and, since 1.3.32, "RONE Analyzer Channel" (per track).
+    // Its installer puts them at the top of the VST3 folder, outside the RONE
+    // subfolder, so the manifest's vst3_bundle is empty for it. One list for the
+    // uninstall, the in-use checks and the install batch's holder scan (2.1.26:
+    // the Channel was unknown to all three, so a DAW holding only a Channel made
+    // an Analyzer update fail with no program named).
+    static juce::StringArray analyzerBundleNames();
+
     // Check whether the standalone exe or VST3/AU bundle exists on disk.
     static bool isStandaloneInstalled (const juce::String& exeName);
     static bool isVst3Installed       (const juce::String& bundleName);
