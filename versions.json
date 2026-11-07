@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-06T18:59:08Z",
+  "last_updated": "2026-11-07T18:02:47Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-374.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-374.1.dmg",
@@ -593,7 +593,7 @@
       "id": "RoneSidechain",
       "released": "2026-10-26",
       "name": "RONE Sidechain",
-      "version": "1.0.9.378",
+      "version": "1.0.10.381",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -607,9 +607,9 @@
       "au_bundle": "RONE Sidechain.component",
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WqbiD2pWe6Y",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-378.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-381.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-378.1.pkg",
-      "sha256": "91d8dbf11c04405d03bc2443d68244b21b877da6fc1410c9b8780f49f47ef612",
+      "sha256": "ac52de5cffd05166335c964b4c38ea8b2fcd45b2019812d49acce88db2062b32",
       "registry_key": "RoneSidechain",
       "sha256_mac": "129d6df0be8f0b3bf9aae6fed48ac12e96c6316db40186e4a2f88be23702aea5",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
@@ -625,7 +625,7 @@
       ],
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
-      "size": 6522805,
+      "size": 6523139,
       "size_mac": 18038776,
       "version_mac": "1.0.9.378"
     },
