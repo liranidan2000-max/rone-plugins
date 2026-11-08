@@ -1,0 +1,34 @@
+{
+  "id": "RoneAfterspace",
+  "name": "RONE AFTERSPACE",
+  "type": "plugin",
+  "formats": [
+    "VST3",
+    "AU",
+    "Standalone"
+  ],
+  "description": "Creative reverb, delay and atmosphere designer - huge cinematic spaces that stay clean via built-in ducking, a tail de-esser (SILK), auto-gain and tempo-synced echo, all in one plugin",
+  "whats_new": "1.1.0 dev - RONE Control's rack inside AFTERSPACE: the + handle opens a rack where your hand moves the knobs (phone or camera), slot A free, more slots with ALL ACCESS. The hand model lives in RONE Control (install it from the Center for the camera). In development, visible only in Liran's own Plugins Center.",
+  "standalone_exe": "RONE AFTERSPACE.exe",
+  "vst3_bundle": "RONE AFTERSPACE.vst3",
+  "au_bundle": "RONE AFTERSPACE.component",
+  "manual": "RONE AFTERSPACE - User Manual.pdf",
+  "video": "https://www.youtube.com/watch?v=lbKXq6iuctM",
+  "registry_key": "RoneAfterspace",
+  "inno_app_id": "{A1B2C3D4-E5F6-7890-ABCD-AFTERSPACE01}",
+  "accent": "#FF8A3D",
+  "category": [
+    "space"
+  ],
+  "tags": [
+    "reverb",
+    "delay",
+    "atmosphere",
+    "ambient",
+    "cinematic",
+    "rack",
+    "hand"
+  ],
+  "store_url": "https://roneaudio.com/products/afterspace.html",
+  "free": false
+}

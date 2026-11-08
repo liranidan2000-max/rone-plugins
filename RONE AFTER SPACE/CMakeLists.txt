@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RoneAfterspace VERSION 1.0.12)
+project(RoneAfterspace VERSION 1.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -56,6 +56,38 @@ juce_add_plugin(RoneAfterspace
     ICON_BIG               "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_1024.png"
     ICON_SMALL             "${CMAKE_CURRENT_SOURCE_DIR}/Source/icon_256.png"
 )
+
+# ---------------------------------------------------------------------------
+# RONE Control Rack (DEV, branch rack-dev): RONE Control's hands beside the plugin.
+# The rack library AND RONE Control's hands layer (mapper, link hub, link view) are one folder in the
+# monorepo, Shared/RoneControlRack (since 26.10.2026) - the same code RONE Control itself compiles.
+# The hand model is NOT embedded: it lives once, in RONE Control, and the rack reads the files RONE
+# Control installed (without them the rack shows "install RONE Control from the Center").
+# ---------------------------------------------------------------------------
+set(RACK_DIR      "${CMAKE_CURRENT_SOURCE_DIR}/../Shared/RoneControlRack")
+set(RACK_CORE_DIR "${RACK_DIR}")
+if(NOT EXISTS "${RACK_DIR}/RackEngine.cpp")
+    message(FATAL_ERROR "The rack needs the monorepo's Shared/RoneControlRack next to the plugin (${RACK_DIR})")
+endif()
+juce_add_binary_data(RoneAfterspaceRackData
+    SOURCES
+        "${RACK_DIR}/ui/rack.html"
+        "${RACK_DIR}/ui/rack.css"
+        "${RACK_DIR}/ui/rack.js"
+        "${RACK_DIR}/ui/vendor/qrcode.min.js"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/rack.json")
+target_sources(RoneAfterspace
+    PRIVATE
+        "${RACK_DIR}/RackEngine.cpp"
+        "${RACK_DIR}/RackView.cpp"
+        "${RACK_DIR}/RackEditorHelper.cpp"
+        "${RACK_DIR}/RackTransport.cpp"
+        "${RACK_CORE_DIR}/ControlCore.cpp"
+        "${RACK_CORE_DIR}/HandLink.cpp"
+        "${RACK_CORE_DIR}/LinkHub.cpp"
+        "${RACK_CORE_DIR}/LinkView.cpp")
+target_include_directories(RoneAfterspace PRIVATE "${RACK_DIR}" "${RACK_CORE_DIR}")
+target_link_libraries(RoneAfterspace PRIVATE RoneAfterspaceRackData)
 
 juce_generate_juce_header(RoneAfterspace)
 
