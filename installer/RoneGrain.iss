@@ -48,12 +48,12 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; ============================================================================
 [Files]
 ; VST3 plugin bundle
-Source: "..\build-ci\RoneGrain_artefacts\Release\VST3\RONE DMT.vst3\*"; \
+Source: "..\RoneGrain\build-ci\RoneGrain_artefacts\Release\VST3\RONE DMT.vst3\*"; \
   DestDir: "{commoncf}\VST3\RONE\RONE DMT.vst3"; \
   Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Standalone executable
-Source: "..\build-ci\RoneGrain_artefacts\Release\Standalone\RONE DMT.exe"; \
+Source: "..\RoneGrain\build-ci\RoneGrain_artefacts\Release\Standalone\RONE DMT.exe"; \
   DestDir: "{app}"; \
   Flags: ignoreversion
 
