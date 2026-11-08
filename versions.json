@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-08T10:49:31Z",
+  "last_updated": "2026-11-08T10:49:59Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-388.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-388.1.dmg",
@@ -674,7 +674,7 @@
     {
       "id": "RoneGrain",
       "name": "RONE DMT",
-      "version": "1.0.0.387",
+      "version": "1.0.0.389",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -689,9 +689,9 @@
       "vst3_bundle": "RONE DMT.vst3",
       "au_bundle": "RONE DMT.component",
       "manual": "RONE DMT - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-387.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-389.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-389.1.pkg",
-      "sha256": "cfeb91b183f16649d082d7b058d55c97a4db1d9284ad88a62a48dd71c784e396",
+      "sha256": "e5b990038e1044fd283fb2edb6d6e36a0cf273b00115caf9cd5f6a9dc485402b",
       "registry_key": "RoneGrain",
       "sha256_mac": "572fa15417342412f92207d99a38b5f72a501cea519c82cd671c2d77d06b3cd6",
       "store_url": "https://roneaudio.com/products/rone-dmt.html",
@@ -707,7 +707,7 @@
       ],
       "accent": "#2EE6C8",
       "inno_app_id": "{6025BEC5-E441-415F-9CA3-825DBEC49685}",
-      "size": 6002962,
+      "size": 6002673,
       "version_mac": "1.0.0.389",
       "size_mac": 17442789
     }
