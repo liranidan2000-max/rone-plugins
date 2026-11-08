@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-08T11:17:02Z",
+  "last_updated": "2026-11-08T16:27:17Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-390.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-390.1.dmg",
@@ -15,7 +15,7 @@
     {
       "id": "ReverseReverb",
       "name": "RONE Reverse Reverb",
-      "version": "1.2.10.369",
+      "version": "1.3.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -29,9 +29,9 @@
       "au_bundle": "RONE Reverse Reverb.component",
       "manual": "RONE Reverse Reverb - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=gNoltmk77DM",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-369.8.pkg",
-      "sha256": "6e345d0b45f7747f5e5f06f8d50e0dd022d334a9b336d7db6085133041e4e8c9",
+      "sha256": "addd23706665cd97543472a4f66d10efffe3029db98f93e2f6b7588981f6d3e8",
       "registry_key": "ReverseReverb",
       "sha256_mac": "cdd0f174cfea3a839f2503e857d0408312f6dfcf8d8cd07af4ec2aebb8346618",
       "price": 49,
@@ -58,14 +58,14 @@
           "description": "Reverb inverso sincronizado al tempo para risers, swells de voz y transiciones sin cortes - colas de 1/32 a 8 compases, moldeadas con fades, filtros y anchura estéreo"
         }
       },
-      "size": 5576208,
+      "size": 13771373,
       "size_mac": 17460416,
       "version_mac": "1.2.10.369"
     },
     {
       "id": "RoneStutter",
       "name": "RONE Stutter",
-      "version": "2.0.3.369",
+      "version": "2.1.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -79,9 +79,9 @@
       "au_bundle": "RONE Stutter.component",
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-369.2.pkg",
-      "sha256": "cde2a17ddf7d45337fbc04fac7c2222605b82ff32a2301148a9dad336c00734b",
+      "sha256": "377d4324140d8ceac5cb5ec6065461c08a4ee9b35740ad0ef716ad53ab928f83",
       "registry_key": "RoneStutter",
       "sha256_mac": "ef76c443436006c91527db8ae5d906fa65bf3f52207f161922b35f1e9992a043",
       "price": 49,
@@ -107,14 +107,14 @@
           "description": "Motor de stutter fijado al tempo - divisiones de pulso, curvas de fade esculpidas y movimiento estéreo para fills, edits y builds glitch al instante"
         }
       },
-      "size": 6417427,
+      "size": 15129402,
       "size_mac": 19227453,
       "version_mac": "2.0.3.369"
     },
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.4.7.386",
+      "version": "1.5.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -128,9 +128,9 @@
       "au_bundle": "RONE Stucker.component",
       "manual": "RONE Stucker - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=l6_cvuOajI4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-386.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-369.7.pkg",
-      "sha256": "32bb6ea32899adde1d781429ab01da6704e788af65e4aacb5e772b2270517cf0",
+      "sha256": "3c20737baf27215cf9aaf097e5a54e8dba6c5e2d8fb6b2614ad02d34bf66dc75",
       "registry_key": "RoneStucker",
       "sha256_mac": "51149f45415cc54f2aed5d7e90861f229b63e1d96992d370c8c792ed9913dc5d",
       "price": 29,
@@ -157,14 +157,14 @@
           "description": "Un knob que atrapa el loop y lo enrolla - la porción capturada se encoge cada vez más hasta gritar, y luego suelta de vuelta al beat"
         }
       },
-      "size": 5030391,
+      "size": 13081228,
       "size_mac": 14125759,
       "version_mac": "1.4.7.369"
     },
     {
       "id": "RoneThrow",
       "name": "RONE Throw",
-      "version": "1.8.11.369",
+      "version": "1.9.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -178,9 +178,9 @@
       "au_bundle": "RONE Throw.component",
       "manual": "RONE Throw - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=htrhBnLIBtQ",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-369.2.pkg",
-      "sha256": "1394a64981612bb1bb7b0f870e09bc093aa734cc4b455def66a42ad1158e0e34",
+      "sha256": "11bc8eec05aca033c3204097cbec97a9ff9089704eae2a72526071ee6f7b0830",
       "registry_key": "RoneThrow",
       "sha256_mac": "b656ef9897ef0aee0154e00a1a49e33ae00b4bb7210edceab006a5a29763f4c7",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
@@ -206,14 +206,14 @@
           "description": "Un knob que lanza cualquier sonido a una atmósfera fijada al tempo - un delay ping-pong de corchea con puntillo cuyo feedback limitado en banda sigue limpio casi infinito, así la cola queda detrás de la mezcla sin embarrarla"
         }
       },
-      "size": 5104169,
+      "size": 13157454,
       "size_mac": 13700429,
       "version_mac": "1.8.11.369"
     },
     {
       "id": "RoneClipper",
       "name": "RONE Clipper",
-      "version": "1.0.15.385",
+      "version": "1.1.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -227,9 +227,9 @@
       "au_bundle": "RONE Clipper.component",
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-385.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-385.1.pkg",
-      "sha256": "6589444910bb33b6c6596d3223111e2d3dc4ffd1110312f9d3b0f00c7a19c0ba",
+      "sha256": "84a30dee534ca42f9499c4580e05b4d61c274af85cfda0d17cafbedfb6715c67",
       "registry_key": "RoneClipper",
       "sha256_mac": "c297f350a47aa6c75a52b09166b1c15f5069664849b3d2e02a80addaadca8c8f",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
@@ -256,14 +256,14 @@
           "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que deja el kick y el bajo fuera del clipper, y oversampling que se anula contra la entrada a -100 dB"
         }
       },
-      "size": 4980971,
+      "size": 13030632,
       "size_mac": 13502973,
       "version_mac": "1.0.15.385"
     },
     {
       "id": "RoneRise",
       "name": "RONE Rise",
-      "version": "1.0.16.369",
+      "version": "1.1.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -277,9 +277,9 @@
       "au_bundle": "RONE Rise.component",
       "manual": "RONE Rise - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-369.2.pkg",
-      "sha256": "1f1e40d94385d5464cd298f28bdbe936272721f8c7e2144b848240534386b826",
+      "sha256": "2ab7764ed3a7540f775a3c15d9323fef88cae925d7a5700d131e0b468a99da95",
       "registry_key": "RoneRise",
       "sha256_mac": "bb262d3b8a69916924cca30d2fc42c4d9f1540bbfc020f0a1a77d6de835d6dcf",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
@@ -306,14 +306,14 @@
           "description": "Un knob, todo el build-up: sube INTENSITY a lo largo de la frase y la mezcla se vuelve un rise (high-pass pronunciado, gran reverb, ecos, ruido, una subida infinita), llévalo a cero en el drop y la reverb aún se derrama en él - o pulsa GO y deja que aterrice en el compás solo"
         }
       },
-      "size": 5348515,
+      "size": 13395981,
       "size_mac": 14243205,
       "version_mac": "1.0.16.369"
     },
     {
       "id": "RoneIron",
       "name": "RONE Iron",
-      "version": "1.0.14.369",
+      "version": "1.1.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -327,9 +327,9 @@
       "au_bundle": "RONE Iron.component",
       "manual": "RONE Iron - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=tZ-BhB5T5Os",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-369.3.pkg",
-      "sha256": "8118be57362edf6e26c8443d32780b74922350c3070453a9059aa5708a38216a",
+      "sha256": "8d76289f18f5481b3527ca1dd68daf8f5ff40a688f3e6b754cca0b0b614318d8",
       "registry_key": "RoneIron",
       "sha256_mac": "ffc50e15d8dbd129bbd4164106ed974b25bfca33233b8110ff87a23394b3974d",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
@@ -356,14 +356,14 @@
           "description": "Suelta una voz y se convierte en un instrumento de chops metálicos: Iron la afina a la nota que elijas, la corta en chops en tus teclas MIDI, hace sonar cada chop en un comb afinado y lo lanza a izquierda y derecha - tócalo desde el piano roll o deja que GROOVE escriba el patrón"
         }
       },
-      "size": 7472795,
+      "size": 15511733,
       "size_mac": 21122309,
       "version_mac": "1.0.14.369"
     },
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.1.10.386",
+      "version": "2.3.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -377,9 +377,9 @@
       "au_bundle": "RONE Flanger.component",
       "manual": "RONE Flanger - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-386.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-373.1.pkg",
-      "sha256": "9ffc8e2c659916f20d992dac766311631d38f8e8ac1f914bb777af26a2bdf742",
+      "sha256": "9838b55182e7243465a29b535caaff458a1a81fdc923b783c513ce67a947716f",
       "registry_key": "RoneFlanger",
       "sha256_mac": "f986d80eab894b7c570a6e7655591adc6abbc1a1b1b52c10201fc9743cd720b9",
       "price": 39,
@@ -405,14 +405,14 @@
           "description": "Un flanger de transición - barre a mano o activa el modo INFINITE para subidas y bajadas sin fin fijadas al compás, con feedback, offset estéreo y un gate rítmico"
         }
       },
-      "size": 5295458,
+      "size": 13344591,
       "size_mac": 14901200,
       "version_mac": "2.1.10.373"
     },
     {
       "id": "RoneAfterspace",
       "name": "RONE AFTERSPACE",
-      "version": "1.0.12.369",
+      "version": "1.1.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -426,9 +426,9 @@
       "au_bundle": "RONE AFTERSPACE.component",
       "manual": "RONE AFTERSPACE - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=lbKXq6iuctM",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-369.3.pkg",
-      "sha256": "c2c1d38c86e1731fd160ad2392067fdc490b611dbfbe039f9c9f31fc478efe35",
+      "sha256": "06bbd20bc4334d4bb349522d69c876040c6e8632bcbdb319f73ea9843ca81aea",
       "registry_key": "RoneAfterspace",
       "sha256_mac": "b7311e0173e87b7031086bbf4197073632eb6ceb05be57845be9ae710ddc3110",
       "price": 59,
@@ -454,7 +454,7 @@
           "description": "Diseñador creativo de reverb, delay y atmósfera - espacios cinematográficos enormes que se mantienen limpios con ducking integrado, de-esser en la cola (SILK), auto-gain y eco sincronizado, todo en un solo plugin"
         }
       },
-      "size": 5465086,
+      "size": 13508250,
       "size_mac": 15481767,
       "version_mac": "1.0.12.369"
     },
@@ -511,7 +511,7 @@
       "id": "Rone1176",
       "released": "2026-10-24",
       "name": "RONE 1176",
-      "version": "0.9.11.386",
+      "version": "0.10.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -525,9 +525,9 @@
       "au_bundle": "RONE 1176.component",
       "manual": "RONE 1176 - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=BW3FRyUCcp8",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-386.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-369.2.pkg",
-      "sha256": "5a82796f90071a87a6faf9a11ddc1310c2f7fca1de2484f82475f8856c9d3a28",
+      "sha256": "a0b2644d0d678df212e164d13135484502e3e29edae9ae18bad870d04ca87bde",
       "registry_key": "Rone1176",
       "sha256_mac": "27ce3ae146e9834cad067a5c19e96e4134340f614f7276fdb5a5bafee394ad73",
       "store_url": "https://roneaudio.com/products/rone-1176.html",
@@ -544,7 +544,7 @@
       ],
       "accent": "#FF8C2E",
       "inno_app_id": "{3C6B2F8A-9D41-4E7B-A0C5-7E1176C0DE01}",
-      "size": 5250063,
+      "size": 13302239,
       "size_mac": 14578125,
       "version_mac": "0.9.11.369"
     },
@@ -552,7 +552,7 @@
       "id": "Rone2A",
       "released": "2026-10-24",
       "name": "RONE 2A",
-      "version": "0.9.13.385",
+      "version": "0.10.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -566,9 +566,9 @@
       "au_bundle": "RONE 2A.component",
       "manual": "RONE 2A - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=t4_3shj3aBs",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-385.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-386.1.pkg",
-      "sha256": "493be7ed26a6095329375370cd7f242098008f848c4584ea7306f463917a0e52",
+      "sha256": "034ed6fbf3b8fbe826bdd863393e2034f19a5950778bdb552fb372664711d682",
       "registry_key": "Rone2A",
       "sha256_mac": "b03cc3f8631c5318acbc31266acca897c21ab76bc336068fc894478053036795",
       "store_url": "https://roneaudio.com/products/rone-2a.html",
@@ -585,7 +585,7 @@
       ],
       "accent": "#FF6F59",
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
-      "size": 5325072,
+      "size": 13375549,
       "size_mac": 15125472,
       "version_mac": "0.9.13.386"
     },
@@ -593,7 +593,7 @@
       "id": "RoneSidechain",
       "released": "2026-10-26",
       "name": "RONE Sidechain",
-      "version": "1.0.11.385",
+      "version": "1.2.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -607,9 +607,9 @@
       "au_bundle": "RONE Sidechain.component",
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WqbiD2pWe6Y",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-385.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-386.1.pkg",
-      "sha256": "26df9cd1ceeadce8f53103c8a44fc413fa42362543db582e52d6f60c4cf80c92",
+      "sha256": "5a9c32ef72457c1d1c8d77f51a1eefe36eb8ea7e23244fe6ec5f33603f9b59b6",
       "registry_key": "RoneSidechain",
       "sha256_mac": "50ff0481be105f84e5a5e2f8d61d8523213da825316c043858b211bc960a1b84",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
@@ -625,7 +625,7 @@
       ],
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
-      "size": 6523485,
+      "size": 14566885,
       "size_mac": 18040178,
       "version_mac": "1.0.11.386"
     },
@@ -633,7 +633,7 @@
       "id": "RoneDelay",
       "released": "2026-11-01",
       "name": "RONE Delay",
-      "version": "1.1.2.369",
+      "version": "1.2.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -649,9 +649,9 @@
       "au_bundle": "RONE Delay.component",
       "manual": "RONE Delay - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=hk-LnCfmupM",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-369.2.pkg",
-      "sha256": "896994a5c00cd22175b09c62f4f37b7b953b50dad9de96693172c24f5c468458",
+      "sha256": "dad33e5deb432f37a1a00fa3e76959f58822ad3201b08413ab2e935d5bbdb59b",
       "registry_key": "RoneDelay",
       "sha256_mac": "2786ff2905eaa85a90383985f7a9fe77139db39df520ad45504165dbdd2099eb",
       "store_url": "https://roneaudio.com/products/rone-delay.html",
@@ -667,14 +667,14 @@
       ],
       "accent": "#E9D6A6",
       "inno_app_id": "{04213AF9-9AD6-4447-B6AE-7F544C41994C}",
-      "size": 5914219,
+      "size": 13785196,
       "version_mac": "1.1.2.369",
       "size_mac": 14366614
     },
     {
       "id": "RoneGrain",
       "name": "RONE DMT",
-      "version": "1.0.0.389",
+      "version": "1.1.0.391",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -689,9 +689,9 @@
       "vst3_bundle": "RONE DMT.vst3",
       "au_bundle": "RONE DMT.component",
       "manual": "RONE DMT - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-389.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-391.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-389.1.pkg",
-      "sha256": "e5b990038e1044fd283fb2edb6d6e36a0cf273b00115caf9cd5f6a9dc485402b",
+      "sha256": "ae3f12819b952f972fd9cf0a881fcac1141a54e4610c8399af8352b81ca1870c",
       "registry_key": "RoneGrain",
       "sha256_mac": "572fa15417342412f92207d99a38b5f72a501cea519c82cd671c2d77d06b3cd6",
       "store_url": "https://roneaudio.com/products/rone-dmt.html",
@@ -707,7 +707,7 @@
       ],
       "accent": "#2EE6C8",
       "inno_app_id": "{6025BEC5-E441-415F-9CA3-825DBEC49685}",
-      "size": 6002673,
+      "size": 6110555,
       "version_mac": "1.0.0.389",
       "size_mac": 17442789
     }
