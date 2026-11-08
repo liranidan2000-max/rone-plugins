@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-08T10:43:11Z",
+  "last_updated": "2026-11-08T10:45:07Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-388.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-388.1.dmg",
@@ -674,7 +674,7 @@
     {
       "id": "RoneGrain",
       "name": "RONE DMT",
-      "version": "1.0.0.0",
+      "version": "1.0.0.387",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -689,9 +689,9 @@
       "vst3_bundle": "RONE DMT.vst3",
       "au_bundle": "RONE DMT.component",
       "manual": "RONE DMT - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-387.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer.pkg",
-      "sha256": "",
+      "sha256": "cfeb91b183f16649d082d7b058d55c97a4db1d9284ad88a62a48dd71c784e396",
       "registry_key": "RoneGrain",
       "sha256_mac": "",
       "store_url": "https://roneaudio.com/products/rone-dmt.html",
@@ -706,7 +706,8 @@
         "psytrance"
       ],
       "accent": "#2EE6C8",
-      "inno_app_id": "{6025BEC5-E441-415F-9CA3-825DBEC49685}"
+      "inno_app_id": "{6025BEC5-E441-415F-9CA3-825DBEC49685}",
+      "size": 6002962
     }
   ],
   "apps": [
