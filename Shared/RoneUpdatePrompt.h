@@ -198,7 +198,7 @@ public:
     // window is minimised, hidden or covered (2026-10-28).
     juce::WebBrowserComponent::Options addTo (juce::WebBrowserComponent::Options options)
     {
-        return windowFit.addTo (RoneWebViewGuard::addTo (options))
+        return windowFit.addTo (webViewGuard.withPaintSignal (RoneWebViewGuard::addTo (options)))
             .withUserScript (RoneWebCompat::script())
             .withUserScript (script())
             .withEventListener ("roneUpdateAction", [this] (const juce::var& payload) { onAction (payload); });

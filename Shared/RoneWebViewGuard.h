@@ -82,12 +82,34 @@ public:
         // still white from the first frame. A dark, click-through child over the
         // browser hides it; once the WebView2 window is up it sits above all of
         // JUCE's painting, so the cover is never seen again.
-        covered = &b;
+        coveredBrowser = &b;
         b.addAndMakeVisible (cover);
         cover.setBounds (b.getLocalBounds());
         b.addComponentListener (&coverSizer);
-        startTimerHz (30);
+
+        // Part 2: the WebView2 window itself shows white for its first frames
+        // (bench: ~150 ms, from ~300 ms) - that is no JUCE painting, so only a real
+        // window above it hides it. nativeCover is one, raised over the WebView2
+        // window until the page says it has painted (withPaintSignal), 2.5 s at
+        // most. Ticks every 10 ms meanwhile so a new WebView2 window is covered at
+        // once; then back to 30 Hz.
+        nativeCoverDone = false;
+        coverStartMs = 0;
+        startTimer (10);
+       #else
+        juce::ignoreUnused (pagePainted);
        #endif
+    }
+
+    // The page's "I have painted" (part 2 above): two animation frames after its
+    // DOM is ready, on the RONE page only (not about:blank).
+    juce::WebBrowserComponent::Options withPaintSignal (juce::WebBrowserComponent::Options options)
+    {
+        return options.withUserScript (
+                          "(function(){if(location.protocol==='about:')return;function go(){requestAnimationFrame(function(){"
+                          "requestAnimationFrame(function(){try{window.__JUCE__.backend.emitEvent('roneWebViewPainted',{});}catch(e){}});});}"
+                          "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();")
+                      .withEventListener ("roneWebViewPainted", [this] (const juce::var&) { pagePainted = true; });
     }
 
 private:
@@ -96,12 +118,13 @@ private:
         stopTimer();
        #if JUCE_WINDOWS
         releaseOverlays();
-        if (auto* b = covered.getComponent())   // the browser may already be gone
+        if (auto* b = coveredBrowser.getComponent())   // the browser may already be gone
         {
             b->removeComponentListener (&coverSizer);
             b->removeChildComponent (&cover);
         }
-        covered = nullptr;
+        coveredBrowser = nullptr;
+        destroyNativeCover();
        #endif
         if (browser != nullptr && hiding)
             browser->setVisible (true);
@@ -133,10 +156,66 @@ private:
         juce::Component& coverRef;
     };
 
+    // A plain child window of the plug-in's window, dark, on top. Its class uses
+    // DefWindowProcW, never a function of this DLL, so a class left registered by
+    // an unloaded copy of the plug-in can never call into freed code.
+    static const wchar_t* nativeCoverClass()
+    {
+        static const bool registered = []
+        {
+            WNDCLASSEXW wc {};
+            wc.cbSize        = sizeof (wc);
+            wc.lpfnWndProc   = DefWindowProcW;
+            wc.hInstance     = GetModuleHandleW (nullptr);
+            wc.hbrBackground = CreateSolidBrush (RGB (0x0d, 0x0d, 0x12));
+            wc.lpszClassName = L"RoneWebViewCover1";
+            return RegisterClassExW (&wc) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+        }();
+        return registered ? L"RoneWebViewCover1" : nullptr;
+    }
+
+    void updateNativeCover (HWND parent)
+    {
+        const auto now = juce::Time::getMillisecondCounter();
+        if (coverStartMs == 0)
+            coverStartMs = now;
+
+        if (pagePainted || now - coverStartMs > 2500)
+        {
+            destroyNativeCover();
+            nativeCoverDone = true;
+            startTimerHz (30);
+            return;
+        }
+
+        if (nativeCover != nullptr && (! IsWindow (nativeCover) || GetParent (nativeCover) != parent))
+            destroyNativeCover();
+
+        if (nativeCover == nullptr)
+            if (const auto* cls = nativeCoverClass())
+                nativeCover = CreateWindowExW (WS_EX_NOACTIVATE, cls, L"", WS_CHILD | WS_CLIPSIBLINGS,
+                                               0, 0, 0, 0, parent, nullptr, GetModuleHandleW (nullptr), nullptr);
+
+        RECT rc {};
+        if (nativeCover != nullptr && GetClientRect (parent, &rc))
+            SetWindowPos (nativeCover, HWND_TOP, 0, 0, rc.right, rc.bottom, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    }
+
+    void destroyNativeCover()
+    {
+        if (nativeCover != nullptr && IsWindow (nativeCover))
+            DestroyWindow (nativeCover);
+        nativeCover = nullptr;
+    }
+
     DarkCover cover;
     CoverSizer coverSizer { cover };
-    juce::Component::SafePointer<juce::Component> covered;
+    juce::Component::SafePointer<juce::Component> coveredBrowser;
+    HWND nativeCover = nullptr;
+    bool nativeCoverDone = true;
+    juce::uint32 coverStartMs = 0;
    #endif
+    bool pagePainted = false;
 
     void timerCallback() override
     {
@@ -153,6 +232,9 @@ private:
             return;
 
         const auto hwnd = (HWND) peer->getNativeHandle();
+        if (! nativeCoverDone)
+            updateNativeCover (hwnd);
+
         const bool covered = coveredUnderMouse (hwnd);
         const bool hide = ! reallyShown (hwnd) || (covered && entirelyCovered (hwnd));
 
