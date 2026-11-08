@@ -52,6 +52,12 @@ if [ "${RONE_ALLOW_DEV_POINTER:-0}" = 1 ]; then
   exit 0
 fi
 
+# git runs a hook with GIT_DIR (and GIT_INDEX_FILE) set. In the main checkout GIT_DIR is the relative ".git", so
+# `git -C <submodule>` lands on the submodule's own .git; in a worktree it is an ABSOLUTE path to the monorepo, so
+# every `git -C <submodule>` below would read the MONOREPO (no such commit, no such remote line) and refuse a good
+# pointer (rack beta release, 9.11.2026). The staged list above needed them; the submodule checks must not have them.
+sub() { (unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX GIT_COMMON_DIR GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES; git -C "$@"); }
+
 bad=""
 add_bad() { bad="$bad  $1
 "; }
@@ -63,20 +69,20 @@ while IFS="$tab" read -r new path; do
     add_bad "$path -> $(short "$new"): the submodule is not initialized here (no $path/.git), its line '$line' cannot be checked"
     continue
   fi
-  if ! err=$(git -C "$path" fetch -q --no-tags origin "+refs/heads/$line:refs/remotes/origin/$line" 2>&1); then
+  if ! err=$(sub "$path" fetch -q --no-tags origin "+refs/heads/$line:refs/remotes/origin/$line" 2>&1); then
     add_bad "$path -> $(short "$new"): could not fetch origin/$line - $(printf '%s' "$err" | tr '\n' ' ')"
     continue
   fi
-  tip=$(git -C "$path" rev-parse -q --verify "refs/remotes/origin/$line^{commit}") || {
+  tip=$(sub "$path" rev-parse -q --verify "refs/remotes/origin/$line^{commit}") || {
     add_bad "$path -> $(short "$new"): origin/$line is not a commit after the fetch"
     continue
   }
-  if ! git -C "$path" cat-file -e "$new^{commit}" 2>/dev/null; then
+  if ! sub "$path" cat-file -e "$new^{commit}" 2>/dev/null; then
     add_bad "$path -> $(short "$new"): the staged commit is not in the submodule's object store"
     continue
   fi
-  if ! git -C "$path" merge-base --is-ancestor "$new" "$tip"; then
-    add_bad "$path -> $(short "$new") (checked out: $(git -C "$path" rev-parse --abbrev-ref HEAD 2>/dev/null)): NOT on its release line '$line' - origin/$line is at $(short "$tip")"
+  if ! sub "$path" merge-base --is-ancestor "$new" "$tip"; then
+    add_bad "$path -> $(short "$new") (checked out: $(sub "$path" rev-parse --abbrev-ref HEAD 2>/dev/null)): NOT on its release line '$line' - origin/$line is at $(short "$tip")"
     continue
   fi
   echo "pre-commit: $path -> $(short "$new") is on its release line '$line' (origin/$line $(short "$tip")) - ok"
