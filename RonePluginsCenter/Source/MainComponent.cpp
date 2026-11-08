@@ -1095,9 +1095,13 @@ void MainComponent::restoreIdleState (const juce::String& id)
     emitPluginsUpdated();
 }
 
-void MainComponent::handBatcher (const juce::String& pluginId, const juce::File& installer,
-                                 const juce::String& verifiedSha, const juce::String& version)
+void MainComponent::handBatcher (juce::String pluginId, juce::File installer,
+                                 juce::String verifiedSha, juce::String version)
 {
+    // By value, on purpose (issue #102, 38 Mac crashes in 2.1.26-2.1.27): the
+    // pre-downloaded path in startInstall passes the file and hash straight out of
+    // prefetched, and prefetched.erase() below destroyed them while they were still
+    // read - liveSha.equalsIgnoreCase (verifiedSha) touched freed memory.
     // The item carries the identity the file was VERIFIED with (the job's hash and
     // version), not the card's live values. applyCatalog replaces the card on every
     // manifest refresh - including the one a release triggers minutes after the user

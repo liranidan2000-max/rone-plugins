@@ -175,8 +175,9 @@ private:
     // ---- Installs ----
     // verifiedSha / version: the identity the file was downloaded and verified
     // with (the job's, never the live card's - 2.1.26, issue #5).
-    void handBatcher (const juce::String& pluginId, const juce::File& installer,
-                      const juce::String& verifiedSha, const juce::String& version);
+    // Taken BY VALUE: callers pass entries of prefetched, which this erases (#102).
+    void handBatcher (juce::String pluginId, juce::File installer,
+                      juce::String verifiedSha, juce::String version);
     void onBatchStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor);
     void onBatchResult (const InstallBatcher::Result& result);
     void setStatus (const juce::String& id, PluginStatus status, const juce::String& waitingFor = {});
