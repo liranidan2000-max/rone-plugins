@@ -74,6 +74,18 @@ public:
         detach();
         browser = &b;
        #if JUCE_WINDOWS
+        // Support #60 (Test Bench, every plug-in, 0.4-1.8 s of white at each open):
+        // JUCE 8.0.4 paints a WebView2 browser plain white (fallbackPaint,
+        // juce_WebBrowserComponent_windows.cpp) until the WebView2 window is up,
+        // and neither the background colour above nor
+        // WEBVIEW2_DEFAULT_BACKGROUND_COLOR reaches that paint - measured, both
+        // still white from the first frame. A dark, click-through child over the
+        // browser hides it; once the WebView2 window is up it sits above all of
+        // JUCE's painting, so the cover is never seen again.
+        covered = &b;
+        b.addAndMakeVisible (cover);
+        cover.setBounds (b.getLocalBounds());
+        b.addComponentListener (&coverSizer);
         startTimerHz (30);
        #endif
     }
@@ -84,12 +96,47 @@ private:
         stopTimer();
        #if JUCE_WINDOWS
         releaseOverlays();
+        if (auto* b = covered.getComponent())   // the browser may already be gone
+        {
+            b->removeComponentListener (&coverSizer);
+            b->removeChildComponent (&cover);
+        }
+        covered = nullptr;
        #endif
         if (browser != nullptr && hiding)
             browser->setVisible (true);
         hiding = false;
         browser = nullptr;
     }
+
+   #if JUCE_WINDOWS
+    struct DarkCover : juce::Component
+    {
+        DarkCover()
+        {
+            setInterceptsMouseClicks (false, false);
+            setOpaque (true);
+            setWantsKeyboardFocus (false);
+            setAccessible (false);
+        }
+        void paint (juce::Graphics& g) override { g.fillAll (juce::Colour (0xff0d0d12)); }
+    };
+
+    struct CoverSizer : juce::ComponentListener
+    {
+        explicit CoverSizer (juce::Component& c) : coverRef (c) {}
+        void componentMovedOrResized (juce::Component& b, bool, bool wasResized) override
+        {
+            if (wasResized)
+                coverRef.setBounds (b.getLocalBounds());
+        }
+        juce::Component& coverRef;
+    };
+
+    DarkCover cover;
+    CoverSizer coverSizer { cover };
+    juce::Component::SafePointer<juce::Component> covered;
+   #endif
 
     void timerCallback() override
     {
