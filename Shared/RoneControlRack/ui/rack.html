@@ -11,7 +11,7 @@
 <div id="vp"><div class="rack-app" id="rackApp">
   <div class="r-head">
     <button class="r-close" id="rClose" title="Collapse the rack">&#8250;</button>
-    <div class="r-brand"><svg class="r-glyph" viewBox="0 0 100 52" aria-label="RONE" role="img"><path class="r-stem" d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"/><path class="r-line" d="M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100"/></svg><b>CONTROL</b><em class="r-beta" title="RONE Control inside RONE plugins is a public beta - tell us what to fix">BETA</em></div>
+    <div class="r-brand"><svg class="r-glyph" viewBox="0 0 100 52" aria-label="RONE" role="img"><path class="r-stem" d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"/><path class="r-line" d="M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100"/></svg><span class="r-word"><b>CONTROL</b><em class="r-beta" title="RONE Control inside RONE plugins is a public beta - tell us what to fix">BETA</em></span></div>
     <button class="r-rec" id="rRec" title="Record in the DAW and play"><i></i>REC</button>
     <button class="r-live active" id="rLive" title="LIVE off = every knob holds its value, the hands are ignored">LIVE</button>
   </div>
@@ -34,6 +34,17 @@
     <div class="r-hint" id="rHint"></div>
     <div class="r-toast" id="rWhy" hidden></div>
   </div>
+  <div class="r-map" id="rMap">
+    <span class="r-mlbl">MAP</span>
+    <div class="r-msel"><button id="rMapPrev" title="Previous map">&#8249;</button><select id="rMapSel" title="Your maps for this plugin"></select><button id="rMapNext" title="Next map">&#8250;</button></div>
+    <button class="r-mic" id="rMapSave" title="Save this map">SAVE</button>
+    <button class="r-mic r-star" id="rMapStar" title="Open every new copy of this plugin with this map">&#9733;</button>
+  </div>
+  <div class="r-mpop" id="rMapPop" hidden>
+    <input id="rMapName" maxlength="24" spellcheck="false" autocomplete="off" aria-label="Map name">
+    <div class="r-mrow"><button class="r-mic r-mgo" id="rMapNew">SAVE AS NEW</button><button class="r-mic" id="rMapUpd">UPDATE</button><button class="r-mic" id="rMapDel">DELETE</button><button class="r-mic" id="rMapX">&#10005;</button></div>
+  </div>
+  <div class="r-mnote" id="rMapNote"></div>
   <div class="r-slots" id="rSlots"></div>
   <div class="r-foot">
     <div class="r-armed" id="rArmed" title="With several RONE plugins open, the hands drive the one you armed last. Click to take them."><i></i><span>ARMED</span></div>

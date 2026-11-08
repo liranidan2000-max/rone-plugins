@@ -19,6 +19,7 @@
 
 #include <JuceHeader.h>
 #include <vector>
+#include <atomic>
 #include "ControlCore.h"
 #include "LinkHub.h"
 #include "RackTransport.h"
@@ -26,13 +27,15 @@
 namespace RoneRack
 {
 class Engine : private juce::Timer,
-               private RoneCtl::LinkHub::Client
+               private RoneCtl::LinkHub::Client,
+               private juce::ValueTree::Listener      // a project load (replaceState) brings this instance's map back
 {
 public:
     Engine (juce::AudioProcessorValueTreeState& apvts, const juce::String& pluginId, const juce::String& manifestJson);
     ~Engine() override;
 
     const juce::String& pluginId() const noexcept { return id; }
+    const juce::String& accentColour() const noexcept { return accent; }   // the plugin's own neon (rack.json "accent")
 
     // The rack was opened in an editor: the link starts (lazily, once) and the slots run.
     void setOpen (bool shouldOpen);
@@ -84,6 +87,34 @@ private:
     Slot slotFromVar (const juce::var& v) const;
     juce::var slotToVar (const Slot& s, int i, bool forPage) const;
     juce::var paramList() const;
+    // One move per knob (Liran, beta round 8.11): two ON slots never share HOLD WITH + MOVE, whatever the hand -
+    // one hand in the picture is read as left or right by where it is, so "same move, other hand" moved the wrong knob.
+    static bool sameMove (const RoneCtl::SlotConfig& a, const RoneCtl::SlotConfig& b) noexcept;
+    int clashOf (int slotIndex) const noexcept;            // another ON slot with the same move, or -1
+    void settleClashes();                                   // a later ON slot that repeats a move is switched off
+    static constexpr int kMapVersion = 2;                   // 2 = beta round 8.11 maps (one move per knob, any hand)
+
+    // MAP PRESETS (beta round 8.11, the presets mockup AdA8MXTWHTtJDa8PWfLFNp): the user's own maps per plugin on this
+    // computer (%APPDATA%/RonePlugins/<id>/rack-maps/<name>.json, shared by every DAW), RONE DEFAULT (= rack.json) always
+    // first and never overwritten, a star = the map every NEW instance opens with. The instance's own map rides in the
+    // project (a property of the APVTS state), so a saved project reopens with the map it was saved with.
+    juce::File mapsDir() const;
+    juce::StringArray mapNames() const;                     // the user's maps, sorted (RONE DEFAULT is not in it)
+    juce::String defaultMapName() const;                    // "" = RONE DEFAULT
+    juce::File mapFile (const juce::String& mapName) const;
+    bool loadMap (const juce::String& mapName);             // "" = RONE DEFAULT; false = no such map (nothing changes)
+    void slotsFromArray (const juce::var& arr);
+    juce::var slotsToArray() const;
+    void writeProjectMap();                                 // the instance's map -> apvts.state (saved with the project)
+    bool readProjectMap();                                  // apvts.state -> the instance's map; false = the project has none
+    void edited() { mapDirty = true; }
+    void valueTreeRedirected (juce::ValueTree&) override { stateSwapped = true; }   // any thread: the timer takes it
+    juce::String mapName;                                   // "" = RONE DEFAULT
+    bool mapDirty = false;
+    std::atomic<bool> stateSwapped { false };
+    juce::StringArray mapNamesCache;                        // read from disk every 2 s / after a map event, not 30 times a second
+    juce::String mapDefCache;
+    void refreshMapCache();
 
     juce::AudioProcessorValueTreeState& apvts;
     juce::String id, name, accent;

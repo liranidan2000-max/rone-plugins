@@ -1,5 +1,5 @@
 /* RONE Control Rack - the rack page (production). RONE graphite design language; the rack's own neon is
-   RONE Control's Laser Green, the knob names wear the plugin's accent (--acc, set from the state).
+   the plugin's own accent (rack.js copies --acc into --neon; laser green only until the state arrives - beta round 8.11).
    Design width 280 px; the page scales itself to the WebView's width and lays out to its height. */
 :root {
   --ground: #14161A; --panel: #17191E; --card: #101216; --line: #23262C; --line2: #2A2E35;
@@ -34,8 +34,9 @@ button { font-family: inherit; cursor: pointer; }
 .r-live:hover { border-color: var(--dim); color: var(--text); }
 .r-live.active { color: var(--neon); border-color: var(--neon); box-shadow: 0 0 12px rgba(var(--neon-rgb), .35); }
 .r-live.ask { color: var(--neon); border-color: var(--neon); padding: 6px 7px; letter-spacing: .1em; animation: r-ask 1s ease-in-out infinite; }   /* a hand is there, LIVE is off */
-.r-beta { font-style: normal; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 7.5px; letter-spacing: .14em; color: var(--dim); border: 1px solid #383D45; border-radius: 4px; padding: 2px 4px 1px; margin-left: -3px; flex-shrink: 0; }   /* public beta, 8.11.2026 */
-.r-head.ask .r-brand b, .r-head.ask .r-beta { display: none; }   /* TAP LIVE is wider than LIVE: the word CONTROL steps aside, the R stays */
+.r-word { display: flex; flex-direction: column; gap: 3px; min-width: 0; line-height: 1; }   /* CONTROL over BETA: no wider than the word (beta round 8.11) */
+.r-beta { font-style: normal; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 7px; letter-spacing: .3em; color: var(--dim); white-space: nowrap; }   /* public beta, 8.11.2026 */
+.r-head.ask .r-word { display: none; }   /* TAP LIVE is wider than LIVE: the word CONTROL steps aside, the R stays */
 @keyframes r-ask { 0%, 100% { box-shadow: 0 0 0 rgba(var(--neon-rgb), 0); } 50% { box-shadow: 0 0 18px rgba(var(--neon-rgb), .8); } }
 .r-rec { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 9.5px; letter-spacing: .14em; color: #B9BDC4; border: 1px solid #383D45; border-radius: 7px; padding: 6px 8px; background: transparent; transition: all .15s; flex-shrink: 0; }
 .r-rec i { width: 8px; height: 8px; border-radius: 50%; background: #5A5F68; transition: all .15s; }
@@ -69,6 +70,30 @@ button { font-family: inherit; cursor: pointer; }
 .r-newcode[hidden] { display: none; }
 .o-go { margin-top: 2px; padding: 7px 12px; background: var(--neon); border: 1px solid var(--neon); border-radius: 7px; color: #0F1114; font-size: 8px; font-weight: 800; letter-spacing: .18em; }
 
+/* MAP presets (beta round 8.11, the presets mockup): RONE DEFAULT first, the user's maps, a star for new copies */
+.r-map { display: flex; align-items: center; gap: 5px; padding: 7px 10px 0; flex-shrink: 0; }
+.r-mlbl { font-size: 8px; font-weight: 800; letter-spacing: .2em; color: var(--dim); }
+.r-msel { flex: 1; min-width: 0; display: flex; align-items: center; height: 26px; background: var(--card); border: 1px solid var(--line2); border-radius: 7px; }
+.r-msel button { width: 20px; height: 100%; border: 0; background: transparent; color: var(--dim); font-size: 14px; line-height: 1; flex-shrink: 0; }
+.r-msel button:hover { color: var(--neon); }
+.r-msel select { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: none; color: var(--text); font: 700 9.5px 'Manrope', 'Segoe UI', sans-serif; letter-spacing: .08em; text-align: center; text-align-last: center; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.r-msel select option { background: #1B1E23; color: var(--text); }
+.r-mic { height: 26px; min-width: 26px; padding: 0 7px; border-radius: 7px; border: 1px solid var(--line2); background: var(--card); color: var(--text); font: 800 8.5px 'Manrope', 'Segoe UI', sans-serif; letter-spacing: .12em; flex-shrink: 0; transition: all .15s; }
+.r-mic:hover { border-color: var(--neon); color: var(--neon); }
+.r-star { font-size: 12px; letter-spacing: 0; color: var(--dim); }
+.r-star.on { color: var(--neon); border-color: var(--neon); box-shadow: 0 0 10px rgba(var(--neon-rgb), .3); }
+.r-mpop { display: flex; flex-direction: column; gap: 6px; margin: 6px 10px 0; padding: 8px; border: 1px solid var(--line2); border-radius: 8px; background: var(--card); flex-shrink: 0; }
+.r-mpop input { height: 26px; border-radius: 6px; border: 1px solid var(--line2); background: #0C0E11; color: var(--text); font: 700 10px 'Manrope', 'Segoe UI', sans-serif; letter-spacing: .08em; padding: 0 8px; outline: none; text-transform: uppercase; }
+.r-mpop input:focus { border-color: var(--neon); }
+.r-mrow { display: flex; gap: 5px; }
+.r-mrow .r-mic { flex: 1; padding: 0 4px; }
+.r-mrow #rMapX { flex: 0 0 26px; }
+.r-mgo { background: var(--neon); color: #0F1114; border-color: var(--neon); }
+.r-mgo:hover { color: #0F1114; filter: brightness(1.1); }
+.r-mic[disabled] { opacity: .3; pointer-events: none; }
+.r-mnote { min-height: 0; padding: 3px 12px 0; font-size: 7.5px; font-weight: 800; letter-spacing: .16em; color: var(--amber); flex-shrink: 0; }
+.r-mnote.ok { color: var(--neon); }
+.r-mnote:empty { padding: 0; }
 .r-slots { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 10px 4px; display: flex; flex-direction: column; gap: 6px; scrollbar-width: thin; scrollbar-color: var(--line2) transparent; }
 .r-card { position: relative; border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 8px 10px 8px; cursor: pointer; transition: border-color .15s, box-shadow .15s, opacity .2s; }
 .r-card:hover { border-color: var(--line2); }

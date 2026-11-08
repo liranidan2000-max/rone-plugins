@@ -40,7 +40,11 @@ Engine::Engine (juce::AudioProcessorValueTreeState& s, const juce::String& plugi
     if (accent.isEmpty()) accent = "#D8E4EC";
     myId = juce::Uuid().toString();
     loadSaved();
-    if (slots.empty()) loadManifest();
+    // a NEW instance opens with the map under the star (the user's default), else RONE DEFAULT; a project that is
+    // loaded right after replaces it with its own map (valueTreeRedirected -> timer -> readProjectMap)
+    if (! loadMap (defaultMapName())) loadMap ({});
+    apvts.state.addListener (this);
+    refreshMapCache();
     refreshLite();
     hub->addClient (this);
     startTimerHz (60);
@@ -63,6 +67,7 @@ void Engine::refreshLite()
 Engine::~Engine()
 {
     stopTimer();
+    apvts.state.removeListener (this);
     releaseAll();
     hub->removeClient (this);
 }
@@ -141,31 +146,146 @@ void Engine::loadSaved()
 {
     const auto j = juce::JSON::parse (savedFile().loadFileAsString());
     if (! j.isObject()) return;
+    // a map saved before the beta round (DEV builds: A and B the same move on two hands) is dropped: the plugin's
+    // own map with one move per knob comes back. Only DEV testers ever had one.
     rememberedOpen = (bool) j["open"];                      // remembered only: the editor opens the rack, and that open must start the link
     live = ! j.hasProperty ("live") || (bool) j["live"];
     useSim = j["source"].toString() == "sim";
+    // the slots in this file (before the beta round: one map shared by every instance) are not read any more
+}
+
+// ---------------------------------------------------------------- map presets
+juce::File Engine::mapsDir() const { return savedFile().getParentDirectory().getChildFile ("rack-maps"); }
+
+juce::File Engine::mapFile (const juce::String& n) const
+{
+    return mapsDir().getChildFile (juce::File::createLegalFileName (n.trim().toUpperCase()) + ".json");
+}
+
+juce::StringArray Engine::mapNames() const
+{
+    juce::StringArray names;
+    for (const auto& f : mapsDir().findChildFiles (juce::File::findFiles, false, "*.json"))
+    {
+        const auto j = juce::JSON::parse (f.loadFileAsString());
+        const auto n = j["name"].toString().trim();
+        if (n.isNotEmpty() && j["slots"].isArray()) names.addIfNotAlreadyThere (n);
+    }
+    names.sortNatural();
+    return names;
+}
+
+void Engine::refreshMapCache()
+{
+    mapNamesCache = mapNames();
+    mapDefCache = defaultMapName();
+}
+
+juce::String Engine::defaultMapName() const
+{
+    const auto n = mapsDir().getChildFile ("_default.txt").loadFileAsString().trim();
+    return (n.isNotEmpty() && mapFile (n).existsAsFile()) ? n : juce::String();
+}
+
+void Engine::slotsFromArray (const juce::var& arr)
+{
+    releaseAll();
     slots.clear();
-    if (auto* arr = j["slots"].getArray())
-        for (const auto& v : *arr)
+    if (auto* a = arr.getArray())
+        for (const auto& v : *a)
         {
             if ((int) slots.size() >= kMaxSlots) break;
             auto s = slotFromVar (v);
             if (paramFor (s) != nullptr) slots.push_back (std::move (s));
         }
+    settleClashes();
+}
+
+juce::var Engine::slotsToArray() const
+{
+    juce::Array<juce::var> a;
+    for (int i = 0; i < (int) slots.size(); ++i) a.add (slotToVar (slots[(size_t) i], i, false));
+    return a;
+}
+
+bool Engine::loadMap (const juce::String& n)
+{
+    if (n.isEmpty())
+    {
+        releaseAll();
+        loadManifest();
+        settleClashes();
+    }
+    else
+    {
+        const auto j = juce::JSON::parse (mapFile (n).loadFileAsString());
+        if (! j["slots"].isArray()) return false;
+        slotsFromArray (j["slots"]);
+        if (slots.empty()) { loadManifest(); settleClashes(); }
+    }
+    mapName = n;
+    mapDirty = false;
+    writeProjectMap();
+    return true;
+}
+
+void Engine::writeProjectMap()
+{
+    auto* o = new juce::DynamicObject();
+    o->setProperty ("v", kMapVersion);
+    o->setProperty ("name", mapName);
+    o->setProperty ("dirty", mapDirty);
+    o->setProperty ("slots", slotsToArray());
+    apvts.state.setProperty ("roneRackMap", juce::JSON::toString (juce::var (o), true), nullptr);
+}
+
+bool Engine::readProjectMap()
+{
+    if (! apvts.state.hasProperty ("roneRackMap")) return false;
+    const auto j = juce::JSON::parse (apvts.state.getProperty ("roneRackMap").toString());
+    if (! j["slots"].isArray() || (int) j["v"] < kMapVersion) return false;
+    slotsFromArray (j["slots"]);
+    if (slots.empty()) { loadManifest(); settleClashes(); }
+    mapName = j["name"].toString();
+    mapDirty = (bool) j["dirty"];
+    return true;
+}
+
+bool Engine::sameMove (const RoneCtl::SlotConfig& a, const RoneCtl::SlotConfig& b) noexcept
+{
+    if (a.src != b.src) return false;
+    if (a.src == Src::pinch || a.src == Src::grip || a.src == Src::spread) return true;   // the move IS the hold
+    return a.eng == b.eng;
+}
+
+int Engine::clashOf (int i) const noexcept
+{
+    if (i < 0 || i >= (int) slots.size() || ! slots[(size_t) i].cfg.enabled) return -1;
+    for (int j = 0; j < (int) slots.size(); ++j)
+        if (j != i && slots[(size_t) j].cfg.enabled && sameMove (slots[(size_t) i].cfg, slots[(size_t) j].cfg)) return j;
+    return -1;
+}
+
+void Engine::settleClashes()
+{
+    for (int i = 0; i < (int) slots.size(); ++i)
+    {
+        const int j = clashOf (i);
+        if (j >= 0 && j < i) { slots[(size_t) i].cfg.enabled = false; slots[(size_t) i].why = juce::String ("Same move as ") + juce::String::charToString ((juce::juce_wchar) ('A' + j)) + " - pick another MOVE or HOLD WITH, then ON."; }
+    }
 }
 
 void Engine::save() const
 {
     auto* o = new juce::DynamicObject();
+    o->setProperty ("map", kMapVersion);
     o->setProperty ("open", open);
     o->setProperty ("live", live);
     o->setProperty ("source", useSim ? "sim" : "hub");
-    juce::Array<juce::var> a;
-    for (int i = 0; i < (int) slots.size(); ++i) a.add (slotToVar (slots[(size_t) i], i, false));
-    o->setProperty ("slots", a);
     const auto f = savedFile();
     f.getParentDirectory().createDirectory();
     f.replaceWithText (juce::JSON::toString (juce::var (o)));
+    const_cast<Engine*> (this)->writeProjectMap();
 }
 
 // ---------------------------------------------------------------- armed
@@ -280,7 +400,9 @@ void Engine::timerCallback()
 {
     const double t = nowSeconds();
     if (++ticks % 10 == 0) checkArmed();
-    if (ticks % 120 == 0) refreshLite();
+    if (ticks % 120 == 0) { refreshLite(); refreshMapCache(); }   // another instance may have saved a map
+    if (stateSwapped.exchange (false))                         // the host loaded a project into this instance
+        if (! readProjectMap()) writeProjectMap();             // a project from before the maps keeps the current one
     if (! open) { lastT = t; return; }
     stepAll (t);
 }
@@ -365,6 +487,16 @@ juce::var Engine::uiState (bool withHands)
     o->setProperty ("lite", lite);
     o->setProperty ("name", name);
     o->setProperty ("accent", accent);
+    {
+        auto* m = new juce::DynamicObject();
+        juce::Array<juce::var> names;
+        for (const auto& n : mapNamesCache) names.add (n);
+        m->setProperty ("names", names);
+        m->setProperty ("cur", mapName);
+        m->setProperty ("dirty", mapDirty);
+        m->setProperty ("def", mapDefCache);
+        o->setProperty ("map", juce::var (m));
+    }
     o->setProperty ("canCamera", LinkHub::cameraSupported());
     o->setProperty ("source", useSim ? "sim" : (hub->source() == LinkHub::Source::camera ? "camera" : "phone"));
     o->setProperty ("linkStarted", hub->isStarted());
@@ -449,15 +581,34 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
     {
         if (auto* s = slotAt (v))
         {
+            const auto before = s->cfg;
             closeGesture (*s); s->activeWas = false; s->st = SlotState {}; s->lastBool = -1;
             s->cfg.applyVar (v["cfg"]);
             s->why.clear();
+            if (const int j = clashOf ((int) (s - slots.data())); j >= 0)     // that move is another knob's: keep the old one
+            {
+                s->cfg = before;
+                s->why = juce::String ("That move is ") + juce::String::charToString ((juce::juce_wchar) ('A' + j)) + "'s - every knob has its own.";
+            }
+            else edited();
             save();
         }
     }
     else if (ev == "slotOn")
     {
-        if (auto* s = slotAt (v)) { s->cfg.enabled = (bool) v["on"]; if (! s->cfg.enabled) { closeGesture (*s); s->activeWas = false; s->st = SlotState {}; } save(); }
+        if (auto* s = slotAt (v))
+        {
+            s->cfg.enabled = (bool) v["on"];
+            if (const int j = clashOf ((int) (s - slots.data())); j >= 0)     // ON with another knob's move: stays OFF, says why
+            {
+                s->cfg.enabled = false;
+                s->why = juce::String ("Same move as ") + juce::String::charToString ((juce::juce_wchar) ('A' + j)) + " - pick another MOVE or HOLD WITH, then ON.";
+            }
+            else if (s->cfg.enabled) s->why.clear();
+            if (! s->cfg.enabled) { closeGesture (*s); s->activeWas = false; s->st = SlotState {}; }
+            edited();
+            save();
+        }
     }
     else if (ev == "slotParam")
     {
@@ -467,6 +618,7 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
             s->param = v["param"].toString();
             if (auto* p = paramFor (*s)) s->cfg.name = p->getName (14).toUpperCase();
             s->why.clear();
+            edited();
             save();
         }
     }
@@ -485,20 +637,69 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
             }
         if (s.param.isEmpty()) return;
         s.cfg.enabled = true;
-        s.cfg.hand = rights <= lefts ? HandSel::right : HandSel::left;
+        s.cfg.hand = HandSel::any;                          // beta round 8.11: one move per knob, either hand
+        juce::ignoreUnused (lefts, rights);
+        const std::pair<Engage, Src> moves[] = { { Engage::pinch, Src::height }, { Engage::fist, Src::height }, { Engage::pinch, Src::side },
+                                                 { Engage::fist, Src::side }, { Engage::always, Src::twist }, { Engage::pinch, Src::depth },
+                                                 { Engage::fist, Src::depth }, { Engage::pinch, Src::twist } };
+        bool found = false;
+        for (const auto& m : moves)
+        {
+            s.cfg.eng = m.first; s.cfg.src = m.second;
+            bool used = false; for (const auto& x : slots) used = used || (x.cfg.enabled && sameMove (x.cfg, s.cfg));
+            if (! used) { found = true; break; }
+        }
+        if (! found) { s.cfg.enabled = false; s.why = "Every move is taken - free one on another knob, then ON."; }
         slots.push_back (std::move (s));
+        edited();
         save();
     }
     else if (ev == "removeSlot")
     {
         const int i = (int) v["i"];
-        if (i >= 0 && i < (int) slots.size() && ! locked (i)) { closeGesture (slots[(size_t) i]); slots.erase (slots.begin() + i); save(); }
+        if (i >= 0 && i < (int) slots.size() && ! locked (i)) { closeGesture (slots[(size_t) i]); slots.erase (slots.begin() + i); edited(); save(); }
     }
     else if (ev == "reset")
     {
-        releaseAll();
-        loadManifest();
+        loadMap ({});
         save();
+    }
+    else if (ev == "mapLoad")                                     // the MAP row: arrows / list ("" = RONE DEFAULT)
+    {
+        if (loadMap (v["name"].toString().trim())) save();
+    }
+    else if (ev == "mapSave")                                     // SAVE AS NEW { name } / UPDATE { name, update: true }
+    {
+        auto n = v["name"].toString().trim().toUpperCase().substring (0, 24);
+        if (n.isEmpty() || n == "RONE DEFAULT") return;          // RONE DEFAULT is ours, never overwritten
+        if ((bool) v["update"] && ! mapFile (n).existsAsFile()) return;
+        auto* o = new juce::DynamicObject();
+        o->setProperty ("name", n);
+        o->setProperty ("plugin", id);
+        o->setProperty ("v", kMapVersion);
+        o->setProperty ("slots", slotsToArray());
+        mapsDir().createDirectory();
+        mapFile (n).replaceWithText (juce::JSON::toString (juce::var (o)));
+        mapName = n;
+        mapDirty = false;
+        refreshMapCache();
+        save();
+    }
+    else if (ev == "mapDefault")                                  // the star: every NEW instance opens with this map
+    {
+        const auto n = v["name"].toString().trim();
+        mapsDir().createDirectory();
+        mapsDir().getChildFile ("_default.txt").replaceWithText (n.isNotEmpty() && mapFile (n).existsAsFile() ? n : juce::String());
+        refreshMapCache();
+    }
+    else if (ev == "mapDelete")
+    {
+        const auto n = v["name"].toString().trim();
+        if (n.isEmpty() || ! mapFile (n).existsAsFile()) return;
+        mapFile (n).deleteFile();
+        if (defaultMapName().isEmpty()) mapsDir().getChildFile ("_default.txt").deleteFile();
+        refreshMapCache();
+        if (mapName == n) { mapName = {}; mapDirty = true; save(); }
     }
     else if (ev == "setLive")
     {

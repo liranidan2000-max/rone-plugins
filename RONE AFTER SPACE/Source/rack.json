@@ -337,7 +337,7 @@
   "rack": [
     {
       "param": "main.mix",
-      "hand": "R",
+      "hand": "ANY",
       "src": "height",
       "eng": "pinch",
       "mode": "grab",
@@ -347,17 +347,17 @@
     },
     {
       "param": "main.size",
-      "hand": "L",
+      "hand": "ANY",
       "src": "height",
-      "eng": "pinch",
+      "eng": "fist",
       "mode": "grab",
       "rel": "stay",
       "on": true,
-      "why": "The left hand holds the hall: how big the room is."
+      "why": "Make a fist and lift: how big the hall is. It stays where you leave it."
     },
     {
       "param": "main.decay",
-      "hand": "L",
+      "hand": "ANY",
       "src": "side",
       "eng": "pinch",
       "mode": "grab",
@@ -367,13 +367,13 @@
     },
     {
       "param": "echo.amount",
-      "hand": "R",
+      "hand": "ANY",
       "src": "twist",
       "eng": "always",
       "mode": "grab",
       "rel": "stay",
       "on": false,
-      "why": "Turn the right hand like a knob: the echo joins the space."
+      "why": "Turn your hand like a knob: the echo joins the space."
     }
   ]
 }
