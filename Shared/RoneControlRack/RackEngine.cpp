@@ -247,6 +247,15 @@ bool Engine::loadMap (const juce::String& n)
         if (! j["slots"].isArray()) j = factoryMap (n);                    // else the plugin's ready map
         if (! j["slots"].isArray()) return false;
         slotsFromArray (j["slots"]);
+        // a ready map may put the plugin in the mode it is made for ("set": { "paramId": 0..1 }) - beta round 6
+        if (auto* set = j["set"].getDynamicObject())
+            for (const auto& kv : set->getProperties())
+                if (auto* p = apvts.getParameter (kv.name.toString()))
+                {
+                    p->beginChangeGesture();
+                    p->setValueNotifyingHost (juce::jlimit (0.0f, 1.0f, (float) kv.value));
+                    p->endChangeGesture();
+                }
         if (slots.empty()) { loadManifest(); settleClashes(); }
     }
     mapName = n;
@@ -707,6 +716,11 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
         o->setProperty ("plugin", id);
         o->setProperty ("v", kMapVersion);
         o->setProperty ("slots", slotsToArray());
+        {   // a saved copy of a ready map keeps the mode the ready map sets (UPDATE on your own copy keeps yours)
+            auto prev = juce::JSON::parse (mapFile (n).loadFileAsString());
+            if (! prev["set"].isObject()) prev = factoryMap (n);
+            if (prev["set"].isObject()) o->setProperty ("set", prev["set"]);
+        }
         mapsDir().createDirectory();
         mapFile (n).replaceWithText (juce::JSON::toString (juce::var (o)));
         mapName = n;
