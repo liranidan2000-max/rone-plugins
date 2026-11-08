@@ -107,6 +107,7 @@ jobs:
               - 'installer/RoneStutter.iss'
               - 'docs/manuals/RONE Stutter - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             stucker:
               - 'RoneStucker'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -206,6 +207,7 @@ jobs:
               - 'installer/RoneGrain.iss'
               - 'docs/manuals/RONE DMT - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             flanger:
               - 'rone-flanger-'
               - 'Shared/!(tests|check-vendored-copies.sh)'
