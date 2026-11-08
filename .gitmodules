@@ -43,3 +43,7 @@
 [submodule "RoneDelay"]
 	path = RoneDelay
 	url = https://github.com/liranidan2000-max/RoneDelay.git
+[submodule "RoneGrain"]
+	path = RoneGrain
+	url = https://github.com/liranidan2000-max/RoneGrain.git
+	branch = release/1.0

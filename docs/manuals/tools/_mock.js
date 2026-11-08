@@ -235,3 +235,62 @@ window.__scn_delay = function (opt) {
   document.querySelectorAll('#duo .dd').forEach(function (el) { el.id = 'duo' + el.dataset.s; });
   document.querySelectorAll('.scr').forEach(function (el, k) { el.id = ['scrScope', 'scrMap', 'scrFilt'][k]; });
 };
+
+// ---- Scenario: RONE DMT with a vocal hook loaded, a note playing and a 2-bar take recorded ----
+// opts: { preset:'NAME', note:1..12, octave:n, midi:bool, take:false }
+// The grains and the take are computed from the page's own timing model (grainSec / intervalSec / stepSec),
+// so the SOURCE marks and the OUTPUT lane match the knobs on screen.
+window.__scn_dmt = function (opts) {
+  opts = opts || {};
+  window.__mockEmit('licenseStatus', { licensed: true });
+  var rnd = window.__mockRand(11), N = 700, secs = 3.2, mn = [], mx = [];
+  // a sung hook: four phrases with breaths between, syllable bumps inside
+  var phrases = [[0.06, 0.27], [0.31, 0.52], [0.57, 0.74], [0.78, 0.97]];
+  function vocal(x) {
+    for (var p = 0; p < phrases.length; p++) {
+      var a = phrases[p][0], b = phrases[p][1];
+      if (x >= a && x <= b) {
+        var u = (x - a) / (b - a), edge = Math.min(1, u / 0.08, (1 - u) / 0.12);
+        return edge * (0.55 + 0.35 * Math.abs(Math.sin(u * Math.PI * (3 + p))));
+      }
+    }
+    return 0.015;
+  }
+  for (var i = 0; i < N; i++) { var a = vocal(i / N) * (0.75 + 0.25 * rnd()); mx.push(a); mn.push(-a * (0.8 + 0.2 * rnd())); }
+  onSource({ loaded: true, name: 'Vocal_Hook_142bpm.wav', seconds: secs, mn: mn, mx: mx });
+  var idx = PRESETS.findIndex(function (p) { return p.n === (opts.preset || 'INIT'); });
+  applyPreset(Math.max(0, idx));
+  if (opts.note) { setParam('note', opts.note); }
+  if (opts.octave) { setParam('octave', opts.octave); }
+  if (opts.midi) { setParam('midiNote', true); }
+  renderKnobs();
+
+  var bpm = 142, sr = 44100, G = grainSec(), I = Math.max(1e-3, intervalSec()), hop = stepSec() * S.waveSpacing / 100;
+  var rd = 0.40, grains = [];
+  for (var k = 0; k < 7; k++) {
+    var pos = ((rd - k * hop / secs) % 1 + 1) % 1;
+    grains.push([40 - k, pos, G / secs, (k % 2 ? 1 : -1) * S.pan / 100, 1]);
+  }
+  var take = null;
+  if (opts.take !== false) {
+    var beat = 60 / bpm, len = Math.round(8 * beat * sr * 0.93), blk = 64, nb = Math.ceil(len / blk);
+    var tmn = new Array(nb).fill(0), tmx = new Array(nb).fill(0), clip = new Array(nb).fill(0), lane = [];
+    var F0 = Math.max(1e-3, S.attack / 1000), H = holdSec(), rpos = 0;
+    for (var t = 0, id = 1; t < len / sr; t += I, id++) {
+      var s0 = Math.round(t * sr), L = Math.round(G * sr);
+      lane.push([s0, L, id]);
+      for (var b = Math.floor(s0 / blk); b <= Math.min(nb - 1, Math.floor((s0 + L) / blk)); b++) {
+        var tt = (b * blk - s0) / sr, env = tt < F0 ? tt / F0 : tt < F0 + H ? 1 : Math.max(0, 1 - (tt - F0 - H) / F0);
+        if (id === 1 && tt < F0) env = 1;
+        var amp = env * vocal(((rpos + tt) / secs % 1 + 1) % 1) * 0.8;
+        tmx[b] = Math.max(tmx[b], amp * (0.85 + 0.15 * rnd())); tmn[b] = Math.min(tmn[b], -amp * (0.8 + 0.2 * rnd()));
+      }
+      rpos += hop;
+    }
+    take = { id: 1, reset: true, len: len, active: false, sr: sr, block: blk, from: 0, mn: tmn, mx: tmx, clip: clip, lane: lane };
+  }
+  var pc = opts.note ? opts.note - 1 : -1;
+  window.__mockEmit('frame', { bpm: bpm, on: true, rd: rd, holdMs: holdSec() * 1000, pc: pc, pcReady: true, pad: true, grains: grains, take: take });
+  // _shot.js photographs ~1.6 s after the state: keep the grains alive (playing) at that moment
+  events.forEach(function (e, i) { e.born += 1500 - i * 25; });
+};

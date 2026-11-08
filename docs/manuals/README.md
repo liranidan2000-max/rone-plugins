@@ -22,6 +22,7 @@ Plugins/Manuals/`) and the Plugins Center opens it from the card menu
 | RONE Sidechain | `RONE Sidechain - User Manual.pdf` |
 | RONE Gater | `RONE Gater - User Manual.pdf` |
 | RONE Delay | `RONE Delay - User Manual.pdf` |
+| RONE DMT | `RONE DMT - User Manual.pdf` |
 
 Changing a PDF triggers that plugin's CI build (see the path filters in
 `.github/workflows/main.yml`), so a manual update ships on its own.

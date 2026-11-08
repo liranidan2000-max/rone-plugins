@@ -59,6 +59,7 @@ for id in $(echo "$published" | jq -r '.[]'); do
     rone2a)         folder=Rone2A;             jid=Rone2A;          tag=Rone2A-latest;          inst=Rone2A ;;
     sidechain)      folder=RoneSidechain;      jid=RoneSidechain;   tag=RoneSidechain-latest;   inst=RoneSidechain ;;
     delay)          folder=RoneDelay;          jid=RoneDelay;       tag=RoneDelay-latest;       inst=RoneDelay ;;
+    dmt)            folder=RoneGrain;          jid=RoneGrain;       tag=RoneGrain-latest;       inst=RoneGrain ;;
     flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
     sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
     afterspace)     folder="RONE AFTER SPACE"; jid=RoneAfterspace; tag=RoneAfterspace-latest;  inst=RoneAfterspace ;;

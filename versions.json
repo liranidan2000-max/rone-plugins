@@ -670,6 +670,43 @@
       "size": 5914219,
       "version_mac": "1.1.2.369",
       "size_mac": 14366614
+    },
+    {
+      "id": "RoneGrain",
+      "name": "RONE DMT",
+      "version": "1.0.0.0",
+      "type": "plugin",
+      "formats": [
+        "VST3",
+        "AU",
+        "Standalone"
+      ],
+      "price": 39,
+      "launch_price": 39,
+      "description": "A granular instrument built on the Fruity Granulizer engine, measured and rebuilt: drop a sample, play it from MIDI, see every grain on the wave and drag what you hear into the DAW.",
+      "whats_new": "1.0.0 - First release.",
+      "standalone_exe": "RONE DMT.exe",
+      "vst3_bundle": "RONE DMT.vst3",
+      "au_bundle": "RONE DMT.component",
+      "manual": "RONE DMT - User Manual.pdf",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer.pkg",
+      "sha256": "",
+      "registry_key": "RoneGrain",
+      "sha256_mac": "",
+      "store_url": "https://roneaudio.com/products/rone-dmt.html",
+      "category": [
+        "creative"
+      ],
+      "tags": [
+        "granular",
+        "sampler",
+        "texture",
+        "time-stretch",
+        "psytrance"
+      ],
+      "accent": "#2EE6C8",
+      "inno_app_id": "{6025BEC5-E441-415F-9CA3-825DBEC49685}"
     }
   ],
   "apps": [

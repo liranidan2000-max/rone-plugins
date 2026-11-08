@@ -44,6 +44,7 @@ static const std::map<juce::String, juce::String>& innoAppIds()
         { "RoneRise",       "{E4F73C6B-63EB-4D37-9E02-0C6E91F7E9CE}" },   // installer/RoneRise.iss
         { "RoneIron",       "{DAFDABED-2E84-4166-86BB-EC4810E01F1F}" },   // installer/RoneIron.iss
         { "RoneDelay",      "{04213AF9-9AD6-4447-B6AE-7F544C41994C}" },   // installer/RoneDelay.iss (same AppId as the dev builds)
+        { "RoneGrain",      "{6025BEC5-E441-415F-9CA3-825DBEC49685}" },   // installer/RoneGrain.iss = RONE DMT (same AppId as the dev builds)
         { "RoneGater",      "{6720533E-A799-4898-9EFA-0AAFEEDFDD7E}" },   // installer/RoneGater.iss
         // 2.1.26: the four products released after the manifest's inno_app_id took
         // over (Center 2.0) were never added here. The elevated UNINSTALL copy has

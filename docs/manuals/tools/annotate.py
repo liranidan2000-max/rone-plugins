@@ -25,7 +25,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # Sidechain's periwinkle prints as it is
           "sidechain": "#7B8CFF",
           # Delay Champagne #E9D6A6 is too pale for white paper; a deeper champagne-gold for badges
-          "delay": "#B39352"}
+          "delay": "#B39352",
+          # DMT Aqua Teal #2EE6C8 is too light on paper; a deeper teal for badges
+          "dmt": "#14A58F"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -427,6 +429,20 @@ def main():
     annotate("delay_hold", "delay/hold.png", [], A, crops=[("map", "#scrMap", 6)])
     annotate("delay_macros", "delay/macros.png", [], A, crops=[("slots", "#macros", 8)])
     plain("delay", "delay/main.png"); plain("delay_presets", "delay/presets.png"); plain("delay_about", "delay/about.png")
+    # ------------------------------------------------------------ DMT
+    A = ACCENT["dmt"]
+    # Order here IS the legend order in content_dmt.py - keep the two lists in step.
+    annotate("dmt", "dmt/tour.png", [
+        ("#pLogo", "Header logo"), ("#presetBar", "PRESET"), ("#slots", "MY SLOTS"), ("#oneSw", "ONE KNOB"), ("#syncSeg", "SYNC / FREE"),
+        ("#resetBtn", "RESET"), ("#srcView", "SOURCE"), ("#outView", "OUTPUT"), ("#viewSeg", "View length"), ("#knobs", "The five knobs"),
+        ("#pad", "PLAY / STOP"), ("#bpmV", "Host tempo"), ("#piano", "NOTE piano"), ("#midiBtn", "MIDI"), ("#octDn+#octUp", "Octave"),
+        ("#outKnob", "OUTPUT level"), ("#chip", "DRAG TO DAW"), ("#saveBtn", "SAVE"), ("#resize-handle", "Resize grip")], A,
+        crops=[("knobs", "#knobs", 8), ("bottom", "#pad+#saveBtn", 8), ("source", "#srcView", 6)])
+    annotate("dmt_oneknob", "dmt/oneknob.png", [("#macroKnob", "ONE KNOB"), ("#macroModes", "Modes"), ("#macroDesc", "What the mode does")], A,
+        crops=[("macro", "#macroPanel", 8)])
+    annotate("dmt_note", "dmt/note.png", [], A, crops=[("note", "#piano+#octUp", 8)])
+    annotate("dmt_sync", "dmt/sync.png", [], A, crops=[("knobs", "#syncSeg+#knobs", 8)])
+    plain("dmt", "dmt/main.png"); plain("dmt_presets", "dmt/presets.png"); plain("dmt_empty", "dmt/empty.png"); plain("dmt_about", "dmt/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

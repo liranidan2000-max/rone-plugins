@@ -13,3 +13,4 @@
 # not its older master).
 RoneDelay	release
 rone-flanger-	release/2.1.4
+RoneGrain	release/1.0

@@ -49,7 +49,7 @@
     "Rone2A":         { "name": "RONE 2A",             "slug": "rone-2a",        "key": "2a",        "screen": "#FF6F59", "dev_folder": "Rone2A" },
     "RoneMotion":     { "name": "RONE Motion",         "slug": "rone-motion",    "key": "motion",    "screen": "#3DE8A0" },
     "RoneControl":    { "name": "RONE Control",        "slug": "rone-control",   "key": "control",   "screen": "#52FF45", "dev_folder": "RoneControl" },
-    "RoneGrain":      { "name": "RONE Grain",          "slug": "rone-grain",     "key": "grain",     "screen": "#2EE6C8", "dev_folder": "RoneGrain" },
+    "RoneGrain":      { "name": "RONE DMT",            "slug": "rone-dmt",       "key": "grain",     "screen": "#2EE6C8", "dev_folder": "RoneGrain" },
     "RoneChoir":      { "name": "RONE Choir",          "slug": "rone-choir",     "key": "choir",     "screen": "#F2A93B" },
     "RoneBassline":   { "name": "RONE Bassline",       "slug": "rone-bassline",  "key": "bassline",  "screen": "#5B54E8" },
     "RoneDelay":      { "name": "RONE Delay",          "slug": "rone-delay",     "key": "delay",     "screen": "#E9D6A6", "dev_folder": "RoneDelay" }

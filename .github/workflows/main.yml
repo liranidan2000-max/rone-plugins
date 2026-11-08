@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       products:
-        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,sidechain,delay,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
+        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,sidechain,delay,dmt,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
         required: true
         default: stutter
 
@@ -187,6 +187,15 @@ jobs:
               - 'installer/RoneDelay.iss'
               - 'docs/manuals/RONE Delay - User Manual.pdf'
               - '.github/workflows/main.yml'
+            dmt:
+              - 'RoneGrain'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests|RoneControlRack)/**/*'
+              - 'Shared/tests?*/**/*'
+              - 'Shared/RoneControlRack?*/**/*'
+              - 'installer/RoneGrain.iss'
+              - 'docs/manuals/RONE DMT - User Manual.pdf'
+              - '.github/workflows/main.yml'
             flanger:
               - 'rone-flanger-'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -265,6 +274,7 @@ jobs:
           C2A=${{ steps.filter.outputs.rone2a         || 'false' }}
           SC=${{ steps.filter.outputs.sidechain       || 'false' }}
           DL=${{ steps.filter.outputs.delay           || 'false' }}
+          DM=${{ steps.filter.outputs.dmt             || 'false' }}
           FL=${{ steps.filter.outputs.flanger         || 'false' }}
           SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
           PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
@@ -277,14 +287,14 @@ jobs:
             want=",$(printf '%s' "$DISPATCH_PRODUCTS" | tr -d ' ' | tr 'A-Z' 'a-z'),"
             for p in $(printf '%s' "$want" | tr ',' ' '); do
               case "$p" in
-                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|sidechain|delay|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
+                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|sidechain|delay|dmt|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
                 *) echo "::error::dry run: unknown product '$p'"; exit 1 ;;
               esac
             done
             pick() { case "$want" in *,all,*|*",$1,"*) echo true ;; *) echo false ;; esac; }
             RR=$(pick reverse_reverb); SF=$(pick stems_fixer); ST=$(pick stutter); SK=$(pick stucker)
             TH=$(pick throw); CL=$(pick clipper); RI=$(pick rise); IR=$(pick iron); FL=$(pick flanger)
-            C76=$(pick rone1176); C2A=$(pick rone2a); SC=$(pick sidechain); DL=$(pick delay)
+            C76=$(pick rone1176); C2A=$(pick rone2a); SC=$(pick sidechain); DL=$(pick delay); DM=$(pick dmt)
             SV=$(pick sync_verb); PC=$(pick plugins_center); AN=$(pick analyzer); AS=$(pick afterspace)
             echo "dry run, nothing is published: $DISPATCH_PRODUCTS"
           fi
@@ -327,6 +337,7 @@ jobs:
           add "$C2A" rone2a         Rone2A             Rone2A            Rone2A-latest              Rone2A                    true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    Rone2A.iss          "RONE 2A - User Manual.pdf"             ""
           add "$SC" sidechain      RoneSidechain      RoneSidechain     RoneSidechain-latest       RoneSidechain             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneSidechain.iss   "RONE Sidechain - User Manual.pdf"      ""
           add "$DL" delay          RoneDelay          RoneDelay         RoneDelay-latest           RoneDelay                 true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneDelay.iss       "RONE Delay - User Manual.pdf"          ""
+          add "$DM" dmt            RoneGrain          RoneGrain         RoneGrain-latest           RoneGrain                 true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneGrain.iss       "RONE DMT - User Manual.pdf"            ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
@@ -1495,6 +1506,7 @@ jobs:
               rone2a)         f=Rone2A ;;
               sidechain)      f=RoneSidechain ;;
               delay)          f=RoneDelay ;;
+              dmt)            f=RoneGrain ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;
@@ -1615,6 +1627,7 @@ jobs:
               rone2a)         f=Rone2A ;;
               sidechain)      f=RoneSidechain ;;
               delay)          f=RoneDelay ;;
+              dmt)            f=RoneGrain ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;

@@ -34,6 +34,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "c2a":        ROOT / "Rone2A" / "Source" / "WebUI.h",
     "sidechain":  ROOT / "RoneSidechain" / "Source" / "WebUI.h",
     "delay":      ROOT / "RoneDelay" / "Source" / "WebUI.h",
+    "dmt":        ROOT / "RoneGrain" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -137,6 +138,15 @@ STATES = [
     ("delay", "_macros", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_delay();saveSlot(0);saveSlot(1);document.getElementById('macros').querySelectorAll('.slot').forEach(function(b){b.classList.remove('saved')})", None),
     # the back panel shows the version the host sends (uiConfig); without a host it would read the page's placeholder
     ("delay", "_about", f"js:window.__mockEmit('uiConfig',{{version:'{_cmake_version('RoneDelay')}'}}),click:pLogo", None),
+    # RONE DMT (900x610, folder RoneGrain): SOURCE / OUTPUT draw only from host events, so every state runs _mock.js's
+    # __scn_dmt (a sung hook, the grains and a 2-bar take computed from the page's own timing model).
+    ("dmt", "", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_dmt({preset:'SLOW MOTION'})", None),
+    ("dmt", "_oneknob", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_dmt({preset:'ONE KNOB BLOOM'})", None),
+    ("dmt", "_sync", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_dmt({preset:'TRIPLET CHOP'})", None),
+    ("dmt", "_note", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_dmt({preset:'DREAM STRETCH',note:8})", None),
+    ("dmt", "_presets", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_dmt({preset:'MELTING WALLS'});document.getElementById('prName').click()", None),
+    ("dmt", "_empty", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__mockEmit('licenseStatus',{licensed:true})", None),
+    ("dmt", "_about", f"js:window.__mockEmit('licenseStatus',{{licensed:true}});window.__mockEmit('uiConfig',{{version:'{_cmake_version('RoneGrain')}'}}),click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power,js:setTremMode('free')", None), ("reversereverb_m", "_about", "click:p-logo", None),
@@ -196,22 +206,23 @@ def prepare_ui():
             html = html.replace("</body>", '<script src="/_shot.js"></script>\n</body>', 1) if "</body>" in html else html + '\n<script src="/_shot.js"></script>'
         f.write_text(html, encoding="utf-8")
     for src in ("stutter", "reversereverb"):
-        if not (UI / src).exists(): continue  # a worktree without that submodule
+        if not (UI / src / "index.html").exists(): continue  # a worktree without that submodule
         dst = UI / (src + "_m")
         shutil.copytree(UI / src, dst)
         f = dst / "index.html"
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
     # the Clipper only draws what the host pushes as `frame` events, so its manual states feed them through the fake bridge (in place, no copy)
     # (Gater and Delay the same: their displays draw only from host frames)
-    for src in ("clipper", "gater", "delay"):
+    for src in ("clipper", "gater", "delay", "dmt"):
         f = UI / src / "index.html"
         if not f.exists(): continue          # a worktree without that submodule
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
     # RONE Delay asks for its type as fonts/<file>.woff2 (the plugin serves Shared/fonts): serve the same files
     fonts = ROOT / "Shared" / "fonts"
-    if (UI / "delay").exists() and fonts.exists():
-        (UI / "delay" / "fonts").mkdir(exist_ok=True)
-        for f in fonts.glob("*.woff2"): shutil.copy(f, UI / "delay" / "fonts" / f.name)
+    for name in ("delay", "dmt"):          # RONE DMT the same
+        if (UI / name).exists() and fonts.exists():
+            (UI / name / "fonts").mkdir(exist_ok=True)
+            for f in fonts.glob("*.woff2"): shutil.copy(f, UI / name / "fonts" / f.name)
 
 class Server:
     def __enter__(self):
