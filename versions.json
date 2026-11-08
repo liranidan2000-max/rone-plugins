@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-08T06:08:56Z",
+  "last_updated": "2026-11-08T09:35:50Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-385.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-385.1.dmg",
@@ -114,7 +114,7 @@
     {
       "id": "RoneStucker",
       "name": "RONE Stucker",
-      "version": "1.4.7.369",
+      "version": "1.4.7.386",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -128,9 +128,9 @@
       "au_bundle": "RONE Stucker.component",
       "manual": "RONE Stucker - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=l6_cvuOajI4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-386.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-369.7.pkg",
-      "sha256": "92c36bf8b4f9d817e126dde52a35c15d79c02aafef6c2cf406665c3c5a756aa3",
+      "sha256": "32bb6ea32899adde1d781429ab01da6704e788af65e4aacb5e772b2270517cf0",
       "registry_key": "RoneStucker",
       "sha256_mac": "51149f45415cc54f2aed5d7e90861f229b63e1d96992d370c8c792ed9913dc5d",
       "price": 29,
@@ -157,7 +157,7 @@
           "description": "Un knob que atrapa el loop y lo enrolla - la porción capturada se encoge cada vez más hasta gritar, y luego suelta de vuelta al beat"
         }
       },
-      "size": 5030809,
+      "size": 5030391,
       "size_mac": 14125759,
       "version_mac": "1.4.7.369"
     },
@@ -363,7 +363,7 @@
     {
       "id": "RoneFlanger",
       "name": "RONE Flanger",
-      "version": "2.1.10.373",
+      "version": "2.1.10.386",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -377,9 +377,9 @@
       "au_bundle": "RONE Flanger.component",
       "manual": "RONE Flanger - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-373.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-386.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-373.1.pkg",
-      "sha256": "189ceaa151b15fba35cd3079d3175b8d6f7bff659345918695fc51909b54d122",
+      "sha256": "9ffc8e2c659916f20d992dac766311631d38f8e8ac1f914bb777af26a2bdf742",
       "registry_key": "RoneFlanger",
       "sha256_mac": "f986d80eab894b7c570a6e7655591adc6abbc1a1b1b52c10201fc9743cd720b9",
       "price": 39,
@@ -405,7 +405,7 @@
           "description": "Un flanger de transición - barre a mano o activa el modo INFINITE para subidas y bajadas sin fin fijadas al compás, con feedback, offset estéreo y un gate rítmico"
         }
       },
-      "size": 5289025,
+      "size": 5295458,
       "size_mac": 14901200,
       "version_mac": "2.1.10.373"
     },
@@ -511,7 +511,7 @@
       "id": "Rone1176",
       "released": "2026-10-24",
       "name": "RONE 1176",
-      "version": "0.9.11.369",
+      "version": "0.9.11.386",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -525,9 +525,9 @@
       "au_bundle": "RONE 1176.component",
       "manual": "RONE 1176 - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=BW3FRyUCcp8",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-386.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-369.2.pkg",
-      "sha256": "56376b39a069c677a1efc971c762ca4e0e294608c6c5668657e1848d6698a939",
+      "sha256": "5a82796f90071a87a6faf9a11ddc1310c2f7fca1de2484f82475f8856c9d3a28",
       "registry_key": "Rone1176",
       "sha256_mac": "27ce3ae146e9834cad067a5c19e96e4134340f614f7276fdb5a5bafee394ad73",
       "store_url": "https://roneaudio.com/products/rone-1176.html",
@@ -544,7 +544,7 @@
       ],
       "accent": "#FF8C2E",
       "inno_app_id": "{3C6B2F8A-9D41-4E7B-A0C5-7E1176C0DE01}",
-      "size": 5253729,
+      "size": 5250063,
       "size_mac": 14578125,
       "version_mac": "0.9.11.369"
     },
