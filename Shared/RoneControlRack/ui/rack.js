@@ -20,6 +20,13 @@
   // the QR (qrcode-generator rides in the plugin: no internet needed to draw it)
   var qrFor = '';
   function renderQr(url) {
+    // beta round 4 (Liran: "the start screen on the iPhone should match the plugin that opened it"): ?c=<accent>&n=<name>
+    // before the #room.key - the phone page paints itself from it at once; the pairing part is unchanged
+    if (url && S && S.accent && url.indexOf('#') > 0 && url.indexOf('?') < 0) {
+      var nm = String(S.name || '').replace(/^RONE\s+/i, '').trim().toUpperCase();
+      var i = url.indexOf('#');
+      url = url.slice(0, i) + '?c=' + encodeURIComponent(String(S.accent).replace('#', '')) + (nm ? '&n=' + encodeURIComponent(nm) : '') + url.slice(i);
+    }
     if (!url || url === qrFor) return;
     qrFor = url;
     try { var q = qrcode(0, 'M'); q.addData(url); q.make(); $('#rQrBox').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0 }); }
