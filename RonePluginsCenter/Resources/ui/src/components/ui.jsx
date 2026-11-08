@@ -9,6 +9,7 @@ export const Icon = {
   rack: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><rect x="3" y="4" width="18" height="6" rx="1.5" /><rect x="3" y="14" width="18" height="6" rx="1.5" /><circle cx="7" cy="7" r=".9" fill="currentColor" /><circle cx="7" cy="17" r=".9" fill="currentColor" /></svg>,
   learn: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M10 9.5v5l4.5-2.5z" fill="currentColor" /></svg>,
   settings: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>,
+  support: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><path d="M4 5h16v11H9l-5 4z" /><path d="M8.5 9.5h7M8.5 12.5h4" /></svg>,
   account: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0114 0" /></svg>,
   globe: (p) => <svg viewBox="0 0 24 24" {...P} {...p}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" /></svg>,
   search: (p) => <svg viewBox="0 0 24 24" {...P} strokeWidth={2} {...p}><circle cx="11" cy="11" r="7" /><path d="M21 21l-5-5" /></svg>,

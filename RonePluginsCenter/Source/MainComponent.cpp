@@ -254,6 +254,9 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
         .withNativeFunction ("setOptin", [this] (NativeArgs args, NativeCompletion complete) {
             handleOptin (args, guarded (std::move (complete)), true);
         })
+        .withNativeFunction ("sendSupport", [this] (NativeArgs args, NativeCompletion complete) {
+            handleSendSupport (args, guarded (std::move (complete)));
+        })
         .withNativeFunction ("scanOldVersions", [this] (NativeArgs args, NativeCompletion complete) {
             handleScanOldVersions (args, guarded (std::move (complete)));
         })
@@ -2098,6 +2101,33 @@ void MainComponent::handleOptin (NativeArgs args, NativeCompletion complete, boo
             result = juce::var (none);
         }
         complete (result);
+    });
+}
+
+void MainComponent::handleSendSupport (NativeArgs args, NativeCompletion complete)
+{
+    // The SUPPORT page (views/SupportView.jsx, 2026-11-08): NEED HELP or IMPROVE, with screenshots, to
+    // roneaudio.com/api/v1/support - the same door as the site's form, so it lands in Liran's console. The page
+    // sends the words and the plugin versions it shows; the OS name is added here (the page cannot know it).
+    juce::var body = args.size() > 0 ? args[0] : juce::var();
+    if (! body.isObject())
+    {
+        auto* bad = new juce::DynamicObject();
+        bad->setProperty ("ok", false);
+        complete (juce::var (bad));
+        return;
+    }
+    if (auto* o = body.getDynamicObject())
+    {
+        o->setProperty ("page", "center");
+        const auto ctx = o->getProperty ("context").toString();
+        o->setProperty ("context", "RONE Plugins Center " + juce::String (JUCE_APPLICATION_VERSION_STRING)
+                                       + " · " + juce::SystemStats::getOperatingSystemName()
+                                       + (ctx.isNotEmpty() ? "\n" + ctx : juce::String()));
+    }
+    juce::Thread::launch ([job = accountClient.openPost ("/support", body, 90000), complete = std::move (complete)]() mutable
+    {
+        complete (job());
     });
 }
 

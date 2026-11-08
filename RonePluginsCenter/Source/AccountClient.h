@@ -103,6 +103,11 @@ public:
     /** The same for a JSON POST (the deals list: /optin with {on, source}). */
     std::function<juce::var()> authorizedPost (const juce::String& path, const juce::var& body) const;
 
+    /** The SUPPORT page (2026-11-08): a JSON POST that works signed out too - the device token goes along
+        only when there is one, so the message is tied to the account. Long timeout: it may carry pictures.
+        Answers the server's JSON plus "status" (the HTTP code), or {ok:false, offline:true}. Off the message thread. */
+    std::function<juce::var()> openPost (const juce::String& path, const juce::var& body, int timeoutMs) const;
+
 private:
     // Same 7-day offline tolerance as the license-key path: a working studio
     // must not go dark because the internet did. It gates the PASS only — a

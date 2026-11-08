@@ -16,6 +16,7 @@ import RackView from './views/RackView'
 import LearnView from './views/LearnView'
 import SettingsView from './views/SettingsView'
 import AccountView from './views/AccountView'
+import SupportView from './views/SupportView'
 import { makeT, LOCALES } from './i18n'
 import { usePrefs, prefersReducedMotion } from './prefs'
 import { playPowerOn } from './sounds'
@@ -40,6 +41,7 @@ export default function App () {
   const [tips, setTips] = useState([])
   const [daws, setDaws] = useState([])
   const [platform, setPlatform] = useState('windows')
+  const [appVersion, setAppVersion] = useState('')
   const [centerUpdate, setCenterUpdate] = useState(null)
 
   const [view, setView] = useState('library')
@@ -152,7 +154,7 @@ export default function App () {
       }
       try { const lic = await api.getLicenseStatus(); if (lic) setLicense(lic) } catch {}
       try { const acct = await api.getAccountStatus(); if (acct) setAccount(acct) } catch {}
-      try { const v = await api.getAppVersion(); if (v?.platform) setPlatform(v.platform) } catch {}
+      try { const v = await api.getAppVersion(); if (v?.platform) setPlatform(v.platform); if (v?.version) setAppVersion(v.version) } catch {}
       try {
         const r = await api.getPlugins()
         if (r?.plugins) setPlugins(r.plugins)
@@ -554,6 +556,9 @@ export default function App () {
             )}
             {view === 'rack' && <RackView t={t} plugins={tagged} access={access} onDetail={openDetail} />}
             {view === 'learn' && <LearnView t={t} plugins={tagged} tips={localTips} onManualPdf={manualPdf} onDetail={openDetail} />}
+            {view === 'support' && (
+              <SupportView t={t} plugins={tagged} account={account} platform={platform} appVersion={appVersion} onNavigate={navigate} />
+            )}
             {view === 'settings' && (
               <SettingsView t={t} prefs={prefs} setPrefs={setPrefs} daws={daws} platform={platform} manifest={manifest} optin={optin} onOptin={changeOptin}
                             onRefresh={refresh} onShowOnboarding={() => setOnboardingOpen(true)} addToast={addToast} />

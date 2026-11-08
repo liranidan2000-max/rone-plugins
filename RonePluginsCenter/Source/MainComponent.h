@@ -137,6 +137,7 @@ private:
     void handleGetAnnouncements (NativeArgs args, NativeCompletion complete);
     void handleGetUpsell (NativeArgs args, NativeCompletion complete);
     void handleOptin (NativeArgs args, NativeCompletion complete, bool write);
+    void handleSendSupport (NativeArgs args, NativeCompletion complete);
     void handleGetAutoStart    (NativeArgs args, NativeCompletion complete);
 
     // Settings > DELETE OLD VERSIONS (OldVersionCleaner.h): list, then delete.

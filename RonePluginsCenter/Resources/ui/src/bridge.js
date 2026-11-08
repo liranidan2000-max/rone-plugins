@@ -135,6 +135,8 @@ export const api = {
   // the deals list (roneaudio.com/api/v1/optin): {on}; setOptin(true|false) joins / leaves
   getOptin:          createNativeFunction('getOptin'),
   setOptin:          createNativeFunction('setOptin'),
+  // the SUPPORT page: NEED HELP / IMPROVE with screenshots -> roneaudio.com/api/v1/support (may carry pictures: long wait)
+  sendSupport:       createNativeFunction('sendSupport', 120000),
   scanOldVersions:   createNativeFunction('scanOldVersions'),
   // may wait for the OS permission prompt (an elevated copy of the Center deletes)
   deleteOldVersions: createNativeFunction('deleteOldVersions', 150000),

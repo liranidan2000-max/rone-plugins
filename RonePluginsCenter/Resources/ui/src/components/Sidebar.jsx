@@ -5,7 +5,7 @@ import { shortName } from '../catalog'
 import { isGiftPass } from '../announcements'
 
 const NAV = [
-  ['library', Icon.library], ['updates', Icon.updates], ['rack', Icon.rack], ['learn', Icon.learn], ['settings', Icon.settings],
+  ['library', Icon.library], ['updates', Icon.updates], ['rack', Icon.rack], ['learn', Icon.learn], ['support', Icon.support], ['settings', Icon.settings],
 ]
 
 // RONE VST MANAGER, always at hand under the menu (Liran 29.10: the banner is the

@@ -100,6 +100,43 @@ std::function<juce::var()> AccountClient::authorizedPost (const juce::String& pa
     };
 }
 
+std::function<juce::var()> AccountClient::openPost (const juce::String& path, const juce::var& body, int timeoutMs) const
+{
+    juce::String bearer;
+    {
+        const juce::ScopedLock sl (lock);
+        bearer = token;
+    }
+    const auto json = juce::JSON::toString (body, true);
+    return [bearer, path, json, timeoutMs]() -> juce::var
+    {
+        juce::String headers ("Content-Type: application/json\r\nAccept: application/json");
+        if (bearer.isNotEmpty())
+            headers << "\r\nAuthorization: Bearer " << bearer;
+
+        // WebInputStream itself (not createInputStream), so a 4xx answer's words still reach the page.
+        juce::WebInputStream stream (juce::URL (juce::String (RONE_API_BASE) + path).withPOSTData (json), true);
+        stream.withExtraHeaders (headers).withConnectionTimeout (timeoutMs);
+        const bool connected = stream.connect (nullptr);
+        const int status = stream.getStatusCode();
+
+        juce::var parsed;
+        if (status > 0)
+            parsed = juce::JSON::parse (stream.readEntireStreamAsString());
+
+        if (! parsed.isObject())
+        {
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("ok", false);
+            if (! connected && status <= 0) o->setProperty ("offline", true);
+            parsed = juce::var (o);
+        }
+        if (auto* o = parsed.getDynamicObject())
+            o->setProperty ("status", status);
+        return parsed;
+    };
+}
+
 // ============================================================================
 // The device token at rest (Center 2.0)
 //
