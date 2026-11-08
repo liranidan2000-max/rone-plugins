@@ -103,6 +103,7 @@ private:
     std::set<const void*> videoWanters;
     juce::String view { "video" };
     int lastHandsNeeded = 0, ticks = 0;
+    juce::var armedCache;                                  // {name, acc} of the armed rack, for the phone (beta round 3)
     // JUCE 8.0.4 builds WebView2s one at a time, and a view sent a script before it exists can be left
     // behind for good when another view is being built at that moment. So the link page gets nothing
     // until it says linkReady (the editor does the same with its page).

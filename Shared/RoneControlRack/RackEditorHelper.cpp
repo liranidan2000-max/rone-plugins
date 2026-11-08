@@ -120,6 +120,7 @@ void EditorHelper::layout (juce::Rectangle<int> bounds)
             shrink = false;
             if (onToggle) onToggle();
             ed.resized();
+            nudgeSoon();
         });
     }
     int rp = rackPx (bounds.getHeight());
@@ -167,7 +168,26 @@ void EditorHelper::setOpen (bool shouldOpen)
         if (grew) ed.setSize (w - rackPx (h), h);
     }
     ed.resized();
+    nudgeSoon();
     tellPage();
+}
+
+void EditorHelper::nudgeSoon()
+{
+    juce::Component::SafePointer<juce::AudioProcessorEditor> safe (&ed);
+    auto nudge = [this, safe]
+    {
+        if (safe == nullptr || plugin == nullptr) return;
+        ed.resized();                                      // the layout for the window as it is NOW
+        const auto b = plugin->getBounds();
+        if (b.getWidth() < 2) return;
+        plugin->setBounds (b.withWidth (b.getWidth() - 1));
+        plugin->setBounds (b);
+        if (view != nullptr && view->isVisible()) { const auto r = view->getBounds(); view->setBounds (r.withWidth (r.getWidth() - 1)); view->setBounds (r); }
+    };
+    juce::Timer::callAfterDelay (250, nudge);
+    juce::Timer::callAfterDelay (1200, nudge);
+    juce::Timer::callAfterDelay (3000, nudge);             // FL's first open can grant the size after ~2 s
 }
 
 void EditorHelper::timerCallback()
@@ -181,6 +201,7 @@ void EditorHelper::timerCallback()
         shrink = true;
         if (onToggle) onToggle();
         ed.resized();
+        nudgeSoon();
     }
 }
 } // namespace RoneRack

@@ -294,7 +294,7 @@ juce::File Engine::armedFile() { return Armed::file(); }
 
 void Engine::arm()
 {
-    Armed::take (myId, id);
+    Armed::take (myId, id, name, accent);
     armed = true;
 }
 

@@ -102,7 +102,9 @@
 
   // ============================================================ the stage
   function glove(g, P, u, hv, alpha) {
-    var col = 'rgb(' + Math.round(lerp(168, 82, hv)) + ',' + Math.round(lerp(175, 255, hv)) + ',' + Math.round(lerp(186, 69, hv)) + ')';
+    // grey at rest -> the plugin's own colour while held (beta round 3: no laser green left on the stage)
+    var N = NEONRGB.split(',').map(Number);
+    var col = 'rgb(' + Math.round(lerp(168, N[0], hv)) + ',' + Math.round(lerp(175, N[1], hv)) + ',' + Math.round(lerp(186, N[2], hv)) + ')';
     g.save(); g.globalAlpha = alpha; g.lineCap = 'round'; g.lineJoin = 'round'; g.fillStyle = col; g.strokeStyle = col;
     if (hv > 0.05) { g.shadowColor = 'rgba(' + NEONRGB + ',' + (0.55 * hv).toFixed(2) + ')'; g.shadowBlur = 16; }
     g.lineWidth = 0.4 * u; g.beginPath(); [0, 1, 5, 9, 13, 17].forEach(function (i, k) { if (k) g.lineTo(P[i][0], P[i][1]); else g.moveTo(P[i][0], P[i][1]); }); g.closePath(); g.fill(); g.stroke();

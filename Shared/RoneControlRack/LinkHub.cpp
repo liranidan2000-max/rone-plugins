@@ -2,6 +2,7 @@
 #include "LinkView.h"
 #include "LinkUI.h"
 #include "Version.h"
+#include "RackArmed.h"    // the phone shows the plugin the hands drive (name + colour)
 #include <random>
 
 #if JUCE_WINDOWS
@@ -498,6 +499,18 @@ void LinkHub::timerCallback()
     auto* fb = new juce::DynamicObject();
     fb->setProperty ("type", "fb");
     fb->setProperty ("slots", best != nullptr ? best->hubFeedback() : juce::var (juce::Array<juce::var>()));
+    // which plugin the hands drive right now, for the phone's colour and its CONNECTED line (beta round 3). The armed
+    // file is one truth across every plugin module and DAW process; read about once a second, not at 10 Hz.
+    if (ticks % 10 == 1 || armedCache.isVoid())
+    {
+        const auto a = RoneRack::Armed::read();
+        auto* ao = new juce::DynamicObject();
+        ao->setProperty ("name", a.id.isNotEmpty() ? a.name : juce::String());
+        ao->setProperty ("acc",  a.id.isNotEmpty() ? a.accent : juce::String());
+        armedCache = juce::var (ao);
+    }
+    fb->setProperty ("plugin", armedCache["name"]);
+    fb->setProperty ("acc", armedCache["acc"]);
     window->send ("fb", juce::var (fb));
 
     // One hand unless a slot needs two: fewer false second hands, and a faster model.
