@@ -2,13 +2,13 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-08T06:06:03Z",
+  "last_updated": "2026-11-08T06:08:56Z",
   "center_installer": {
-    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-384.1.exe",
-    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-384.1.dmg",
-    "version": "2.1.26.384",
-    "sha256": "bb99074880d4f16d15f41b34b1bfc7247c231a5860d68f08476e83927dcf741c",
-    "sha256_mac": "ff34e92d4c524c8ba16da987a45780633037b1f53a328c13bd28597d943f7ccb",
+    "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-385.1.exe",
+    "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-385.1.dmg",
+    "version": "2.1.27.385",
+    "sha256": "18c17abe0df8fdc443ee2c0964afa932714aee9de6eda851ee85a03f807f4c08",
+    "sha256_mac": "4e95c7ff6f6fac6ff00f307367ebc911a8b73d7e7400036d587db5ca3f74fa29",
     "whats_new": "2.1.25: Learn gets a Start Here row with the install videos, the trial reads 14 days everywhere, and RONE 1176 and 2A stand in My Rack with their hardware. 2.1.24: a cleaner tray menu, in the RONE look. 2.1.23: RONE VST MANAGER on the Library banner - every plugin you own in one library, with Install and its full video guide. 2.1.22: updating RONE VST MANAGER no longer asks you to close it - the Center closes it, updates it and opens it again by itself (Windows). 2.1.21: the Center opens with its logo drawing itself - the R writes its line in purple light, then the library opens (Windows). 2.1.20: the light on the new-drop banner sweeps across the unit in one smooth loop. 2.1.19: RONE Control's LINK works again on Windows 11 with the new Windows MIDI system - the \"RONE Control\" MIDI port now comes from Windows itself, so FL Studio, Live and REAPER hear it with no restart and no extra driver. 2.1.18: RONE VST MANAGER has its own place in the sidebar - one click opens it (or installs it first). 2.1.17: RONE VST MANAGER also reaches ALL ACCESS members and everyone who unlocked it with a story. 2.1.16: a gift for every RONE customer who bought a plugin or ALL ACCESS - RONE VST MANAGER, every plug-in on your computer in one library with pictures, loaded onto your track in one click. Install it from the card at the top of the Library. 2.1.14: a calmer, brighter Library - white is the Center's colour, each plugin card glows in its own neon with its 3D unit faintly at its edge, the new-drop banner turns its unit slowly in the light, and plugin and Center updates share one bar. The preview player is gone. 2.1.12: the Center wears the RONE PLUGINS colours - white on graphite - and each plugin keeps its own. 2.1.11: updates reach Windows as soon as they are ready, and on a Mac each update shows its own version. 2.1.10: RONE Sidechain arrives with its own icon and its 3D unit. 2.1.9: your plugins stay unlocked even if our licence server has a hiccup, and if a computer ever needs you to sign in again to keep them unlocked, the Center says so. 2.1.8: behind the scenes, the Center tells us which RONE versions this computer runs - so when an update matters (like the new INFINITE bars in Flanger) we make sure it reaches you. 2.1.7: the RONE Analyzer card wears its new cyan icon. 2.1.6: an update that waits for a program to close now says exactly which one - including FL Studio's own plug-in hosts (ilbridge.exe and the scanner) - and when one of those is left running after FL Studio itself has closed, the Center ends it and installs. 2.1.5: your own prices - right after a purchase, one plugin picked for it at $19 for a day (its tutorial plays muted until you tap the speaker); an owner price on every RONE plugin you don't have yet; a first plugin offer for a free account; and a Settings switch to hear about deals first. 2.1.3 (Mac): Settings > Updates without a password. One button moves your RONE plugins from the system folders into your own (one last password), and from then on every update installs with no password. 2.1.2: when an install fails, the Center now says why - and how to fix it - instead of 'installer code 0'. 2.1.1 (Mac): a plugin whose user folder (~/Library/Audio/Plug-Ins/VST3 or Components) the Center may not write to - often made by another company's installer - now installs system-wide with your password instead of failing with 'Permission denied'."
   },
   "plugins": [
@@ -228,10 +228,10 @@
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-385.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-380.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-385.1.pkg",
       "sha256": "6589444910bb33b6c6596d3223111e2d3dc4ffd1110312f9d3b0f00c7a19c0ba",
       "registry_key": "RoneClipper",
-      "sha256_mac": "2c2ec5a30432539f210536b7c23a1f8a36c3737b6735585bef5fc2b8e4b0e95f",
+      "sha256_mac": "c297f350a47aa6c75a52b09166b1c15f5069664849b3d2e02a80addaadca8c8f",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
       "price": 0,
       "launch_price": 0,
@@ -257,8 +257,8 @@
         }
       },
       "size": 4980971,
-      "size_mac": 13502793,
-      "version_mac": "1.0.14.380"
+      "size_mac": 13502973,
+      "version_mac": "1.0.15.385"
     },
     {
       "id": "RoneRise",
@@ -567,10 +567,10 @@
       "manual": "RONE 2A - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=t4_3shj3aBs",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-385.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-369.9.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-385.1.pkg",
       "sha256": "493be7ed26a6095329375370cd7f242098008f848c4584ea7306f463917a0e52",
       "registry_key": "Rone2A",
-      "sha256_mac": "a8e9e3985b88390c7560179eb84eed32e03e547c75e411b858215531768ecbee",
+      "sha256_mac": "bedc9297f30b5a05c7c4807608a3d8cafebf31a80443b70915f3628ade2f9159",
       "store_url": "https://roneaudio.com/products/rone-2a.html",
       "subscription_only": true,
       "category": [
@@ -586,8 +586,8 @@
       "accent": "#FF6F59",
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
       "size": 5325072,
-      "size_mac": 15142215,
-      "version_mac": "0.9.12.369"
+      "size_mac": 15125447,
+      "version_mac": "0.9.13.385"
     },
     {
       "id": "RoneSidechain",
@@ -608,10 +608,10 @@
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WqbiD2pWe6Y",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-385.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-383.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-385.1.pkg",
       "sha256": "26df9cd1ceeadce8f53103c8a44fc413fa42362543db582e52d6f60c4cf80c92",
       "registry_key": "RoneSidechain",
-      "sha256_mac": "ebcb3583bfd4f25f1989ef78768670c0e98505017e4a48ce1e82811869296bd3",
+      "sha256_mac": "6d0aeed38724bf19ba86b01758cb443472cda97d7b0da2bb7225872e8e657f2d",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
       "category": [
         "mix"
@@ -626,8 +626,8 @@
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
       "size": 6523485,
-      "size_mac": 18040515,
-      "version_mac": "1.0.10.383"
+      "size_mac": 18040152,
+      "version_mac": "1.0.11.385"
     },
     {
       "id": "RoneDelay",
