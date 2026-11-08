@@ -12,7 +12,7 @@ def manual(G):
 
     S.append({"title": "Welcome to RONE DMT", "sub": "a granular instrument you can read", "html": f"""
 <p><strong>RONE DMT</strong> cuts a sample into small overlapping pieces - <em>grains</em> - and plays them back with their own timing. Slow a vocal down without changing its pitch, freeze one syllable into a pad, run a phrase backwards word by word, or chop it into rhythmic stutters.</p>
-<p>The engine is the classic granular model producers know from FL Studio's Fruity Granulizer, measured against it and rebuilt - with the parts that were hard to use fixed:</p>
+<p>The engine is a classic granular model, rebuilt with exact control - with the parts that are usually hard to use fixed:</p>
 <ul>
 <li><strong>Every value is exact</strong> - ATTACK, HOLD, SPACING, SPEED and PAN show real milliseconds and percentages, and the ONE GRAIN card spells out what they add up to.</li>
 <li><strong>You see what happens</strong> - the SOURCE view marks every grain on the sample as it plays; the OUTPUT view records everything RONE DMT outputs, on the host grid.</li>

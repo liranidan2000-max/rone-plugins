@@ -683,7 +683,7 @@
       ],
       "price": 39,
       "launch_price": 39,
-      "description": "A granular instrument built on the Fruity Granulizer engine, measured and rebuilt: drop a sample, play it from MIDI, see every grain on the wave and drag what you hear into the DAW.",
+      "description": "A granular instrument with exact control: drop a sample, play it from MIDI, see every grain on the wave and drag what you hear into the DAW.",
       "whats_new": "1.0.0 - First release.",
       "standalone_exe": "RONE DMT.exe",
       "vst3_bundle": "RONE DMT.vst3",
