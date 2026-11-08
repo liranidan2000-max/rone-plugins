@@ -16,7 +16,8 @@ namespace
             .withResourceProvider (std::move (res));
         // page -> C++: everything but rackReady / collapse goes to the engine as it is
         for (auto* name : { "slotConfig", "slotOn", "slotParam", "addSlot", "removeSlot", "reset", "setLive", "arm",
-                            "setSource", "hands", "newCode", "camera", "view", "rec" })
+                            "setSource", "hands", "newCode", "camera", "view", "rec",
+                            "mapLoad", "mapSave", "mapDefault", "mapDelete", "openCenter" })   // the MAP row + Center links (beta round 6: they were never wired)
         {
             const juce::String n (name);
             o = o.withEventListener (n, [&engine, n] (const juce::var& p) { engine.pageEvent (n, p); });
