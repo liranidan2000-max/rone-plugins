@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-07T18:51:47Z",
+  "last_updated": "2026-11-08T06:06:03Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-384.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-384.1.dmg",
@@ -213,7 +213,7 @@
     {
       "id": "RoneClipper",
       "name": "RONE Clipper",
-      "version": "1.0.14.380",
+      "version": "1.0.15.385",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -227,9 +227,9 @@
       "au_bundle": "RONE Clipper.component",
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-380.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-385.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-380.1.pkg",
-      "sha256": "884ec220a784625fa87489febd7e8308d7099f9fce3ca69c5c49e9f4d65204be",
+      "sha256": "6589444910bb33b6c6596d3223111e2d3dc4ffd1110312f9d3b0f00c7a19c0ba",
       "registry_key": "RoneClipper",
       "sha256_mac": "2c2ec5a30432539f210536b7c23a1f8a36c3737b6735585bef5fc2b8e4b0e95f",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
@@ -256,7 +256,7 @@
           "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que deja el kick y el bajo fuera del clipper, y oversampling que se anula contra la entrada a -100 dB"
         }
       },
-      "size": 4980454,
+      "size": 4980971,
       "size_mac": 13502793,
       "version_mac": "1.0.14.380"
     },
@@ -552,7 +552,7 @@
       "id": "Rone2A",
       "released": "2026-10-24",
       "name": "RONE 2A",
-      "version": "0.9.12.369",
+      "version": "0.9.13.385",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -566,9 +566,9 @@
       "au_bundle": "RONE 2A.component",
       "manual": "RONE 2A - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=t4_3shj3aBs",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-369.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-385.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-369.9.pkg",
-      "sha256": "0fa95f35e30ff1e97a7a714ca9f88fa3c363dc4d95ab0c845747c37b5e671c9f",
+      "sha256": "493be7ed26a6095329375370cd7f242098008f848c4584ea7306f463917a0e52",
       "registry_key": "Rone2A",
       "sha256_mac": "a8e9e3985b88390c7560179eb84eed32e03e547c75e411b858215531768ecbee",
       "store_url": "https://roneaudio.com/products/rone-2a.html",
@@ -585,7 +585,7 @@
       ],
       "accent": "#FF6F59",
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
-      "size": 5330240,
+      "size": 5325072,
       "size_mac": 15142215,
       "version_mac": "0.9.12.369"
     },
@@ -593,7 +593,7 @@
       "id": "RoneSidechain",
       "released": "2026-10-26",
       "name": "RONE Sidechain",
-      "version": "1.0.10.383",
+      "version": "1.0.11.385",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -607,9 +607,9 @@
       "au_bundle": "RONE Sidechain.component",
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WqbiD2pWe6Y",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-383.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-385.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-383.1.pkg",
-      "sha256": "6fd6aedcf2ec2a6387577afe467e100f3fe042fc2ccf971c880dce9d47709255",
+      "sha256": "26df9cd1ceeadce8f53103c8a44fc413fa42362543db582e52d6f60c4cf80c92",
       "registry_key": "RoneSidechain",
       "sha256_mac": "ebcb3583bfd4f25f1989ef78768670c0e98505017e4a48ce1e82811869296bd3",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
@@ -625,7 +625,7 @@
       ],
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
-      "size": 6522140,
+      "size": 6523485,
       "size_mac": 18040515,
       "version_mac": "1.0.10.383"
     },
