@@ -45,5 +45,6 @@ export function isSticky (text) {
 export function installErrorText (error, name, t) {
   if (error === 'License required') return t('msg.license_required', { name })
   if (error === 'Sign in required') return t('msg.sign_in_required', { name })   // audit R246
+  if (error === 'Being published') return t('msg.being_published', { name })     // support #20/#21
   return error
 }

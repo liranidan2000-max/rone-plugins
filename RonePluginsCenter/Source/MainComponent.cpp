@@ -1019,6 +1019,26 @@ bool MainComponent::startInstall (const juce::String& pluginId, juce::String& er
         }
     }
 
+    // A card without a hash for this computer is a release still publishing: a new
+    // plugin enters versions.json as "1.0.0.0" with empty hashes and a placeholder
+    // asset name, and CI fills them when its build leg lands (support #20 / #21,
+    // 8.11.2026: RONE DMT sat like that for three hours, and Install ended in a 404
+    // on the placeholder file or in "no integrity hash"). Nothing is downloaded -
+    // the download would be refused anyway - and the catalog is read again from
+    // origin, so the card turns installable as soon as the release is out.
+    if (sha.isEmpty())
+    {
+        // From origin = the rate-limited API: once a minute however often he clicks.
+        const auto now = juce::Time::currentTimeMillis();
+        if (now - lastManifestAttemptMs >= 60 * 1000)
+        {
+            lastManifestAttemptMs = now;
+            networkManager.fetchManifest (true);
+        }
+        error = "Being published";
+        return false;
+    }
+
     // Already downloaded in the background for this very file (same hash): install
     // it now (the batch hashes it once more before it runs). A pre-download of
     // another build - the card moved on since - is not it, and a fresh download
