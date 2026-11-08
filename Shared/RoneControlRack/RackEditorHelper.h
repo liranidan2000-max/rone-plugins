@@ -37,6 +37,10 @@ public:
     void attach (juce::WebBrowserComponent& pluginView);
 
     void layout (juce::Rectangle<int> bounds);
+    // Beta round 3 (Stucker, FL, first open): the window grew late and the layout gave the plugin's view the room,
+    // but its WebView2 window stayed at the narrow size - a black band between the face and the rack. After every
+    // open / close / late grant the view is nudged (bounds 1 px narrower and back) twice, so WebView2 re-reads them.
+    void nudgeSoon();
     int  heightForWidth (int contentWidth) const;          // content height, no title bar
     double widthFactor() const;                            // 1, or (W + 280) / W while the rack grows the window
     bool isOpen() const noexcept { return open; }

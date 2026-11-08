@@ -11,6 +11,7 @@
   var lerp = function (a, b, q) { return a + (b - a) * q; };
   var $ = function (s) { return document.querySelector(s); };
   var SW = 248, SH = 160, LETTERS = 'ABCDEFGH';
+  var NEONRGB = '82,255,69';   // the rack's neon = the plugin's accent once the state arrives (beta round 8.11)
   var MOVE_WORDS = { height: 'LIFT', side: 'SLIDE', depth: 'PUSH / PULL', twist: 'TWIST', pinch: 'OPEN / CLOSE', grip: 'SQUEEZE', spread: 'SPREAD' };
   var HOLD_WORDS = { pinch: 'PINCH', fist: 'FIST', always: 'NO GRAB' };
   var S = null, sel = -1, source = 'phone', sig = '', app = $('#rackApp'), stage = $('#rStage'), cv = $('#rCanvas'), ctx = cv.getContext('2d');
@@ -19,6 +20,13 @@
   // the QR (qrcode-generator rides in the plugin: no internet needed to draw it)
   var qrFor = '';
   function renderQr(url) {
+    // beta round 4 (Liran: "the start screen on the iPhone should match the plugin that opened it"): ?c=<accent>&n=<name>
+    // before the #room.key - the phone page paints itself from it at once; the pairing part is unchanged
+    if (url && S && S.accent && url.indexOf('#') > 0 && url.indexOf('?') < 0) {
+      var nm = String(S.name || '').replace(/^RONE\s+/i, '').trim().toUpperCase();
+      var i = url.indexOf('#');
+      url = url.slice(0, i) + '?c=' + encodeURIComponent(String(S.accent).replace('#', '')) + (nm ? '&n=' + encodeURIComponent(nm) : '') + url.slice(i);
+    }
     if (!url || url === qrFor) return;
     qrFor = url;
     try { var q = qrcode(0, 'M'); q.addData(url); q.make(); $('#rQrBox').innerHTML = q.createSvgTag({ cellSize: 3, margin: 0 }); }
@@ -101,9 +109,11 @@
 
   // ============================================================ the stage
   function glove(g, P, u, hv, alpha) {
-    var col = 'rgb(' + Math.round(lerp(168, 82, hv)) + ',' + Math.round(lerp(175, 255, hv)) + ',' + Math.round(lerp(186, 69, hv)) + ')';
+    // grey at rest -> the plugin's own colour while held (beta round 3: no laser green left on the stage)
+    var N = NEONRGB.split(',').map(Number);
+    var col = 'rgb(' + Math.round(lerp(168, N[0], hv)) + ',' + Math.round(lerp(175, N[1], hv)) + ',' + Math.round(lerp(186, N[2], hv)) + ')';
     g.save(); g.globalAlpha = alpha; g.lineCap = 'round'; g.lineJoin = 'round'; g.fillStyle = col; g.strokeStyle = col;
-    if (hv > 0.05) { g.shadowColor = 'rgba(82,255,69,' + (0.55 * hv).toFixed(2) + ')'; g.shadowBlur = 16; }
+    if (hv > 0.05) { g.shadowColor = 'rgba(' + NEONRGB + ',' + (0.55 * hv).toFixed(2) + ')'; g.shadowBlur = 16; }
     g.lineWidth = 0.4 * u; g.beginPath(); [0, 1, 5, 9, 13, 17].forEach(function (i, k) { if (k) g.lineTo(P[i][0], P[i][1]); else g.moveTo(P[i][0], P[i][1]); }); g.closePath(); g.fill(); g.stroke();
     g.shadowBlur = 0;
     [[17, 18, 19, 20, 0.2], [13, 14, 15, 16, 0.225], [9, 10, 11, 12, 0.24], [5, 6, 7, 8, 0.235], [1, 2, 3, 4, 0.27]].forEach(function (f) {
@@ -137,7 +147,7 @@
       for (var i = 0; i < 21; i++) P.push([h.lm[i * 2] * SW, h.lm[i * 2 + 1] * SH]);
       var u = Math.max(14, Math.hypot(P[9][0] - P[0][0], P[9][1] - P[0][1]) * 0.9);
       if (hold) {
-        var c = hold.cfg; g.save(); g.setLineDash([3, 4]); g.strokeStyle = 'rgba(82,255,69,.35)'; g.lineWidth = 1.2;
+        var c = hold.cfg; g.save(); g.setLineDash([3, 4]); g.strokeStyle = 'rgba(' + NEONRGB + ',.35)'; g.lineWidth = 1.2;
         var cx = h.pcx * SW, cy = h.pcy * SH;
         if (c.src === 'height') { g.beginPath(); g.moveTo(cx, SH * 0.18); g.lineTo(cx, SH * 0.78); g.stroke(); }
         else if (c.src === 'side') { g.beginPath(); g.moveTo(SW * 0.2, cy); g.lineTo(SW * 0.8, cy); g.stroke(); }
@@ -145,10 +155,10 @@
         g.restore();
       }
       glove(g, P, u, S.armed ? hv : 0, S.armed ? 1 : 0.45);
-      if (h.p) { var px = (P[4][0] + P[8][0]) / 2, py = (P[4][1] + P[8][1]) / 2; g.save(); g.strokeStyle = '#fff'; g.lineWidth = 1.6; g.shadowColor = 'rgba(82,255,69,1)'; g.shadowBlur = 10; g.beginPath(); g.arc(px, py, u * 0.28, 0, 7); g.stroke(); g.restore(); }
+      if (h.p) { var px = (P[4][0] + P[8][0]) / 2, py = (P[4][1] + P[8][1]) / 2; g.save(); g.strokeStyle = '#fff'; g.lineWidth = 1.6; g.shadowColor = 'rgba(' + NEONRGB + ',1)'; g.shadowBlur = 10; g.beginPath(); g.arc(px, py, u * 0.28, 0, 7); g.stroke(); g.restore(); }
       var lab = h.h === 'L' ? 'LEFT' : 'RIGHT'; if (hold) lab += ' · ' + hold.name;
       g.save(); g.font = '800 7.5px Manrope, sans-serif'; g.textAlign = 'center'; try { g.letterSpacing = '1.4px'; } catch (_) {}
-      g.fillStyle = hold ? 'rgb(82,255,69)' : '#5B616B'; g.fillText(lab, clamp(h.pcx * SW, 40, SW - 40), clamp(h.pcy * SH + u * 1.9, 14, SH - 6)); g.restore();
+      g.fillStyle = hold ? 'rgb(' + NEONRGB + ')' : '#5B616B'; g.fillText(lab, clamp(h.pcx * SW, 40, SW - 40), clamp(h.pcy * SH + u * 1.9, 14, SH - 6)); g.restore();
     });
   }
 
@@ -169,16 +179,26 @@
     if (c.mode === 'follow') a += ' The knob jumps to where your hand is.';
     return a + (c.rel === 'return' ? ' Let go and it springs back.' : ' Let go and it stays.');
   }
-  function seg(key, opts, cur) {
-    return '<div class="r-seg" data-key="' + key + '">' + opts.map(function (o) { return '<span data-v="' + o[0] + '"' + (o[0] === cur ? ' class="on"' : '') + '>' + o[1] + '</span>'; }).join('') + '</div>';
+  // one move per knob (beta round 8.11): the same test as Engine::sameMove
+  function sameMove(a, b) { if (a.src !== b.src) return false; if (a.src === 'pinch' || a.src === 'grip' || a.src === 'spread') return true; return a.eng === b.eng; }
+  function takenBy(s, cfg) {
+    var all = (S && S.slots) || [];
+    for (var j = 0; j < all.length; j++) if (j !== s.i && all[j].on && sameMove(cfg, all[j].cfg)) return LETTERS[j];
+    return '';
+  }
+  function seg(key, opts, cur, taken) {
+    return '<div class="r-seg" data-key="' + key + '">' + opts.map(function (o) {
+      var t = o[0] !== cur && taken ? taken(o[0]) : '';
+      return '<span data-v="' + o[0] + '"' + (o[0] === cur ? ' class="on"' : t ? ' class="off" title="Knob ' + t + ' has this move"' : '') + '>' + o[1] + '</span>';
+    }).join('') + '</div>';
   }
   function editorHTML(s) {
     var c = s.cfg, selHtml = '<select data-key="param">' + (S.params || []).map(function (p) { return '<option value="' + p.id + '"' + (p.id === s.param ? ' selected' : '') + '>' + p.name + (p.bool ? ' (SWITCH)' : '') + '</option>'; }).join('') + '</select>';
     return '<div class="r-edit">' +
       '<div class="r-erow"><label>KNOB</label>' + selHtml + '</div>' +
       '<div class="r-erow"><label>HAND</label>' + seg('hand', [['L', 'LEFT'], ['R', 'RIGHT'], ['ANY', 'ANY']], c.hand) + '</div>' +
-      '<div class="r-erow"><label>MOVE</label>' + seg('src', [['height', 'UP / DOWN'], ['side', 'LEFT / RIGHT'], ['depth', 'NEAR / FAR'], ['twist', 'TWIST'], ['pinch', 'PINCH'], ['grip', 'FIST']], c.src) + '</div>' +
-      (c.src === 'pinch' || c.src === 'grip' ? '' : '<div class="r-erow"><label>HOLD WITH</label>' + seg('eng', [['pinch', 'PINCH'], ['fist', 'FIST'], ['always', 'NO GRAB']], c.eng) + '</div>') +
+      '<div class="r-erow"><label>MOVE</label>' + seg('src', [['height', 'UP / DOWN'], ['side', 'LEFT / RIGHT'], ['depth', 'NEAR / FAR'], ['twist', 'TWIST'], ['pinch', 'PINCH'], ['grip', 'FIST']], c.src, function (v) { return s.on ? takenBy(s, { src: v, eng: (v === 'pinch' || v === 'grip') ? 'always' : c.eng }) : ''; }) + '</div>' +
+      (c.src === 'pinch' || c.src === 'grip' ? '' : '<div class="r-erow"><label>HOLD WITH</label>' + seg('eng', [['pinch', 'PINCH'], ['fist', 'FIST'], ['always', 'NO GRAB']], c.eng, function (v) { return s.on ? takenBy(s, { src: c.src, eng: v }) : ''; }) + '</div>') +
       '<div class="r-erow"><label>LET GO</label>' + seg('rel', [['stay', 'STAYS'], ['return', 'SPRINGS BACK']], c.rel) + '</div>' +
       '<div class="r-say">' + say(c) + '</div>' +
       '<button class="r-remove">REMOVE THIS KNOB</button></div>';
@@ -241,7 +261,12 @@
   function paintTop() {
     document.documentElement.style.setProperty('--acc', S.accent || '#D8E4EC');
     var m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(S.accent || '');
-    if (m) document.documentElement.style.setProperty('--acc-rgb', parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16));
+    if (m) {
+      var rgb = parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16);
+      document.documentElement.style.setProperty('--acc-rgb', rgb);
+      // beta round 8.11 (Liran): the whole rack wears the plugin's colour, not RONE Control's laser green
+      if (rgb !== NEONRGB) { NEONRGB = rgb; document.documentElement.style.setProperty('--neon', '#' + m[1] + m[2] + m[3]); document.documentElement.style.setProperty('--neon-rgb', rgb); }
+    }
     var seen = !!(S.hands && S.hands.length > 0), lb = $('#rLive');
     lb.classList.toggle('active', !!S.live);
     // a hand in the picture and LIVE off = "I grab and nothing happens" (Liran, FL 26.10): the button itself asks for the tap
@@ -304,6 +329,64 @@
   tap($('#rArmed'), function () { emit('arm'); });
   tap($('#rAdd'), function () { if (S && S.lite) { upsell(); return; } sel = (S.slots || []).length; emit('addSlot'); });
   tap($('#rReset'), function () { sel = -1; emit('reset'); });
+
+  // ============================================================ MAP presets (beta round 8.11)
+  var DEFAULT_MAP = 'RONE DEFAULT', mapSig = '', noteT = 0, noteText = '', noteOk = false;
+  function mapState() { return (S && S.map) || { names: [], cur: '', dirty: false, def: '' }; }
+  function mapList() { return [''].concat(mapState().names || []); }        // '' = RONE DEFAULT, always first
+  function mapLabel(n) { return n === '' ? DEFAULT_MAP : n; }
+  function note(t, ok) { noteText = t; noteOk = !!ok; clearTimeout(noteT); noteT = setTimeout(function () { noteText = ''; paintMap(); }, 2600); paintMap(); }
+  function paintMap() {
+    var m = mapState(), list = mapList(), selEl = $('#rMapSel');
+    var key = list.join('|') + '#' + m.cur + '#' + m.def;
+    if (key !== mapSig) {
+      mapSig = key;
+      selEl.innerHTML = list.map(function (n) { return '<option>' + (n === m.def ? '\u2605 ' : '') + mapLabel(n) + '</option>'; }).join('');
+      // option text is set by innerHTML; keep the real names on the elements
+      Array.prototype.forEach.call(selEl.options, function (o, i) { o.value = list[i]; o.textContent = (list[i] === m.def ? '\u2605 ' : '') + mapLabel(list[i]); });
+    }
+    if (selEl.value !== m.cur) selEl.value = m.cur;
+    var star = $('#rMapStar'); star.classList.toggle('on', m.cur === m.def && !m.dirty);
+    star.title = m.cur === m.def && !m.dirty ? 'New copies of this plugin open with this map (click: back to RONE DEFAULT)' : 'Open every new copy of this plugin with this map';
+    var n = $('#rMapNote'), t = noteText || (m.dirty ? 'EDITED \u00B7 NOT SAVED' : '');
+    if (n.textContent !== t) n.textContent = t;
+    n.classList.toggle('ok', !!noteText && noteOk);
+  }
+  function loadMapAt(i) { var l = mapList(); i = (i + l.length) % l.length; sel = -1; emit('mapLoad', { name: l[i] }); }
+  $('#rMapSel').addEventListener('change', function () { sel = -1; emit('mapLoad', { name: this.value }); });
+  tap($('#rMapPrev'), function () { loadMapAt(mapList().indexOf(mapState().cur) - 1); });
+  tap($('#rMapNext'), function () { loadMapAt(mapList().indexOf(mapState().cur) + 1); });
+  function nextFreeName() { var names = mapState().names || [], k = 1; while (names.indexOf('MY MAP ' + k) >= 0) k++; return 'MY MAP ' + k; }
+  function openPop() {
+    var m = mapState(), p = $('#rMapPop'), own = m.cur !== '';
+    p.hidden = false;
+    $('#rMapName').value = own ? m.cur : nextFreeName();       // a name is ready: SAVE AS NEW works without typing
+    $('#rMapUpd').disabled = !own; $('#rMapDel').disabled = !own;
+    setTimeout(function () { try { $('#rMapName').focus(); $('#rMapName').select(); } catch (e) {} }, 30);
+  }
+  tap($('#rMapSave'), function () { var p = $('#rMapPop'); if (p.hidden) openPop(); else p.hidden = true; });
+  tap($('#rMapX'), function () { $('#rMapPop').hidden = true; });
+  function nameIn() { return ($('#rMapName').value || '').trim().toUpperCase().slice(0, 24); }
+  tap($('#rMapNew'), function () {
+    var n = nameIn() || nextFreeName();
+    if (n === DEFAULT_MAP) { note('RONE DEFAULT IS OURS - PICK ANOTHER NAME'); return; }
+    emit('mapSave', { name: n }); $('#rMapPop').hidden = true; note('SAVED \u00B7 ' + n, true);
+  });
+  tap($('#rMapUpd'), function () {
+    var m = mapState(); if (!m.cur) return;
+    emit('mapSave', { name: m.cur, update: true }); $('#rMapPop').hidden = true; note('UPDATED \u00B7 ' + m.cur, true);
+  });
+  tap($('#rMapDel'), function () {
+    var m = mapState(); if (!m.cur) return;
+    emit('mapDelete', { name: m.cur }); $('#rMapPop').hidden = true; note('DELETED \u00B7 ' + m.cur, true);
+  });
+  $('#rMapName').addEventListener('keydown', function (e) { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); $('#rMapNew').click(); } if (e.key === 'Escape') $('#rMapPop').hidden = true; });
+  tap($('#rMapStar'), function () {
+    var m = mapState();
+    if (m.dirty) { note('SAVE THE MAP FIRST'); openPop(); return; }
+    if (m.cur === m.def) { emit('mapDefault', { name: '' }); note('NEW COPIES OPEN WITH \u00B7 RONE DEFAULT', true); return; }
+    emit('mapDefault', { name: m.cur }); note('NEW COPIES OPEN WITH \u00B7 ' + mapLabel(m.cur), true);
+  });
   tap($('#rClose'), function () { emit('collapse'); });
   tap($('#rCenterBtn'), function (e) { e.stopPropagation(); if (centerAction) centerAction(); });
   tap(stage, function (e) { if (source !== 'sim' && !e.target.closest('.o-go') && upsellUntil) { upsellUntil = 0; paintTop(); } });
@@ -325,7 +408,7 @@
       if (!st || !st.slots) return;
       S = st;
       if (st.thumb && st.thumbSeq !== thumbSeq) { thumbSeq = st.thumbSeq; thumbImg.src = st.thumb; }
-      paintTop(); renderSlots(); paintValues();
+      paintTop(); paintMap(); renderSlots(); paintValues();
     });
     emit('rackReady', {});
   });

@@ -157,7 +157,8 @@ juce::String Transport::why() const
     if (standalone) return "Recording needs a DAW";
     // Rack-first (Liran, 26.10.2026): the racks ship before RONE Control; in FL, Live and Bitwig REC is RONE Control's
     // script, so until it is installed and has run once the button says where REC comes from.
-    if (how() == "script") return hostName() + ": REC comes with RONE Control";
+    // Public beta (8.11.2026): RONE Control is not public yet, so the button says what to do instead of naming it.
+    if (how() == "script") return hostName() + ": press record in " + hostName() + " - REC here comes soon";
     return hostName() + ": no record control from a plugin yet";
 }
 
