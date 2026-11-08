@@ -4,23 +4,24 @@ namespace RoneRack
 {
 namespace
 {
-// The + handle inside the plugin's page: a grey hairline at rest, laser green only under the mouse (Liran 25.10). Plain ES5. Talks through two events:
+// The + handle inside the plugin's page: a grey hairline at rest, the PLUGIN'S OWN colour under the mouse (Liran 25.10; own
+// colour instead of laser green since the beta round 8.11). Plain ES5. Talks through two events:
 //   page -> C++  "roneRack"       { type: "open" }
-//   C++ -> page  "roneRackState"  { open }
+//   C++ -> page  "roneRackState"  { open, accent }
 const char* kHandleScript = R"RONERACK((function () {
   if (window.__roneRackHandle) return; window.__roneRackHandle = true;
-  var NEON = '82,255,69';
+  var NEON = '216,228,236';     // until the state arrives: the plugin's accent replaces it
   function build() {
     if (document.getElementById('rone-rack-handle')) return;
     var css = document.createElement('style');
     css.textContent =
       '#rone-rack-handle{position:fixed;right:0;top:50%;transform:translateY(-50%);height:84px;width:14px;z-index:2147483000;cursor:pointer;overflow:hidden;' +
-      'border-radius:10px 0 0 10px;transition:width .18s ease,background .18s ease;background:transparent;display:flex;align-items:center;justify-content:center;font-family:Sora,Manrope,"Segoe UI",sans-serif}' +
+      'border-radius:10px 0 0 10px;transition:width .18s ease,background .18s ease;background:transparent;display:flex;align-items:center;justify-content:center;font-family:Sora,Manrope,"Segoe UI",Arial,sans-serif}' +
       '#rone-rack-handle i{position:absolute;right:0;top:18px;bottom:18px;width:3px;border-radius:2px;background:rgba(255,255,255,.16);transition:opacity .18s,background .18s}' +
-      '#rone-rack-handle b{font-size:22px;font-weight:800;color:rgb(' + NEON + ');opacity:0;transition:opacity .18s;text-shadow:0 0 14px rgba(' + NEON + ',.9);line-height:1}' +
-      '#rone-rack-handle span{position:absolute;bottom:7px;left:0;right:0;text-align:center;font-size:7px;font-weight:800;letter-spacing:.22em;color:rgb(' + NEON + ');opacity:0;transition:opacity .18s}' +
-      '#rone-rack-handle:hover{width:46px;background:rgba(16,18,22,.94);box-shadow:-8px 0 24px rgba(0,0,0,.5),inset 1px 0 0 #2A2E35}' +
-      '#rone-rack-handle:hover i{opacity:0;background:rgb(' + NEON + ')}#rone-rack-handle:hover b,#rone-rack-handle:hover span{opacity:1}' +
+      '#rone-rack-handle b{font-size:22px;font-weight:800;color:rgb(var(--rr-acc,' + NEON + '));opacity:0;transition:opacity .18s;text-shadow:0 0 14px rgba(var(--rr-acc,' + NEON + '),.9);line-height:1}' +
+      '#rone-rack-handle span{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:7px;line-height:1;font-weight:700;letter-spacing:.08em;white-space:nowrap;color:rgb(var(--rr-acc,' + NEON + '));opacity:0;transition:opacity .18s}' +
+      '#rone-rack-handle:hover{width:58px;background:rgba(16,18,22,.94);box-shadow:-8px 0 24px rgba(0,0,0,.5),inset 1px 0 0 #2A2E35}' +
+      '#rone-rack-handle:hover i{opacity:0;background:rgb(var(--rr-acc,' + NEON + '))}#rone-rack-handle:hover b,#rone-rack-handle:hover span{opacity:1}' +
       '#rone-rack-handle.rr-hidden{display:none}';
     document.head.appendChild(css);
     var h = document.createElement('div'); h.id = 'rone-rack-handle'; h.title = 'RONE Control';
@@ -30,7 +31,11 @@ const char* kHandleScript = R"RONERACK((function () {
     document.body.appendChild(h);
     function bridge() {
       if (!(window.__JUCE__ && window.__JUCE__.backend)) { setTimeout(bridge, 60); return; }
-      window.__JUCE__.backend.addEventListener('roneRackState', function (s) { h.classList.toggle('rr-hidden', !!(s && s.open)); });
+      window.__JUCE__.backend.addEventListener('roneRackState', function (s) {
+        h.classList.toggle('rr-hidden', !!(s && s.open));
+        var m = s && /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(s.accent || '');
+        if (m) h.style.setProperty('--rr-acc', parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16));
+      });
       window.__JUCE__.backend.emitEvent('roneRack', { type: 'hello' });
     }
     bridge();
@@ -78,6 +83,7 @@ void EditorHelper::tellPage()
     if (plugin == nullptr) return;
     auto* o = new juce::DynamicObject();
     o->setProperty ("open", open);
+    o->setProperty ("accent", eng.accentColour());
     plugin->emitEventIfBrowserIsVisible ("roneRackState", juce::var (o));
 }
 
@@ -114,6 +120,7 @@ void EditorHelper::layout (juce::Rectangle<int> bounds)
             shrink = false;
             if (onToggle) onToggle();
             ed.resized();
+            nudgeSoon();
         });
     }
     int rp = rackPx (bounds.getHeight());
@@ -161,7 +168,26 @@ void EditorHelper::setOpen (bool shouldOpen)
         if (grew) ed.setSize (w - rackPx (h), h);
     }
     ed.resized();
+    nudgeSoon();
     tellPage();
+}
+
+void EditorHelper::nudgeSoon()
+{
+    juce::Component::SafePointer<juce::AudioProcessorEditor> safe (&ed);
+    auto nudge = [this, safe]
+    {
+        if (safe == nullptr || plugin == nullptr) return;
+        ed.resized();                                      // the layout for the window as it is NOW
+        const auto b = plugin->getBounds();
+        if (b.getWidth() < 2) return;
+        plugin->setBounds (b.withWidth (b.getWidth() - 1));
+        plugin->setBounds (b);
+        if (view != nullptr && view->isVisible()) { const auto r = view->getBounds(); view->setBounds (r.withWidth (r.getWidth() - 1)); view->setBounds (r); }
+    };
+    juce::Timer::callAfterDelay (250, nudge);
+    juce::Timer::callAfterDelay (1200, nudge);
+    juce::Timer::callAfterDelay (3000, nudge);             // FL's first open can grant the size after ~2 s
 }
 
 void EditorHelper::timerCallback()
@@ -175,6 +201,7 @@ void EditorHelper::timerCallback()
         shrink = true;
         if (onToggle) onToggle();
         ed.resized();
+        nudgeSoon();
     }
 }
 } // namespace RoneRack

@@ -89,6 +89,7 @@ jobs:
               - 'installer/ReverseReverb.iss'
               - 'docs/manuals/RONE Reverse Reverb - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             stems_fixer:
               - 'RoneStemsFixer'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -115,6 +116,7 @@ jobs:
               - 'installer/RoneStucker.iss'
               - 'docs/manuals/RONE Stucker - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             throw:
               - 'RoneThrow'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -124,6 +126,7 @@ jobs:
               - 'installer/RoneThrow.iss'
               - 'docs/manuals/RONE Throw - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             clipper:
               - 'RoneClipper'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -133,6 +136,7 @@ jobs:
               - 'installer/RoneClipper.iss'
               - 'docs/manuals/RONE Clipper - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             rise:
               - 'RoneRise'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -142,6 +146,7 @@ jobs:
               - 'installer/RoneRise.iss'
               - 'docs/manuals/RONE Rise - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             iron:
               - 'RoneIron'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -151,6 +156,7 @@ jobs:
               - 'installer/RoneIron.iss'
               - 'docs/manuals/RONE Iron - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             rone1176:
               - 'Rone1176'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -160,6 +166,7 @@ jobs:
               - 'installer/Rone1176.iss'
               - 'docs/manuals/RONE 1176 - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             rone2a:
               - 'Rone2A'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -169,6 +176,7 @@ jobs:
               - 'installer/Rone2A.iss'
               - 'docs/manuals/RONE 2A - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             sidechain:
               - 'RoneSidechain'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -178,6 +186,7 @@ jobs:
               - 'installer/RoneSidechain.iss'
               - 'docs/manuals/RONE Sidechain - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             delay:
               - 'RoneDelay'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -187,6 +196,7 @@ jobs:
               - 'installer/RoneDelay.iss'
               - 'docs/manuals/RONE Delay - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             dmt:
               - 'RoneGrain'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -205,6 +215,7 @@ jobs:
               - 'installer/RoneFlanger.iss'
               - 'docs/manuals/RONE Flanger - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             sync_verb:
               - 'rone sync verb'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -223,6 +234,7 @@ jobs:
               - 'installer/RoneAfterspace.iss'
               - 'docs/manuals/RONE AFTERSPACE - User Manual.pdf'
               - '.github/workflows/main.yml'
+              - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             analyzer:
               - 'RONEAnalyzer'
               - 'installer/RONEAnalyzer.iss'
