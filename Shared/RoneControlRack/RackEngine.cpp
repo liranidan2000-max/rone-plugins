@@ -2,6 +2,7 @@
 #include "RackArmed.h"
 #include "../RoneUpdatePrompt.h"      // RoneUpdates::launchCenterFor - the cards' "open the Center" buttons
 #include "../BundleLicenseChecker.h"  // LITE: slot A free, the rest with ALL ACCESS
+#include "Version.h"                  // kBeta: every slot open during the public beta
 #include "../RemoteLicenseGate.h"
 
 namespace RoneRack
@@ -52,7 +53,7 @@ Engine::Engine (juce::AudioProcessorValueTreeState& s, const juce::String& plugi
 void Engine::refreshLite()
 {
     const bool forced = juce::SystemStats::getEnvironmentVariable ("RONE_RACK_FORCE_LITE", {}) == "1";
-    const bool full = ! forced && (RemoteLicenseGate::isOpenMode() || BundleLicenseChecker::isBundleLicensed());
+    const bool full = ! forced && (RoneCtl::kBeta || RemoteLicenseGate::isOpenMode() || BundleLicenseChecker::isBundleLicensed());
     if (lite == ! full) return;
     lite = ! full;
     for (int i = 0; i < (int) slots.size(); ++i)

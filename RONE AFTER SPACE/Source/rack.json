@@ -1,0 +1,379 @@
+{
+  "slug": "afterspace",
+  "plugin": "RoneAfterspace",
+  "name": "RONE AFTERSPACE",
+  "accent": "#FF8A3D",
+  "accentRgb": "255,138,61",
+  "window": {
+    "w": 1150,
+    "h": 780,
+    "minW": 805,
+    "maxW": 1840
+  },
+  "params": [
+    {
+      "id": "main.mix",
+      "name": "MIX",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.25,
+      "unit": "%"
+    },
+    {
+      "id": "main.size",
+      "name": "SIZE",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.55,
+      "unit": "%"
+    },
+    {
+      "id": "main.decay",
+      "name": "DECAY",
+      "type": "float",
+      "min": 0.2,
+      "max": 30,
+      "def": 2.2,
+      "unit": "s"
+    },
+    {
+      "id": "main.bloom",
+      "name": "BLOOM",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.1,
+      "unit": "%"
+    },
+    {
+      "id": "silk.amount",
+      "name": "SILK",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.35,
+      "unit": "%"
+    },
+    {
+      "id": "main.character",
+      "name": "CHARACTER",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.25,
+      "unit": "%"
+    },
+    {
+      "id": "main.bypass",
+      "name": "BYPASS",
+      "type": "bool",
+      "def": false
+    },
+    {
+      "id": "main.autogain",
+      "name": "AUTO GAIN",
+      "type": "bool",
+      "def": true
+    },
+    {
+      "id": "main.solowet",
+      "name": "SOLO WET",
+      "type": "bool",
+      "def": false
+    },
+    {
+      "id": "freeze.active",
+      "name": "FREEZE",
+      "type": "bool",
+      "def": false
+    },
+    {
+      "id": "duck.amount",
+      "name": "DUCK",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.2,
+      "unit": "%"
+    },
+    {
+      "id": "duck.mode",
+      "name": "DUCK MODE",
+      "type": "choice",
+      "n": 5,
+      "def": 0,
+      "labels": [
+        "Smart",
+        "Full",
+        "Vocal",
+        "Transient",
+        "Custom"
+      ]
+    },
+    {
+      "id": "duck.attack",
+      "name": "DUCK ATTACK",
+      "type": "float",
+      "min": 0.1,
+      "max": 200,
+      "def": 10,
+      "unit": "ms"
+    },
+    {
+      "id": "duck.hold",
+      "name": "DUCK HOLD",
+      "type": "float",
+      "min": 0,
+      "max": 500,
+      "def": 40,
+      "unit": "ms"
+    },
+    {
+      "id": "duck.release",
+      "name": "DUCK RELEASE",
+      "type": "float",
+      "min": 20,
+      "max": 3000,
+      "def": 300,
+      "unit": "ms"
+    },
+    {
+      "id": "duck.sensitivity",
+      "name": "DUCK SENSITIVITY",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.5,
+      "unit": "%"
+    },
+    {
+      "id": "echo.amount",
+      "name": "ECHO",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0,
+      "unit": "%"
+    },
+    {
+      "id": "echo.time",
+      "name": "ECHO TIME",
+      "type": "choice",
+      "n": 16,
+      "def": 9,
+      "labels": [
+        "1/32",
+        "1/16T",
+        "1/16",
+        "1/16D",
+        "1/8T",
+        "1/8",
+        "1/8D",
+        "1/4T",
+        "1/4",
+        "1/4D",
+        "1/2T",
+        "1/2",
+        "1/2D",
+        "1 Bar",
+        "2 Bars",
+        "Free"
+      ]
+    },
+    {
+      "id": "echo.freeMs",
+      "name": "ECHO FREE TIME",
+      "type": "float",
+      "min": 10,
+      "max": 2000,
+      "def": 350,
+      "unit": "ms"
+    },
+    {
+      "id": "echo.feedback",
+      "name": "ECHO FEEDBACK",
+      "type": "float",
+      "min": 0,
+      "max": 0.95,
+      "def": 0.25,
+      "unit": "%"
+    },
+    {
+      "id": "echo.routing",
+      "name": "ECHO ROUTING",
+      "type": "choice",
+      "n": 3,
+      "def": 0,
+      "labels": [
+        "Before",
+        "Inside",
+        "After"
+      ]
+    },
+    {
+      "id": "echo.pingpong",
+      "name": "ECHO PING PONG",
+      "type": "bool",
+      "def": false
+    },
+    {
+      "id": "echo.lowcut",
+      "name": "ECHO LOW CUT",
+      "type": "float",
+      "min": 20,
+      "max": 2000,
+      "def": 150,
+      "unit": "Hz"
+    },
+    {
+      "id": "echo.highcut",
+      "name": "ECHO HIGH CUT",
+      "type": "float",
+      "min": 1000,
+      "max": 20000,
+      "def": 10000,
+      "unit": "Hz"
+    },
+    {
+      "id": "space.predelay",
+      "name": "PRE-DELAY",
+      "type": "float",
+      "min": 0,
+      "max": 250,
+      "def": 20,
+      "unit": "ms"
+    },
+    {
+      "id": "space.texture",
+      "name": "TEXTURE",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.7,
+      "unit": "%"
+    },
+    {
+      "id": "space.earlylate",
+      "name": "EARLY/LATE",
+      "type": "float",
+      "min": -1,
+      "max": 1,
+      "def": 0.3,
+      "unit": "%"
+    },
+    {
+      "id": "tone.lowcut",
+      "name": "LOW CUT",
+      "type": "float",
+      "min": 20,
+      "max": 1000,
+      "def": 120,
+      "unit": "Hz"
+    },
+    {
+      "id": "tone.highcut",
+      "name": "HIGH CUT",
+      "type": "float",
+      "min": 2000,
+      "max": 20000,
+      "def": 12000,
+      "unit": "Hz"
+    },
+    {
+      "id": "tone.lowdamp",
+      "name": "LOW DAMP",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.2,
+      "unit": "%"
+    },
+    {
+      "id": "tone.highdamp",
+      "name": "HIGH DAMP",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.4,
+      "unit": "%"
+    },
+    {
+      "id": "mod.rate",
+      "name": "MOD RATE",
+      "type": "float",
+      "min": 0.01,
+      "max": 5,
+      "def": 0.25,
+      "unit": "Hz"
+    },
+    {
+      "id": "mod.depth",
+      "name": "MOTION",
+      "type": "float",
+      "min": 0,
+      "max": 1,
+      "def": 0.15,
+      "unit": "%"
+    },
+    {
+      "id": "stereo.width",
+      "name": "WIDTH",
+      "type": "float",
+      "min": 0,
+      "max": 2,
+      "def": 1.15,
+      "unit": "%"
+    },
+    {
+      "id": "stereo.monolow",
+      "name": "MONO LOW",
+      "type": "bool",
+      "def": true
+    }
+  ],
+  "engine": {},
+  "rack": [
+    {
+      "param": "main.mix",
+      "hand": "R",
+      "src": "height",
+      "eng": "pinch",
+      "mode": "grab",
+      "rel": "stay",
+      "on": true,
+      "why": "Pinch and lift: more space around the sound. It stays where you leave it."
+    },
+    {
+      "param": "main.size",
+      "hand": "L",
+      "src": "height",
+      "eng": "pinch",
+      "mode": "grab",
+      "rel": "stay",
+      "on": true,
+      "why": "The left hand holds the hall: how big the room is."
+    },
+    {
+      "param": "main.decay",
+      "hand": "L",
+      "src": "side",
+      "eng": "pinch",
+      "mode": "grab",
+      "rel": "stay",
+      "on": false,
+      "why": "Pinch and slide left or right: a short tail, or a tail that never ends."
+    },
+    {
+      "param": "echo.amount",
+      "hand": "R",
+      "src": "twist",
+      "eng": "always",
+      "mode": "grab",
+      "rel": "stay",
+      "on": false,
+      "why": "Turn the right hand like a knob: the echo joins the space."
+    }
+  ]
+}

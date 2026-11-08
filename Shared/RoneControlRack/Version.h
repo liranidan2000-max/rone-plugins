@@ -12,4 +12,9 @@
 namespace RoneCtl
 {
     constexpr int kCoreProtocol = 1;     // 2026-10-26: Core moved here from RoneControl/Source/Core (unchanged shapes)
+
+    // PUBLIC BETA (Liran, 8.11.2026: "exclusive to every RONE PLUGINS user, published as a beta"): while true the rack
+    // says BETA and every slot runs for everyone who has the plugin - the LITE lock (slot A free, B.. ALL ACCESS) is off.
+    // Set false when the beta ends: LITE comes back with no other change.
+    constexpr bool kBeta = true;
 }

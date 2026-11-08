@@ -17,6 +17,9 @@ RoneAfterspaceAudioProcessor::RoneAfterspaceAudioProcessor()
     if (wrapperType == wrapperType_Standalone)
         RoneCrashReporter::installCrashHandler (JucePlugin_Name, JucePlugin_VersionString, "Standalone");
 
+    rackTransport.setStandalone (wrapperType == wrapperType_Standalone);
+    rack.attachTransport (rackTransport);
+
     auto raw = [this] (const char* id) { return apvts.getRawParameterValue (id); };
 
     pMix         = raw (ParamIDs::mix);
@@ -178,6 +181,7 @@ void RoneAfterspaceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
                 dawBpm.store (*bpm);
                 dawBpmAvailable.store (*bpm > 0.0);
             }
+            rackTransport.setHostRecording (pos->getIsRecording());
         }
     }
 

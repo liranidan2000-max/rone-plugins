@@ -34,7 +34,8 @@ button { font-family: inherit; cursor: pointer; }
 .r-live:hover { border-color: var(--dim); color: var(--text); }
 .r-live.active { color: var(--neon); border-color: var(--neon); box-shadow: 0 0 12px rgba(var(--neon-rgb), .35); }
 .r-live.ask { color: var(--neon); border-color: var(--neon); padding: 6px 7px; letter-spacing: .1em; animation: r-ask 1s ease-in-out infinite; }   /* a hand is there, LIVE is off */
-.r-head.ask .r-brand b { display: none; }   /* TAP LIVE is wider than LIVE: the word CONTROL steps aside, the R stays */
+.r-beta { font-style: normal; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 7.5px; letter-spacing: .14em; color: var(--dim); border: 1px solid #383D45; border-radius: 4px; padding: 2px 4px 1px; margin-left: -3px; flex-shrink: 0; }   /* public beta, 8.11.2026 */
+.r-head.ask .r-brand b, .r-head.ask .r-beta { display: none; }   /* TAP LIVE is wider than LIVE: the word CONTROL steps aside, the R stays */
 @keyframes r-ask { 0%, 100% { box-shadow: 0 0 0 rgba(var(--neon-rgb), 0); } 50% { box-shadow: 0 0 18px rgba(var(--neon-rgb), .8); } }
 .r-rec { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 9.5px; letter-spacing: .14em; color: #B9BDC4; border: 1px solid #383D45; border-radius: 7px; padding: 6px 8px; background: transparent; transition: all .15s; flex-shrink: 0; }
 .r-rec i { width: 8px; height: 8px; border-radius: 50%; background: #5A5F68; transition: all .15s; }
