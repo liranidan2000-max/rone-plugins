@@ -162,16 +162,34 @@ juce::File Engine::mapFile (const juce::String& n) const
     return mapsDir().getChildFile (juce::File::createLegalFileName (n.trim().toUpperCase()) + ".json");
 }
 
+// the plugin's own ready maps (rack.json "maps"), by name - beta round 6
+juce::var Engine::factoryMap (const juce::String& name) const
+{
+    const auto n = name.trim().toUpperCase();
+    if (n.isEmpty()) return {};
+    if (auto* arr = manifest["maps"].getArray())
+        for (const auto& m : *arr)
+            if (m["name"].toString().trim().toUpperCase() == n && m["slots"].isArray()) return m;
+    return {};
+}
+
 juce::StringArray Engine::mapNames() const
 {
-    juce::StringArray names;
+    juce::StringArray names, mine;
+    if (auto* arr = manifest["maps"].getArray())                 // the plugin's ready maps first, in their order
+        for (const auto& m : *arr)
+        {
+            const auto n = m["name"].toString().trim().toUpperCase();
+            if (n.isNotEmpty() && m["slots"].isArray()) names.addIfNotAlreadyThere (n);
+        }
     for (const auto& f : mapsDir().findChildFiles (juce::File::findFiles, false, "*.json"))
     {
         const auto j = juce::JSON::parse (f.loadFileAsString());
         const auto n = j["name"].toString().trim();
-        if (n.isNotEmpty() && j["slots"].isArray()) names.addIfNotAlreadyThere (n);
+        if (n.isNotEmpty() && j["slots"].isArray() && ! names.contains (n)) mine.addIfNotAlreadyThere (n);
     }
-    names.sortNatural();
+    mine.sortNatural();
+    names.addArray (mine);
     return names;
 }
 
@@ -179,12 +197,19 @@ void Engine::refreshMapCache()
 {
     mapNamesCache = mapNames();
     mapDefCache = defaultMapName();
+    mapReadyCache.clear();
+    if (auto* arr = manifest["maps"].getArray())
+        for (const auto& m : *arr)
+        {
+            const auto n = m["name"].toString().trim().toUpperCase();
+            if (n.isNotEmpty() && ! mapFile (n).existsAsFile()) mapReadyCache.add (n);
+        }
 }
 
 juce::String Engine::defaultMapName() const
 {
     const auto n = mapsDir().getChildFile ("_default.txt").loadFileAsString().trim();
-    return (n.isNotEmpty() && mapFile (n).existsAsFile()) ? n : juce::String();
+    return (n.isNotEmpty() && (mapFile (n).existsAsFile() || ! factoryMap (n).isVoid())) ? n : juce::String();
 }
 
 void Engine::slotsFromArray (const juce::var& arr)
@@ -218,7 +243,8 @@ bool Engine::loadMap (const juce::String& n)
     }
     else
     {
-        const auto j = juce::JSON::parse (mapFile (n).loadFileAsString());
+        auto j = juce::JSON::parse (mapFile (n).loadFileAsString());      // the user's own copy wins
+        if (! j["slots"].isArray()) j = factoryMap (n);                    // else the plugin's ready map
         if (! j["slots"].isArray()) return false;
         slotsFromArray (j["slots"]);
         if (slots.empty()) { loadManifest(); settleClashes(); }
@@ -495,6 +521,9 @@ juce::var Engine::uiState (bool withHands)
         m->setProperty ("cur", mapName);
         m->setProperty ("dirty", mapDirty);
         m->setProperty ("def", mapDefCache);
+        juce::Array<juce::var> ready;
+        for (const auto& n : mapReadyCache) ready.add (n);
+        m->setProperty ("ready", ready);
         o->setProperty ("map", juce::var (m));
     }
     o->setProperty ("canCamera", LinkHub::cameraSupported());
@@ -672,7 +701,7 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
     {
         auto n = v["name"].toString().trim().toUpperCase().substring (0, 24);
         if (n.isEmpty() || n == "RONE DEFAULT") return;          // RONE DEFAULT is ours, never overwritten
-        if ((bool) v["update"] && ! mapFile (n).existsAsFile()) return;
+        if ((bool) v["update"] && ! mapFile (n).existsAsFile() && factoryMap (n).isVoid()) return;   // a ready map: saved as the user's copy
         auto* o = new juce::DynamicObject();
         o->setProperty ("name", n);
         o->setProperty ("plugin", id);
@@ -689,7 +718,7 @@ void Engine::pageEvent (const juce::String& ev, const juce::var& v)
     {
         const auto n = v["name"].toString().trim();
         mapsDir().createDirectory();
-        mapsDir().getChildFile ("_default.txt").replaceWithText (n.isNotEmpty() && mapFile (n).existsAsFile() ? n : juce::String());
+        mapsDir().getChildFile ("_default.txt").replaceWithText (n.isNotEmpty() && (mapFile (n).existsAsFile() || ! factoryMap (n).isVoid()) ? n : juce::String());
         refreshMapCache();
     }
     else if (ev == "mapDelete")

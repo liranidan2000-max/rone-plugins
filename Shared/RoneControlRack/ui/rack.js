@@ -361,7 +361,9 @@
     var m = mapState(), p = $('#rMapPop'), own = m.cur !== '';
     p.hidden = false;
     $('#rMapName').value = own ? m.cur : nextFreeName();       // a name is ready: SAVE AS NEW works without typing
-    $('#rMapUpd').disabled = !own; $('#rMapDel').disabled = !own;
+    // a ready map of the plugin (beta round 6): UPDATE saves your own copy of it, DELETE is for your own maps only
+    var ready = (m.ready || []).indexOf(m.cur) >= 0;
+    $('#rMapUpd').disabled = !own; $('#rMapDel').disabled = !own || ready;
     setTimeout(function () { try { $('#rMapName').focus(); $('#rMapName').select(); } catch (e) {} }, 30);
   }
   tap($('#rMapSave'), function () { var p = $('#rMapPop'); if (p.hidden) openPop(); else p.hidden = true; });

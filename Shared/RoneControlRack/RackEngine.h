@@ -112,7 +112,9 @@ private:
     juce::String mapName;                                   // "" = RONE DEFAULT
     bool mapDirty = false;
     std::atomic<bool> stateSwapped { false };
-    juce::StringArray mapNamesCache;                        // read from disk every 2 s / after a map event, not 30 times a second
+    juce::var factoryMap (const juce::String& name) const;      // a map shipped in rack.json "maps" (void = none)
+    juce::StringArray mapNamesCache;
+    juce::StringArray mapReadyCache;                        // the plugin's ready maps with no user copy (can't be deleted)                        // read from disk every 2 s / after a map event, not 30 times a second
     juce::String mapDefCache;
     void refreshMapCache();
 
