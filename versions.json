@@ -716,7 +716,7 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.23",
+      "version": "0.9.24",
       "type": "standalone",
       "formats": [
         "App"
@@ -727,13 +727,13 @@
       "registry_key": "RoneVstManager",
       "video": "https://www.youtube.com/watch?v=5O7U35jwAzI",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.23.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.23.27.pkg",
-      "sha256": "40b6e8b4e4c53269cc93decdf2e57bb806be68ef755739922e7fe0015bd7637e",
-      "sha256_mac": "74c785110e53e5bc588ba536bc1d0f1cc583759276037176d74e6eb93c38ea48",
-      "size": 5190894,
-      "size_mac": 10397127,
-      "version_mac": "0.9.23.27",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.24.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.24.28.pkg",
+      "sha256": "6ff65de55dec7636427a7b1cb1cc6ceefe959d9be6639eb94c9fb574476470cc",
+      "sha256_mac": "64602ce694657730b8d940612a9d9045daee4d4217a514e55638a604fd2e6ee6",
+      "size": 5190688,
+      "size_mac": 10400923,
+      "version_mac": "0.9.24.28",
       "released": "2026-11-08"
     }
   ],
