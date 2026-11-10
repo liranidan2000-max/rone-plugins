@@ -27,7 +27,7 @@ function VstManagerEntry ({ t, app, onInstall, onOpen }) {
   )
 }
 
-export default function Sidebar ({ t, view, onNavigate, updatesCount, account, license, ownedPlugins, locale, giftApp, onInstall, onOpen }) {
+export default function Sidebar ({ t, view, onNavigate, updatesCount, account, license, ownedPlugins, locale, giftApp, onInstall, onOpen, onTryAll }) {
   const navView = view === 'detail' ? 'library' : view
   const signedIn = !!account.signedIn
   const pass = !!license.licensed
@@ -96,6 +96,15 @@ export default function Sidebar ({ t, view, onNavigate, updatesCount, account, l
                 className="mt-2.5 text-[11px] font-extrabold uppercase tracking-[0.12em] text-rone-purple hover:text-rone-light-purple">
           {plan.go} ›
         </button>
+        {!pass && onTryAll && (
+          <div className="mt-3 pt-3 border-t border-rone-border">
+            <p className="m-0 text-[11.5px] leading-snug text-rone-text-dim">{t('plan.tryLine')}</p>
+            <button onClick={onTryAll}
+                    className="mt-2 w-full rounded-lg border border-rone-purple px-2.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.1em] text-rone-purple hover:bg-rone-purple/10">
+              {t('plan.tryGo')}
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   )

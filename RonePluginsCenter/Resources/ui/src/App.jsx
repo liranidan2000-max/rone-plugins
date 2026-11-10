@@ -327,6 +327,10 @@ export default function App () {
     const url = (plugin.store_url || 'https://roneaudio.com/pricing.html')
     openExternal(url + (url.includes('?') ? '&' : '?') + 'utm_source=plugins_center&utm_medium=card')
   }
+  // The ALL ACCESS trial for an account that never had a pass (Liran 10.11.2026: an owner had no way to start it).
+  // The server hands a signed roneaudio.com/trial link; the page opens the checkout on this account at once.
+  const trialLink = upsell?.trial || null
+  const tryAll = (src) => { if (trialLink) openExternal(trialLink + (trialLink.includes('?') ? '&' : '?') + 'src=' + src) }
   const manualPdf = async (plugin) => {
     setManualPlugin(null)
     if (DEV) { addToast(t('msg.openingPdf')); return }
@@ -523,7 +527,8 @@ export default function App () {
 
       <div className="flex-1 min-h-0 flex">
         <Sidebar t={t} view={view} onNavigate={navigate} updatesCount={ups.length} account={account} license={license}
-                 ownedPlugins={ownedPlugins} locale={locale} giftApp={giftApp} onInstall={install} onOpen={open} />
+                 ownedPlugins={ownedPlugins} locale={locale} giftApp={giftApp} onInstall={install} onOpen={open}
+                 onTryAll={trialLink ? () => tryAll('sidebar') : null} />
 
         <main className="flex-1 min-w-0 flex flex-col relative">
           <TopBar t={t} searchQuery={query} onSearchChange={(q) => { setQuery(q); if (q && view !== 'library') navigate('library') }}
@@ -552,6 +557,7 @@ export default function App () {
               <DetailView t={t} plugin={detailPlugin} access={access} reduced={reduced} daws={daws} dawId={dawId}
                           onDaw={(id) => setPrefs({ daw: id })} catLabel={catLabel} onBack={() => navigate(returnView)}
                           onInstall={install} onCancel={cancel} onOpen={open} onBuy={(p) => buy(p, 'detail')} onSignIn={() => navigate('account')}
+                          onTryAll={trialLink ? () => tryAll('detail') : null} signedIn={!!account.signedIn}
                           onManualPdf={manualPdf} onOpenFolder={openFolder} onUninstall={setUninstallAsk} />
             )}
             {view === 'rack' && <RackView t={t} plugins={tagged} access={access} onDetail={openDetail} />}

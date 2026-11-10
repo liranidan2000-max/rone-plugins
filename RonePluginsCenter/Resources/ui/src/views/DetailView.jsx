@@ -8,7 +8,8 @@ import { openExternal } from '../bridge'
 // up in the user's DAW, the guide and the manual - everything that used to hide
 // in a small Details window and a ⋮ menu.
 export default function DetailView ({ t, plugin, access, reduced, daws, dawId, onDaw, catLabel,
-                                      onBack, onInstall, onCancel, onOpen, onBuy, onSignIn, onManualPdf, onOpenFolder, onUninstall }) {
+                                      onBack, onInstall, onCancel, onOpen, onBuy, onSignIn, onManualPdf, onOpenFolder, onUninstall,
+                                      onTryAll, signedIn }) {
   const acc = accentOf(plugin)
 
   const a = cardAction(plugin, access, t)
@@ -60,9 +61,15 @@ export default function DetailView ({ t, plugin, access, reduced, daws, dawId, o
             {a.busy && <span className="text-[13px] font-bold text-rone-text-secondary">{a.status}{plugin.status === 'downloading' ? ` · ${Math.round((plugin.downloadProgress || 0) * 100)}%` : ''}</span>}
             {a.cancel && <button className="btn btn-ghost" onClick={() => onCancel(plugin.id)}>{t('card.cancel')}</button>}
             {a.ok && <span className="text-[12px] font-extrabold uppercase tracking-[0.08em] text-rone-green">✓ {t('card.installed')}</span>}
-            {!un && price && (
+            {!un && onTryAll && (
+              <button className="btn btn-out" onClick={onTryAll}>
+                {t('card.tryAll')}
+              </button>
+            )}
+            {!un && price && (price.onSale || (!onTryAll && !signedIn)) && (
               <span className="text-[12px] text-rone-text-dim">
-                {price.onSale && <>{price.kind ? t(price.kind === 'offer' ? 'card.todayOnly' : 'card.ownerPrice') : t('card.lifetime')} · <s>{usd(price.regular)}</s> · </>}{t('card.trial')}
+                {price.onSale && <>{price.kind ? t(price.kind === 'offer' ? 'card.todayOnly' : 'card.ownerPrice') : t('card.lifetime')} · <s>{usd(price.regular)}</s></>}
+                {!onTryAll && !signedIn && <>{price.onSale ? ' · ' : ''}{t('card.trial')}</>}
               </span>
             )}
             <span className="flex-1" />

@@ -253,7 +253,7 @@ export function mockUpsell (scenario = devScenario()) {
   const link = (id) => 'https://roneaudio.com/owner?k=dev.' + id
   if (scenario === 'free') {
     return {
-      ok: true, offer: null, owner: null, links: { RoneStucker: link('RoneStucker') },
+      ok: true, offer: null, owner: null, links: { RoneStucker: link('RoneStucker') }, trial: 'https://roneaudio.com/trial?k=dev.trial',
       first: { kind: 'first', product: 'RoneStucker', name: 'RONE Stucker', slug: 'products/rone-stucker.html', price: 15, regular: 29,
                endsAt: new Date(Date.now() + 47.5 * 3600000).toISOString(), line: 'The classic roll-up, back on the beat',
                video: '/media/shorts/RoneStucker.mp4', poster: '/media/shorts/RoneStucker.jpg',
@@ -264,6 +264,7 @@ export function mockUpsell (scenario = devScenario()) {
   const prices = { RoneThrow: 29, RoneRise: 29, RoneIron: 29, ReverseReverb: 37, RoneAfterspace: 44, RONEAnalyzer: 37 }
   return {
     ok: true,
+    trial: 'https://roneaudio.com/trial?k=dev.trial',
     offer: { kind: 'upsell', product: 'RoneStucker', name: 'RONE Stucker', price: 19, regular: 29, because: 'RoneStutter', becauseName: 'RONE Stutter',
              endsAt: new Date(Date.now() + 21.6 * 3600000).toISOString(), line: 'The classic roll-up, back on the beat',
              video: '/media/shorts/RoneStucker.mp4', poster: '/media/shorts/RoneStucker.jpg' },
