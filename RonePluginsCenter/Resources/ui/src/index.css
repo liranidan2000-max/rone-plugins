@@ -162,6 +162,18 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 70%); mask-image: linear-gradient(to top, #000 0%, transparent 70%);
 }
 .hero-glow { animation: heroGlow 6s ease-in-out infinite; }
+/* The ALL ACCESS trial slide: every plugin's unit on one slow conveyor, each bobbing on its own beat with a
+   floor glow in its own neon - the whole rack, alive, behind the offer. Two copies of the row make the loop seamless. */
+.hero-rack { position: absolute; top: 50%; left: 0; display: flex; align-items: center; gap: 14px; padding-left: 24px;
+  transform: translateY(-50%); width: max-content; animation: heroRack 46s linear infinite; }
+.hero-rack.still { animation: none; flex-wrap: wrap; width: 100%; max-height: 200px; overflow: hidden; }
+.hero-rack-cell { position: relative; flex: none; animation: heroBob 4.4s ease-in-out infinite; animation-delay: var(--d); }
+.hero-rack-cell::after { content: ''; position: absolute; left: 12%; right: 12%; bottom: -10px; height: 14px; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--c), transparent); opacity: .45; filter: blur(4px); }
+.hero-rack-unit { display: block; height: 118px; width: auto; filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .7)); }
+@keyframes heroRack { from { transform: translate(0, -50%); } to { transform: translate(-50%, -50%); } }
+@keyframes heroBob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-9px) rotate(1.5deg); } }
+@media (prefers-reduced-motion: reduce) { .hero-rack, .hero-rack-cell { animation: none; } }
 @keyframes heroIn { from { opacity: 0; transform: translateX(60px) scale(.96); } to { opacity: 1; transform: none; } }
 @keyframes heroTurn {
   0%, 100% { transform: rotateY(-14deg) rotateX(3deg) translateY(0); }

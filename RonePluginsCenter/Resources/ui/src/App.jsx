@@ -508,7 +508,7 @@ export default function App () {
   }
 
   const handlers = {
-    onInstall: install, onCancel: cancel, onOpen: open, onDetail: openDetail, onBuy: buy,
+    onInstall: install, onCancel: cancel, onOpen: open, onDetail: openDetail, onBuy: buy, onTryAll: trialLink ? () => tryAll('hero') : null,
     onSignIn: () => navigate('account'), onManual: setManualPlugin, onOpenFolder: openFolder, onUninstall: setUninstallAsk,
   }
   const detailPlugin = tagged.find(p => p.id === detailId)

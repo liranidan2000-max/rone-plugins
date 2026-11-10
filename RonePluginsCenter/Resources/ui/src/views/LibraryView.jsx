@@ -25,7 +25,7 @@ export default function LibraryView ({ t, plugins, loading, access, account, lic
   return (
     <div className="flex flex-col">
       {!query && (
-        <Hero t={t} plugins={plugins} app={vstmApp} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk} onBuy={handlers.onBuy} tips={tips} reduced={reduced}
+        <Hero t={t} plugins={plugins} app={vstmApp} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk} onBuy={handlers.onBuy} onTryAll={handlers.onTryAll} tips={tips} reduced={reduced}
               onInstall={handlers.onInstall} onDetail={handlers.onDetail} onAccount={() => onNavigate('account')} />
       )}
 

@@ -7,7 +7,7 @@ import { openExternal } from '../bridge'
 // tip of the week - instead of a status banner. A guest or a lapsed pass sees
 // what unlocks things first. Slides change every 8 s unless motion is reduced.
 // The unit turns slowly in perspective with a light sweeping across it (index.css .hero-*).
-export default function Hero ({ t, plugins, app, access, account, license, personal, optinAsk, onBuy, tips, reduced, onInstall, onDetail, onAccount }) {
+export default function Hero ({ t, plugins, app, access, account, license, personal, optinAsk, onBuy, tips, reduced, onInstall, onDetail, onAccount, onTryAll }) {
   const slides = useMemo(() => {
     const out = []
     const signedIn = !!account.signedIn
@@ -79,12 +79,27 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
         actions: [{ label: t('hero.optinYes'), primary: true, onClick: () => optinAsk(true) }, { label: t('hero.optinNo'), ghost: true, onClick: () => optinAsk(false) }] })
     }
 
+    // The ALL ACCESS trial (Liran 10.11.2026): every plugin's unit in one animated rack, first in line, for a signed-in
+    // account that never had a pass (the server sends the /trial link only then). An owner hears "keep what you own".
+    if (onTryAll && signedIn && !license.licensed) {
+      const rack = plugins.filter(p => !p.free && p.kind !== 'app' && p.unitUrl)
+      const locked = rack.filter(p => !isUnlocked(p, access)).length
+      const owner = locked < rack.length
+      if (rack.length >= 3) {
+        out.unshift({ key: 'trial', color: '#B07CFF', eyebrow: t('hero.trialEyebrow'), title: t('hero.trialTitle'),
+                      body: owner ? t('hero.trialBodyOwner', { n: locked }) : t('hero.trialBody', { n: rack.length }),
+                      rack: rack.map(p => ({ id: p.id, url: p.unitUrl, color: accentOf(p) })),
+                      actions: [{ label: t('hero.trialGo'), primary: true, onClick: onTryAll },
+                                { label: t('hero.trialMore'), ghost: true, onClick: () => openExternal('https://roneaudio.com/pricing?utm_source=plugins_center&utm_medium=hero_trial#plan') }] })
+      }
+    }
+
     if (signedIn && !license.licensed && account.plan === 'all-access') {
       out.unshift({ key: 'pass', color: '#FFFFFF', eyebrow: 'ALL ACCESS', title: t('hero.passTitle'), body: t('hero.passBody'),
                     actions: [{ label: t('plan.accountGo'), primary: true, onClick: onAccount }] })
     }
     return out
-  }, [plugins, access, account, license, tips, t, personal, optinAsk, onBuy])
+  }, [plugins, access, account, license, tips, t, personal, optinAsk, onBuy, onTryAll])
 
   const [i, setI] = useState(0)
   useEffect(() => { if (i >= slides.length) setI(0) }, [slides.length])
@@ -104,6 +119,18 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
              style={{ background: 'linear-gradient(160deg, #1B1E23, #0D0F12)' }} aria-roledescription="carousel">
       <div className="hero-glow absolute inset-0" style={{ background: `radial-gradient(55% 110% at 78% 50%, ${s.color} 0%, transparent 62%)` }} />
       <div className="absolute inset-0" style={{ background: 'radial-gradient(90% 160% at 85% 50%, rgba(255,255,255,.06) 0%, transparent 55%)' }} />
+      {s.rack && (
+        <div key={s.key} className="absolute right-0 top-0 bottom-0 w-[42%] pointer-events-none overflow-hidden" aria-hidden="true">
+          <div className={reduced ? 'hero-rack still' : 'hero-rack'}>
+            {[...s.rack, ...(reduced ? [] : s.rack)].map((u, k) => (
+              <div key={u.id + k} className="hero-rack-cell" style={{ '--d': `${(k % s.rack.length) * -0.55}s`, '--c': u.color }}>
+                <img src={u.url} alt="" className="hero-rack-unit" onError={(e) => { e.currentTarget.parentElement.style.display = 'none' }} />
+              </div>
+            ))}
+          </div>
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, #15171B 0%, rgba(21,23,27,0) 22%, rgba(13,15,18,0) 85%, #0D0F12 100%)' }} />
+        </div>
+      )}
       {unit && (
         <div className="hero-stage absolute right-[3%] top-0 bottom-0 w-[44%] flex items-center justify-center pointer-events-none" aria-hidden="true">
           <div key={s.key + unit} className={reduced ? 'relative' : 'hero-unit-wrap'} style={{ '--unit-mask': `url("${unit}")` }}>
@@ -115,7 +142,7 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
           </div>
         </div>
       )}
-      <div className={`relative h-full px-8 py-7 flex flex-col gap-2 ${unit ? 'max-w-[58%]' : 'max-w-[86%]'}`} aria-live="polite">
+      <div className={`relative h-full px-8 py-7 flex flex-col gap-2 ${unit || s.rack ? 'max-w-[58%]' : 'max-w-[86%]'}`} aria-live="polite">
         <div className="text-[11px] font-extrabold tracking-[0.24em] uppercase" style={{ color: s.color, textShadow: `0 0 14px ${s.color}` }}>{s.eyebrow}</div>
         {s.title && <h2 className="m-0 font-display font-extrabold text-[32px] leading-[1.08] tracking-[-0.01em] text-white text-balance">{s.title}</h2>}
         <p className={`m-0 text-rone-text-secondary ${s.title ? 'text-[13.5px] leading-[1.5] line-clamp-2' : 'text-[16px] font-semibold leading-snug text-rone-text-primary line-clamp-3'}`}>{s.body}</p>

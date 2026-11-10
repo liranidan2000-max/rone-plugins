@@ -108,6 +108,7 @@ const en = {
   'up.tapSound': 'Tap for sound', 'up.soundOn': 'Sound on', 'up.note': 'Opens checkout with your price applied. It installs here the moment you pay.',
   'hero.signInTitle': 'Sign in to unlock your plugins',
   'hero.signInBody': 'Your roneaudio.com account unlocks what you own. A free account gets RONE Clipper; ALL ACCESS has a 14-day free trial.',
+  'hero.trialEyebrow': 'ALL ACCESS · 14 days free', 'hero.trialTitle': 'Every RONE plugin. 14 days free.', 'hero.trialBody': 'All {n} plugins and every future release. Nothing charged for 14 days.', 'hero.trialBodyOwner': 'Unlock the other {n} plugins and every future release. Nothing charged for 14 days.', 'hero.trialGo': 'Start free trial', 'hero.trialMore': 'What is included',
   'hero.passTitle': 'Your ALL ACCESS pass is not active',
   'hero.passBody': 'Renew it at roneaudio.com and every plugin unlocks on this computer.',
 
@@ -379,6 +380,7 @@ const pt = {
   'up.tapSound': 'Toque para ouvir', 'up.soundOn': 'Som ligado', 'up.note': 'Abre o pagamento com o seu preço aplicado. Instala aqui assim que você pagar.',
   'hero.signInTitle': 'Entre para liberar seus plugins',
   'hero.signInBody': 'Sua conta roneaudio.com libera o que é seu. Uma conta grátis ganha o RONE Clipper; o ALL ACCESS tem 14 dias de teste grátis.',
+  'hero.trialEyebrow': 'ALL ACCESS · 14 dias grátis', 'hero.trialTitle': 'Todos os plugins RONE. 14 dias grátis.', 'hero.trialBody': 'Os {n} plugins e todo lançamento futuro. Nada cobrado por 14 dias.', 'hero.trialBodyOwner': 'Libere os outros {n} plugins e todo lançamento futuro. Nada cobrado por 14 dias.', 'hero.trialGo': 'Começar teste grátis', 'hero.trialMore': 'O que está incluído',
   'hero.passTitle': 'Seu passe ALL ACCESS não está ativo',
   'hero.passBody': 'Renove em roneaudio.com e todos os plugins são liberados neste computador.',
   'upd.one': '1 atualização pronta para os seus plugins', 'upd.many': '{n} atualizações prontas para os seus plugins',
@@ -605,6 +607,7 @@ const es = {
   'up.tapSound': 'Toca para escuchar', 'up.soundOn': 'Sonido activado', 'up.note': 'Abre el pago con tu precio aplicado. Se instala aquí en cuanto pagas.',
   'hero.signInTitle': 'Entra para desbloquear tus plugins',
   'hero.signInBody': 'Tu cuenta de roneaudio.com desbloquea lo que es tuyo. Una cuenta gratis recibe RONE Clipper; ALL ACCESS tiene 14 días de prueba gratis.',
+  'hero.trialEyebrow': 'ALL ACCESS · 14 días gratis', 'hero.trialTitle': 'Todos los plugins RONE. 14 días gratis.', 'hero.trialBody': 'Los {n} plugins y todo lanzamiento futuro. Nada cobrado en 14 días.', 'hero.trialBodyOwner': 'Desbloquea los otros {n} plugins y todo lanzamiento futuro. Nada cobrado en 14 días.', 'hero.trialGo': 'Empezar prueba gratis', 'hero.trialMore': 'Qué incluye',
   'hero.passTitle': 'Tu pase ALL ACCESS no está activo',
   'hero.passBody': 'Renuévalo en roneaudio.com y todos los plugins se desbloquean en este equipo.',
   'upd.one': '1 actualización lista para tus plugins', 'upd.many': '{n} actualizaciones listas para tus plugins',
