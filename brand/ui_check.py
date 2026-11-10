@@ -21,7 +21,7 @@ CSS = open(os.path.join(ROOT, "Shared", "fonts", "rone-fonts.css"), encoding="ut
 
 PLUGINS = ["ReverseReverbVST", "rone-flanger-", "RoneStutter", "RoneStucker", "RoneThrow", "RoneClipper",
            "RoneRise", "RoneIron", "RoneGater", "RONE AFTER SPACE", "Rone1176", "Rone2A", "RoneBassline",
-           "RoneChoir", "RoneControl", "RoneDelay", "RoneGrain", "RoneLock", "RoneMotion", "rone sync verb",
+           "RoneChoir", "RoneControl", "RoneDelay", "RoneGrain", "RoneLock", "RoneMotion",
            "RONEAnalyzer", "RoneStereo"]
 PAGES = ["Source/ui/index.html", "Resources/ui/index.html", "Source/ui/index.base.html", "Source/WebUI.h",
          "Resources/ui/index.html"]
