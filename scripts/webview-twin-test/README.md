@@ -27,3 +27,26 @@ scripts\webview-twin-test\run_twin.ps1 -Vst3 "$env:TEMP\wv2t\bundles\stucker\RON
 Results 2026-09-27: RONE Stucker 1.2.1 as released - 1 of 2 pages (twice), 2 of 3 with three
 windows. With `pageReady` - 2 of 2 (three runs) and 3 of 3; Throw, Rise, Clipper, Reverse Reverb,
 Stutter, Sync Verb and AFTERSPACE 2 of 2, every page receiving its pushes.
+
+## reopen - one window closed and opened again at once (2026-11-10)
+
+Liran in FL: DMT, then Iron - closed the window, opened it again from the Channel rack, white for
+46 s to minutes. The closed window's msedgewebview2 browser lingers 20-40 s while it shuts down
+(under load); a new window on the same profile folder gets E_ABORT from
+CreateCoreWebView2Controller after 10 s and JUCE (8.0.4 and 8.0.12) never retries. The fix is
+`Shared/RoneWebViewFolder.h` (through `RoneUpdatePrompt::addTo`): each window picks a folder whose
+browser is gone.
+
+`ReopenEditorHost` opens one window, hosts it, deletes it, opens it again; it sees the page from
+inside (a `Chrome_RenderWidgetHostHWND` under the window), so no debug port decides the result.
+`-LingerMs` freezes each closed window's browser that long - the slow shutdown made certain.
+
+```
+cmake --build $env:TEMP\wv2t\host --config Release --target ReopenEditorHost
+scripts\webview-twin-test\reopen.ps1 -Vst3 "<bundle>" -Cycles 6 -Hold 10 -GapMs 300 -LingerMs 20000
+```
+
+A build with the fix gets `RONE_WEBVIEW_TEST_ROOT` (its folders under the test root);
+one without gets the old single `WEBVIEW2_USER_DATA_FOLDER`. Results 2026-11-10, Iron:
+installed 1.1.0 - 4 of 6 opens white; with the fix - 8 of 8 in under 1 s (folders rotate
+`RoneIron_WebView2`, `-2`, `-3`). The Test Bench runs the same case nightly (check `reopen`).

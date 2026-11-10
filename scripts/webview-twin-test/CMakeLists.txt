@@ -24,6 +24,24 @@ target_link_libraries(TwinEditorHost PRIVATE
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags)
 
+juce_add_console_app(ReopenEditorHost PRODUCT_NAME "ReopenEditorHost")
+target_sources(ReopenEditorHost PRIVATE reopen_host.cpp)
+juce_generate_juce_header(ReopenEditorHost)
+target_compile_definitions(ReopenEditorHost PRIVATE
+    JUCE_PLUGINHOST_VST3=1
+    JUCE_MODAL_LOOPS_PERMITTED=1
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0)
+target_link_libraries(ReopenEditorHost PRIVATE
+    juce::juce_audio_processors
+    juce::juce_audio_utils
+    juce::juce_events
+    juce::juce_core
+    juce::juce_data_structures
+    PUBLIC
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_warning_flags)
+
 add_executable(HiddenDesktopRun hidden_run.cpp)
 target_compile_definitions(HiddenDesktopRun PRIVATE UNICODE _UNICODE)
 target_link_libraries(HiddenDesktopRun PRIVATE user32)

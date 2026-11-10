@@ -29,7 +29,7 @@ namespace
 
 View::View (Engine& e, const juce::String& pluginId, std::function<void()> onCollapse)
     : engine (e), collapse (std::move (onCollapse)),
-      web (options (this, e, pluginId, [] (const juce::String& url) { return resource (url); })
+      web (webFolder.apply (options (this, e, pluginId, [] (const juce::String& url) { return resource (url); }))
                .withEventListener ("rackReady", [this] (const juce::var&) { pageReady = true; })
                .withEventListener ("collapse",  [this] (const juce::var&) { if (collapse) collapse(); }))
 {

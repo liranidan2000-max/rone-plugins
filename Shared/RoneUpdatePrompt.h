@@ -46,6 +46,7 @@
 #include "RoneWebCompat.h"
 #include "RoneWindowFit.h"
 #include "RoneWebViewGuard.h"
+#include "RoneWebViewFolder.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -196,9 +197,11 @@ public:
     // stretched plug-in windows and after a monitor move (2026-10-24).
     // And RoneWebViewGuard: the WebView never takes the DAW's clicks while its
     // window is minimised, hidden or covered (2026-10-28).
+    // And RoneWebViewFolder: a window closed and opened again never waits on the
+    // closed window's browser, which takes 20-40 s to go away (2026-11-10).
     juce::WebBrowserComponent::Options addTo (juce::WebBrowserComponent::Options options)
     {
-        return windowFit.addTo (webViewGuard.withPaintSignal (RoneWebViewGuard::addTo (options)))
+        return windowFit.addTo (webViewGuard.withPaintSignal (RoneWebViewGuard::addTo (webViewFolder.apply (options))))
             .withUserScript (RoneWebCompat::script())
             .withUserScript (script())
             .withEventListener ("roneUpdateAction", [this] (const juce::var& payload) { onAction (payload); });
@@ -289,6 +292,7 @@ private:
     juce::WebBrowserComponent* browser = nullptr;
     RoneWindowFit windowFit;   // the WebView fills the window (Live's stretched windows, monitor moves)
     RoneWebViewGuard webViewGuard;   // hidden / minimised / covered window: the DAW gets its clicks back
+    RoneWebViewFolder webViewFolder; // the WebView2 profile folder of this window (reopen never white)
 
     // The page side. Plain ES5, one IIFE, its own prefixed ids and styles, no
     // dependency on the plugin's page. Kept well under MSVC's 16 KB literal limit.

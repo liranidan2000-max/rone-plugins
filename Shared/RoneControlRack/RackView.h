@@ -9,6 +9,7 @@
 
 #include <JuceHeader.h>
 #include "RackEngine.h"
+#include "../RoneWebViewFolder.h"
 
 namespace RoneRack
 {
@@ -29,6 +30,7 @@ private:
     Engine& engine;
     std::function<void()> collapse;
     bool pageReady = false;
+    RoneWebViewFolder webFolder;   // before web: a reopened rack window never waits on the closed one's browser
     juce::WebBrowserComponent web;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (View)
