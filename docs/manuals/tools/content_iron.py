@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "iron", "product": "RONE Iron", "eyebrow": "DROP A VOCAL. PLAY METAL.",
-        "title_html": "RONE <i>Iron</i>", "accent": "#B530D6", "version": "1.0",
+        "title_html": "RONE <i>Iron</i>", "accent": "#B530D6", "version": "1.2",
         "tagline": "Drop any vocal and it becomes a metallic chop instrument: flattened to the note you pick, sliced onto your keys, rung through a comb tuned to that note and thrown from left to right. Play it from the piano roll, or let the GROOVE write the pattern.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Iron.vst3", "au": "RONE Iron.component", "exe": "RONE Iron.exe",
         "pdf": "RONE Iron - User Manual.pdf", "cover_img": "iron/main.png",
@@ -17,7 +17,7 @@ def manual(G):
 <h3>Where it shines</h3>
 <ul>
 <li><strong>Drop hooks</strong> - a rhythmic metal vocal on the note of your bassline.</li>
-<li><strong>Build-ups</strong> - ride the macros CHOP and MOTION up into the drop.</li>
+<li><strong>Build-ups</strong> - ride the macros CHOP and MOTION up into the drop, or let the LFO open the metal by itself.</li>
 <li><strong>Leads from a voice</strong> - ARP turns the chops into a melody over a chord.</li>
 <li><strong>Breaks and intros</strong> - long rings and soft pans for a hypnotic bed.</li>
 </ul>
@@ -52,14 +52,17 @@ def manual(G):
 {img("iron/tour.png", "The header and the vocal card.")}
 {legend([
  ("Header logo", "click to flip to the back panel (About, version, licence)"),
- ("Preset browser", "15 presets in six groups; arrows step through them, the name opens the list"),
+ ("Preset browser", "38 presets in nine groups; arrows step through them, the name opens the list"),
  ("Macros", "METAL, CHOP, SPACE, MOTION - four knobs that move the whole sound"),
  ("MIDI / tempo", "the MIDI light flashes with incoming notes; the host tempo the GROOVE follows"),
- ("Vocal", "the file you dropped and its length"),
+ ("Vocal", "the file you dropped"),
  ("AUTO SLICE", "SMALL (fewer, longer chops), MEDIUM, LARGE (many more)"),
- ("Chops / keys", "how many chops, and the keys they sit on"),
- ("Chop readout", "the chop under the mouse or playing: its number, key, length and pan"),
+ ("THRESHOLD", "only the strong chops get a key; breaths and faint sounds join the chop before them"),
+ ("NORMALIZE", "every chop at the same level"),
+ ("Chops", "how many chops the vocal was cut into"),
+ ("Chop readout", "the chop under the mouse or selected: its number and key"),
  ("BROWSE / EJECT", "open a file, or empty the plugin"),
+ ("Chop note", "the selected chop's own note: - / + moves it in semitones"),
  ("Chop map", "the flattened vocal with every slice marked; click a chop to hear it"),
  ("Pan lane", "one bar per chop: up = left, down = right; drag a bar to pan by hand"),
  ("Chop keys", "the keyboard of chops; the lit key is the one playing"),
@@ -71,11 +74,11 @@ def manual(G):
  ("MIDI NOTE", "lets the octave under the chops on your keyboard choose the note"),
  ("ARP", "lets you light several notes; every chop then takes one of them"),
  ("ARP order", "UP, DOWN, UP-DOWN or FOLLOW, over 1 or 2 octaves"),
- ("Note readout", "the vocal's own pitch, the note it goes to, and its frequency"),
- ("Comb readout", "where the comb is tuned and how far apart its teeth are"),
+ ("Note readout", "the vocal's own pitch and the note it goes to"),
  ("IRON", "how much metal: the tuned comb's share of the sound"),
  ("FADE OUT", "shortens every chop"),
  ("RING", "how long the metal rings"),
+ ("LFO", "moves IRON, FADE OUT and RING by themselves, in time with the song"),
  ("AUTO PAN", "a new left-right pattern for every chop"),
  ("PAN STYLE", "PING-PONG, SPREAD or WIDE"),
  ("RANGE", "how far to the sides the pans go"),
@@ -87,7 +90,7 @@ def manual(G):
  ("GROOVE", "the automatic pattern on or off"),
  ("Step strip", "the pattern at a glance; EDIT opens the GROOVE panel"),
  ("DRAG MIDI", "drag the pattern into your piano roll as MIDI notes"),
- ("Groove readout", "hits in the pattern, locked steps and the pattern's name"),
+ ("Pattern name", "the groove pattern that plays, or CUSTOM"),
  ("MIX", "from the full effect back towards the plain chops"),
  ("NOTE", "makes MIX keep the flattened note (only the metal fades)"),
  ("OUT", "output level"),
@@ -100,6 +103,9 @@ def manual(G):
 {img("iron/tour_vocal.png", "<b>The vocal card.</b> The slices on the waveform, the pan of every chop under it, and the keys they play from.", "")}
 {ctl("Drop / BROWSE", "WAV, AIFF, FLAC, MP3, OGG<br>up to 60 s", "<p>Drop a file on the card or press the folder button. Iron reads the first 60 seconds from the first sound, finds the vocal's pitch, flattens it to your note, finds the transients and builds the chops - usually in well under a second per ten seconds of audio. EJECT empties the plugin. Breaths, S sounds and other noises stay on the keys, but the GROOVE and the ARP never pick them.</p>")}
 {ctl("AUTO SLICE", "SMALL / MEDIUM / LARGE<br>default MEDIUM", "<p>How finely the vocal is cut. SMALL gives fewer, longer chops (whole words); LARGE gives many more short ones (syllables). DETAIL in ADVANCED fine-tunes it between the three. At most 128 chops; when there are more chops than keys above ROOT, the key map moves down to the highest C where every chop has a key.</p>", "Clicking a chop on the waveform or on the keys plays it.")}
+{ctl("THRESHOLD", "OFF, -42 to -6 dB<br>default OFF", "<p>Decides which sounds are loud enough to be a chop. With THRESHOLD on, a chop that is more than the shown number of dB quieter than the loudest chop - a breath, a faint in-between sound - gets no key: it joins the chop before it. Raise it until only the syllables you want are left. Changing it re-slices the vocal.</p>", "Drag the chip or use the mouse wheel. Double-click = OFF.")}
+{ctl("NORMALIZE", "on / off<br>default off", "<p>Brings every chop to the same level, so quiet syllables hit as hard as loud ones. It is the LEVEL knob of ADVANCED at 100 %; use that knob for anything in between.</p>")}
+{ctl("Chop note", "-24 to +24 semitones<br>per chop", "<p>Click a chop on the waveform or on the keys: a small - / + appears over it. It moves that one chop in semitones above or below the note the rest of the vocal is flattened to (or its ARP note), and the comb gets a tooth for it, so the chop stays in metal and in tune. Use it to put one syllable on the fifth, or to write a short melody inside a groove. A new vocal or a new slicing clears the chop notes.</p>", "The mouse wheel over the - / + steps it. Double-click = back to 0.")}
 {ctl("NOTE", "C to B<br>default A", "<p>The note the whole vocal is flattened to, in the octave nearest the voice. Pick the key of your track (the root of your bassline). Changing it re-renders the vocal in the background; the old chops keep playing until the new ones are ready.</p>", "The mouse wheel over the piano steps the note.")}
 {ctl("OCTAVE", "-2 to +2<br>default 0", "<p>Moves the target note whole octaves down or up from the octave nearest the vocal. Big jumps change the character - down is darker and more robotic.</p>")}
 {ctl("MIDI NOTE", "on / off<br>default off<br>automatable", "<p>With MIDI NOTE on, the twelve keys right below the first chop key (with the chops starting at C5, that is C4 to B4) choose the NOTE instead of playing chops. Hold a key with your left hand while the GROOVE runs and the whole vocal follows - you can play the groove like an instrument. The switch is instant: Iron prepares the other notes in the background.</p>")}
@@ -111,22 +117,36 @@ def manual(G):
 {ctl("OUT and SAFE", "OUT -24 to +12 dB<br>SAFE on by default", "<p>OUT sets the level. SAFE is a ceiling at -0.3 dBFS on the output: it never touches normal levels and only catches the peaks that a long ring or many voices can pile up. The lamp next to OUT is green while SAFE is on.</p>")}
 """})
 
+    S.append({"title": "LFO", "sub": "the knobs move by themselves", "html": f"""
+{img("iron/lfo.png", "<b>The LFO editor</b> (the LFO key under the IRON knob). Here a pump shape, one bar long, opens IRON by 50 % and pulls FADE OUT down by 30 %.")}
+{legend([
+ ("LFO", "opens the editor; lit while the LFO is on"),
+ ("ON", "the LFO on or off"),
+ ("Shape", "one cycle: drag a point, click an empty spot for a new point, double-click a point to remove it"),
+ ("Ready shapes", "triangle, sine, ramp up, ramp down, square and pump"),
+ ("Length", "how long one cycle is, from 4 bars to 1/32, locked to the host tempo"),
+ ("Depths", "how far the LFO moves IRON, FADE OUT and RING; click a box to attach or detach it"),
+])}
+<p>The LFO does the automation for you. Draw one shape, pick its length, and give each of the three knobs a depth: the knob then opens and closes by itself, in time with your song. The ring around each knob shows where the LFO has taken it. A depth below 0 pulls the knob down instead of up, so one LFO can open the metal while it tightens the chops.</p>
+<p>The LFO never moves the knobs themselves: it is added on top, exactly like the macros, so switching it off returns to your settings. While the DAW plays it follows the song position (a bounce is the same every time); while the DAW is stopped it runs on its own at the project tempo. It is saved with the project and with the presets that use it.</p>
+{note("Pump the metal like a sidechain", "IRON low (15 to 20 %), the pump shape, length 1/4 and an IRON depth of +40 %: the metal ducks on every kick and opens after it. The MOTION presets are built this way.")}
+"""})
+
     S.append({"title": "ARP", "sub": "a melody from one vocal", "html": f"""
-{img("iron/arp.png", "<b>ARP on</b> with A, C and E lit: the chops play a minor triad, with one comb per note.", "w80")}
+{img("iron/arp.png", "<b>ARP on</b> with A, C and E lit: the chops play a minor triad, with one comb per note. UP, DOWN, UP-DOWN, FOLLOW and the octaves show while ARP is on.", "w80")}
 {legend([
  ("ARP", "on / off"),
  ("Chord notes", "click keys to add or remove notes; the NOTE is always one of them"),
  ("Order", "UP, DOWN, UP-DOWN or FOLLOW"),
  ("Octaves", "the notes in one octave, or continued into a second"),
  ("Note readout", "the notes in use"),
- ("Combs", "one comb per note, each tuned to its own note"),
 ])}
 <p>With ARP on, every chop takes one of the lit notes. In <b>UP</b>, <b>DOWN</b> and <b>UP-DOWN</b> the chops walk through the notes in order - chop 1 on the first note, chop 2 on the next and so on - so a GROOVE or a run of keys becomes an arpeggio. <b>FOLLOW</b> works differently: each chop goes to the lit note nearest its own pitch, so the vocal keeps its melody but snaps to your chord or scale. The <b>x</b> clears the extra notes. 2 OCT continues the order an octave higher (FOLLOW ignores it).</p>
 {note("Light the scale, use FOLLOW", "Light the notes of your track's scale and choose FOLLOW: the chops stay in key but keep the shape of the original singing - the best way to keep two different vocals sounding different.")}
 """})
 
     S.append({"title": "GROOVE", "sub": "the automatic pattern", "html": f"""
-{img("iron/groove.png", "<b>The GROOVE panel</b> (EDIT in the footer). Each card is a 16th note: the chop it plays, its length bar and its marks.")}
+{img("iron/groove.png", "<b>The GROOVE panel</b> (EDIT in the footer). Each card is a 16th note: the chop it plays and its marks. A hit longer than one 16th is drawn across the steps it sounds on, like a note in a piano roll.")}
 {legend([
  ("GROOVE", "on / off - it plays the moment it is on, and follows your song while the DAW plays"),
  ("BARS", "a 1-bar or 2-bar pattern"),
@@ -134,14 +154,15 @@ def manual(G):
  ("History", "back to an earlier roll and forward again (32 kept)"),
  ("LOCK STEPS", "freeze every hit as it plays now"),
  ("CLEAR EDITS", "every step back to the generator"),
- ("Pattern", "16 researched patterns, or CUSTOM"),
+ ("Pattern", "20 researched patterns, or CUSTOM"),
  ("DRAG MIDI", "drag the pattern into your piano roll"),
- ("Steps", "16 cards per bar; hover a card for its controls"),
+ ("Steps", "16 cards per bar; click a hit to edit it"),
  ("Density / chops / variation", "how many hits, how many different chops, how different bar 2 is"),
  ("Length / hold / flip / rolls", "how long the hits are, how many ring on, pan flips and 1/32 rolls"),
 ])}
-{img("iron/groove_steps.png", "<b>Step cards.</b> The power button switches a step on or off, the lock freezes it, and the arrows that appear on hover choose the previous or next chop. Marks show a pan flip, a roll, or a step whose chop no longer exists.", "w60")}
-{ctl("Patterns", "16 + CUSTOM", "<p>RONE, HOOK, GALLOP, SYLLABLES, ROLLING, OFFBEAT, BACKBEAT, PROG STAB, TRESILLO, DOTTED, FLIPSIDE, CALL ANSWER, RATCHET, BUILDUP, HALFTIME and BREAKDOWN - patterns built around the kick and bass grid of psytrance, progressive and techno. A pattern fixes the steps; the knobs and the chop choice still apply. Edit the steps or REROLL and it becomes CUSTOM.</p>")}
+{img("iron/step.png", "<b>A step's editor.</b> Click a hit: ROLL turns it into 2, 3 or 4 fast 1/32 hits, LENGTH sets how long it sounds, FLIP throws it to the other side, CHOP picks the chop. A step you set by hand is locked; RESET STEP gives it back to the generator.")}
+{ctl("Step editor", "ROLL off / x2 / x3 / x4<br>LENGTH 1/2, 1, 2, 4, HOLD<br>FLIP, CHOP", "<p>Every step can be built by hand. The power button switches a step on or off (on an empty step it shows under the mouse), the lock freezes it. Click a hit to open its editor: <b>ROLL</b> makes the 1/32 ratchet, <b>LENGTH</b> is in 16th notes (HOLD rings to the next hit), <b>FLIP</b> sends the hit to the other side and <b>PREV / NEXT</b> choose its chop. Whatever you set by hand is locked, so REROLL and the knobs leave it alone.</p>", "Shift + mouse wheel over a hit steps its ROLL.")}
+{ctl("Patterns", "20 + CUSTOM", "<p>RONE, HOOK, GALLOP, SYLLABLES, ROLLING, OFFBEAT, BACKBEAT, PROG STAB, TRESILLO, DOTTED, FLIPSIDE, CALL ANSWER, RATCHET, BUILDUP, HALFTIME and BREAKDOWN - patterns built around the kick and bass grid of psytrance, progressive and techno - and four built on the 1/32 ratchet: RIPPER, JITTER, SHRED and TRIPWIRE. A pattern fixes the steps; the knobs and the chop choice still apply. Edit the steps or REROLL and it becomes CUSTOM.</p>")}
 {ctl("DENSITY", "0 to 100 %<br>automatable", "<p>How many of the 16 steps play (the readout counts them).</p>")}
 {ctl("CHOPS", "0 to 100 %<br>automatable", "<p>How many different chops the pattern uses - a few for a hypnotic loop, many for a talking line. The GROOVE only picks strong, tonal chops.</p>")}
 {ctl("VARIATION", "0 to 100 %<br>2 BARS only", "<p>How much bar 2 differs from bar 1.</p>")}
@@ -155,12 +176,13 @@ def manual(G):
 {img("iron/presets.png", "<b>The preset list.</b> The line under the list describes the preset under the mouse; MY SLOTS keep six sounds of your own.")}
 {legend([
  ("Preset browser", "arrows step through the presets; the name opens the list"),
- ("Preset list", "SIGNATURE, STABS, ARP, SOFT, SPACE and FX"),
+ ("Preset list", "SIGNATURE, STABS, ARP, SOFT, SPACE, FX, MOTION, RATCHET and PHRYGIAN"),
  ("Description", "what the preset is for"),
  ("MY SLOTS", "hold a slot to store the current sound, tap to recall it"),
  ("INIT", "every control back to its default"),
 ])}
-<p>A preset sets the whole IRON sound: the metal, the fades, the pans, the ARP notes, the groove and what the four macros do. It never changes your vocal, your NOTE, OCTAVE or ROOT, or the pans you set by hand. <b>SIGNATURE</b>: IRON (the signature sound for the main drop) and FORGE (peak-time full-on). <b>STABS</b>: RAZOR, ANVIL, PISTON. <b>ARP</b>: TRIAD, ASCEND, MELODY, PHRYGIAN. <b>SOFT</b>: HUMAN, HALO. <b>SPACE</b>: MOLTEN, CATHEDRAL. <b>FX</b>: SHRAPNEL, IGNITION.</p>
+<p>A preset sets the whole IRON sound: the metal, the fades, the pans, the ARP notes, the groove and what the four macros do. It never changes your vocal, your NOTE, OCTAVE or ROOT, or the pans you set by hand. <b>SIGNATURE</b>: IRON (the signature sound for the main drop), FORGE (peak-time full-on) and SPINE. <b>STABS</b>: RAZOR, ANVIL, PISTON. <b>ARP</b>: TRIAD, ASCEND, MELODY, PHRYGIAN, HIJAZ, DESCENT, SPIRAL. <b>SOFT</b>: HUMAN, HALO, GLASS, VELVET. <b>SPACE</b>: MOLTEN, CATHEDRAL. <b>FX</b>: SHRAPNEL, IGNITION.</p>
+<p>New in 1.2: <b>MOTION</b> - PULSE, BREATHE, TIDE, STAIRS and UNFOLD, where the LFO moves the sound for you. <b>RATCHET</b> - RATTLE, RIPPER, JITTER, SHRED, TRIPWIRE and BUZZSAW, built on 1/32 rips. <b>PHRYGIAN</b> - COBRA, SERPENT, ORACLE, RITUAL, MIRAGE and SANDSTORM, ARPs in the phrygian scale that psytrance melodies live in. Also SPINE (the signature groove dead centre) in SIGNATURE and HIJAZ, DESCENT and SPIRAL in ARP. Every ARP preset starts from the note you pick with NOTE, so it is always in the key of your track. A preset that uses the LFO brings its shape; a preset without it switches the LFO off and keeps what you drew.</p>
 {ctl("Macros", "METAL, CHOP, SPACE, MOTION<br>0 to 100 %<br>automatable", "<p>Each macro moves several controls at once, in the way the current preset defines: METAL adds metal and ring, CHOP tightens the hits, SPACE opens the rings and the stereo, MOTION adds pan movement, density and rolls. The macros never move the knobs themselves - the knobs show where a macro has taken them - so turning a macro back to 0 always returns exactly to the preset. Automate them into a drop.</p>", "Hover a macro to light the controls it moves.")}
 {img("iron/locks.png", "<b>Locks.</b> The small locks next to IRON, RING and MIX: those controls keep their values when you switch presets.", "w80")}
 {ctl("Locks", "12 lockable controls", "<p>Every lockable control has a small lock next to it, grey while it is open; click it to lock and it lights up. A locked control stays where it is when you switch presets, so you can audition presets around a metal amount or a groove you like. Lockable: IRON, RING, FADE OUT, MIX, LIFE, the pans, the ARP notes, the GROOVE and each of the four macros.</p>")}
@@ -181,7 +203,7 @@ def manual(G):
 {ctl("FINE", "-50 to +50 cents<br>default 0", "<p>Tunes the target note in cents, for tracks that are not at A = 440 Hz.</p>")}
 {ctl("DETAIL", "-1 to +1<br>default 0", "<p>Fine control over the slicing between the AUTO SLICE steps: right = more chops, left = fewer. The readout shows the new count.</p>")}
 {ctl("TONE", "0 to 100 %<br>default 0<br>automatable", "<p>Darkens the metal: higher values damp the comb's upper teeth, for a softer, warmer ring.</p>")}
-{ctl("LEVEL", "0 to 100 %<br>default 0<br>automatable", "<p>Evens out the chops' levels, so quiet syllables hit as hard as loud ones.</p>")}
+{ctl("LEVEL", "0 to 100 %<br>default 0<br>automatable", "<p>Evens out the chops' levels, so quiet syllables hit as hard as loud ones. NORMALIZE on the vocal card is this knob at 100 %.</p>")}
 {ctl("LOW CUT", "OFF, 20 to 400 Hz<br>default OFF<br>automatable", "<p>A high-pass on the output - useful when the vocal is flattened low (OCTAVE -1 or -2) and starts to fight the bass.</p>")}
 {ctl("ROOT", "MIDI 0 to 127<br>default C5 (60)<br>automatable", "<p>The key of the first chop. The others follow upward, one chop per key, black keys included.</p>")}
 {ctl("STEAL", "0 to 100 ms<br>default 20 ms", "<p>In MONO, how quickly a chop fades when the next one cuts it. Shorter is choppier; longer is smoother.</p>")}
@@ -206,7 +228,19 @@ def manual(G):
  steps([
   "Turn on ARP and light the notes of your scale (or a triad).",
   "FOLLOW keeps the singer's melody snapped to your notes; UP or UP-DOWN turns the chops into an arpeggio.",
-  "Try the ARP presets: TRIAD, ASCEND, MELODY, PHRYGIAN.",
+  "Try the ARP presets: TRIAD, ASCEND, MELODY, PHRYGIAN - and the PHRYGIAN group for dark psytrance lines.",
+ ]))}
+{recipe("A build with no automation", "LFO",
+ steps([
+  "Preset TIDE, or open the LFO on any preset.",
+  "Shape: ramp up. Length: 4 BAR. IRON depth up, FADE OUT depth below 0.",
+  "Every 4 bars the sound opens from a dry gate into ringing metal and snaps shut on the downbeat.",
+ ]))}
+{recipe("Rips at the end of a phrase", "ROLL",
+ steps([
+  "Open the GROOVE panel and click a hit near the end of the bar.",
+  "ROLL x4 turns it into a 1/32 rip over two 16ths; x2 and x3 are shorter.",
+  "Or start from the RATCHET presets and the patterns RIPPER, JITTER, SHRED and TRIPWIRE.",
  ]))}
 {recipe("Build-up into the drop", "Macros",
  steps([
@@ -223,6 +257,7 @@ def manual(G):
 <li><strong>Every vocal sounding alike?</strong> One note and one comb bring vocals closer together by design. Use ARP FOLLOW, pull MIX down a little, or raise LIFE.</li>
 <li><strong>Too low and muddy?</strong> OCTAVE +1, or LOW CUT in ADVANCED.</li>
 <li><strong>Tighter hits:</strong> FADE OUT and a shorter RING; MONO with a short STEAL.</li>
+<li><strong>Breaths on the keys?</strong> Raise THRESHOLD until they are gone.</li>
 <li><strong>Bigger stereo:</strong> PAN STYLE WIDE, RANGE 100 %, FLIP up in the GROOVE.</li>
 </ul>
 <h3>Troubleshooting</h3>

@@ -8,7 +8,7 @@ pipeline.py calls prepare() after prepare_ui() and shoot_all() inside its server
   python shoot_iron.py              every Iron state (starts its own server)
   python shoot_iron.py iron_adv     one state
 """
-import os, sys, json, time, pathlib
+import os, sys, json, time, pathlib, urllib.parse
 TOOLS = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 from paths import UI, SHOTS, EDGE, PORT, ensure
@@ -26,6 +26,10 @@ STATES = {   # name -> demo query
     "iron_presets": "state=ready&iplist=1&slots=1,3",
     "iron_locks":   "state=ready&locks=iron,ring,mix&ipreset=4&premod=1",
     "iron_about":   "state=ready&about=1",
+    # (1.2.0) a (demo query, _shot.js state) pair: the page is posed by script after it loads
+    "iron_chop":    ("state=ready&groove=1", "js:" + urllib.parse.quote("selectChop(20); setChopNote(20, 2);")),
+    "iron_lfo":     ("state=ready&groove=1", "js:" + urllib.parse.quote("document.querySelector('#lfoBtn').click(); document.querySelector('#lfoOn').click(); document.querySelector('#lfoShapes .b[data-s=\"pump\"]').click(); lfo.depth = [0.5, 0, -0.3]; sendLfo();")),
+    "iron_step":    ("state=ready&groove=1&gp=1", "js:" + urllib.parse.quote("(function () { var i = groove.steps.findIndex(function (s) { return s.on; }); sendSet(i, { roll: 3 }); var j = groove.steps.findIndex(function (s, k) { return s.on && k > i + 2; }); openPop(j >= 0 ? j : i); })();")),
 }
 
 def prepare():
@@ -49,7 +53,7 @@ const q = new URLSearchParams(location.search);
 const w = +q.get('w'), h = +q.get('h');
 const f = document.createElement('iframe');
 f.width = w; f.height = h; f.style.width = w + 'px'; f.style.height = h + 'px';
-f.src = '/iron/index.html?' + (q.get('dq') || '') + '&shot=';
+f.src = '/iron/index.html?' + (q.get('dq') || '') + '&shot=' + encodeURIComponent(q.get('sh') || '');
 document.body.appendChild(f);
 window.addEventListener('message', e => {
   if (!e.data || e.data.type !== 'rects') return;
@@ -59,9 +63,10 @@ window.addEventListener('message', e => {
 </script></body></html>""", encoding="utf-8")
 
 def shoot(name, dq):
-    import urllib.parse
+    sh = ""
+    if isinstance(dq, tuple): dq, sh = dq
     out = SHOTS / f"{name}.png"
-    url = f"http://127.0.0.1:{PORT}/harness_iron.html?w={W}&h={H}&dq={urllib.parse.quote(dq)}"
+    url = f"http://127.0.0.1:{PORT}/harness_iron.html?w={W}&h={H}&dq={urllib.parse.quote(dq)}&sh={urllib.parse.quote(sh)}"
     with Edge(EDGE, W + 20, H + 20, DPR) as edge:
         edge.goto(url)
         raw = edge.wait_for("(function(){var s=document.getElementById('__rects');return s?s.textContent:''})()", timeout=40)

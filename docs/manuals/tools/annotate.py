@@ -374,19 +374,20 @@ def main():
     # #chopCv is one canvas: the waveform, the pan lane and the keys are boxes in image pixels (DPR 2).
     WAVE, LANE, KEYS = [108, 186, 1834, 236], [60, 426, 1882, 108], [106, 538, 1836, 82]
     # Order here IS the legend order in content_iron.py - keep the lists in step.
-    annotate("iron", "iron/tour.png", [
+    annotate("iron_chop", "iron/tour.png", [
         ("#pLogo", "Header logo"), ("#ipPre", "Preset browser"), ("#macroRow", "Macros"), ("#midiLed+#bpmRead", "MIDI / tempo"),
-        ("#vFile+#vMeta", "Vocal"), ("#sliceSeg", "AUTO SLICE"), ("#vCount", "Chops / keys"), ("#vInfo", "Chop readout"),
-        ("#browseBtn+#ejectBtn", "BROWSE / EJECT"), (WAVE, "Chop map"), (LANE, "Pan lane"), (KEYS, "Chop keys")], A,
+        ("#vFile", "Vocal"), ("#sliceSeg", "AUTO SLICE"), ("#thrChip", "THRESHOLD"), ("#normBtn", "NORMALIZE"), ("#vCount", "Chops"),
+        ("#vInfo", "Chop readout"), ("#browseBtn+#ejectBtn", "BROWSE / EJECT"), ("#chopPit", "Chop note"),
+        (WAVE, "Chop map"), (LANE, "Pan lane"), (KEYS, "Chop keys")], A,
         crops=[("vocal", "#vCard", 6)])
     annotate("iron", "iron/play.png", [
         ("#notePill", "NOTE"), ("#octCtl", "OCTAVE"), ("#midiBtn", "MIDI NOTE"), ("#arpBtn", "ARP"), ("#arpRow", "ARP order"),
-        ("#nRead", "Note readout"), ("#kComb", "Comb readout"), ("#ironKnob", "IRON"), ("#kFade", "FADE OUT"), ("#kRing", "RING"),
+        ("#nRead", "Note readout"), ("#ironKnob", "IRON"), ("#kFade", "FADE OUT"), ("#kRing", "RING"), ("#lfoBtn", "LFO"),
         ("#autoPan", "AUTO PAN"), ("#panStyleSeg", "PAN STYLE"), ("#rangeKnob", "RANGE"), ("#panMeter", "Pan meter")], A,
         crops=[("hero", "#hero", 0)])
     annotate("iron", "iron/foot.png", [
         ("#advBtn", "ADVANCED"), ("#grooveBtn", "GROOVE"), ("#gSteps", "Step strip"), ("#dragMidiFoot", "DRAG MIDI"),
-        ("#gRead", "Groove readout"), ("#mixKnob", "MIX"), ("#mixNote", "NOTE"), ("#outKnob", "OUT"), ("#safeLamp", "SAFE"),
+        ("#gRead", "Pattern name"), ("#mixKnob", "MIX"), ("#mixNote", "NOTE"), ("#outKnob", "OUT"), ("#safeLamp", "SAFE"),
         ("#resize-handle", "Resize grip")], A)
     annotate("iron_groove", "iron/groove.png", [
         ("#gpToggle", "GROOVE"), ("#barsSeg", "BARS"), ("#rerollBtn", "REROLL"), ("#histBack+#histPos+#histFwd", "History"),
@@ -399,10 +400,13 @@ def main():
         crops=[("drawer", "#drawer", 0)])
     annotate("iron_presets", "iron/presets.png", [
         ("#ipPre", "Preset browser"), ("#ipList", "Preset list"), ("#ipDetail", "Description"),
-        ([380, 836, 1150, 62], "MY SLOTS"), ("#ipInit", "INIT")], A)
+        ([60, 1215, 650, 70], "MY SLOTS"), ("#ipInit", "INIT")], A)
     annotate("iron_arp", "iron/arp.png", [("#arpBtn", "ARP"), ("#notePill", "Chord notes"), ("#arpOrderSeg", "Order"),
-        ("#arpOctSeg", "Octaves"), ("#nRead", "Note readout"), ("#kComb", "Combs")], A,
-        crops=[("note", "#octCtl+#notePill+#arpRow+#nRead+#kComb", 10)])
+        ("#arpOctSeg", "Octaves"), ("#nRead", "Note readout")], A,
+        crops=[("note", "#octCtl+#notePill+#arpRow+#nRead", 10)])
+    annotate("iron_lfo", "iron/lfo.png", [("#lfoBtn", "LFO"), ("#lfoOn", "ON"), ("#lfoCv", "Shape"), ("#lfoShapes", "Ready shapes"),
+        ("#lfoRates", "Length"), ("#lfoTg", "Depths")], A)
+    plain("iron_step", "iron/step.png")
     # ------------------------------------------------------------ GATER
     A = ACCENT["gater"]
     # Order here IS the legend order in content_gater.py - keep the two lists in step.
