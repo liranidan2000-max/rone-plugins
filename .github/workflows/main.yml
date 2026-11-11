@@ -1009,6 +1009,9 @@ jobs:
           # Crash reports go through roneaudio.com/api/v1/crash since Center 2.0;
           # no token is compiled into any binary.
           EXTRA=()
+          # The fixes to the fetched JUCE, for every product (Shared/RoneBuildHooks.cmake part 3,
+          # Shared/RoneJuceFixes.cmake) - the same file the Windows leg passes for its symbols.
+          EXTRA+=("-DCMAKE_PROJECT_INCLUDE=$GITHUB_WORKSPACE/Shared/RoneBuildHooks.cmake")
           # Deployment target: without it CMake takes the RUNNER's macOS version as the
           # minimum, so every Mac build demanded whatever macos-latest was that day - the
           # shipped Center carried minos 26.0 ("requires macOS 26"), and a customer on an
