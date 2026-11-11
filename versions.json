@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-11T22:40:40Z",
+  "last_updated": "2026-11-11T23:59:59Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-394.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-394.1.dmg",
@@ -313,7 +313,7 @@
     {
       "id": "RoneIron",
       "name": "RONE Iron",
-      "version": "1.1.1.394",
+      "version": "1.2.0.399",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -327,9 +327,9 @@
       "au_bundle": "RONE Iron.component",
       "manual": "RONE Iron - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=tZ-BhB5T5Os",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-394.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-399.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-394.1.pkg",
-      "sha256": "0deae6e2c435262a660c7dd86a719e466cf223ffb0b74096f9ac9bdeb693e60d",
+      "sha256": "6624a802a8bf5c6aced22fab93e99a7141d72203be3db99c26f56322b230b8d8",
       "registry_key": "RoneIron",
       "sha256_mac": "a0f4700f236a3ec8de6520ee1e8f78ec224e9e956f944d6d1f8246184621067a",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
@@ -356,7 +356,7 @@
           "description": "Suelta una voz y se convierte en un instrumento de chops metálicos: Iron la afina a la nota que elijas, la corta en chops en tus teclas MIDI, hace sonar cada chop en un comb afinado y lo lanza a izquierda y derecha - tócalo desde el piano roll o deja que GROOVE escriba el patrón"
         }
       },
-      "size": 15517513,
+      "size": 15843045,
       "size_mac": 22147193,
       "version_mac": "1.1.1.394"
     },
