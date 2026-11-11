@@ -16,6 +16,16 @@
 #      VST MANAGER both crashed in MSVCP140.dll+0x12f58 the moment they started,
 #      and every plugin would have done the same inside the DAW.
 #      WebView2LoaderStatic.lib carries no runtime, so it links either way.
+#   4. macOS: the fixes to the JUCE the product fetched (Shared/RoneJuceFixes.cmake),
+#      applied when the configure ends - by then the project has brought its JUCE in.
+#
+# 1 - 3 are Windows only, 4 is macOS only.
+
+if(APPLE AND NOT RONE_JUCE_FIXES_HOOKED)
+    set(RONE_JUCE_FIXES_HOOKED TRUE)
+    include(${CMAKE_CURRENT_LIST_DIR}/RoneJuceFixes.cmake)
+    cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL rone_apply_juce_fixes)
+endif()
 
 if(RONE_BUILD_HOOKS_DONE OR NOT MSVC)
     return()
