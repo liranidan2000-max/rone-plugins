@@ -9,6 +9,16 @@
 #      what /DEBUG would otherwise switch off, so the code stays as it was.
 #   2. RoneDawCrashGuard.cpp in each plugin's VST3 target (not the Standalone), with
 #      the DLL's entry point moved to it. The file's header comment says why.
+#   3. macOS: the fixes to the JUCE the product fetched (Shared/RoneJuceFixes.cmake),
+#      applied when the configure ends - by then the project has brought its JUCE in.
+#
+# 1 and 2 are Windows only, 3 is macOS only.
+
+if(APPLE AND NOT RONE_JUCE_FIXES_HOOKED)
+    set(RONE_JUCE_FIXES_HOOKED TRUE)
+    include(${CMAKE_CURRENT_LIST_DIR}/RoneJuceFixes.cmake)
+    cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL rone_apply_juce_fixes)
+endif()
 
 if(RONE_BUILD_HOOKS_DONE OR NOT MSVC)
     return()
