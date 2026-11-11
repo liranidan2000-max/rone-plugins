@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-11T22:40:04Z",
+  "last_updated": "2026-11-11T22:40:40Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-394.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-394.1.dmg",
@@ -608,10 +608,10 @@
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WqbiD2pWe6Y",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-397.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-395.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-397.1.pkg",
       "sha256": "83305d8dfd42a8857cb9977d0249ee4e32e3a3be8e7cd000adb6e6e98ef9ab85",
       "registry_key": "RoneSidechain",
-      "sha256_mac": "a74db37a791e6cdf73944da1ef2ecf47f3e71d2569740fdab228985bb6a375c3",
+      "sha256_mac": "0b0397502c6ad4fe3d47ec16156119c55607ec785ea235b4c207bc7e1416edb6",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
       "category": [
         "mix"
@@ -626,8 +626,8 @@
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
       "size": 14588515,
-      "size_mac": 19088912,
-      "version_mac": "1.2.2.395"
+      "size_mac": 19177141,
+      "version_mac": "1.2.3.397"
     },
     {
       "id": "RoneDelay",
