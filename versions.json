@@ -716,24 +716,24 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.26",
+      "version": "0.9.27",
       "type": "standalone",
       "formats": [
         "App"
       ],
       "description": "Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig, FL Studio, Cubase, and on a Mac in Logic Pro and Pro Tools - or from the side strip right next to your DAW (Ctrl+Alt+V, or any key you choose in Setup). Free for good with any RONE plugin; 14 days free for every producer.",
-      "whats_new": "0.9.26 - The strip key now goes straight into the search on Mac too: press it and type, no click needed (also when the strip was left open behind your DAW). Bitwig: plugins, MIDI files and actions now really load onto the selected track - Bitwig used to drop them silently. Add the controller once in Bitwig: Settings > Controllers > Add controller > RONE > RONE VST Manager.",
+      "whats_new": "0.9.27 - Mac keyboard: shortcuts can use Cmd, and every key shows as ⌘ ⌥ ⌃ ⇧ (Setup and the Map keyboard). 0.9.26 - The strip key now goes straight into the search on Mac too: press it and type, no click needed (also when the strip was left open behind your DAW). Bitwig: plugins, MIDI files and actions now really load onto the selected track - Bitwig used to drop them silently. Add the controller once in Bitwig: Settings > Controllers > Add controller > RONE > RONE VST Manager.",
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
       "video": "https://www.youtube.com/watch?v=5O7U35jwAzI",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.26.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.26.30.pkg",
-      "sha256": "b9ba4ffbc86d5b99568dd0c298a757c11b62848f9869e4f064f33cde6ce6202f",
-      "sha256_mac": "6088861a8784a428a10786e4949a238f2f22b9e574a7fc48f231bf0b6eab2f9b",
-      "size": 5194584,
-      "size_mac": 10411919,
-      "version_mac": "0.9.26.30",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.27.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.27.31.pkg",
+      "sha256": "c53b3ab5ca80e6728cf02ee604b53b6e89a9742fa4c68866f890416681b66c1c",
+      "sha256_mac": "041bfc8396454677bbe484b70c6299569d1fbbf567426dae8128164a39b6c685",
+      "size": 5196421,
+      "size_mac": 10413342,
+      "version_mac": "0.9.27.31",
       "released": "2026-11-11"
     }
   ],
