@@ -348,9 +348,9 @@ def main():
     annotate("sidechain_shape", "sidechain/bend_full.png", [([454, 454, 24, 24], "Bend circle"), ([858, 402, 24, 24], "Point")], A)
     annotate("sidechain_phase", "sidechain/phase.png", [
         ("#phCv", "Handover scope"), ("#phOnBtn", "ON / OFF"), ([180, 900, 170, 192], "PHASE"), ([388, 900, 124, 192], "SPLIT"),
-        ("#modeSeg+#polBtn", "MODE / FLIP"), ("#phState", "Status"), ("#phRead", "Readout")], A)
+        ("#modeSeg+#polBtn", "MODE / FLIP"), ("#splitSeg", "SPLIT AUTO / MANUAL"), ("#phState", "Status"), ("#phRead", "Readout")], A)
     annotate("sidechain_space", "sidechain/space.png", [
-        ("#spCv", "The bells"), ([236, 300, 120, 80], "Cut now"), ([706, 238, 24, 350], "LOW / HIGH"), ([1800, 262, 64, 270], "dB scale"),
+        ("#spCv", "The bell"), ([236, 300, 120, 80], "Cut now"), ([706, 238, 24, 350], "LOW / HIGH"), ([1800, 262, 64, 270], "dB scale"),
         ("#stCv", "WHEN THEY WORK"), ("#spOnBtn", "SPACE ON / OFF"), ([860, 900, 140, 192], "AMOUNT"), ([1090, 900, 130, 192], "RELEASE")], A)
     annotate("sidechain_psave", "sidechain/psave_full.png", [
         ("#presetList", "Genre presets"), ("pico[14]", "Star"), ("#myPresetsH+#myPresetList", "MY PRESETS"),

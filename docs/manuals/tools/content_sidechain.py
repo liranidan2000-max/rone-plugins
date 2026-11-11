@@ -2,7 +2,7 @@ def manual(G):
     img, legend, ctl, note, steps, recipe, table = (G[k] for k in ("img", "legend", "ctl", "note", "steps", "recipe", "table"))
     m = {
         "id": "sidechain", "product": "RONE Sidechain", "eyebrow": "DRAWN SIDECHAIN · PHASE · SPACE",
-        "title_html": "RONE <i>Sidechain</i>", "accent": "#7B8CFF", "version": "1.0.9",
+        "title_html": "RONE <i>Sidechain</i>", "accent": "#7B8CFF", "version": "1.2.3",
         "tagline": "Draw the duck on your bass and let every kick restart it - silent at the kick's first sample, open exactly where you drew it. Then turn the bass's sub to meet the kick, and cut only where the two really collide.",
         "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Sidechain.vst3", "au": "RONE Sidechain.component", "exe": "RONE Sidechain.exe",
         "pdf": "RONE Sidechain - User Manual.pdf", "cover_img": "sidechain/main.png",
@@ -129,14 +129,14 @@ def manual(G):
 {ctl("RATE", "1/16, 1/8, 1/4, 1/2, 1 BAR<br>default 1/4<br>automatable", "<p>How long one cycle of the curve is, synced to the host tempo. 1/4 = one beat, the usual four-on-the-floor kick. A kick that comes before the cycle is over restarts it there.</p>")}
 {ctl("DEPTH", "0 to 100 %<br>default 100 %<br>automatable", "<p>How far the curve closes. At 100 % the bottom of the curve is silence; at 50 % the bass never drops below half its level.</p>")}
 {ctl("CLICK", "0.5 to 20 ms<br>default 2.0 ms<br>automatable", "<p>The fade <em>before</em> the kick that keeps the cut from clicking. It is complete at the kick's first sample, so the bass is silent when the kick starts however long you set it. Shorter = a tighter cut; longer = softer on low, sustained basses.</p>")}
-{ctl("DUCK", "FULL / SUB / BAND<br>default FULL<br>automatable", "<p>Where in the spectrum the duck works - <strong>the rest passes untouched</strong>.</p><p><b>FULL</b> ducks the whole bass. <b>SUB</b> ducks only its sub, below SPLIT (set on the PHASE page). <b>BAND</b> ducks only between the two handles of the strip under the switch: drag a handle and the switch goes to BAND; double-click the strip for FULL. The bands are split linear-phase, so the part that is not ducked passes exactly as it came.</p>", "BAND's handles run from 20 Hz to 20 kHz (default 20 Hz - 200 Hz); the view's readout shows the range you set.")}
+{ctl("DUCK", "FULL / SUB / BAND<br>default FULL<br>automatable", "<p>Where in the spectrum the duck works - <strong>the rest passes untouched</strong>.</p><p><b>FULL</b> ducks the whole bass. <b>SUB</b> ducks only its sub, below SPLIT (set on the PHASE page). <b>BAND</b> ducks only between the two handles of the strip under the switch: drag a handle and the switch goes to BAND; double-click the strip for FULL. The bands are split linear-phase, so the part that is not ducked passes exactly as it came. With PHASE turned, SUB and BAND duck the turned bass, so nothing of the band is left under the kick.</p>", "BAND's handles run from 20 Hz to 20 kHz (default 20 Hz - 200 Hz); the view's readout shows the range you set.")}
 {img("sidechain/band_duck.png", "DUCK in BAND: the strip shows the range the duck works in.", "w60")}
 """})
 
     S.append({"title": "The kick: routed, dropped or the grid", "sub": "where the kick comes from", "html": f"""
 <p>The <strong>KICK chip</strong> in the header always shows what the curve is following:</p>
 {table(["Chip", "What it means"], [
- ("KICK IN &middot; ROUTED", "A kick arrives on the sidechain input. Every hit restarts the curve, whatever the pattern."),
+ ("KICK IN &middot; ROUTED", "A kick arrives on the sidechain input. Every hit restarts the curve, whatever the pattern - quieter ghost kicks between the main ones too."),
  ("SAMPLE &middot; <i>name</i>", "You dropped or loaded a kick sample. It plays silently on the host's beat and restarts the curve there."),
  ("LAST KICK &middot; ON THE BEAT", "The routed kick stopped arriving. The last clean kick heard plays on, silently, on every beat."),
  ("GRID &middot; NO KICK", "No kick at all. The curve restarts on its own at every RATE. PHASE and SPACE wait for a kick."),
@@ -164,52 +164,55 @@ def manual(G):
  ("Bitwig", "RONE Sidechain device &rarr; <b>Sidechain input</b> = the kick track."),
  ("REAPER", "Kick track &rarr; Route: send to the bass track on channels <b>3/4</b>; RONE Sidechain pin connector: sidechain = 3/4."),
 ])}
+{note("Ghost kicks restart the curve, other drums do not", "A kick down to 24 dB quieter than your main kick still restarts the curve, as long as it sounds like your kick: the plugin compares every quieter hit with the kick it remembers. Snares, claps and hats on the same bus, and bass bleeding onto the sidechain, do not restart it.")}
 {note("A sidechain that carries the bass is ignored", "FL Studio, before a sidechain route is made, feeds the bass's own signal onto the plugin's sidechain bus. RONE Sidechain recognises that - even when it arrives at another level or a few milliseconds late - and does not treat the bass as a kick: the curve follows the beat until you route the real kick.")}
 <h3>Dropping a kick sample</h3>
 <p>No routing at all? Drag a kick file (WAV, AIFF, MP3 or FLAC) from your browser or the desktop and drop it anywhere on the plugin - the page shows <em>DROP YOUR KICK</em> - or press <strong>LOAD KICK&hellip;</strong>. The sample plays <strong>silently</strong> on the host's beat: the curve follows the beat, and PHASE and SPACE know your kick's sound. It is saved with the project.</p>
 <p>A dropped kick <strong>always wins over the routing</strong>. The button turns into <strong>&#10005; CLEAR KICK</strong>; press it to hand control back to the routed kick.</p>
 <h3>Rendering the bass alone</h3>
-<p>When the kick stops arriving - you solo the bass, or render the bass track on its own - the <strong>last kick heard plays on every beat, silently</strong>. The curve, PHASE and SPACE stay exactly as they were, so a render of the bass sounds like the bass in the mix. The remembered kick is saved with the project.</p>
+<p>When the kick stops arriving - you solo the bass, or render the bass track on its own - the <strong>last kick heard plays on every beat, silently</strong>. The curve, PHASE and SPACE stay exactly as they were, so a render of the bass sounds like the bass in the mix. The remembered kick is saved with the project, at its real level.</p>
 <h3>The standalone</h3>
 <p>The standalone app has no sidechain input: the curve follows its own clock (GRID). Drop a kick sample to give PHASE and SPACE a kick.</p>
 """})
 
     S.append({"title": "The PHASE page", "sub": "the sub turned to meet the kick", "html": f"""
-<p>Where the kick's tail hands over to the bass, the two low ends overlap. If they are out of phase they cancel, and the low end gets thinner exactly where it should be strongest. PHASE turns <strong>only the bass's sub</strong> (below SPLIT) so the two add up. The turn is a linear-phase rotation: the bass's attack is not smeared and nothing above SPLIT moves.</p>
+<p>Where the kick's tail hands over to the bass, the two low ends overlap. If they are out of phase they cancel, and the low end gets thinner exactly where it should be strongest. PHASE turns <strong>only the bass's sub</strong> (below SPLIT) so the two add up. The turn is a linear-phase rotation: the bass's attack is not smeared and nothing above SPLIT moves. It also keeps the level: the turn slides smoothly across SPLIT, so a note or a harmonic right at SPLIT stays as loud as it was (within half a dB) at any angle.</p>
 {img("sidechain/phase.png", "The PHASE page: the kick's low band (grey) and the bass's sub as you hear it (periwinkle) at the handover.", "w80")}
 {legend([
  ("Handover scope", "the first 160 ms of the cycle: the kick's low band in grey, the bass's sub as heard in periwinkle - locked, they read as one continuous wave"),
  ("ON / OFF", "switch PHASE off to hear what the turn does; the duck and SPACE stay"),
  ("PHASE", "the angle the sub is turned by, -180&deg; to +180&deg;"),
  ("SPLIT", "where the sub ends: what PHASE turns and what DUCK SUB ducks"),
- ("MODE / &Oslash; FLIP", "AUTO or MANUAL; &Oslash; FLIP turns the sub's polarity (+180&deg;)"),
- ("Status", "LOCKED, TURNING TO &hellip;, NOTHING TO TURN, PHASE OFF"),
+ ("MODE / Ø FLIP", "AUTO or MANUAL for PHASE; &Oslash; FLIP turns the sub's polarity (+180&deg;)"),
+ ("SPLIT AUTO / MANUAL", "AUTO sets SPLIT to 1.5 x the bass's note and follows it"),
+ ("Status", "LOCKED, TURNING TO &hellip;, HOLDING &hellip;, NOTHING TO TURN, PHASE OFF"),
  ("Readout", "the bass's note, kick + bass together in dB, and what they would be turned"),
 ])}
 {ctl("ON / OFF", "default ON<br>automatable", "<p>Off = the sub as it came. Use it to compare.</p>")}
-{ctl("MODE", "AUTO / MANUAL<br>default AUTO<br>automatable", "<p><b>AUTO</b> measures where the kick's tail and the bass add up and turns the sub there by itself. It turns <strong>only while the duck is closed</strong>, so you never hear it moving. In AUTO the PHASE knob shows the angle and is not yours to turn. <b>MANUAL</b> leaves PHASE to you; the status line tells you where AUTO would turn it and how much louder the low end would be.</p>")}
+{ctl("MODE", "AUTO / MANUAL<br>default AUTO<br>automatable", "<p><b>AUTO</b> measures where the kick's tail and the bass add up and turns the sub there by itself. It turns <strong>only while the duck is closed</strong>, so you never hear it moving. In AUTO the PHASE knob shows the angle and is not yours to turn. AUTO settles on <strong>one angle for the bass</strong> from the last eight kicks. When the bass meets the kick at a different angle on every hit (a free-running oscillator, for example), no single angle fits: AUTO then holds where it is and the status reads HOLDING. <b>MANUAL</b> leaves PHASE to you; the status line tells you where AUTO would turn it and how much louder the low end would be.</p>")}
 {ctl("PHASE", "-180&deg; to +180&deg;<br>default 0&deg;<br>automatable", "<p>How far the sub is turned against the kick. Set by AUTO, or by hand in MANUAL.</p>")}
 {ctl("SPLIT", "50 to 200 Hz<br>default 90 Hz<br>automatable", "<p>Where the sub ends. Everything below it is what PHASE turns and what DUCK = SUB ducks; everything above passes as it was.</p>")}
-{ctl("&Oslash; FLIP", "on / off<br>automatable", "<p>Turns the sub's polarity around (+180&deg; on top of PHASE).</p>")}
+{ctl("SPLIT AUTO / MANUAL", "default AUTO", "<p><b>AUTO</b> sets SPLIT by itself to 1.5 x the note your bass plays - the point that turns the sub and its first harmonic and leaves the bass's body alone - and follows the bass when it moves to another note. The same bass always gives the same SPLIT. <b>MANUAL</b> keeps the value AUTO found and gives you the knob. A SPLIT change glides in over about 40 ms, so it never clicks. Projects made before 1.2.2 open in MANUAL on their own SPLIT.</p>")}
+{ctl("&Oslash; FLIP", "on / off<br>automatable", "<p>Turns the sub's polarity around (+180&deg; on top of PHASE). It stays in AUTO too: AUTO turns to its angle plus 180&deg;.</p>")}
 {note("PHASE needs a kick", "With GRID &middot; NO KICK the page reads ROUTE THE KICK OR DROP A SAMPLE - there is nothing to turn towards. If the kick and the bass never overlap, the status says NOTHING TO TURN.")}
 """})
 
     S.append({"title": "The SPACE page", "sub": "bells only where kick and bass meet", "html": f"""
-<p>A static EQ cut on the bass takes the low end away all the time. SPACE works like a dynamic EQ instead: up to 48 narrow <strong>bells</strong> that cut the bass <strong>only where the kick is loud and the bass has something at the same frequency, at the same moment</strong>. Between kicks, and at frequencies where they do not meet, the bass is untouched.</p>
+<p>A static EQ cut on the bass takes the low end away all the time. SPACE works like a dynamic EQ instead: one sharp <strong>bell</strong> (a second one only for a second, separate collision) that cuts the bass <strong>exactly where the kick is loud and the bass has a note at the same frequency, at the same moment</strong>. The bell sits on the bass's own note, so it takes the clash and leaves the rest of the bass alone. Between kicks, and at frequencies where they do not meet, the bass is untouched.</p>
 {img("sidechain/space.png", "The SPACE page: the bells as a live dynamic EQ on the bass, and when they work in the cycle.")}
 {legend([
- ("The bells", "a live dynamic EQ on the bass: the kick (grey) and the bass (blue) faint behind; outside LOW .. HIGH the display is shaded"),
+ ("The bell", "a live dynamic EQ on the bass: the kick (grey) and the bass (blue) faint behind; outside LOW .. HIGH the display is shaded"),
  ("Cut now", "the bells' response in red, dipping where they cut and coming back; the dot names the deepest point. The dashed line = the deepest they went this cycle"),
  ("LOW / HIGH", "drag the two handles on the display: the range the bells may work in"),
- ("dB scale", "the EQ's own scale: 0 dB at the top line, then -6, -12 and -18 dB"),
+ ("dB scale", "the EQ's own scale: 0 dB at the top line, down to -24 dB"),
  ("WHEN THEY WORK", "one cycle: the kick, the bass as it leaves, and in red the moments the bells cut"),
  ("SPACE ON / OFF", "off = no bells; the duck and PHASE stay"),
- ("AMOUNT", "how deep the bells go where kick and bass meet (up to 18 dB)"),
+ ("AMOUNT", "how deep the bells go where kick and bass meet (up to 24 dB)"),
  ("RELEASE", "how long a bell follows the kick after its hit"),
 ])}
 {note("What you see and what you hear", "The red dip drops at once and returns over about 150 ms, so the eye can follow it. That is only the display: the bells in the audio are as fast as before, set by RELEASE.")}
 {ctl("SPACE ON / OFF", "default ON<br>automatable (Space On)", "<p>Off = no bells at all, so you hear the bass without them. The duck and PHASE stay as they are. The display then reads SPACE IS OFF.</p>")}
-{ctl("AMOUNT", "0 to 100 %<br>default 30 %<br>automatable", "<p>How deep the bells cut where the kick and the bass collide - 100 % is up to 18 dB. At 0 SPACE does nothing.</p>")}
+{ctl("AMOUNT", "0 to 100 %<br>default 30 %<br>automatable", "<p>How deep the bells cut where the kick and the bass collide - 100 % is up to 24 dB. At 0 SPACE does nothing. The bell cuts only while the bass is heard: where the duck has already closed the bass, there is nothing to cut.</p>")}
 {ctl("RELEASE", "15 to 125 ms<br>default 29 ms<br>automatable", "<p>How long a bell keeps following the kick after its hit. Short leaves the next bass note alone; longer keeps the room open through a long kick tail.</p>")}
 {ctl("LOW / HIGH", "20 Hz to 20 kHz<br>default 20 Hz - 250 Hz<br>automatable", "<p>The range the bells may work in. Click or drag on the display and the nearer handle follows.</p>")}
 {note("When SPACE cuts", "Mostly under the first bass note after the kick, where the kick's tail is still ringing. With a curve that keeps the kick's 16th closed, there is nothing to cut under the kick itself - by design. SPACE needs a kick: with GRID &middot; NO KICK it waits.")}
