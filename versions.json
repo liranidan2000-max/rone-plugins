@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-12T20:23:46Z",
+  "last_updated": "2026-11-12T20:25:49Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-394.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-394.1.dmg",
@@ -228,10 +228,10 @@
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-401.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-394.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-401.1.pkg",
       "sha256": "e8dd8d7a92685ad660a3230be475e4219d709113a0497ec6ea112cd30f1cf0df",
       "registry_key": "RoneClipper",
-      "sha256_mac": "cb02c6eae1c1f627aa396badb4de97f58eafb14d1c5820b8fd98fa02ed3f0363",
+      "sha256_mac": "f608fa21b07b534d940e2de266b42bdce41a842fceefe0eb857431463ab7509a",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
       "price": 0,
       "launch_price": 0,
@@ -257,8 +257,8 @@
         }
       },
       "size": 13035407,
-      "size_mac": 14526810,
-      "version_mac": "1.1.1.394"
+      "size_mac": 14527471,
+      "version_mac": "1.1.2.401"
     },
     {
       "id": "RoneRise",
