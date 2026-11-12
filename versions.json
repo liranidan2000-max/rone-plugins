@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-12T10:13:19Z",
+  "last_updated": "2026-11-12T10:13:28Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-394.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-394.1.dmg",
@@ -278,10 +278,10 @@
       "manual": "RONE Rise - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-400.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-394.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-400.1.pkg",
       "sha256": "2a3715c1e60b307846afc46c9374396df10e51a28695727b22429c86c678d735",
       "registry_key": "RoneRise",
-      "sha256_mac": "a867213347fa848a88d8ccaa455531c6287d554e3146954e1db7da89ebcec754",
+      "sha256_mac": "775edfa25368c93ecabf6a05f459284b51f537528af5668ed1e0f03fad06e7f1",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
       "launch_price": 39,
@@ -307,8 +307,8 @@
         }
       },
       "size": 13872528,
-      "size_mac": 15256275,
-      "version_mac": "1.1.1.394"
+      "size_mac": 15833896,
+      "version_mac": "1.2.0.400"
     },
     {
       "id": "RoneIron",
