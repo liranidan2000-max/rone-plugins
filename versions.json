@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-12T10:13:28Z",
+  "last_updated": "2026-11-12T20:23:46Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-394.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-394.1.dmg",
@@ -213,7 +213,7 @@
     {
       "id": "RoneClipper",
       "name": "RONE Clipper",
-      "version": "1.1.1.394",
+      "version": "1.1.2.401",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -227,9 +227,9 @@
       "au_bundle": "RONE Clipper.component",
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-394.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-401.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-394.1.pkg",
-      "sha256": "e3022b8ce11b210ead4f1709e75352d5e0bce9649f0dc5db6214c9d2e760ec1e",
+      "sha256": "e8dd8d7a92685ad660a3230be475e4219d709113a0497ec6ea112cd30f1cf0df",
       "registry_key": "RoneClipper",
       "sha256_mac": "cb02c6eae1c1f627aa396badb4de97f58eafb14d1c5820b8fd98fa02ed3f0363",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
@@ -256,7 +256,7 @@
           "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que deja el kick y el bajo fuera del clipper, y oversampling que se anula contra la entrada a -100 dB"
         }
       },
-      "size": 13034806,
+      "size": 13035407,
       "size_mac": 14526810,
       "version_mac": "1.1.1.394"
     },
