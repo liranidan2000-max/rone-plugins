@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>RONE Rise סבב 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Heebo:wght@400;500;700;800&display=swap">
+<style>/* rone-ui v2 */
+/* ============================================================================
+   RONE UI kit v2 (26.10.2026) - the graphite house language as one stylesheet.
+   Decided with Liran on the controls-finish mockup (claude.ai/artifact/PL1XNPMJeg44Dqu24SAQXC):
+     - the knob is the .arck of Reverse Reverb / Flanger (value inside, white dot, arc outside,
+       no ticks); its lit arc glows only while touched (.touch) and on the hero (.hero)
+     - keys are machined: no 1px grey border, a top highlight and a dark bottom edge, ONE on-state
+       (neon fill), an action key carries a LED; a pressed key only sinks 1px (no animation)
+     - only things that MOVE animate: the segment pill glides (380 ms, --pop), the switch thumb pops
+     - one popover for everything that opens (presets, selects, header menus, pickers)
+     - a 3 % grain on caps and panels (.rone-grain)
+   Use: paste after Shared/fonts/rone-fonts.css, then set the plugin's neon once:
+       :root { --neon:#FF5FB8; --neon-rgb:255,95,184; }
+   Pair with rone-ui.js (RoneUI.knob / seg / menu / select / switch). Demo: Shared/ui/demo.html.
+   ============================================================================ */
+
+:root {
+    --ground:#14161A; --panel:#17191E; --card:#101216; --drawer:#1B1E23;
+    --line:#23262C; --line2:#2A2E35; --line3:#383D45;
+    --text:#E8EAED; --text2:#B9BDC4;
+    --dim:#7A7F88;      /* the lowest colour for a label anyone has to read (4.5:1) */
+    --faint:#4E535B;    /* decoration only: ticks, dividers, disabled - never a label */
+    --hot:#FF3B3B; --hot-rgb:255,59,59;
+    --ink:#0F1114;      /* text on a lit neon surface */
+    --neon:#E8EAED; --neon-rgb:232,234,237;
+    --pop:cubic-bezier(.34,1.56,.64,1);   /* the one overshoot curve for things that move */
+    --font-display:'Sora','Segoe UI',-apple-system,sans-serif;
+    --font-ui:'Manrope','Segoe UI',-apple-system,sans-serif;
+    --font-mono:'IBM Plex Mono','Consolas',monospace;
+    --rone-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- type roles: nothing under 9 px on the design canvas ---- */
+.rone-display { font-family:var(--font-display); font-weight:800; letter-spacing:.02em; color:var(--text); }
+.rone-label   { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); }
+.rone-value   { font-family:var(--font-display); font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.rone-mono    { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
+
+/* ---- grain: a 3 % noise overlay on any panel (the element needs position:relative) ---- */
+.rone-grain::before { content:''; position:absolute; inset:0; background:var(--rone-noise); opacity:.5; mix-blend-mode:screen; pointer-events:none; border-radius:inherit; }
+.rone-panel { position:relative; background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); border-radius:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
+
+/* ---- the knob: .arck, as Reverse Reverb / Flanger draw it (geometry untouched) ----
+   DOM: .arck.size-m > svg(path.track, path.lit) + .kbody + .kdot + .cval        */
+.arck { position:relative; flex-shrink:0; cursor:grab; outline:none; touch-action:none; }
+.arck:active { cursor:grabbing; }
+.arck.locked { cursor:default; }
+.arck svg { position:absolute; inset:0; pointer-events:none; overflow:visible; }
+.arck .track { fill:none; stroke:var(--line); stroke-linecap:round; }
+.arck .lit { fill:none; stroke:var(--neon); stroke-linecap:round; transition:filter .5s ease-out, opacity .1s; }
+.arck.touch .lit, .arck.hero .lit { filter:drop-shadow(0 0 5px rgba(var(--neon-rgb),.6)); }
+.arck .kbody { position:absolute; border-radius:50%;
+    background:radial-gradient(circle at 38% 30%,#363B42 0%,#26292F 52%,#1A1C21 100%);
+    box-shadow:0 12px 24px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.07), inset 0 -7px 16px rgba(0,0,0,.45); }
+.arck .kbody::before { content:''; position:absolute; inset:9%; border-radius:50%;
+    background:radial-gradient(circle at 40% 32%,#2C3037 0%,#1D2025 60%,#16181C 100%);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.05), 0 2px 6px rgba(0,0,0,.4); }
+.arck .kbody::after { content:''; position:absolute; inset:0; border-radius:50%; background:var(--rone-noise); opacity:.3; mix-blend-mode:overlay; pointer-events:none; }
+.arck .kdot { position:absolute; left:50%; border-radius:50%; background:#F2F4F6; box-shadow:0 0 7px rgba(255,255,255,.5); transform:rotate(-135deg); z-index:2; pointer-events:none; }
+.arck .cval { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
+    font-family:var(--font-display); font-weight:700; color:var(--text); text-transform:uppercase; z-index:3; font-variant-numeric:tabular-nums; }
+.arck .cval small { font-size:.55em; font-weight:700; margin-left:2px; }
+.arck.size-s { width:58px;  height:58px;  } .arck.size-s .track, .arck.size-s .lit { stroke-width:3.5; } .arck.size-s .kbody { inset:8px;  } .arck.size-s .kdot { top:11px; width:4px;  height:4px;  margin-left:-2px;   transform-origin:50% 18px; } .arck.size-s .cval { font-size:10px; }
+.arck.size-m { width:104px; height:104px; } .arck.size-m .track, .arck.size-m .lit { stroke-width:4.5; } .arck.size-m .kbody { inset:13px; } .arck.size-m .kdot { top:21px; width:6px;  height:6px;  margin-left:-3px;   transform-origin:50% 31px; } .arck.size-m .cval { font-size:15px; }
+.arck.size-l { width:124px; height:124px; } .arck.size-l .track, .arck.size-l .lit { stroke-width:5;   } .arck.size-l .kbody { inset:15px; } .arck.size-l .kdot { top:23px; width:7px;  height:7px;  margin-left:-3.5px; transform-origin:50% 39px; } .arck.size-l .cval { font-size:18px; }
+/* hero: the same knob scaled; value + name inside, the lit arc always glows */
+.arck.size-xl { width:200px; height:200px; } .arck.size-xl .track, .arck.size-xl .lit { stroke-width:7; } .arck.size-xl .kbody { inset:24px; } .arck.size-xl .kdot { top:36px; width:10px; height:10px; margin-left:-5px; transform-origin:50% 64px; }
+.arck.size-xl .cval { font-size:36px; flex-direction:column; gap:2px; letter-spacing:-.02em; }
+.arck .cval .sub { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.24em; color:var(--dim); }
+.arck:focus-visible .kbody { box-shadow:0 0 0 2px var(--neon), 0 12px 24px rgba(0,0,0,.55); }
+.rone-knobgroup { display:flex; flex-direction:column; align-items:center; gap:6px; }
+
+/* ---- keys ---- */
+.rone-btn { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text2);
+    background:linear-gradient(180deg,#1E2126,#15171B); border:0; border-radius:7px; padding:9px 14px; cursor:pointer; position:relative; white-space:nowrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35);
+    transition:box-shadow .18s, color .15s, background .18s; }
+.rone-btn:hover { color:var(--text); }
+.rone-btn:active { transform:translateY(1px); box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+.rone-btn.on, .rone-btn[aria-pressed="true"] { color:var(--ink);
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+.rone-btn.hot.on { background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--hot); color:#fff; }
+.rone-btn.act { color:var(--text); }
+.rone-btn.act::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); margin-right:8px; vertical-align:1px; }
+.rone-btn.act.wait::before { background:var(--faint); box-shadow:none; }
+.rone-btn.dd::after { content:''; display:inline-block; width:5px; height:5px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); margin-left:9px; vertical-align:2px; transition:transform .2s; }
+.rone-btn.dd.open::after { transform:rotate(225deg) translate(-1px,-1px); }
+.rone-btn.icon { padding:9px 11px; }
+.rone-btn.arrow { padding:9px 10px; color:var(--dim); }
+.rone-btn:disabled { color:var(--faint); cursor:default; transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+.rone-btn:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+
+/* ---- preset bar: ◀ name ▶ (the name opens the preset popover) ---- */
+.rone-preset { display:inline-flex; align-items:center; gap:2px; background:var(--card); border-radius:8px; padding:3px; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-preset .nm { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text); padding:6px 14px; min-width:120px; text-align:center; cursor:pointer; }
+.rone-preset .rone-btn { padding:6px 9px; color:var(--dim); box-shadow:none; background:transparent; }
+.rone-preset .rone-btn:hover { color:var(--text); }
+
+/* ---- segment: one of N, a sliding pill (rone-ui.js RoneUI.seg places it) ---- */
+.rone-seg { display:inline-flex; gap:2px; padding:3px; background:var(--card); border-radius:8px; position:relative; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-seg .pill { position:absolute; top:3px; left:0; height:calc(100% - 6px); width:0; border-radius:5px; pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 1px 2px rgba(0,0,0,.5); transition:transform .38s var(--pop), width .38s var(--pop); }
+.rone-seg > :not(.pill) { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:6px 11px; color:var(--dim); cursor:pointer;
+    border-radius:5px; position:relative; z-index:1; transition:color .2s; white-space:nowrap; background:none; border:0; }
+.rone-seg > :not(.pill):hover { color:var(--text2); }
+.rone-seg > .on, .rone-seg > .active, .rone-seg > [aria-checked="true"], .rone-seg > [aria-pressed="true"] { color:var(--ink); }
+.rone-seg.squash .pill { animation:rone-squash .38s var(--pop); }
+@keyframes rone-squash { 0% { transform:scaleY(.8) translateX(var(--px)); } 50% { transform:scaleY(1.08) translateX(var(--px)); } 100% { transform:scaleY(1) translateX(var(--px)); } }
+.rone-seg.off .pill { background:var(--line2); box-shadow:none; }   /* the row is switched off: the pill goes grey */
+.rone-seg.off > .on { color:var(--text2); }
+
+/* ---- chip (a read-out) ---- */
+.rone-chip { display:inline-flex; align-items:baseline; gap:8px; background:var(--card); border-radius:7px; padding:6px 10px; white-space:nowrap; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-chip .k { font-family:var(--font-ui); font-size:9px; font-weight:700; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
+.rone-chip .v { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.rone-chip .v small { font-size:9px; color:var(--dim); margin-left:3px; }
+
+/* ---- switch ---- */
+.rone-switch { display:inline-flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; color:var(--dim); text-transform:uppercase; cursor:pointer; transition:color .2s; user-select:none; }
+.rone-switch i { width:34px; height:18px; border-radius:9px; background:var(--card); box-shadow:inset 0 1px 3px rgba(0,0,0,.7); position:relative; flex:0 0 auto; }
+.rone-switch i::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:linear-gradient(180deg,#3A3F47,#24272C); box-shadow:0 1px 2px rgba(0,0,0,.6); transition:transform .32s var(--pop), background .2s; }
+.rone-switch.on { color:var(--text); }
+.rone-switch.on i::after { transform:translateX(16px); background:var(--neon); box-shadow:0 1px 2px rgba(0,0,0,.6), 0 0 8px rgba(var(--neon-rgb),.6); }
+.rone-led { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); vertical-align:1px; }
+.rone-led.off { background:var(--faint); box-shadow:none; }
+
+/* ---- popover: presets, selects, header menus, pickers (rone-ui.js RoneUI.menu / RoneUI.select) ---- */
+.rone-anchor { position:relative; display:inline-block; }
+.rone-menu { position:absolute; top:calc(100% + 6px); left:0; min-width:200px; z-index:60; background:var(--drawer); border-radius:9px; padding:5px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(0,0,0,.6), 0 18px 40px rgba(0,0,0,.6);
+    opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top left; pointer-events:none; transition:opacity .16s ease-out, transform .18s var(--pop); max-height:420px; overflow-y:auto; }
+.rone-menu.right { left:auto; right:0; transform-origin:top right; }
+.rone-menu.up { top:auto; bottom:calc(100% + 6px); transform:translateY(6px) scale(.98); transform-origin:bottom left; }
+.rone-menu.open { opacity:1; transform:none; pointer-events:auto; }
+.rone-menu.closing { transition:opacity .1s ease-in, transform .1s ease-in; }
+.rone-menu .h { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:7px 10px 5px; }
+.rone-menu .it { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:5px; cursor:pointer; font-family:var(--font-ui); font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); transition:background .12s, color .12s; white-space:nowrap; }
+.rone-menu .it:hover, .rone-menu .it.hi { background:var(--line2); color:var(--text); }
+.rone-menu .it .d { width:6px; height:6px; border-radius:50%; background:transparent; flex:0 0 auto; transition:background .15s, box-shadow .15s; }
+.rone-menu .it.on { color:var(--text); }
+.rone-menu .it.on .d { background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); }
+.rone-menu .it .m { margin-left:auto; padding-left:14px; font-family:var(--font-mono); font-size:10px; font-weight:500; letter-spacing:.02em; text-transform:none; color:var(--dim); }
+.rone-menu .it .star { margin-left:6px; color:var(--faint); font-size:11px; }
+.rone-menu .it .star.on { color:var(--neon); }
+.rone-menu .it.disabled { color:var(--faint); cursor:default; background:none; }
+.rone-menu .sep { height:1px; background:var(--line); margin:4px 6px; }
+.rone-menu .ft { font-family:var(--font-ui); font-size:10px; font-weight:600; color:var(--dim); padding:7px 10px 6px; max-width:260px; white-space:normal; line-height:1.5; }
+.rone-menu.wide { min-width:300px; }
+.rone-menu::-webkit-scrollbar { width:8px; } .rone-menu::-webkit-scrollbar-thumb { background:var(--line2); border-radius:4px; }
+/* a native <select> wrapped by RoneUI.select: the select stays in the DOM (hidden), the key shows its text */
+.rone-select-native { position:absolute !important; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
+
+/* Rise: BYPASS toggles .active (kept), the ADVANCED / preset / GO keys use the kit's .on */
+.rone-btn.active{color:var(--ink);background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)),var(--neon);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.25),0 1px 0 rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.35)}
+.rone-btn.hot.active{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)),var(--hot);color:#fff}
+</style>
+<style>
+/* ============================================================================
+   RONE Rise - RONE graphite design language (bundle standard), Rise Pink.
+   Design canvas 860x580 in #app, scaled into #app-viewport (fitScale).
+   One INTENSITY knob over a sunrise that lights the whole plugin; presets at
+   the bottom; everything else behind ADVANCED.
+   ============================================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+    --ground:#14161A; --panel:#17191E; --card:#101216; --line:#23262C; --line2:#2A2E35;
+    --text:#E8EAED; --dim:#7A7F88; --faint:#4E535B; --hot:#FF3B3B; --hot-rgb:255,59,59;
+    --neon:#FF5FB8; --neon-rgb:255,95,184;
+}
+.plug { overflow:hidden; font-family:'Manrope','Segoe UI',-apple-system,sans-serif;
+    background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); color:var(--text);
+    user-select:none; -webkit-user-select:none; cursor:default; }
+.plug { display:flex; flex-direction:column; }
+#app-viewport { position:relative; width:100%; aspect-ratio:860/580; overflow:hidden; }
+#app { position:absolute; left:0; top:0; width:860px; height:580px; transform-origin:top left; overflow:hidden;
+    background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); }
+#app.bypassed .p-body { opacity:.5; filter:saturate(.3); }
+
+/* ---- Corner resize grip (bundle-standard triangle, bottom right) ---- */
+#resize-handle { position:fixed; bottom:0; right:0; width:18px; height:18px; cursor:nwse-resize; z-index:90; background:transparent; }
+#resize-handle::before, #resize-handle::after { content:""; position:absolute; background:var(--dim); border-radius:1px; transform:rotate(-45deg); transform-origin:bottom right; }
+#resize-handle::before { width:10px; height:1.5px; bottom:7px; right:2px; }
+#resize-handle::after  { width:6px;  height:1.5px; bottom:4px; right:2px; }
+#resize-handle:hover::before, #resize-handle:hover::after { background:var(--neon); }
+
+/* ---- Custom Title Bar (standalone, Windows) ---- */
+.title-bar { display:flex; align-items:center; height:30px; min-height:30px; background:var(--card); border-bottom:1px solid var(--line); }
+.title-bar-drag { flex:1; display:flex; align-items:center; padding-left:12px; height:100%; cursor:grab; }
+.title-bar-drag:active { cursor:grabbing; }
+.title-bar-text { font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--dim); }
+.title-bar-controls { display:flex; height:100%; }
+.title-btn { width:40px; height:100%; border:none; background:transparent; color:var(--dim); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; padding:0; }
+.title-btn:hover { background:rgba(255,255,255,.08); color:var(--text); }
+.title-btn-close:hover { background:#e81123; color:#fff; }
+.title-btn-text { width:auto; padding:0 12px; font-family:inherit; font-size:10px; font-weight:700; letter-spacing:1.5px; }
+body.has-titlebar #bp-about { top:30px; }
+
+/* ---- Licence lock ---- */
+.rl-overlay{position:fixed;inset:0;z-index:99999;background:#14161A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:'Manrope','Segoe UI',sans-serif;transition:opacity .35s ease}
+.rl-overlay.rl-hidden{opacity:0;pointer-events:none}
+.rl-name{font-family:'Sora','Segoe UI',sans-serif;font-size:22px;font-weight:800;letter-spacing:.14em;color:#E8EAED}
+.rl-name i{font-style:normal;color:#FF5FB8}
+.rl-prompt{font-family:'Sora','Segoe UI',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;color:#E8EAED;margin-top:6px}
+.rl-hint,.rl-sub{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7A7F88;text-align:center;max-width:80%;line-height:1.6}
+.rl-btn{margin-top:8px;padding:11px 24px;background:#FF5FB8;border:1px solid #FF5FB8;border-radius:8px;color:#0F1114;font-family:'Manrope','Segoe UI',sans-serif;font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+
+/* ---- Header ---- */
+.p-head{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative;z-index:3}
+.p-hcenter{position:relative;display:flex;align-items:center;gap:6px;margin-left:auto;margin-right:22px}
+.p-hright{display:flex;align-items:center;gap:10px}
+.p-pbar .nm{min-width:150px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-pbar .nm.mod::after{content:' *';color:var(--neon)}
+.p-pbar .nm small{color:var(--dim);font-size:8.5px;letter-spacing:.16em;margin-right:7px}
+.p-hbtn{padding:8px 11px}
+.p-gear svg{width:13px;height:13px;display:block}
+.p-tailq{display:flex;align-items:center;gap:7px}
+.p-tailq .rone-seg > :not(.pill){padding:6px 8px}
+.p-save{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);width:270px;z-index:61;background:var(--drawer);border-radius:9px;padding:10px;display:none;flex-direction:column;gap:8px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px rgba(0,0,0,.6),0 18px 40px rgba(0,0,0,.6)}
+.p-save.open{display:flex}
+.p-save input{font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text);background:var(--card);border:0;border-radius:6px;padding:8px 10px;outline:none;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
+.p-save input:focus{box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 0 0 1px rgba(var(--neon-rgb),.6)}
+.p-save .row{display:flex;gap:6px}
+.p-save .row .rone-btn{flex:1}
+.p-save .note{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--dim);line-height:1.5}
+.p-logo{display:flex;align-items:center;gap:9px;cursor:pointer;transform-origin:left center;transition:transform .18s ease}
+.p-logo:hover{transform:scale(1.06)}
+.p-logo:active{transform:scale(.99)}
+.p-logo:hover .p-glyph{filter:drop-shadow(0 0 11px rgba(var(--neon-rgb),.95))}
+.p-glyph{width:40px;height:21px;flex-shrink:0;overflow:visible;filter:drop-shadow(0 0 6px rgba(var(--neon-rgb),.5));transition:filter .18s}
+.p-glyph .r-stem{fill:var(--neon)} .p-glyph .r-line{fill:none;stroke:var(--neon);stroke-width:4.2}
+.p-name{font-family:'Sora',sans-serif;font-weight:800;font-size:16px;letter-spacing:.16em;white-space:nowrap}
+.p-name i{font-style:normal;color:var(--neon);text-shadow:0 0 12px rgba(var(--neon-rgb),.55)}
+
+/* ---- Body: the scene canvas fills it, the knob floats over it ---- */
+.p-body{position:absolute;inset:54px 0 0 0}
+.p-scene{position:absolute;inset:0}
+.p-scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.p-mood{position:absolute;top:12px;left:645px;transform:translateX(-50%);pointer-events:none}
+.p-mood .v{letter-spacing:.14em;transition:color .2s,text-shadow .2s}
+.p-mood.up .v{color:var(--neon);text-shadow:0 0 10px rgba(var(--neon-rgb),.5)}
+.p-mood.hot .v{color:var(--hot);text-shadow:0 0 10px rgba(var(--hot-rgb),.6)}
+
+/* ---- Hero knob ---- */
+.p-knobwrap{position:absolute;left:62px;top:36px;width:340px;height:340px;cursor:grab}
+.p-knobwrap:active{cursor:grabbing}
+.p-knobwrap svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
+.p-knobwrap .track{fill:none;stroke:var(--line);stroke-width:8;stroke-linecap:round}
+.p-knobwrap .over{fill:none;stroke:rgba(var(--hot-rgb),.28);stroke-width:8;stroke-linecap:round}
+.p-knobwrap .lit{fill:none;stroke:var(--neon);stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 10px rgba(var(--neon-rgb),.85))}
+.p-knobwrap .lit.hot{stroke:var(--hot);filter:drop-shadow(0 0 12px rgba(var(--hot-rgb),.9))}
+.p-knobwrap .bars{fill:none;stroke:var(--line);stroke-width:3;stroke-linecap:round}
+.p-knobwrap .barsLit{fill:none;stroke:#F1F4F7;stroke-width:3;stroke-linecap:round;opacity:.85}
+.p-knobwrap .tick{stroke:var(--faint);stroke-width:1.5}
+.p-knob{position:absolute;inset:46px}
+.p-knobwrap .kbody{box-shadow:0 18px 40px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.07),inset 0 -10px 22px rgba(0,0,0,.45)}
+.p-dot{top:11px;width:11px;height:11px;margin-left:-5.5px;transform-origin:50% 113px}
+.p-kval{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none}
+.p-kval b{display:block;font-family:'Sora',sans-serif;font-size:52px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.p-kval b.hot{color:var(--hot);text-shadow:0 0 16px rgba(var(--hot-rgb),.6)}
+.p-kval span{display:block;font-size:10px;font-weight:800;letter-spacing:.3em;color:var(--dim);margin-top:8px}
+
+/* ---- Under the knob: AUDITION always (1.2.0); GO + the bar clock when LAND ON BAR is armed ---- */
+.p-gopill{position:absolute;left:62px;width:340px;top:392px;display:flex;align-items:center;justify-content:center;gap:14px}
+#app .hid{display:none !important}
+.p-aud{padding:9px 16px}
+.p-go{padding:9px 22px}
+.p-clock{font-size:11px;font-weight:800;letter-spacing:.14em;color:#B9BDC4;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;gap:5px}
+.p-beats{display:flex;gap:4px}
+.p-beats i{width:9px;height:4px;border-radius:2px;background:var(--line2)}
+.p-beats i.on{background:var(--neon);box-shadow:0 0 6px rgba(var(--neon-rgb),.8)}
+
+/* ---- Bottom: ADVANCED at the left corner, presets centred ---- */
+.p-bottom{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;padding:0 16px;gap:14px;z-index:4}
+.p-adv{display:flex;align-items:center;gap:7px}
+.p-adv i{display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid currentColor;transition:transform .2s}
+.p-adv.on i{transform:rotate(180deg)}
+.p-presets{display:flex;gap:6px;flex:1;justify-content:center;margin-right:30px}
+.p-preset{width:118px;text-align:center;padding:7px 4px}
+.p-preset small{display:block;font-size:9px;letter-spacing:.2em;color:var(--dim);margin-bottom:2px}
+.p-preset.on small{color:rgba(15,17,20,.6)}
+.p-preset.mod::after{content:'';position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:#0F1114;opacity:.55}
+
+/* ---- ADVANCED drawer ---- */
+.p-drawer{position:absolute;left:0;right:0;bottom:0;background:rgba(20,22,25,.97);border-top:1px solid var(--line2);box-shadow:0 -18px 40px rgba(0,0,0,.55);
+  transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);padding:14px 18px 76px;display:flex;flex-direction:column;gap:12px;z-index:3}
+.p-drawer.open{transform:translateY(0)}
+.p-drow{display:flex;align-items:center;gap:14px}
+.p-lbl{width:92px;flex-shrink:0}
+.p-hint{font-size:9.5px;color:var(--dim);font-weight:700;letter-spacing:.06em;margin-left:auto;flex:1;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-macros{display:flex;justify-content:space-around;padding:2px 0 0}
+.p-minilabel{white-space:nowrap}
+.p-minival{letter-spacing:-.01em}
+.p-chain{display:flex;gap:6px}
+.p-mod{flex:1;min-width:0;background:var(--card);border-radius:7px;padding:6px 6px 7px;display:flex;flex-direction:column;gap:4px;box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.04);transition:box-shadow .2s}
+.p-mod.live{box-shadow:inset 0 0 0 1px rgba(var(--neon-rgb),.45),inset 0 1px 3px rgba(0,0,0,.6)}
+.p-mod .n{font-size:9px;font-weight:800;letter-spacing:.14em;color:var(--dim);white-space:nowrap}
+.p-mod.live .n{color:var(--text)}
+.p-mod .v{font-size:9.5px;font-weight:700;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.p-mod.live .v{color:var(--neon)}
+.p-mod .b{height:3px;border-radius:2px;background:var(--line2);overflow:hidden}
+.p-mod .b i{display:block;height:100%;width:0;background:var(--neon);box-shadow:0 0 6px rgba(var(--neon-rgb),.7)}
+.p-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s ease-out;z-index:8}
+.p-flash.on{opacity:.45;transition:none}
+/* ---- 1.2.0: DICE in the preset bar, a typed value on any knob ---- */
+.p-dice svg{width:13px;height:13px;display:block}
+.p-kval b{pointer-events:auto;cursor:text}
+.p-type{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;width:132px;text-align:center;font-family:var(--font-display);font-weight:800;font-size:40px;color:#fff;background:var(--card);border:0;border-radius:8px;padding:4px 6px;outline:none;pointer-events:auto;user-select:text;-webkit-user-select:text;box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 0 0 1px rgba(var(--neon-rgb),.7)}
+.p-miniarc .p-type{width:52px;font-size:12px;padding:4px 2px;border-radius:5px}
+.p-kval.typing > b,.p-kval.typing > span,.p-miniarc.typing > .cval{visibility:hidden}
+</style>
+<style>
+/* layout: one column - a DAW-transport strip, the plugin at its real proportions, then the notes */
+:root { color-scheme:dark; --page:#0B0C0F; --strip:#111318; --ink:#E8EAED; --ink2:#A9AEB6; --rule:#23262C; --pink:#FF5FB8;
+        --font-he:'Heebo','Segoe UI',Arial,sans-serif; }
+body { background:var(--page); color:var(--ink); font-family:var(--font-he); }
+.mk { max-width:1080px; margin:0 auto; padding-block:22px 56px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+      display:flex; flex-direction:column; gap:16px; }
+.mk-head { direction:rtl; display:flex; flex-direction:column; gap:6px; }
+.mk-head h1 { font-family:'Sora',var(--font-he); font-size:22px; font-weight:800; letter-spacing:.01em; text-wrap:balance; }
+.mk-head h1 i { font-style:normal; color:var(--pink); }
+.mk-head p { color:var(--ink2); font-size:14px; line-height:1.65; max-width:68ch; }
+.mk-bar { direction:ltr; display:flex; flex-wrap:wrap; align-items:center; gap:10px 20px; background:var(--strip); border-radius:12px; padding:12px 14px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
+.mk-grp { display:flex; align-items:center; gap:8px; min-width:0; }
+.mk-grp .k { font-family:var(--font-he); font-size:12.5px; font-weight:700; color:var(--ink2); white-space:nowrap; }
+.mk-play { min-width:96px; padding:11px 16px; font-size:11px; }
+.mk-num { width:64px; font-family:var(--font-mono); font-size:13px; color:var(--ink); background:var(--card); border:0; border-radius:6px; padding:8px; text-align:center; outline:none; box-shadow:inset 0 1px 3px rgba(0,0,0,.6); }
+.mk-num:focus-visible, .mk-vol:focus-visible { box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 0 0 1px rgba(255,95,184,.7); }
+.mk-pos { font-family:var(--font-mono); font-size:12px; color:var(--ink2); min-width:112px; font-variant-numeric:tabular-nums; }
+.mk-bar .rone-seg > :not(.pill), .mk-file { font-family:var(--font-he); font-size:12.5px; letter-spacing:0; text-transform:none; }
+.mk-bar .rone-seg > :not(.pill) { padding:6px 12px; }
+.mk-file { padding:8px 12px; }
+.mk-vol { width:90px; accent-color:var(--pink); }
+.mk-msg { font-family:var(--font-he); font-size:12.5px; color:var(--ink2); direction:rtl; }
+.plug { border-radius:14px; box-shadow:0 0 0 1px #000, 0 24px 60px rgba(0,0,0,.55); }
+.mk-notes { direction:rtl; display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap:22px 36px; padding-top:6px; }
+.mk-notes > div { min-width:0; }
+.mk-notes h2 { font-size:15px; font-weight:800; margin-bottom:10px; text-wrap:balance; }
+.mk-notes dl, .mk-notes ol { display:grid; gap:10px; }
+.mk-notes dt { font-family:'Sora',var(--font-he); font-size:12px; font-weight:800; letter-spacing:.08em; color:var(--ink); }
+.mk-notes dt small { font-family:var(--font-he); font-size:12px; font-weight:500; letter-spacing:0; color:var(--ink2); margin-inline-start:8px; }
+.mk-notes dd, .mk-notes li, .mk-notes p { color:var(--ink2); font-size:14px; line-height:1.65; }
+.mk-notes ol { padding-inline-start:20px; }
+.mk-notes b { color:var(--ink); font-weight:700; }
+.mk-notes .ltr { direction:ltr; unicode-bidi:isolate; font-family:'Sora',var(--font-he); font-size:12px; font-weight:700; letter-spacing:.06em; color:var(--ink); }
+
+/* ---- the page inside the frame ---- */
+#resize-handle { display:none; }
+#app, #app-viewport { overflow:clip; }   /* clip, not hidden: a hidden box can still be scrolled by focus */   /* the mockup has no host window to resize */
+@media (prefers-reduced-motion: reduce) { .rone-seg .pill, .p-drawer, .rone-menu { transition:none !important; animation:none !important; } }
+</style>
+
+<div class="mk">
+  <header class="mk-head">
+    <h1>RONE <i>Rise</i> 1.2 · הדמיה</h1>
+    <p>זה העמוד האמיתי של הגרסה הבאה, אותו קובץ שנכנס לפלאגין. הסאונד הוא המנוע של הפלאגין, מועתק שורה-שורה ורץ כאן בדפדפן, אז מה שאתה רואה ושומע הוא ההתנהגות האמיתית ולא חיקוי.</p>
+  </header>
+
+  <section class="mk-bar" aria-label="Transport">
+    <div class="mk-grp"><button class="rone-btn act wait mk-play" id="mkPlay">PLAY</button><span class="mk-pos" id="mkPos">BAR 1 · BEAT 1</span></div>
+    <div class="mk-grp"><label class="k" for="mkBpm">BPM</label><input class="mk-num" id="mkBpm" type="number" min="60" max="200" step="1" value="145" inputmode="numeric"></div>
+    <div class="mk-grp"><span class="k">מקור</span>
+      <div class="rone-seg" id="mkSrc"><span data-i="0" class="on">לופ מובנה</span><span data-i="1">קובץ שלי</span></div>
+      <button class="rone-btn mk-file" id="mkFileBtn" hidden>בחר קובץ</button><input type="file" id="mkFile" accept="audio/*" hidden>
+    </div>
+    <div class="mk-grp"><span class="k">הדרופ</span>
+      <div class="rone-seg" id="mkDrop"><span data-i="0">1.1.1</span><span data-i="1" class="on">1.2</span></div>
+    </div>
+    <div class="mk-grp"><label class="k" for="mkVol">עוצמה</label><input class="mk-vol" id="mkVol" type="range" min="0" max="1" step="0.01" value="0.8"></div>
+    <div class="mk-msg" id="mkMsg" hidden></div>
+  </section>
+
+  <div class="plug">
+
+
+<!-- Custom Title Bar (standalone, Windows) -->
+<div class="title-bar" id="titleBar" style="display:none;">
+    <div class="title-bar-drag" id="titleBarDrag"><span class="title-bar-text">RONE Rise</span></div>
+    <div class="title-bar-controls">
+        <button class="title-btn title-btn-text" id="btnAudio" title="Audio + MIDI devices">AUDIO</button>
+        <button class="title-btn" id="btnMinimize" title="Minimize"><svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg></button>
+        <button class="title-btn title-btn-close" id="btnClose" title="Close"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0 L10 10 M10 0 L0 10" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    </div>
+</div>
+
+<div id="app-viewport">
+<div id="app">
+  <div class="p-flash" id="flash"></div>
+  <div class="p-head">
+    <div class="p-logo" id="pLogo" title="About" role="button">
+      <svg class="p-glyph" viewBox="0 0 100 52" aria-label="RONE" role="img">
+        <path class="r-stem" d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"/>
+        <path class="r-line" d="M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100"/>
+      </svg>
+      <div class="p-name">RI<i>SE</i></div>
+    </div>
+    <div class="p-hcenter">
+      <div class="rone-preset p-pbar" id="pbar">
+        <button class="rone-btn arrow" id="pPrev" title="Previous preset">&#9664;</button>
+        <div class="nm" id="pName" title="Presets">LIFTOFF</div>
+        <button class="rone-btn arrow" id="pNext" title="Next preset">&#9654;</button>
+        <button class="rone-btn arrow p-dice" id="pDice" title="DICE: a new build-up, inside the limits of taste"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="5.5" r="1.15" fill="currentColor"/><circle cx="8" cy="8" r="1.15" fill="currentColor"/><circle cx="10.5" cy="10.5" r="1.15" fill="currentColor"/></svg></button>
+      </div>
+      <button class="rone-btn p-hbtn" id="pSaveBtn" title="Save the macros as a preset">SAVE</button>
+      <button class="rone-btn p-hbtn p-gear" id="pGear" title="Settings"><svg viewBox="0 0 16 16"><path fill="currentColor" d="M9.2 1l.4 1.9c.4.1.8.3 1.1.5l1.7-1 1.2 1.2-1 1.7c.2.3.4.7.5 1.1l1.9.4v1.6l-1.9.4c-.1.4-.3.8-.5 1.1l1 1.7-1.2 1.2-1.7-1c-.3.2-.7.4-1.1.5L9.2 15H7.6l-.4-1.9c-.4-.1-.8-.3-1.1-.5l-1.7 1-1.2-1.2 1-1.7c-.2-.3-.4-.7-.5-1.1L1.8 9.2V7.6l1.9-.4c.1-.4.3-.8.5-1.1l-1-1.7 1.2-1.2 1.7 1c.3-.2.7-.4 1.1-.5L7.6 1h1.6zM8.4 5.6a2.8 2.8 0 100 5.6 2.8 2.8 0 000-5.6z"/></svg></button>
+      <div class="p-save" id="pSave">
+        <div class="rone-label">SAVE PRESET</div>
+        <input id="pSaveName" maxlength="40" placeholder="PRESET NAME" spellcheck="false">
+        <div class="row"><button class="rone-btn" id="pSaveOk">SAVE PRESET</button></div>
+        <div class="row"><button class="rone-btn" id="pSaveCard">SAVE AS LIFTOFF MACROS</button></div>
+        <div class="note">Saved for you on this computer, in every project. SAVE AS &hellip; MACROS makes these the card's own macros; Settings &gt; RESET TO FACTORY MACROS brings the factory ones back.</div>
+      </div>
+    </div>
+    <div class="p-hright">
+      <div class="p-tailq" title="TAIL: reverb + delay release after the knob falls (CUT = hard stop)">
+        <div class="rone-label">TAIL</div>
+        <div class="p-seg rone-seg" id="tailSeg"><span data-i="0" class="on">CUT</span><span data-i="1">1</span><span data-i="2">2</span><span data-i="3">3</span><span data-i="4">4</span></div>
+      </div>
+      <div class="p-bypass rone-btn hot" id="bypassBtn" title="Bypass">BYPASS</div>
+    </div>
+  </div>
+
+  <div class="p-body">
+    <div class="p-scene" id="scene"><canvas id="cv"></canvas><div class="p-mood rone-chip" id="mood"><span class="k">SCENE</span><span class="v">NIGHT</span></div></div>
+
+    <div class="p-knobwrap arck hero" id="knob" title="INTENSITY 0..100 - drag, wheel (shift = fine), double-click = 0, click the number to type">
+      <svg viewBox="0 0 340 340">
+        <g id="ticks"></g>
+        <circle class="bars" cx="170" cy="170" r="162" id="barsTrack" stroke-dasharray="0 2000"/>
+        <circle class="barsLit" cx="170" cy="170" r="162" id="barsLit" stroke-dasharray="0 2000"/>
+        <path class="track" id="trk"/><path class="lit" id="lit"/>
+      </svg>
+      <div class="p-knob kbody"><div class="p-dot kdot" id="dot"></div></div>
+      <div class="p-kval"><b id="kval">0%</b><span>INTENSITY</span></div>
+    </div>
+    <div class="p-gopill" id="gopill">
+      <button class="p-aud rone-btn act wait" id="audBtn" title="AUDITION: the rise runs in a loop, so you hear the preset while you browse">AUDITION</button>
+      <button class="p-go rone-btn act wait hid" id="goBtn">GO</button>
+      <div class="p-clock hid" id="pClock"><span id="clockTxt">BAR &mdash; / 8</span><div class="p-beats" id="beats"><i></i><i></i><i></i><i></i></div></div>
+    </div>
+
+    <div class="p-drawer" id="drawer">
+      <div class="p-drow">
+        <div class="p-lbl rone-label">LAND ON BAR</div>
+        <div class="p-seg rone-seg" id="landSeg"><span data-i="0" class="on">MANUAL</span><span data-i="5">1</span><span data-i="6">2</span><span data-i="1">4</span><span data-i="2">8</span><span data-i="3">16</span><span data-i="4">32</span></div>
+        <div class="p-seg rone-seg" id="dirSeg" title="RISE climbs and lands on the drop. FALL starts at 100 on the next bar line and comes down - the way into a breakdown"><span data-i="0" class="on">RISE</span><span data-i="1">FALL</span></div>
+        <div class="p-hint">GO runs it and lands it &middot; MIDI C1 = GO</div>
+      </div>
+      <div class="p-drow">
+        <div class="p-lbl rone-label">CURVE</div>
+        <div class="p-seg rone-seg" id="curveSeg" title="How the LAND run climbs: straight, soft (default), quiet-then-everything, or with a last-stretch push"><span data-i="0">LIN</span><span data-i="1" class="on">SOFT</span><span data-i="2">EXP</span><span data-i="3">S</span></div>
+        <div class="p-lbl rone-label" style="width:auto;margin-left:18px">GAP</div>
+        <div class="p-seg rone-seg" id="gapSeg" title="GAP: beats of silence right before the drop. The reverb and delay tails keep ringing through it"><span data-i="0" class="on">OFF</span><span data-i="1">&frac12;</span><span data-i="2">1</span><span data-i="3">2</span></div>
+        <div class="p-hint">beats of silence before the drop &middot; the tail rings through</div>
+      </div>
+      <div class="p-macros" id="macros"></div>
+      <div class="p-chain" id="chain"></div>
+    </div>
+
+    <div class="p-bottom">
+      <button class="p-adv rone-btn" id="advBtn"><i></i>ADVANCED</button>
+      <div class="p-presets" id="presets"></div>
+    </div>
+  </div>
+</div><!-- /#app -->
+</div><!-- /#app-viewport -->
+
+<div id="resize-handle" title="Resize"></div>
+
+<div class="rl-overlay rl-hidden" id="rlOverlay" style="display:none">
+  <div class="rl-name">RONE <i>RISE</i></div>
+  <span class="rl-prompt">A RONE Rise licence or RONE ALL ACCESS is required</span>
+  <span class="rl-hint">Sign in with your roneaudio.com account in the RONE Plugins Center</span>
+  <button class="rl-btn" id="rlLaunch">OPEN RONE PLUGINS CENTER</button>
+  <span class="rl-sub">No account yet? 7-day free trial at roneaudio.com</span>
+</div>
+
+<!--ABOUT-->
+
+
+  </div><!-- /.plug -->
+
+  <section class="mk-notes">
+    <div>
+      <h2>השמש: דמות לכל מצב</h2>
+      <dl>
+        <div><dt>LIFTOFF<small>ורודה</small></dt><dd>השמש שאתה מכיר, מלוטשת: קפיץ בתנועה, קוצים עגולים שקופצים עם הביט.</dd></div>
+        <div><dt>ORBIT<small>סגולה</small></dt><dd>עיניים גדולות ונוצצות, פה של "וואו" למעלה, טבעת עם שני ירחים שמקיפים אותה.</dd></div>
+        <div><dt>PULSAR<small>זהובה</small></dt><dd>מחושמלת: האור נחתך עם ה-GATE, שתי אלומות מסתובבות פעם בתיבה, ובשיא העיניים נעצמות מצחוק.</dd></div>
+        <div><dt>UNDERTOW<small>כחולה</small></dt><dd>הים עולה ומכסה אותה ככל ש-DIVE נסגר. היא שמה מסכה ושנורקל, מנפחת לחיים ומוציאה בועות.</dd></div>
+        <div><dt>MELTDOWN<small>אדומה</small></dt><dd>כועסת: גבות יורדות, שיניים חשוקות, סימן עצבים, אדים מהאוזניים, רועדת ונמסה. ב-100 היא שואגת.</dd></div>
+        <div><dt>בכל המצבים</dt><dd>הדיליי זורק טבעות, הריוורב מרחיב את ההילה, הרעש מעיף רסס, RISE שולח חצים למעלה. העיניים עוקבות אחרי העכבר, והיא נרדמת כשעוזבים אותה. בדרופ: קפיצה ומשקפי שמש. ב-GAP: עוצרת נשימה והאור יורד.</dd></div>
+      </dl>
+    </div>
+    <div>
+      <h2>מה חדש במסך</h2>
+      <dl>
+        <div><dt>AUDITION<small>מתחת לכפתור הגדול</small></dt><dd>מריץ את העלייה בלופ: עולה, נוחת, נותן לדרופ לנגן תיבה או שתיים, ושוב. מחליפים פריסט תוך כדי ושומעים מיד.</dd></div>
+        <div><dt>DICE<small>הקובייה ליד שם הפריסט</small></dt><dd>בילד חדש בכל לחיצה, בתוך גבולות טעם. SAVE שומר אותו כפריסט שלך.</dd></div>
+        <div><dt>ADVANCED</dt><dd>TAIL ירד מכאן (הוא למעלה, ליד BYPASS). נוספו: 1 ו-2 תיבות ב-LAND ON BAR, <span class="ltr">RISE / FALL</span>, <span class="ltr">GAP</span> (שקט לפני הדרופ), וכפתור <span class="ltr">DRIVE</span>.</dd></div>
+        <div><dt>הקלדת ערך</dt><dd>קליק על המספר (בכפתור הגדול או בכפתורי ADVANCED), מקלידים, Enter. דאבל-קליק עדיין מאפס.</dd></div>
+      </dl>
+    </div>
+    <div>
+      <h2>איך לבדוק</h2>
+      <ol>
+        <li>לחץ <span class="ltr">AUDITION</span>. הלופ מתחיל לנגן והעלייה רצה לבד.</li>
+        <li>עבור בין חמשת המצבים בשורה התחתונה וראה את השמש מתחלפת. <span class="ltr">MELTDOWN</span> ו-<span class="ltr">UNDERTOW</span> הכי שונים.</li>
+        <li>חכה לנחיתה: קונפטי, קפיצה ומשקפי שמש. אחר כך שים <span class="ltr">GAP</span> על 1 ב-ADVANCED וראה אותה עוצרת נשימה.</li>
+        <li>עצור את הנגינה והזז את העכבר מעל השמש. עזוב אותה כמה שניות והיא נרדמת.</li>
+        <li>המתג "הדרופ" למעלה משווה את הנחיתה של 1.1.1 לזו של 1.2. הקשב לקיק הראשון עם <span class="ltr">KILL LOW</span> על 100.</li>
+      </ol>
+    </div>
+    <div>
+      <h2>מה לא אמיתי כאן</h2>
+      <p>אין DAW: ה-PLAY וה-BPM שלמעלה מחליפים אותו, והלופ המובנה הוא קיק, בס ולִיד שנוצרים בדפדפן ב-145 BPM. המתג "הדרופ" הוא לא חלק מהפלאגין.</p>
+      <p style="margin-top:10px">המסך עצמו אמיתי לגמרי. המנוע שמאחוריו הוא העתק לדפדפן שנבדק במספרים; את הפלאגין עצמו בודקים ב-DAW.</p>
+    </div>
+  </section>
+</div>
+<script>/* RONE Rise in the browser.
+   RiseEngine + Reverb are a line-for-line port of RoneRise/Source/DSP/RoneRiseEngine.cpp and
+   Shared/RoneReverbEngine.cpp as released in 1.1.1; RiseProc is Source/PluginProcessor.cpp
+   (the phrase clock, LAND ON BAR, the landing latch, REST ON STOP, the drop detector).
+   Added for the round-2 mockup: LAND 1 / 2 bars, RISE / FALL, GAP, AUDITION, a DRIVE macro,
+   and `fixed` = the round-1 landing (sample-accurate, filters open ON the bar line). */
+(function (root) {
+'use strict';
+const clampf = (v, a, b) => v < a ? a : v > b ? b : v;
+const sstepf = (a, b, x) => { const t = clampf((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const nextPow2 = n => { let p = 1; while (p < n) p <<= 1; return p; };
+const TWO_PI = Math.PI * 2;
+
+// juce::SmoothedValue<float> (linear)
+class Smooth {
+  constructor() { this.cur = 0; this.tgt = 0; this.cd = 0; this.step = 0; this.steps = 0; }
+  reset(sr, sec) { this.steps = Math.floor(sec * sr); this.setNow(this.tgt); }
+  setNow(v) { this.cur = this.tgt = v; this.cd = 0; }
+  set(v) { if (v === this.tgt) return; if (this.steps <= 0) { this.setNow(v); return; } this.tgt = v; this.cd = this.steps; this.step = (this.tgt - this.cur) / this.cd; }
+  next() { if (this.cd <= 0) return this.tgt; if (--this.cd > 0) this.cur += this.step; else this.cur = this.tgt; return this.cur; }
+  skip(n) { if (n >= this.cd) { this.setNow(this.tgt); return; } this.cur += this.step * n; this.cd -= n; }
+  get smoothing() { return this.cd > 0; }
+}
+
+// juce::dsp::StateVariableTPTFilter, two channels. type: 0 low-pass, 2 high-pass
+class SVF {
+  constructor(type) { this.type = type; this.a = new Float64Array(2); this.b = new Float64Array(2); this.sr = 44100; this.fc = 1000; this.q = 0.707; this.g = 0; this.R2 = 1; this.h = 1; }
+  prepare(sr) { this.sr = sr; this.update(); this.reset(); }
+  set(fc, q) { if (fc === this.fc && (q === undefined || q === this.q)) return; this.fc = fc; if (q !== undefined) this.q = q; this.update(); }
+  update() { this.g = Math.tan(Math.PI * this.fc / this.sr); this.R2 = 1 / this.q; this.h = 1 / (1 + this.R2 * this.g + this.g * this.g); }
+  reset() { this.a[0] = this.a[1] = this.b[0] = this.b[1] = 0; }
+  proc(ch, x) {
+    const g = this.g, s1 = this.a[ch], s2 = this.b[ch];
+    const hp = this.h * (x - s1 * (g + this.R2) - s2);
+    const bp = hp * g + s1; this.a[ch] = hp * g + bp;
+    const lp = bp * g + s2; this.b[ch] = bp * g + lp;
+    return this.type === 0 ? lp : hp;
+  }
+}
+
+// ============================================================================ the AFTERSPACE reverb
+const BASE48 = [1687, 1931, 2213, 2503, 2801, 3109, 3413, 3719];
+const DIFF_L48 = [254, 379, 538, 710], DIFF_R48 = [269, 397, 557, 733];
+const DENS48 = [113, 149, 181, 211, 239, 271, 307, 337];
+const ER_L = [7.1, 11.3, 17.9, 23.6, 31.7, 41.3, 53.9, 67.7], ER_R = [8.3, 13.1, 19.7, 26.3, 34.9, 43.7, 56.3, 71.9];
+const SIGN_L = [1, 1, -1, -1, 1, 1, -1, -1], SIGN_R = [1, -1, -1, 1, 1, -1, -1, 1];
+const IN_GAIN = 0.353553391, OUT_GAIN = 0.42, MAX_SIZE = 1.15, MOD_MARGIN = 24;
+function fastSin01(ph) { const x = ph - 0.5; const y = x * (8 - 16 * Math.abs(x)); return y * (0.775 + 0.225 * Math.abs(y)); }
+function readLin(buf, mask, w, d) { const rp = w - d, i0 = Math.floor(rp), fr = rp - i0, s0 = buf[i0 & mask]; return s0 + fr * (buf[(i0 + 1) & mask] - s0); }
+
+class Reverb {
+  constructor() { this.size = 0.55; this.decay = 2.2; this.modRate = 0.25; this.oL = 0; this.oR = 0; }
+  prepare(sr) {
+    this.sr = sr; this.k = sr / 48000;
+    this.preSize = nextPow2(Math.floor(sr * 0.350) + 8);
+    this.preL = new Float32Array(this.preSize); this.preR = new Float32Array(this.preSize); this.preW = 0;
+    const S = sec => { const s = new Smooth(); s.reset(sr, sec); return s; };
+    this.smPre = S(0.05); this.smPre.setNow(0.020 * sr);
+    this.erG = new Float32Array(8); for (let t = 0; t < 8; t++) this.erG[t] = 0.32 * Math.pow(0.80, t);
+    this.erTL = new Float32Array(8); this.erTR = new Float32Array(8); this.erSL = 0; this.erSR = 0;
+    this.dL = []; this.dR = []; this.dpL = [0, 0, 0, 0]; this.dpR = [0, 0, 0, 0];
+    for (let i = 0; i < 4; i++) { this.dL.push(new Float32Array(Math.max(4, Math.floor(DIFF_L48[i] * this.k)))); this.dR.push(new Float32Array(Math.max(4, Math.floor(DIFF_R48[i] * this.k)))); }
+    this.smDiff = S(0.05); this.smDiff.setNow(0.25 + 0.5 * 0.70);
+    this.fB = []; this.fMask = []; this.fW = []; this.smLen = []; this.smFb = []; this.nB = []; this.nP = []; this.lfoPh = []; this.lfoInc = new Float64Array(8); this.baseLen = new Float64Array(8);
+    for (let i = 0; i < 8; i++) {
+      const size = nextPow2(Math.floor(BASE48[i] * this.k * MAX_SIZE + MOD_MARGIN * this.k + 8));
+      this.fB.push(new Float32Array(size)); this.fMask.push(size - 1); this.fW.push(0);
+      this.smLen.push(S(0.15)); this.smFb.push(S(0.05));
+      this.nB.push(new Float32Array(Math.max(4, Math.floor(DENS48[i] * this.k)))); this.nP.push(0);
+      this.lfoPh.push((0.618034 * i) % 1);
+    }
+    this.smHi = S(0.05); this.smLo = S(0.05); this.smDens = S(0.05); this.smMod = S(0.10); this.smEr = S(0.05); this.smLate = S(0.05);
+    this.hi = new Float64Array(8); this.lo = new Float64Array(8); this.line = new Float64Array(8);
+    this.setSize(this.size); this.setDecay(this.decay); this.setModRate(this.modRate); this.setModDepth(0.15);
+    this.setHighDamp(0.4); this.setLowDamp(0.2); this.setDensity(0.7); this.setEarlyLate(0.3);
+    for (let i = 0; i < 8; i++) { this.smLen[i].setNow(this.smLen[i].tgt); this.smFb[i].setNow(this.smFb[i].tgt); }
+    this.reset();
+  }
+  reset() {
+    this.preL.fill(0); this.preR.fill(0);
+    for (let i = 0; i < 4; i++) { this.dL[i].fill(0); this.dR[i].fill(0); }
+    for (let i = 0; i < 8; i++) { this.fB[i].fill(0); this.nB[i].fill(0); this.hi[i] = 0; this.lo[i] = 0; }
+    this.erSL = this.erSR = 0;
+  }
+  setSize(s) {
+    this.size = clampf(s, 0, 1); const sc = 0.30 + 0.85 * this.size;
+    for (let i = 0; i < 8; i++) { this.baseLen[i] = BASE48[i] * this.k * sc; this.smLen[i].set(this.baseLen[i]); }
+    const er = (0.45 + 0.75 * this.size) * this.sr / 1000;
+    for (let t = 0; t < 8; t++) { this.erTL[t] = ER_L[t] * er; this.erTR[t] = ER_R[t] * er; }
+    this.updFb();
+  }
+  setDecay(sec) { this.decay = clampf(sec, 0.2, 30); this.updFb(); }
+  updFb() { const t60 = this.decay * this.sr; for (let i = 0; i < 8; i++) this.smFb[i].set(clampf(Math.pow(10, -3 * this.baseLen[i] / t60), 0, 0.9995)); }
+  setPreDelayMs(ms) { this.smPre.set(clampf(ms, 0, 250) * this.sr / 1000); }
+  setDiffusion(a) { this.smDiff.set(0.25 + 0.5 * clampf(a, 0, 1)); }
+  setDensity(a) { this.smDens.set(0.20 + 0.45 * clampf(a, 0, 1)); }
+  setModRate(hz) { this.modRate = clampf(hz, 0.01, 5); for (let i = 0; i < 8; i++) this.lfoInc[i] = this.modRate * (0.82 + 0.05 * i) / this.sr; }
+  setModDepth(a) { this.smMod.set(clampf(a, 0, 1.5) * 9 * this.k); }
+  setHighDamp(a) { const c = 20000 * Math.pow(1200 / 20000, clampf(a, 0, 1)); this.smHi.set(clampf(1 - Math.exp(-TWO_PI * c / this.sr), 0, 1)); }
+  setLowDamp(a) { const c = 15 * Math.pow(350 / 15, clampf(a, 0, 1)); this.smLo.set(clampf(1 - Math.exp(-TWO_PI * c / this.sr), 0, 1)); }
+  setEarlyLate(b) { const x = (clampf(b, -1, 1) + 1) * 0.5; this.smEr.set(Math.cos(x * Math.PI / 2)); this.smLate.set(Math.sin(x * Math.PI / 2)); }
+  proc(inL, inR) {
+    const pm = this.preSize - 1, w = this.preW;
+    this.preL[w] = inL; this.preR[w] = inR;
+    const pre = this.smPre.next();
+    const pdL = readLin(this.preL, pm, w, pre + 1), pdR = readLin(this.preR, pm, w, pre + 1);
+    let erL = 0, erR = 0;
+    for (let t = 0; t < 8; t++) { erL += this.erG[t] * readLin(this.preL, pm, w, pre + this.erTL[t]); erR += this.erG[t] * readLin(this.preR, pm, w, pre + this.erTR[t]); }
+    this.erSL += 0.55 * (erL - this.erSL); this.erSR += 0.55 * (erR - this.erSR); erL = this.erSL; erR = this.erSR;
+    this.preW = (w + 1) & pm;
+    const dc = this.smDiff.next(); let dL = pdL, dR = pdR;
+    for (let i = 0; i < 4; i++) {
+      const bL = this.dL[i], pL = this.dpL[i], dl = bL[pL], wl = dL - dc * dl; bL[pL] = wl; dL = dl + dc * wl; this.dpL[i] = pL + 1 < bL.length ? pL + 1 : 0;
+      const bR = this.dR[i], pR = this.dpR[i], dr = bR[pR], wr = dR - dc * dr; bR[pR] = wr; dR = dr + dc * wr; this.dpR[i] = pR + 1 < bR.length ? pR + 1 : 0;
+    }
+    const mod = this.smMod.next(), hiC = this.smHi.next(), loC = this.smLo.next(), densC = this.smDens.next();
+    const line = this.line; let sum = 0;
+    for (let i = 0; i < 8; i++) {
+      const lfo = fastSin01(this.lfoPh[i]); this.lfoPh[i] += this.lfoInc[i]; if (this.lfoPh[i] >= 1) this.lfoPh[i] -= 1;
+      let x = readLin(this.fB[i], this.fMask[i], this.fW[i], this.smLen[i].next() + lfo * mod);
+      this.hi[i] += hiC * (x - this.hi[i]); x = this.hi[i];
+      this.lo[i] += loC * (x - this.lo[i]); x -= this.lo[i] * 0.85 * (loC > 0 ? 1 : 0);
+      line[i] = x; sum += x;
+    }
+    const kk = sum * (2 / 8);
+    for (let i = 0; i < 8; i++) {
+      const fb = this.smFb[i].next();
+      let inj = ((i & 1) === 0 ? dL : dR) * IN_GAIN; if ((i & 3) >= 2) inj = -inj;
+      let v = inj + fb * (line[i] - kk);
+      const db = this.nB[i], dp = this.nP[i], dly = db[dp], ww = v - densC * dly; db[dp] = ww; v = dly + densC * ww; this.nP[i] = dp + 1 < db.length ? dp + 1 : 0;
+      this.fB[i][this.fW[i]] = v; this.fW[i] = (this.fW[i] + 1) & this.fMask[i];
+    }
+    let lateL = 0, lateR = 0;
+    for (let i = 0; i < 8; i++) { lateL += SIGN_L[i] * line[i]; lateR += SIGN_R[i] * line[i]; }
+    lateL *= OUT_GAIN * IN_GAIN * 2; lateR *= OUT_GAIN * IN_GAIN * 2;
+    const eg = this.smEr.next(), lg = this.smLate.next();
+    this.oL = erL * eg + lateL * lg; this.oR = erR * eg + lateR * lg;
+  }
+}
+
+// ============================================================================ RoneRiseEngine
+const WEIGHTS = [
+  { hpf: 0.35, rev: 1, del: 0.0, drive: 0.15, rateLink: 0 },   // LIFTOFF
+  { hpf: 0.35, rev: 1, del: 0.8, drive: 0.2,  rateLink: 0 },   // ORBIT
+  { hpf: 1.0,  rev: 1, del: 0.4, drive: 0.4,  rateLink: 0 },   // PULSAR
+  { hpf: 0.25, rev: 1, del: 0.7, drive: 0.3,  rateLink: 0 },   // UNDERTOW
+  { hpf: 1.0,  rev: 1, del: 0.8, drive: 0.8,  rateLink: 1 } ]; // MELTDOWN
+const HA = [0.6923878, 0.9360654322959, 0.9882295226860, 0.9987488452737];
+const HB = [0.4021921162426, 0.8561710882420, 0.9722909545651, 0.9952884791278];
+function softSat(x) { const a = Math.abs(x); if (a <= 0.7) return x; const over = a - 0.7, y = 0.7 + over / (1 + over * 1.6); return x < 0 ? -y : y; }
+const MAXB = 8192;
+
+class RiseEngine {
+  prepare(sr) {
+    this.sr = sr;
+    this.hpf = new SVF(2); this.hpf2 = new SVF(2); this.lpf = new SVF(0); this.lpf2 = new SVF(0);
+    for (const f of [this.hpf, this.hpf2]) { f.prepare(sr); f.set(20, 0.707); }
+    for (const f of [this.lpf, this.lpf2]) { f.prepare(sr); f.set(20000, 0.707); }
+    this.gateCoeff = 1 - Math.exp(-1 / (0.0025 * sr));
+    this.pitchHzCoeff = 1 - Math.exp(-1 / (0.02 * sr));
+    this.reverb = new Reverb(); this.reverb.prepare(sr);
+    this.reverb.setPreDelayMs(18); this.reverb.setDiffusion(0.7); this.reverb.setDensity(0.6);
+    this.reverb.setModRate(0.3); this.reverb.setModDepth(0.3); this.reverb.setLowDamp(0.3); this.reverb.setEarlyLate(0.6);
+    this.revHP = new SVF(2); this.revHP.prepare(sr); this.revHP.set(150, 0.707);
+    this.lineLength = nextPow2(Math.floor(2.0 * sr));
+    this.lines = [new Float32Array(this.lineLength), new Float32Array(this.lineLength)];
+    this.delayCoeff = 1 - Math.exp(-1 / (0.08 * sr));
+    this.loopLpCoeff = 1 - Math.exp(-TWO_PI * 3800 / sr);
+    this.noiseHP = new SVF(2); this.noiseHP.prepare(sr); this.noiseHP.set(150, 1.3);
+    this.noiseLP = new SVF(0); this.noiseLP.prepare(sr); this.noiseLP.set(9000, 0.707);
+    this.wetL = new Float32Array(MAXB); this.wetR = new Float32Array(MAXB);
+    this.nzL = new Float32Array(MAXB); this.nzR = new Float32Array(MAXB);
+    this.dryL = new Float32Array(MAXB); this.dryR = new Float32Array(MAXB);
+    const S = sec => { const s = new Smooth(); s.reset(sr, sec); return s; };
+    this.revG = S(0.03); this.delG = S(0.03); this.noiseG = S(0.03); this.shepG = S(0.03); this.sendDel = S(0.03); this.fbSm = S(0.03);
+    this.driveSm = S(0.03); this.widthSm = S(0.03); this.revFeed = S(0.03); this.dryG = S(0.03); this.pitchBlend = S(0.03);
+    this.bypassMix = S(0.01); this.gapG = S(0.005);
+    this.hpfMix = S(0.01); this.lpfMix = S(0.01); this.fadeSlow = Math.max(1, Math.floor(0.01 * sr)); this.fadeQuick = Math.max(1, Math.floor(0.005 * sr));   // 1.2: a filter leaves the path by a crossfade
+    this.slow = Math.floor(0.03 * sr); this.quick = Math.floor(0.003 * sr);
+    this.cutFadeLen = Math.max(32, Math.floor(0.02 * sr));
+    this.hx = new Float64Array(3 * 2 * 2 * 4 * 2); this.hy = new Float64Array(3 * 2 * 2 * 4 * 2); this.hd = new Float64Array(6);
+    this.rng = new Uint32Array([0x9E3779B9, 0x7F4A7C15]);
+    this.loopLp = [0, 0]; this.oscPhase = [0, 0];
+    this.ui = { hpf: 20, lpf: 20000, gate: 0, pitch: 0, rev: 0, del: 0, noise: -90, shep: 0, drive: 0, wet: 0, tail: 0 };
+    this.delayT = 0.75 * 0.5 * sr; this.bypassOn = false;
+    this.reset();
+  }
+  reset() {
+    this.hpf.reset(); this.hpf2.reset(); this.hpfHz = 20; this.hpfQ = 0.707; this.hpfOn = false; this.hpfMix.setNow(0);
+    this.lpf.reset(); this.lpf2.reset(); this.lpfHz = 20000; this.lpfOn = false; this.lpfMix.setNow(0); this.gateSm = 1; this.gateDiv = 0;
+    this.pitchPhase = 0; this.pitchHz = 0; this.pitchBlend.setNow(0);
+    this.dryG.setNow(1); this.gapG.setNow(1);
+    this.reverb.reset(); this.revHP.reset(); this.revFeed.setNow(0); this.revLevel = this.revRelRef = 0; this.delRelRef = 0; this.uRoom = 0; this.tailHeld = 0;
+    this.lines[0].fill(0); this.lines[1].fill(0); this.writePos = 0; this.delayLen = this.delayT; this.loopLp[0] = this.loopLp[1] = 0; this.delLevel = 0;
+    this.noiseHP.reset(); this.noiseLP.reset(); this.noiseHz = 150; this.noiseLfo = 0;
+    this.hx.fill(0); this.hy.fill(0); this.hd.fill(0);
+    this.oscPhase[0] = this.oscPhase[1] = 0; this.cyclePhase = 0;
+    for (const s of [this.revG, this.delG, this.noiseG, this.shepG, this.sendDel, this.fbSm, this.driveSm, this.widthSm]) s.setNow(0);
+    this.bypassMix.setNow(this.bypassOn ? 1 : 0); this.bypassSettled = true;
+    this.uiWetAcc = 0; this.cutFadeLeft = 0; this.inEnv = 0;
+  }
+  // single-sideband shift, Hilbert allpass pair (Niemitalo 4 + 4), per (voice, channel)
+  freqShift(voice, ch, x, c, s) {
+    const hx = this.hx, hy = this.hy; let c0 = 0, c1 = 0;
+    for (let k = 0; k < 2; k++) {
+      const coef = k === 0 ? HA : HB; let v = x;
+      for (let st = 0; st < 4; st++) {
+        const b = ((((voice * 2 + ch) * 2 + k) * 4) + st) * 2;
+        const y = coef[st] * coef[st] * (v + hy[b + 1]) - hx[b + 1];
+        hx[b + 1] = hx[b]; hx[b] = v; hy[b + 1] = hy[b]; hy[b] = y; v = y;
+      }
+      if (k === 0) c0 = v; else c1 = v;
+    }
+    const di = voice * 2 + ch, I = this.hd[di]; this.hd[di] = c0;
+    return I * c + c1 * s;
+  }
+  readHermite(line, d) {
+    const rp = this.writePos - d, i1 = Math.floor(rp), fr = rp - i1, m = this.lineLength - 1, b = this.lines[line];
+    const y0 = b[(i1 - 1) & m], y1 = b[i1 & m], y2 = b[(i1 + 1) & m], y3 = b[(i1 + 2) & m];
+    const c1 = 0.5 * (y2 - y0), c2 = y0 - 2.5 * y1 + 2 * y2 - 0.5 * y3, c3 = 0.5 * (y3 - y0) + 1.5 * (y1 - y2);
+    return ((c3 * fr + c2) * fr + c1) * fr + y1;
+  }
+  /* p: t, preset, rise, noise, space, delay, kill, dive, gate, sink, pitch, drive, delaySamples, shepCycleSec,
+        tailSec, cut, bypass, barPhase, bpb, spb  (as RoneRiseEngine::setParameters)
+        + hold (GAP: the dry is muted, the sends close, the tails keep ringing)
+        + fast (round 1: the filters and the dry come back in ~10 ms) + runP (LAND progress, -1 = none) + fixed */
+  process(L, R, off, n, p) {
+    const sr = this.sr;
+    this.bypassOn = !!p.bypass; this.bypassMix.set(p.bypass ? 1 : 0);
+    const ui = this.ui;
+    if (p.bypass && this.bypassSettled) { ui.hpf = 20; ui.lpf = 20000; ui.gate = 0; ui.pitch = 0; ui.rev = 0; ui.del = 0; ui.noise = -90; ui.shep = 0; ui.drive = 0; ui.wet = 0; ui.tail = 0; return; }
+    const fading = this.bypassMix.smoothing;
+    if (fading || p.bypass) for (let i = 0; i < n; i++) { this.dryL[i] = L[off + i]; this.dryR[i] = R[off + i]; }
+
+    const u = clampf(p.t, 0, 1), w = WEIGHTS[clampf(p.preset | 0, 0, 4)];
+    const rise = p.rise, noise = p.noise, space = p.space, kill = p.kill, dive = p.dive, gate = p.gate, sink = p.sink, pitch = p.pitch, echo = p.delay;
+    const hold = !!p.hold, fast = !!p.fast;
+    const blockSec = n / sr, coefBlock = 1 - Math.exp(-blockSec / 0.03), coefFast = 1 - Math.exp(-blockSec / 0.003);
+    this.delayT = clampf(p.delaySamples, 32, this.lineLength - 8);
+    if (p.cut && this.cutFadeLeft === 0) this.cutFadeLeft = this.cutFadeLen;
+
+    { let pk = 0; for (let i = 0; i < n; i++) { const a = Math.abs(L[off + i]), b = Math.abs(R[off + i]); if (a > pk) pk = a; if (b > pk) pk = b; }
+      const a = pk > this.inEnv ? 1 - Math.exp(-blockSec / 0.01) : 1 - Math.exp(-blockSec / 1.0); this.inEnv += (pk - this.inEnv) * a; }
+
+    // ---- 1. HPF (KILL LOW) ----
+    let hpfTarget = 20;
+    if (kill > 0.02) { const maxHz = 20 * Math.pow(150, Math.pow(kill, 0.55)); hpfTarget = 20 * Math.pow(maxHz / 20, Math.pow(u, 1.4)); }
+    if (fast) this.hpfHz = Math.exp(Math.log(this.hpfHz) + (Math.log(hpfTarget) - Math.log(this.hpfHz)) * coefFast);
+    else this.hpfHz += (hpfTarget - this.hpfHz) * coefBlock;
+    this.hpfQ += ((0.707 + 0.25 * u * kill) - this.hpfQ) * coefBlock;
+    let hpfActive = this.hpfHz > 21;
+    if (p.fixed) {
+      // 1.2 (as the C++): the filter comes INTO the path at once and goes OUT of it by a crossfade to the input -
+      // 5 ms on a drop, 10 ms when the knob simply came down. Dropping it in one sample was a click.
+      const leaveNow = fast && hpfTarget <= 21, mixT = (this.hpfHz > 21 && !leaveNow) ? 1 : 0;
+      if (!this.hpfOn && mixT > 0) { this.hpfOn = true; this.hpfMix.setNow(1); }
+      else if (this.hpfOn) { this.hpfMix.steps = leaveNow ? this.fadeQuick : this.fadeSlow; this.hpfMix.set(mixT); }
+      if (this.hpfOn) {
+        const fc = clampf(this.hpfHz, 20, 0.45 * sr); this.hpf.set(fc, 0.707); this.hpf2.set(fc, this.hpfQ);
+        for (let i = 0; i < n; i++) { const mix = this.hpfMix.next(), xl = L[off + i], xr = R[off + i], fl = this.hpf2.proc(0, this.hpf.proc(0, xl)), fr = this.hpf2.proc(1, this.hpf.proc(1, xr));
+          L[off + i] = mix >= 1 ? fl : xl + (fl - xl) * mix; R[off + i] = mix >= 1 ? fr : xr + (fr - xr) * mix; }
+        if (this.hpfMix.cd <= 0 && this.hpfMix.tgt <= 0) { this.hpfOn = false; this.hpf.reset(); this.hpf2.reset(); if (hpfTarget <= 21) this.hpfHz = hpfTarget; }
+      }
+      hpfActive = this.hpfOn;
+    } else if (hpfActive) {
+      const fc = clampf(this.hpfHz, 20, 0.45 * sr); this.hpf.set(fc, 0.707); this.hpf2.set(fc, this.hpfQ);
+      for (let i = 0; i < n; i++) { L[off + i] = this.hpf2.proc(0, this.hpf.proc(0, L[off + i])); R[off + i] = this.hpf2.proc(1, this.hpf.proc(1, R[off + i])); }
+    } else { this.hpf.reset(); this.hpf2.reset(); }
+
+    // ---- 1b. LPF (DIVE) ----
+    let lpfTarget = 20000;
+    if (dive > 0.02) lpfTarget = 20000 * Math.pow(500 / 20000, Math.pow(u, 1.3) * dive);
+    if (fast) this.lpfHz = Math.exp(Math.log(this.lpfHz) + (Math.log(lpfTarget) - Math.log(this.lpfHz)) * coefFast);
+    else this.lpfHz += (lpfTarget - this.lpfHz) * coefBlock;
+    let lpfActive = this.lpfHz < 19000;
+    if (p.fixed) {
+      const leaveNow = fast && lpfTarget >= 19000, mixT = (this.lpfHz < 19000 && !leaveNow) ? 1 : 0;
+      if (!this.lpfOn && mixT > 0) { this.lpfOn = true; this.lpfMix.setNow(1); }
+      else if (this.lpfOn) { this.lpfMix.steps = leaveNow ? this.fadeQuick : this.fadeSlow; this.lpfMix.set(mixT); }
+      if (this.lpfOn) {
+        const fc = clampf(this.lpfHz, 200, Math.min(20000, 0.45 * sr)); this.lpf.set(fc, 0.707); this.lpf2.set(fc, 0.707 + 0.5 * u * dive);
+        for (let i = 0; i < n; i++) { const mix = this.lpfMix.next(), xl = L[off + i], xr = R[off + i], fl = this.lpf2.proc(0, this.lpf.proc(0, xl)), fr = this.lpf2.proc(1, this.lpf.proc(1, xr));
+          L[off + i] = mix >= 1 ? fl : xl + (fl - xl) * mix; R[off + i] = mix >= 1 ? fr : xr + (fr - xr) * mix; }
+        if (this.lpfMix.cd <= 0 && this.lpfMix.tgt <= 0) { this.lpfOn = false; this.lpf.reset(); this.lpf2.reset(); if (lpfTarget >= 19000) this.lpfHz = lpfTarget; }
+      }
+      lpfActive = this.lpfOn;
+    } else if (lpfActive) {
+      const fc = clampf(this.lpfHz, 200, Math.min(20000, 0.45 * sr)); this.lpf.set(fc, 0.707); this.lpf2.set(fc, 0.707 + 0.5 * u * dive);
+      for (let i = 0; i < n; i++) { L[off + i] = this.lpf2.proc(0, this.lpf.proc(0, L[off + i])); R[off + i] = this.lpf2.proc(1, this.lpf.proc(1, R[off + i])); }
+    } else { this.lpf.reset(); this.lpf2.reset(); }
+
+    // ---- 1c. GATE ----
+    const gateDepth = hold ? 0 : gate * Math.pow(u, 0.8);
+    let gateDiv = 0;
+    if (gateDepth > 0.02) {
+      const beat0 = p.barPhase * p.bpb, spb = p.spb;
+      if (p.fixed) {
+        // round 1: the division only changes ON a beat line; in a LAND run it follows the phrase in four equal parts
+        const x = p.runP >= 0 ? p.runP : u;
+        const want = p.runP >= 0 ? (x < 0.25 ? 4 : x < 0.5 ? 8 : x < 0.75 ? 16 : 32) : (u < 0.3 ? 4 : u < 0.55 ? 8 : u < 0.8 ? 16 : 32);
+        const onBeat = Math.floor(beat0) !== Math.floor(beat0 + n / spb) || beat0 - Math.floor(beat0) < n / spb;
+        if (this.gateDiv === 0 || onBeat) this.gateDiv = want;
+        gateDiv = this.gateDiv;
+      } else gateDiv = u < 0.3 ? 4 : u < 0.55 ? 8 : u < 0.8 ? 16 : 32;
+      const divBeats = 4 / gateDiv, closed = 1 - gateDepth;
+      for (let i = 0; i < n; i++) {
+        const pos = (beat0 + i / spb) / divBeats, target = (pos - Math.floor(pos)) < 0.5 ? 1 : closed;
+        this.gateSm += (target - this.gateSm) * this.gateCoeff;
+        L[off + i] *= this.gateSm; R[off + i] *= this.gateSm;
+      }
+    } else {
+      // off, the drop or the GAP. 1.2 (as the C++): it opens over its own 2.5 ms - a run lets go 20 ms before the bar line,
+      // where a 1/16 or 1/32 gate is shut, and opening it in one sample was a step
+      this.gateDiv = 0;
+      if (p.fixed && this.gateSm < 0.9995) for (let i = 0; i < n; i++) { this.gateSm += (1 - this.gateSm) * this.gateCoeff; L[off + i] *= this.gateSm; R[off + i] *= this.gateSm; }
+      else this.gateSm = 1;
+    }
+
+    // ---- 1d. PITCH ----
+    this.pitchBlend.steps = fast ? this.quick : this.slow;
+    const pitchHzTarget = pitch * 200 * Math.pow(u, 1.5);
+    this.pitchBlend.set(pitch > 0.02 ? sstepf(0, 0.12, u) : 0);
+    if (this.pitchBlend.cur > 0.001 || this.pitchBlend.tgt > 0.001) {
+      for (let i = 0; i < n; i++) {
+        this.pitchHz += (pitchHzTarget - this.pitchHz) * this.pitchHzCoeff;
+        this.pitchPhase += TWO_PI * this.pitchHz / sr; if (this.pitchPhase >= TWO_PI) this.pitchPhase -= TWO_PI;
+        const c = Math.cos(this.pitchPhase), s = Math.sin(this.pitchPhase), b = this.pitchBlend.next();
+        const xl = L[off + i]; L[off + i] = xl + (this.freqShift(2, 0, xl, c, s) - xl) * b;
+        const xr = R[off + i]; R[off + i] = xr + (this.freqShift(2, 1, xr, c, s) - xr) * b;
+      }
+    } else { this.pitchBlend.skip(n); this.pitchHz = 0; }
+
+    const wetL = this.wetL, wetR = this.wetR, nzL = this.nzL, nzR = this.nzR;
+    for (let i = 0; i < n; i++) { wetL[i] = 0; wetR[i] = 0; }
+
+    // ---- 2. NOISE ----
+    const inGate = sstepf(0.001, 0.02, this.inEnv);
+    const noiseGainT = hold ? 0 : noise * u * u * 0.22 * inGate;
+    this.noiseG.set(noiseGainT);
+    if (noiseGainT > 0.0005 || this.noiseG.cur > 0.0005) {
+      this.noiseLfo += n / sr * 0.35;
+      const lfo = Math.sin(this.noiseLfo * TWO_PI) * 0.12;
+      const nzTarget = 150 * Math.pow(32, u + lfo);
+      this.noiseHz += (nzTarget - this.noiseHz) * coefBlock;
+      this.noiseHP.set(clampf(this.noiseHz, 60, 0.4 * sr));
+      const rng = this.rng;
+      for (let i = 0; i < n; i++) {
+        const g = this.noiseG.next();
+        for (let ch = 0; ch < 2; ch++) {
+          let r = rng[ch]; r ^= r << 13; r >>>= 0; r ^= r >>> 17; r ^= r << 5; r >>>= 0; rng[ch] = r;
+          let v = ((r & 0xFFFFFF) / 8388608 - 1) * 0.5;
+          v = this.noiseLP.proc(ch, this.noiseHP.proc(ch, v)) * g;
+          if (ch === 0) { nzL[i] = v; wetL[i] += v; } else { nzR[i] = v; wetR[i] += v; }
+        }
+      }
+    } else { this.noiseG.skip(n); for (let i = 0; i < n; i++) { nzL[i] = 0; nzR[i] = 0; } }
+
+    // ---- 3. REVERB ----
+    const tailSec = p.tailSec, coef250 = 1 - Math.exp(-blockSec / 0.25);
+    const revFromT = hold ? 0 : w.rev * space * Math.pow(u, 1.3) * 0.6;
+    if (hold) { /* GAP: the level stays where it was, nothing new is sent in */ }
+    else if (revFromT > 0.005) { this.revLevel = revFromT > this.revLevel ? revFromT : this.revLevel + (revFromT - this.revLevel) * coef250; this.revRelRef = this.revLevel; this.tailHeld = 0; }
+    else if (tailSec > 0.001) { this.tailHeld += blockSec; if (this.tailHeld > tailSec * 0.35) this.revLevel = Math.max(0, this.revLevel - this.revRelRef * blockSec / (tailSec * 0.65)); }
+    else this.revLevel = 0;
+    this.revG.set(this.revLevel);
+    this.revFeed.set(revFromT > 0.005 ? 1 : 0);
+    if (this.revLevel > 0.001 || this.revG.cur > 0.001 || this.revFeed.cur > 0.001) {
+      if (u > this.uRoom) this.uRoom = u; else if (revFromT > 0.005) this.uRoom += (u - this.uRoom) * coef250;
+      const rv = this.reverb;
+      rv.setSize(0.5 + 0.45 * this.uRoom);
+      rv.setDecay(revFromT > 0.005 ? 1.6 + 4.5 * this.uRoom : Math.max(1.6 + 4.5 * this.uRoom, 1.3 * tailSec));
+      rv.setHighDamp(0.4 - 0.2 * this.uRoom);
+      this.revHP.set(clampf(Math.max(150, this.hpfHz * 1.2), 150, 0.4 * sr));
+      for (let i = 0; i < n; i++) {
+        const feed = this.revFeed.next();
+        rv.proc((L[off + i] + nzL[i] * 0.7) * feed, (R[off + i] + nzR[i] * 0.7) * feed);
+        const g = this.revG.next();
+        wetL[i] += this.revHP.proc(0, rv.oL) * g; wetR[i] += this.revHP.proc(1, rv.oR) * g;
+      }
+    } else { this.revG.skip(n); this.revFeed.skip(n); }
+
+    // ---- 4. DELAY ----
+    const delFromT = hold ? 0 : echo * Math.pow(u, 1.2) * 0.5;
+    if (hold) { /* held */ }
+    else if (delFromT > 0.005) { this.delLevel = delFromT > this.delLevel ? delFromT : this.delLevel + (delFromT - this.delLevel) * coef250; this.delRelRef = this.delLevel; }
+    else if (tailSec > 0.001) { if (this.tailHeld > tailSec * 0.35) this.delLevel = Math.max(0, this.delLevel - this.delRelRef * blockSec / (tailSec * 0.65)); }
+    else this.delLevel = 0;
+    this.delG.set(this.delLevel);
+    if (this.delLevel > 0.001 || this.delG.cur > 0.001) {
+      this.sendDel.set(delFromT > 0.005 ? 1 : 0);
+      this.fbSm.set(0.3 + 0.5 * this.uRoom);
+      this.widthSm.set(1 + 0.6 * u);
+      const m = this.lineLength - 1, dl = this.lines[0], dr = this.lines[1];
+      for (let i = 0; i < n; i++) {
+        this.delayLen += (this.delayT - this.delayLen) * this.delayCoeff;
+        const fb = this.fbSm.next(), send = this.sendDel.next();
+        const inp = 0.5 * (L[off + i] + R[off + i]) * send;
+        const oL = this.readHermite(0, this.delayLen), oR = this.readHermite(1, this.delayLen);
+        this.loopLp[0] += (oR - this.loopLp[0]) * this.loopLpCoeff; this.loopLp[1] += (oL - this.loopLp[1]) * this.loopLpCoeff;
+        dl[this.writePos] = softSat(inp + this.loopLp[0] * fb); dr[this.writePos] = softSat(this.loopLp[1] * fb);
+        this.writePos = (this.writePos + 1) & m;
+        const g = this.delG.next(), wd = this.widthSm.next(), mid = 0.5 * (oL + oR), side = 0.5 * (oL - oR) * wd;
+        wetL[i] += (mid + side) * g; wetR[i] += (mid - side) * g;
+      }
+    } else { this.delG.skip(n); this.sendDel.skip(n); this.fbSm.skip(n); this.widthSm.skip(n); }
+
+    // ---- 5. SHEPARD ----
+    const shepGainT = hold ? 0 : rise * Math.pow(u, 1.4) * 0.55;
+    this.shepG.set(shepGainT);
+    let shepRange = 0;
+    if (shepGainT > 0.0005 || this.shepG.cur > 0.0005) {
+      shepRange = 180 + 520 * u;
+      const cycleSec = Math.max(0.25, p.shepCycleSec) / (1 + 3 * u * w.rateLink), cycleInc = 1 / (cycleSec * sr);
+      for (let i = 0; i < n; i++) {
+        const g = this.shepG.next();
+        this.cyclePhase += cycleInc; if (this.cyclePhase >= 1) this.cyclePhase -= 1;
+        let yL = 0, yR = 0;
+        for (let v = 0; v < 2; v++) {
+          let ph = this.cyclePhase + 0.5 * v; if (ph >= 1) ph -= 1;
+          const win = 0.5 - 0.5 * Math.cos(TWO_PI * ph);
+          this.oscPhase[v] += TWO_PI * shepRange * ph / sr; if (this.oscPhase[v] >= TWO_PI) this.oscPhase[v] -= TWO_PI;
+          const c = Math.cos(this.oscPhase[v]), s = Math.sin(this.oscPhase[v]);
+          yL += win * this.freqShift(v, 0, L[off + i], c, s); yR += win * this.freqShift(v, 1, R[off + i], c, s);
+        }
+        wetL[i] += yL * g; wetR[i] += yR * g;
+      }
+    } else this.shepG.skip(n);
+
+    // ---- the cut: 20 ms fade on everything wet, then the lines are emptied ----
+    if (this.cutFadeLeft > 0) {
+      for (let i = 0; i < n; i++) { const g = this.cutFadeLeft > 0 ? this.cutFadeLeft / this.cutFadeLen : 0; wetL[i] *= g; wetR[i] *= g; if (this.cutFadeLeft > 0) this.cutFadeLeft--; }
+      if (this.cutFadeLeft === 0) {
+        this.reverb.reset(); this.revHP.reset(); this.lines[0].fill(0); this.lines[1].fill(0); this.loopLp[0] = this.loopLp[1] = 0;
+        this.revLevel = this.delLevel = this.revRelRef = this.delRelRef = 0; this.tailHeld = 0;
+        this.revG.setNow(0); this.delG.setNow(0); this.noiseG.setNow(0); this.shepG.setNow(Math.min(this.shepG.tgt, this.shepG.cur));
+      }
+    }
+
+    // ---- 6. DRIVE on the wet, SINK on the dry, sum ----
+    const driveAmt = p.drive == null ? w.drive : p.drive;
+    this.driveSm.set(driveAmt * u);
+    this.dryG.steps = fast ? this.quick : this.slow;
+    this.dryG.set(1 - sink * Math.pow(u, 1.6));
+    this.gapG.set(hold ? 0 : 1);
+    let wetPeak = 0;
+    for (let i = 0; i < n; i++) {
+      const d = this.driveSm.next(), dg = this.dryG.next() * this.gapG.next();
+      const pre = 1 + 4 * d, post = 1 / (1 + 1.6 * d);
+      const l = softSat(wetL[i] * pre) * post, r = softSat(wetR[i] * pre) * post;
+      const al = Math.abs(l), ar = Math.abs(r); if (al > wetPeak) wetPeak = al; if (ar > wetPeak) wetPeak = ar;
+      L[off + i] = L[off + i] * dg + l; R[off + i] = R[off + i] * dg + r;
+    }
+
+    // ---- BYPASS crossfade ----
+    if (fading || p.bypass) {
+      for (let i = 0; i < n; i++) { const bm = this.bypassMix.next(); L[off + i] += (this.dryL[i] - L[off + i]) * bm; R[off + i] += (this.dryR[i] - R[off + i]) * bm; }
+      if (p.bypass && !this.bypassMix.smoothing) {
+        this.reverb.reset(); this.revHP.reset(); this.lines[0].fill(0); this.lines[1].fill(0); this.loopLp[0] = this.loopLp[1] = 0; this.revLevel = this.delLevel = 0;
+        for (const s of [this.revG, this.delG, this.noiseG, this.shepG, this.sendDel, this.revFeed]) s.setNow(0);
+        this.bypassSettled = true;
+      } else this.bypassSettled = false;
+    } else { this.bypassMix.skip(n); this.bypassSettled = false; }
+
+    for (let i = 0; i < n; i++) if (!isFinite(L[off + i]) || !isFinite(R[off + i])) { this.reset(); for (let j = 0; j < n; j++) { L[off + j] = 0; R[off + j] = 0; } return; }
+
+    this.uiWetAcc += (wetPeak - this.uiWetAcc) * 0.3;
+    ui.wet = clampf(this.uiWetAcc, 0, 1);
+    ui.hpf = hpfActive ? this.hpfHz : 20; ui.lpf = lpfActive ? this.lpfHz : 20000; ui.gate = gateDiv;
+    ui.pitch = this.pitchBlend.cur > 0.01 ? this.pitchHz : 0;
+    ui.rev = clampf(this.revG.cur / 0.6, 0, 1); ui.del = clampf(this.delG.cur / 0.5, 0, 1);
+    ui.noise = this.noiseG.cur > 0.0005 ? 20 * Math.log10(this.noiseG.cur * 0.5) : -90;
+    ui.shep = this.shepG.cur > 0.0005 ? shepRange : 0;
+    ui.drive = clampf(this.driveSm.cur, 0, 1);
+    ui.tail = (u < 0.05 || hold) ? clampf(Math.max(this.revG.cur / 0.6, this.delG.cur / 0.5) * 1.5, 0, 1) : 0;
+  }
+}
+
+// ============================================================================ the processor
+const LAND_BARS = [0, 4, 8, 16, 32, 1, 2];   // by the LAND parameter index: 1 and 2 bars were appended in 1.2.0
+const GAP_BEATS = [0, 0.5, 1, 2];
+function shape(x, curve) {   // RoneBarClock::shape - 0 LIN, 1 EXP, 2 S
+  x = clampf(x, 0, 1);
+  if (curve === 1) return Math.pow(x, 2.6);
+  if (curve === 2) { const e = Math.pow(x, 2.2), push = x > 0.75 ? Math.pow((x - 0.75) / 0.25, 2) : 0; return clampf(e * 0.8 + push * 0.2, 0, 1); }
+  return x;
+}
+
+class RiseProc {
+  constructor(sr) {
+    this.sr = sr; this.engine = new RiseEngine(); this.engine.prepare(sr);
+    this.P = { intensity: 0, preset: 0, bypass: 0, rise: 0, noise: 0, space: 0.73, delay: 0, kill: 0.35, dive: 0, gate: 0, sink: 0.55, pitch: 0, drive: 0.15,
+               curve: 1, tail: 0, land: 0, dir: 0, gap: 0 };
+    this.fixed = false;            // round 1 landing
+    this.audition = false;
+    this.ppq = 0; this.bpm = 145; this.bpb = 4; this.playing = false; this.prevPlaying = false;
+    this.goReq = false; this.cancelReq = false;
+    this.running = false; this.runDir = 0; this.runStart = 0; this.runBeats = 0;
+    this.armed = false; this.armPpq = 0; this.armBars = 0;
+    this.audNext = 0; this.holdUntil = -1; this.fastLeft = 0;
+    this.recentMax = 0; this.latched = false; this.latchKnob = 0;
+    this.ui = { t: 0, latched: false, running: false, bar: 0, beat: 0, bars: 0, bpm: 145, playing: false, phase: 0, bpb: 4, armed: false, audition: false, hold: false, prog: 0 };
+  }
+  spb() { return 60 / this.bpm * this.sr; }
+  barStart() { return Math.floor((this.ppq + 1 / this.spb()) / this.bpb) * this.bpb; }   // a position within one sample of a bar line IS that line
+  setAudition(on) {
+    this.audition = !!on;
+    if (on) { this.latched = false; this.running = false; this.armed = false; this.audNext = this.barStart(); }
+    else { this.running = false; this.armed = false; this.latched = false; this.holdUntil = -1; }
+  }
+  // samples until the next moment the state changes inside a block (Infinity = none)
+  nextEvent(spb) {
+    let e = Infinity; const add = s => { if (s > 0.5 && s < e) e = s; };
+    if (this.running) {
+      const toLand = (this.runStart + this.runBeats - this.ppq) * spb;
+      if (this.runDir === 0) { const gb = GAP_BEATS[this.P.gap | 0]; if (gb > 0) add(toLand - gb * spb); }
+      if (this.fixed) add(toLand - 0.020 * this.sr);
+    }
+    if (this.armed) add((this.armPpq - this.ppq) * spb);
+    if (this.audition && !this.running && !this.armed) add((this.audNext - this.ppq) * spb);
+    if (this.holdUntil >= 0) add((this.holdUntil - this.ppq) * spb);
+    return e;
+  }
+  process(L, R, n) {
+    let pos = 0;
+    while (pos < n) {
+      const spb = this.spb();
+      let len = this.fixed ? Math.min(32, n - pos) : n - pos;   // today: one decision per host block, as the plugin does
+      const ev = this.nextEvent(spb); if (ev < len) len = Math.max(1, Math.ceil(ev));
+      this.step(L, R, pos, len, spb);
+      this.ppq += len / spb;
+      pos += len;
+    }
+  }
+  startRun(bars) {
+    if (this.P.dir === 0) { this.running = true; this.runDir = 0; this.runStart = this.barStart(); this.runBeats = bars * this.bpb; }
+    else {   // FALL starts ON a bar line: this one if we are on it, else the next
+      const bs = this.barStart(), onLine = this.ppq - bs < 2 / this.spb();
+      this.armed = true; this.armPpq = onLine ? bs : bs + this.bpb; this.armBars = bars;
+    }
+  }
+  step(L, R, off, len, spb) {
+    const P = this.P, sr = this.sr, bpb = this.bpb, ppq = this.ppq, eps = 0.5 / spb;
+    let go = this.goReq; this.goReq = false;
+    if (this.cancelReq) { this.cancelReq = false; this.running = false; this.armed = false; this.latched = false; this.audition = false; this.holdUntil = -1; }
+
+    // REST ON STOP
+    let stopCut = false;
+    if (this.prevPlaying && !this.playing) { this.running = false; this.armed = false; this.audition = false; this.holdUntil = -1; stopCut = true; this.latched = true; this.latchKnob = P.intensity; }
+    if (!this.prevPlaying && this.playing) this.latched = false;
+    this.prevPlaying = this.playing;
+
+    const landBars = LAND_BARS[clampf(P.land | 0, 0, 6)], tailChoice = clampf(P.tail | 0, 0, 4);
+    const audBars = landBars > 0 ? landBars : 4;
+
+    if (go) {
+      this.latched = false;
+      if (this.audition) { this.audition = false; this.running = false; this.armed = false; }
+      else if (this.running || this.armed) { this.running = false; this.armed = false; }
+      else if (landBars > 0) this.startRun(landBars);
+    }
+    if (this.audition && !this.running && !this.armed && ppq >= this.audNext - eps) { this.latched = false; this.startRun(audBars); }
+    if (this.armed && ppq >= this.armPpq - eps) { this.armed = false; this.running = true; this.runDir = 1; this.runStart = this.armPpq; this.runBeats = this.armBars * bpb; }
+
+    const knob = P.intensity;
+    if (this.latched && Math.abs(knob - this.latchKnob) > 0.01) this.latched = false;
+    let eff = this.latched ? 0 : knob, landedNow = false, hold = false, runP = -1;
+    if (this.running) {
+      const landPpq = this.runStart + this.runBeats;
+      const toLand = (landPpq - ppq) * spb, early = this.fixed ? 0.020 * sr : 0;
+      const p = Math.max(0, (ppq - this.runStart) / Math.max(1e-6, this.runBeats));
+      if (toLand <= early + 0.5) {
+        this.running = false; eff = 0; landedNow = this.runDir === 0; this.latched = true; this.latchKnob = knob;
+        if (this.fixed && this.runDir === 0 && GAP_BEATS[P.gap | 0] > 0) this.holdUntil = landPpq - 0.005 * sr / spb;   // the dry opens ON the line
+        if (this.audition) this.audNext = landPpq + (audBars <= 2 ? 1 : 2) * bpb;
+      } else {
+        const x = this.runDir === 0 ? p : 1 - p, curve = clampf(P.curve | 0, 0, 3);
+        eff = curve === 0 ? x : curve === 1 ? Math.pow(x, 1.35) : shape(x, curve - 1);
+        runP = p;
+        if (this.runDir === 0) { const gb = GAP_BEATS[P.gap | 0]; if (gb > 0 && toLand <= gb * spb + 0.5) hold = true; }
+      }
+    }
+    if (this.holdUntil >= 0) { if (ppq < this.holdUntil - eps) hold = true; else this.holdUntil = -1; }
+
+    // the drop: a fast pull to zero (mouse, automation snap, the landing)
+    let cut = false;
+    this.recentMax = Math.max(eff, this.recentMax * Math.exp(-len / (0.12 * sr)));
+    const dropped = landedNow || (this.recentMax > 0.35 && eff < 0.05);
+    if (dropped) { this.recentMax = 0; if (tailChoice === 0) cut = true; if (this.fixed) this.fastLeft = Math.floor(0.06 * sr); }
+    if (stopCut) { cut = true; this.recentMax = 0; }
+    const tailSec = tailChoice === 0 ? 0 : tailChoice * bpb * 60 / this.bpm;
+
+    const bs = Math.floor(ppq / bpb + 1e-9) * bpb, phase = (ppq - bs) / bpb, ui = this.ui;
+    ui.t = eff; ui.latched = this.latched; ui.running = this.running; ui.armed = this.armed; ui.audition = this.audition; ui.hold = hold;
+    ui.bars = this.audition ? audBars : landBars; ui.bpm = this.bpm; ui.playing = this.playing; ui.phase = phase; ui.bpb = bpb;
+    if (this.running) { const bi = ppq - this.runStart; ui.bar = Math.floor(bi / bpb + 1e-9); ui.beat = Math.floor((bi % bpb) + 1e-9); ui.prog = clampf(bi / this.runBeats, 0, 1); }
+    else { ui.bar = 0; ui.beat = 0; ui.prog = 0; }
+
+    const fast = this.fastLeft > 0; if (fast) this.fastLeft -= len;
+    this.engine.process(L, R, off, len, {
+      t: eff, preset: P.preset, rise: P.rise, noise: P.noise, space: P.space, delay: P.delay, kill: P.kill, dive: P.dive, gate: P.gate, sink: P.sink, pitch: P.pitch, drive: P.drive,
+      delaySamples: 0.75 * spb, shepCycleSec: 2 * bpb * 60 / this.bpm, tailSec, cut, bypass: P.bypass > 0.5,
+      barPhase: phase, bpb, spb, hold, fast, runP, fixed: this.fixed });
+  }
+}
+
+// ============================================================================ the built-in loop (145 BPM psy pattern, 4 bars)
+function makeLoop(sr, bpm) {
+  const spb = 60 / bpm * sr, len = Math.round(spb * 16), L = new Float32Array(len), R = new Float32Array(len);
+  let seed = 0x1234567; const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const add = (i, l, r) => { const k = ((i % len) + len) % len; L[k] += l; R[k] += r; };
+  const s16 = spb / 4;
+  for (let b = 0; b < 16; b++) {
+    const t0 = Math.round(b * spb);
+    // kick: a sine falling from ~220 Hz to 48 Hz, plus a 2 ms click
+    { let ph = 0; const n = Math.floor(0.30 * sr);
+      for (let i = 0; i < n; i++) { const t = i / sr, f = 48 + 175 * Math.exp(-t / 0.016); ph += TWO_PI * f / sr;
+        const a = Math.exp(-t / 0.13) * (1 - Math.exp(-t / 0.0004)) * Math.min(1, (n - i) / (0.01 * sr));
+        const v = Math.sin(ph) * a * 0.9 + (t < 0.002 ? (rnd() * 2 - 1) * 0.25 * (1 - t / 0.002) : 0); add(t0 + i, v, v); } }
+    // rolling bass on the three sixteenths after the kick (G1, 49 Hz)
+    for (let k = 1; k < 4; k++) { const s0 = Math.round(t0 + k * s16), n = Math.floor(s16 * 0.92); let ph = 0, lp = 0;
+      for (let i = 0; i < n; i++) { const t = i / sr; ph += 49 / sr; if (ph >= 1) ph -= 1;
+        const saw = 2 * ph - 1, fc = 180 + 1500 * Math.exp(-t / 0.035), c = 1 - Math.exp(-TWO_PI * fc / sr); lp += (saw - lp) * c;
+        const a = Math.min(1, t / 0.002) * Math.exp(-t / 0.085) * Math.min(1, (n - i) / (0.004 * sr)); const v = lp * a * 0.62; add(s0 + i, v, v); } }
+    // clap on 2 and 4
+    if (b % 4 === 1 || b % 4 === 3) { const n = Math.floor(0.16 * sr); let hp = 0, prev = 0;
+      for (let i = 0; i < n; i++) { const t = i / sr, x = rnd() * 2 - 1; hp = 0.82 * (hp + x - prev); prev = x;
+        const a = Math.exp(-t / 0.045) * (0.6 + 0.4 * Math.abs(Math.sin(t * 190))) * 0.2; add(t0 + i, hp * a, hp * a * 0.9); } }
+    // hats: open on the off-beat, closed on the sixteenths
+    for (let k = 0; k < 4; k++) { const s0 = Math.round(t0 + k * s16), open = k === 2, n = Math.floor((open ? 0.07 : 0.025) * sr); let hp = 0, prev = 0;
+      for (let i = 0; i < n; i++) { const t = i / sr, x = rnd() * 2 - 1; hp = 0.6 * (hp + x - prev); prev = x;
+        const a = Math.exp(-t / (open ? 0.03 : 0.008)) * (open ? 0.11 : 0.045); add(s0 + i, hp * a * 0.8, hp * a); } }
+  }
+  // lead: a sixteenth arp in G minor, alternating sides
+  const scale = [0, 3, 7, 12, 15, 12, 7, 3, 0, 7, 10, 15, 19, 15, 10, 7], roots = [0, 0, -4, -2];
+  for (let s = 0; s < 64; s++) {
+    if (s % 4 === 0) continue;                                   // leave the kick alone
+    const bar = s >> 4, note = 55 + roots[bar] + scale[(s + bar * 3) % 16], f = 440 * Math.pow(2, (note - 69) / 12);
+    const s0 = Math.round(s * s16), n = Math.floor(s16 * 1.6), pan = s % 2 ? 0.72 : 0.28; let ph = 0, ph2 = 0, lp = 0;
+    for (let i = 0; i < n; i++) { const t = i / sr; ph += f / sr; if (ph >= 1) ph -= 1; ph2 += f * 1.006 / sr; if (ph2 >= 1) ph2 -= 1;
+      const x = (2 * ph - 1) * 0.6 + (2 * ph2 - 1) * 0.4, fc = 900 + 3200 * Math.exp(-t / 0.06), c = 1 - Math.exp(-TWO_PI * fc / sr); lp += (x - lp) * c;
+      const a = Math.min(1, t / 0.003) * Math.exp(-t / 0.11) * 0.17; add(s0 + i, lp * a * (1 - pan) * 1.4, lp * a * pan * 1.4); }
+  }
+  let pk = 0; for (let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i]));
+  const g = 0.7 / pk; for (let i = 0; i < len; i++) { L[i] *= g; R[i] *= g; }
+  return { L, R, len };
+}
+
+const api = { RiseEngine, RiseProc, Reverb, makeLoop, WEIGHTS, LAND_BARS, GAP_BEATS };
+if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.RiseDSP = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>
+// ============================================================================
+// The "DAW" behind the page: the page talks to window.__JUCE__.backend exactly as it does in the
+// plugin; here the other end is the engine port, a transport, and a loop to play through it.
+// ============================================================================
+(function () {
+  'use strict';
+  const D = window.RiseDSP, listeners = {};
+  const CARDS = [
+    { rise: 0,  noise: 0,   space: .73, delay: 0,    kill: .35,  dive: 0, gate: 0,  sink: .55, pitch: 0, drive: .15 },
+    { rise: 0,  noise: .25, space: .82, delay: .656, kill: .35,  dive: 0, gate: 0,  sink: .55, pitch: 0, drive: .2 },
+    { rise: .4, noise: .5,  space: .76, delay: .304, kill: .8,   dive: 0, gate: .7, sink: .6,  pitch: .5, drive: .4 },
+    { rise: 0,  noise: 0,   space: .91, delay: .637, kill: .125, dive: 1, gate: 0,  sink: .7,  pitch: 0, drive: .3 },
+    { rise: 1,  noise: 1,   space: .88, delay: .704, kill: 1,    dive: 0, gate: .5, sink: .7,  pitch: 1, drive: .8 } ];
+  const H = window.RiseHost = { proc: new D.RiseProc(48000), ctx: null, node: null, gain: null, playing: false, presetName: '', src: 0, loop: null, user: null, loopBpm: 0, vol: 0.8, onChange: null };
+  H.proc.fixed = true;   // the mockup opens on the 1.2 drop
+  const send = (n, p) => (listeners[n] || []).forEach(cb => { try { cb(p); } catch (e) { console.error(e); } });
+  window.__JUCE__ = { backend: { addEventListener(n, cb) { (listeners[n] = listeners[n] || []).push(cb); }, emitEvent(n, p) { onEvent(n, p || {}); } } };
+
+  function pushState() { const P = H.proc.P; send('paramState', Object.assign({}, P, { bypass: P.bypass > 0.5, presetName: H.presetName })); }
+  function ensureAudio() {
+    if (H.ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { H.fail = true; return false; }
+    try {
+      H.ctx = new AC({ latencyHint: 'interactive' });
+      const old = H.proc; H.proc = new D.RiseProc(H.ctx.sampleRate); Object.assign(H.proc.P, old.P); H.proc.bpm = old.bpm; H.proc.fixed = old.fixed;
+      H.gain = H.ctx.createGain(); H.gain.gain.value = H.vol; H.gain.connect(H.ctx.destination);
+      H.node = H.ctx.createScriptProcessor(1024, 1, 2);
+      H.node.onaudioprocess = e => {
+        const L = e.outputBuffer.getChannelData(0), R = e.outputBuffer.getChannelData(1), n = L.length, pr = H.proc;
+        const s = H.playing ? source() : null;
+        if (s) { let k = Math.round(pr.ppq * pr.spb()) % s.len; for (let i = 0; i < n; i++) { L[i] = s.L[k]; R[i] = s.R[k]; if (++k >= s.len) k = 0; } }
+        else { L.fill(0); R.fill(0); }
+        pr.playing = H.playing; pr.process(L, R, n);
+        for (let i = 0; i < n; i++) { const a = L[i], b = R[i]; L[i] = a > 1 ? 1 : a < -1 ? -1 : a; R[i] = b > 1 ? 1 : b < -1 ? -1 : b; }
+      };
+      H.node.connect(H.gain);
+    } catch (err) { console.error(err); H.fail = true; return false; }
+    return true;
+  }
+  function source() {
+    if (H.src === 1 && H.user) return H.user;
+    if (!H.loop || H.loopBpm !== H.proc.bpm || H.loop.sr !== H.ctx.sampleRate) { H.loop = D.makeLoop(H.ctx.sampleRate, H.proc.bpm); H.loop.sr = H.ctx.sampleRate; H.loopBpm = H.proc.bpm; }
+    return H.loop;
+  }
+  H.play = () => { if (!ensureAudio()) { if (H.onChange) H.onChange(); return; } if (H.ctx.state !== 'running') H.ctx.resume(); source(); H.proc.ppq = 0; H.playing = true; if (H.onChange) H.onChange(); };
+  H.stop = () => { H.playing = false; if (H.onChange) H.onChange(); };
+  H.setBpm = b => { H.proc.bpm = Math.max(60, Math.min(200, b || 145)); };
+  H.setFixed = f => { H.proc.fixed = !!f; };
+  H.setVol = v => { H.vol = v; if (H.gain) H.gain.gain.value = v; };
+  H.loadFile = (file, done) => {
+    if (!ensureAudio()) { done(false); return; }
+    const fr = new FileReader();
+    fr.onload = () => { H.ctx.decodeAudioData(fr.result, buf => { const L = buf.getChannelData(0), R = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L; H.user = { L, R, len: buf.length }; done(true); }, () => done(false)); };
+    fr.onerror = () => done(false); fr.readAsArrayBuffer(file);
+  };
+
+  function onEvent(n, p) {
+    if ((n === 'go' || (n === 'audition' && p.on)) && !H.playing) H.play();
+    const pr = H.proc, P = pr.P;
+    switch (n) {
+      case 'setParameter': if (p.name in P) { P[p.name] = typeof p.value === 'boolean' ? (p.value ? 1 : 0) : +p.value; if ((p.name === 'land' || p.name === 'dir') && pr.audition) pr.setAudition(true); } break;
+      case 'loadPreset': P.preset = p.card | 0; Object.keys(p.m || {}).forEach(k => { if (k in P) P[k] = +p.m[k]; }); if (!p.m || p.m.drive === undefined) P.drive = CARDS[P.preset].drive; H.presetName = p.name || ''; pushState(); break;
+      case 'savePreset': H.presetName = p.name || ''; break;
+      case 'saveCardMacros': case 'deletePreset': H.presetName = ''; break;
+      case 'resetCardMacros': Object.assign(P, CARDS[P.preset | 0]); H.presetName = ''; pushState(); break;
+      case 'go': pr.goReq = true; break;
+      case 'cancelRun': pr.cancelReq = true; break;
+      case 'audition': pr.setAudition(!!p.on && H.playing); break;
+      case 'requestState': pushState(); send('licenseStatus', { licensed: true }); break;
+      case 'requestUiConfig': send('uiConfig', { version: '1.2.0 dev' }); break;
+    }
+  }
+  setInterval(() => {
+    const pr = H.proc, u = pr.ui, e = pr.engine.ui;
+    send('frame', { t: u.t, latched: u.latched, running: u.running, bar: u.bar, beat: u.beat, bars: u.bars, tail: e.tail, bpm: pr.bpm, playing: H.playing, phase: u.phase, bpb: u.bpb,
+      hpf: e.hpf, rev: e.rev, del: e.del, noise: e.noise, shep: e.shep, drive: e.drive, lpf: e.lpf, gate: e.gate, pitch: e.pitch, wet: e.wet,
+      audition: pr.audition, armed: u.armed, hold: u.hold, prog: u.prog });
+  }, 33);
+})();
+</script>
+<script>/* rone-ui v2 */
+// RONE UI kit v2 (26.10.2026) - the behaviour behind rone-ui.css. Paste after the CSS.
+//   RoneUI.knob(el, {size:'m', value:.5, def:.5, fmt:v=>..., label:'Mix', hero:false, onChange:v=>...})
+//       -> {set(v), get(), setText(html), lock(bool), el}      drag (shift = fine), wheel 2 %/notch, dbl-click = default, arrows
+//   RoneUI.seg(el, {onClass:'on'})     -> adds the sliding pill; the plugin keeps toggling its own on-class, the pill follows
+//   RoneUI.switch(el)                  -> toggles .on on click (optional helper)
+//   RoneUI.menu(trigger, {items, header, footer, wide, side, onSelect}) -> {open(), close(), set(items), el}
+//   RoneUI.select(selectEl, {wide})    -> wraps a native <select> in a key + popover; select.value / 'change' keep working
+(function (root) {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const SIZES = { s: { S: 58, st: 3.5 }, m: { S: 104, st: 4.5 }, l: { S: 124, st: 5 }, xl: { S: 200, st: 7 } };
+
+  function arcPath(cx, cy, r, a0, a1) {
+    const p = a => { const t = (a - 90) * Math.PI / 180; return [cx + r * Math.cos(t), cy + r * Math.sin(t)]; };
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+  }
+  function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+
+  // ---------------------------------------------------------------- knob (.arck)
+  function knob(target, opt) {
+    const o = Object.assign({ size: 'm', value: 0, def: null, fmt: null, label: '', hero: false, onChange: null, locked: false }, opt || {});
+    const { S, st } = SIZES[o.size] || SIZES.m, c = S / 2, r = c - st / 2 - 1;
+    const k = target; k.classList.add('arck', 'size-' + o.size); if (o.hero) k.classList.add('hero'); if (!k.hasAttribute('tabindex')) k.tabIndex = 0;
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+    const track = document.createElementNS(NS, 'path'), lit = document.createElementNS(NS, 'path');
+    track.setAttribute('class', 'track'); lit.setAttribute('class', 'lit'); track.setAttribute('d', arcPath(c, c, r, -135, 135));
+    svg.append(track, lit);
+    const body = el('div', 'kbody'), dot = el('div', 'kdot'), cval = el('div', 'cval');
+    k.textContent = ''; k.append(svg, body, dot, cval);   // not replaceChildren: Safari 14+, older Macs run these pages
+    let v = clamp(o.value, 0, 1), text = null, lingerT = null;
+    const def = o.def == null ? v : o.def;
+    function draw() {
+      const a = -135 + 270 * v;
+      lit.setAttribute('d', v > 0.003 ? arcPath(c, c, r, -135, a) : '');
+      dot.style.transform = `rotate(${a.toFixed(1)}deg)`;
+      const t = text != null ? text : (o.fmt ? o.fmt(v) : Math.round(v * 100) + '%');
+      cval.innerHTML = o.hero ? `<span>${t}</span><span class="sub">${o.label}</span>` : t;
+    }
+    function touch() { k.classList.add('touch'); clearTimeout(lingerT); lingerT = setTimeout(() => k.classList.remove('touch'), 500); }
+    function user(nv) { nv = clamp(nv, 0, 1); if (nv === v) return; v = nv; text = null; draw(); if (o.onChange) o.onChange(v); }
+    let y0 = 0, v0 = 0;
+    k.addEventListener('pointerdown', e => { if (o.locked || e.button !== 0) return; k.setPointerCapture(e.pointerId); y0 = e.clientY; v0 = v; k.classList.add('touch'); clearTimeout(lingerT); e.preventDefault(); });
+    k.addEventListener('pointermove', e => { if (!k.hasPointerCapture(e.pointerId)) return; user(v0 + (y0 - e.clientY) / (e.shiftKey ? 800 : 200)); });
+    const up = () => { lingerT = setTimeout(() => k.classList.remove('touch'), 500); };
+    k.addEventListener('pointerup', up); k.addEventListener('pointercancel', up);
+    k.addEventListener('wheel', e => { if (o.locked) return; e.preventDefault(); user(v + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? .005 : .02)); touch(); }, { passive: false });
+    k.addEventListener('dblclick', () => { if (!o.locked) user(def); });
+    k.addEventListener('keydown', e => { if (o.locked) return; const d = (e.key === 'ArrowUp' || e.key === 'ArrowRight') ? .02 : (e.key === 'ArrowDown' || e.key === 'ArrowLeft') ? -.02 : 0; if (!d) return; user(v + d); touch(); e.preventDefault(); });
+    draw();
+    return { set(nv) { v = clamp(nv, 0, 1); text = null; draw(); }, get: () => v, setText(t) { text = t; draw(); },
+             lock(b) { o.locked = !!b; k.classList.toggle('locked', !!b); }, el: k };
+  }
+
+  // ---------------------------------------------------------------- segment pill
+  function seg(s, opt) {
+    const o = Object.assign({ onClass: 'on' }, opt || {});
+    s.classList.add('rone-seg');
+    let pill = s.querySelector(':scope > .pill');
+    if (!pill) { pill = el('i', 'pill'); s.appendChild(pill); }   // LAST child: index-based plugin code (children[i]) keeps its indices
+    const isOn = b => b.classList.contains(o.onClass) || b.getAttribute('aria-checked') === 'true' || b.getAttribute('aria-pressed') === 'true';
+    function current() { return Array.from(s.children).find(b => b !== pill && isOn(b)); }
+    function place(anim) {
+      const b = current();
+      if (!b) { pill.style.width = '0px'; return; }
+      const x = b.offsetLeft;
+      pill.style.setProperty('--px', x + 'px'); pill.style.transform = `translateX(${x}px)`; pill.style.width = b.offsetWidth + 'px';
+      if (anim) { s.classList.remove('squash'); void pill.offsetWidth; s.classList.add('squash'); }
+    }
+    pill.style.transition = 'none'; place(false); void pill.offsetWidth; pill.style.transition = '';
+    // the segment's own class (squash) and the pill must not re-trigger the placement, or it loops forever
+    new MutationObserver(ms => { if (ms.some(m => m.target !== s && m.target !== pill)) place(true); })
+      .observe(s, { attributes: true, subtree: true, attributeFilter: ['class', 'aria-checked', 'aria-pressed'] });
+    if (root.ResizeObserver) new ResizeObserver(() => { pill.style.transition = 'none'; place(false); void pill.offsetWidth; pill.style.transition = ''; }).observe(s);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => place(false));
+    return { place };
+  }
+  function switchEl(s) { s.classList.add('rone-switch'); if (!s.querySelector('i')) s.insertBefore(el('i'), s.firstChild); s.addEventListener('click', () => s.classList.toggle('on')); return s; }
+
+  // ---------------------------------------------------------------- popover
+  let openMenu = null;
+  function closeAll() { if (openMenu) openMenu.close(); }
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+  function menu(trigger, opt) {
+    const o = Object.assign({ items: [], header: null, footer: null, wide: false, side: 'left', up: false, onSelect: null }, opt || {});
+    let anchor = trigger.parentElement;
+    if (!anchor || !anchor.classList.contains('rone-anchor')) { anchor = el('div', 'rone-anchor'); trigger.parentNode.insertBefore(anchor, trigger); anchor.appendChild(trigger); }
+    const m = el('div', 'rone-menu' + (o.wide ? ' wide' : '') + (o.side === 'right' ? ' right' : '') + (o.up ? ' up' : ''));
+    anchor.appendChild(m);
+    const api = {
+      el: m, trigger,
+      set(items) {
+        m.textContent = '';
+        if (o.header) m.appendChild(el('div', 'h', o.header));
+        items.forEach(it => {
+          if (it === '-') { m.appendChild(el('div', 'sep')); return; }
+          if (it.html) { const w = el('div'); w.innerHTML = it.html; m.appendChild(w); return; }
+          const r = el('div', 'it' + (it.on ? ' on' : '') + (it.disabled ? ' disabled' : ''));
+          r.innerHTML = `<span class="d"></span><span class="t">${it.t}</span>${it.m != null ? `<span class="m">${it.m}</span>` : ''}${it.star != null ? `<span class="star${it.star ? ' on' : ''}">★</span>` : ''}`;
+          r.addEventListener('click', e => {
+            e.stopPropagation(); if (it.disabled) return;
+            if (!it.action) m.querySelectorAll('.it').forEach(x => x.classList.toggle('on', x === r));
+            api.close(); if (it.onSelect) it.onSelect(it); if (o.onSelect) o.onSelect(it);
+          });
+          m.appendChild(r);
+        });
+        if (o.footer) m.appendChild(el('div', 'ft', o.footer));
+      },
+      open() { if (openMenu && openMenu !== api) openMenu.close(); m.classList.remove('closing'); m.classList.add('open'); trigger.classList.add('open'); openMenu = api; },
+      close() { if (!m.classList.contains('open')) return; m.classList.add('closing'); m.classList.remove('open'); trigger.classList.remove('open'); if (openMenu === api) openMenu = null; },
+      toggle() { m.classList.contains('open') ? api.close() : api.open(); }
+    };
+    api.set(o.items);
+    trigger.addEventListener('click', e => { e.stopPropagation(); api.toggle(); });
+    m.addEventListener('click', e => e.stopPropagation());
+    return api;
+  }
+
+  // ---------------------------------------------------------------- native <select> -> key + popover
+  function select(sel, opt) {
+    const o = Object.assign({ wide: false, side: 'left', up: false, className: '' }, opt || {});
+    if (sel._rone) return sel._rone;
+    const btn = el('button', 'rone-btn dd ' + o.className); btn.type = 'button';
+    sel.parentNode.insertBefore(btn, sel); sel.classList.add('rone-select-native'); sel.tabIndex = -1;
+    const label = () => { const op = sel.options[sel.selectedIndex]; btn.textContent = op ? op.textContent : ''; };
+    const items = () => Array.from(sel.options).map(op => ({ t: op.textContent, on: op.selected, disabled: op.disabled, value: op.value,
+      onSelect() { if (sel.value === op.value) return; sel.value = op.value; label(); sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); } }));
+    const m = menu(btn, { wide: o.wide, side: o.side, up: o.up, items: items() });
+    btn.addEventListener('click', () => m.set(items()));          // rebuild from the live options every time it opens
+    sel.addEventListener('change', label);
+    // code that assigns sel.value / sel.selectedIndex (host -> UI) must move the key's text too
+    ['value', 'selectedIndex'].forEach(p => { const d = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, p);
+      if (d && d.set) Object.defineProperty(sel, p, { get() { return d.get.call(sel); }, set(x) { d.set.call(sel, x); label(); }, configurable: true }); });
+    new MutationObserver(label).observe(sel, { childList: true, subtree: true, attributes: true });
+    if (sel.disabled) btn.disabled = true;
+    label();
+    sel._rone = { button: btn, menu: m, refresh: label };
+    return sel._rone;
+  }
+
+  root.RoneUI = { knob, seg, switch: switchEl, menu, select, arcPath, closeAll };
+})(window);
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// Bridge helpers + write-if-changed
+// ─────────────────────────────────────────────────────────────────
+function emit(name, payload) { if (window.__JUCE__ && window.__JUCE__.backend) window.__JUCE__.backend.emitEvent(name, payload); }
+function setText(el, v) { if (el && el.__t !== v) { el.textContent = v; el.__t = v; } }
+function setStyle(el, k, v) { if (el && el.__s !== undefined ? el.__s[k] !== v : true) { el.__s = el.__s || {}; el.style[k] = v; el.__s[k] = v; } }
+function setCls(el, c, on) { if (el && el.classList.contains(c) !== on) el.classList.toggle(c, on); }
+function setAttr(el, k, v) { if (el && el.__a === undefined) el.__a = {}; if (el && el.__a[k] !== v) { el.setAttribute(k, v); el.__a[k] = v; } }
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const TAU = Math.PI * 2;
+
+// Host-side state (paramState) and the live frame (audio thread readouts)
+const state = { intensity: 0, preset: 0, rise: 0, noise: 0, space: .73, delay: 0, kill: .35, dive: 0, gate: 0, sink: .55, pitch: 0, tail: 0, land: 0, curve: 1, bypass: false, presetName: '', drive: .15, dir: 0, gap: 0 };
+const frame = { t: 0, latched: false, running: false, bar: 0, beat: 0, bars: 0, tail: 0, bpm: 120, playing: false, phase: 0, bpb: 4, hpf: 20, rev: 0, del: 0, noise: -90, shep: 0, drive: 0, lpf: 20000, gate: 0, pitch: 0, wet: 0, audition: false, armed: false, hold: false, prog: 0 };
+let dragParam = null;
+
+function setParam(id, v) { state[id] = v; emit('setParameter', { name: id, value: v }); }
+function gestured(id, v) { emit('paramGesture', { name: id, begin: true }); setParam(id, v); emit('paramGesture', { name: id, begin: false }); }
+
+// ─────────────────────────────────────────────────────────────────
+// Modes + presets (weights live in the engine; the page loads the macros)
+// ─────────────────────────────────────────────────────────────────
+// The five mode cards - the factory macros mirror RoneRiseEngine::presetMacros (renamed 29.10, 1.0.15).
+// KILL LOW sets its own reach since 1.0.15 (100 % = 3 kHz): the cards keep their old sound with
+// the old mode scale folded into their KILL value.
+const PRESETS = [
+  { n: 'LIFTOFF',  t: 'CLEAN',   m: { rise: 0,  noise: 0,   space: .73, delay: 0,    kill: .35,  dive: 0, gate: 0,  sink: .55, pitch: 0 } },
+  { n: 'ORBIT',    t: 'ECHO',    m: { rise: 0,  noise: .25, space: .82, delay: .656, kill: .35,  dive: 0, gate: 0,  sink: .55, pitch: 0 } },
+  { n: 'PULSAR',   t: 'GATED',   m: { rise: .4, noise: .5,  space: .76, delay: .304, kill: .8,   dive: 0, gate: .7, sink: .6,  pitch: .5 } },
+  { n: 'UNDERTOW', t: 'FILTER',  m: { rise: 0,  noise: 0,   space: .91, delay: .637, kill: .125, dive: 1, gate: 0,  sink: .7,  pitch: 0 } },
+  { n: 'MELTDOWN', t: 'EXTREME', m: { rise: 1,  noise: 1,   space: .88, delay: .704, kill: 1,    dive: 0, gate: .5, sink: .7,  pitch: 1 } },
+];
+// DRIVE is a macro since 1.2.0 (it was fixed per mode): the cards and the factory presets carry the mode's old amount
+const DRIVE_W = [.15, .2, .4, .3, .8]; PRESETS.forEach((p, i) => { p.m.drive = DRIVE_W[i]; });
+// The card macros in use: the factory ones until the plugin sends the user's own (SAVE AS ... MACROS)
+let cardMacros = PRESETS.map(p => Object.assign({}, p.m)), cardOwn = [false, false, false, false, false];
+// Factory presets: a mode card + its macros. Missing macros = 0, except SINK (.55) and DRIVE (the mode's old fixed amount).
+const FM = o => Object.assign({ rise: 0, noise: 0, space: 0, delay: 0, kill: 0, dive: 0, gate: 0, sink: .55, pitch: 0 }, o);
+const FACTORY = [
+  { n: 'CLEAN LIFT',      c: 0, m: FM({ space: .73, kill: .35 }) },
+  { n: 'AIR LIFT',        c: 0, m: FM({ noise: .35, space: .8, kill: .5, sink: .5 }) },
+  { n: 'FILTER CLIMB',    c: 0, m: FM({ space: .55, kill: 1, sink: .5 }) },
+  { n: 'WASH OUT',        c: 0, m: FM({ space: 1, delay: .4, kill: .6, sink: .3 }) },
+  { n: 'TAPE RISE',       c: 0, m: FM({ noise: .15, space: .6, kill: .45, sink: .6, pitch: .6 }) },
+  { n: 'DUB THROW',       c: 1, m: FM({ space: .5, delay: .9, kill: .4, sink: .5 }) },
+  { n: 'PING PONG CLIMB', c: 1, m: FM({ space: .6, delay: .75, kill: .55, gate: .35 }) },
+  { n: 'STARFIELD',       c: 1, m: FM({ rise: .5, noise: .3, space: .85, delay: .6, kill: .45, sink: .5 }) },
+  { n: 'STUTTER CLIMB',   c: 2, m: FM({ noise: .3, space: .5, delay: .2, kill: .8, gate: 1, sink: .65, pitch: .3 }) },
+  { n: 'PSY GATE',        c: 2, m: FM({ rise: .3, noise: .6, space: .7, delay: .4, kill: .9, gate: .8, sink: .6, pitch: .6 }) },
+  { n: 'TRANCE BUILD',    c: 2, m: FM({ rise: .6, noise: .7, space: .8, delay: .5, kill: .85, gate: .4, sink: .6, pitch: .4 }) },
+  { n: 'SUBMARINE',       c: 3, m: FM({ space: .95, delay: .4, kill: .2, dive: 1, sink: .75 }) },
+  { n: 'MUFFLED ROOM',    c: 3, m: FM({ noise: .2, space: .7, dive: .7, sink: .7 }) },
+  { n: 'DEEP SPACE',      c: 3, m: FM({ rise: .4, space: 1, delay: .7, kill: .3, dive: .8, sink: .8 }) },
+  { n: 'BLAST OFF',       c: 4, m: FM({ rise: .8, noise: .8, space: .8, delay: .5, kill: 1, gate: .3, sink: .7, pitch: .8 }) },
+  { n: 'WARP DRIVE',      c: 4, m: FM({ rise: 1, noise: .5, space: .7, delay: .3, kill: .7, sink: .75, pitch: 1 }) },
+  { n: 'CHAOS',           c: 4, m: FM({ rise: 1, noise: 1, space: 1, delay: .9, kill: 1, gate: 1, sink: .8, pitch: 1 }) },
+];
+FACTORY.forEach(p => { if (p.m.drive === undefined) p.m.drive = DRIVE_W[p.c]; });
+let userPresets = [];   // [{ name, card, m }] - the plugin's per-user file (every project)
+const MACROS = [{ k: 'rise', n: 'RISE' }, { k: 'noise', n: 'NOISE' }, { k: 'space', n: 'REVERB' }, { k: 'delay', n: 'DELAY' }, { k: 'kill', n: 'KILL LOW' }, { k: 'dive', n: 'DIVE' }, { k: 'gate', n: 'GATE' }, { k: 'sink', n: 'SINK' }, { k: 'pitch', n: 'PITCH' }, { k: 'drive', n: 'DRIVE' }];
+const MKEYS = MACROS.map(m => m.k);
+const CHAIN = [{ k: 'hpf', n: 'HPF' }, { k: 'lpf', n: 'DIVE' }, { k: 'gate', n: 'GATE' }, { k: 'pitch', n: 'PITCH' }, { k: 'rev', n: 'REVERB' }, { k: 'del', n: 'DELAY' }, { k: 'noise', n: 'NOISE' }, { k: 'shep', n: 'SHEPARD' }, { k: 'drive', n: 'DRIVE' }];
+
+// Every preset in browse order: the factory ones, then the user's
+function allPresets() { return FACTORY.map(p => ({ name: p.n, card: p.c, m: p.m, user: false })).concat(userPresets.map(p => ({ name: p.name, card: p.card, m: p.m, user: true }))); }
+function findPreset(name) { return name ? allPresets().find(p => p.name.toUpperCase() === name.toUpperCase()) : null; }
+// What the dot / * compare with and a double-click goes back to: the loaded preset's macros, else the card's
+// DICE (1.2.0): a rolled build-up is its own reference until it is saved or another preset is loaded
+let diceRef = null, diceN = 0;
+function isDice() { return /^DICE /.test(state.presetName || ''); }
+function refMacros() { if (diceRef && isDice()) return diceRef; const p = findPreset(state.presetName); return p && p.card === state.preset ? p.m : cardMacros[state.preset]; }
+function macrosNow() { const m = {}; MKEYS.forEach(k => { m[k] = state[k]; }); return m; }
+// Loading goes through the plugin: it sets the mode and the macros together (the mode alone would load the card's)
+function loadPreset(card, m, name) {
+  state.preset = card; state.presetName = name || ''; MKEYS.forEach(k => { if (m[k] !== undefined) state[k] = m[k]; });
+  emit('loadPreset', { card, m, name: name || '' }); renderMacros();
+}
+
+const presetsEl = $('#presets');
+PRESETS.forEach((p, i) => {
+  const b = document.createElement('button'); b.className = 'p-preset rone-btn'; b.innerHTML = `<small>${p.t}</small>${p.n}`;
+  b.addEventListener('click', () => loadPreset(i, cardMacros[i], ''));
+  presetsEl.appendChild(b);
+});
+function presetModified() { const m = refMacros(); return Object.keys(m).some(k => Math.abs(state[k] - m[k]) > 0.011); }
+function renderPresets() {
+  const mod = presetModified();
+  presetsEl.querySelectorAll('.p-preset').forEach((x, j) => { setCls(x, 'on', j === state.preset); setCls(x, 'mod', j === state.preset && mod); });
+  const p = findPreset(state.presetName), nm = $('#pName');
+  const html = isDice() ? `<small>DICE</small>${PRESETS[state.preset].n} ${state.presetName.slice(5)}` : p ? `${p.user ? '<small>USER</small>' : ''}${p.name}` : `<small>MODE</small>${PRESETS[state.preset].n}${cardOwn[state.preset] ? ' (MINE)' : ''}`;
+  if (nm.__h !== html) { nm.innerHTML = html; nm.__h = html; }
+  setCls(nm, 'mod', mod);
+  setText($('#pSaveCard'), 'SAVE AS ' + PRESETS[state.preset].n + ' MACROS');
+}
+
+// ---- the preset bar: the name opens the list, the arrows step through it ----
+const pSave = $('#pSave'), pSaveName = $('#pSaveName');
+const pMenu = RoneUI.menu($('#pName'), { wide: true, items: [] });
+function presetItems() {
+  const cur = (state.presetName || '').toUpperCase(), items = [{ html: '<div class="h">FACTORY</div>' }];
+  FACTORY.forEach(p => items.push({ t: p.n, m: PRESETS[p.c].n, on: p.n === cur, action: true, onSelect: () => loadPreset(p.c, p.m, p.n) }));
+  items.push('-', { html: '<div class="h">USER</div>' });
+  if (!userPresets.length) items.push({ t: 'NOTHING SAVED YET', disabled: true });
+  userPresets.forEach(p => items.push({ t: p.name, m: PRESETS[p.card] ? PRESETS[p.card].n : '', on: p.name.toUpperCase() === cur, action: true, onSelect: () => loadPreset(p.card, p.m, p.name) }));
+  return items;
+}
+$('#pName').addEventListener('click', () => pMenu.set(presetItems()), true);   // rebuilt every time it opens
+function stepPreset(d) {
+  const all = allPresets();
+  const i = all.findIndex(p => p.name.toUpperCase() === (state.presetName || '').toUpperCase());
+  const p = all[i < 0 ? (d > 0 ? 0 : all.length - 1) : (i + d + all.length) % all.length];
+  loadPreset(p.card, p.m, p.name);
+}
+$('#pPrev').addEventListener('click', () => stepPreset(-1));
+$('#pNext').addEventListener('click', () => stepPreset(1));
+// One in five rolls is an underwater (DIVE) build; the reverb is always there, the dry always sinks, the loud stages come in by chance
+$('#pDice').addEventListener('click', e => {
+  e.stopPropagation(); RoneUI.closeAll(); pSave.classList.remove('open');
+  const r = Math.random, pick = (a, b) => Math.round((a + (b - a) * r()) * 100) / 100, card = Math.floor(r() * 5), under = r() < 0.2;
+  const m = { kill: under ? pick(0, .3) : pick(.3, 1), dive: under ? pick(.6, 1) : 0, space: pick(.45, 1), delay: r() < .5 ? pick(.2, .9) : 0, noise: r() < .6 ? pick(.15, .9) : 0,
+              rise: r() < .4 ? pick(.2, 1) : 0, gate: r() < .35 ? pick(.3, 1) : 0, pitch: r() < .4 ? pick(.2, 1) : 0, sink: pick(.4, .8), drive: pick(.1, .8) };
+  diceRef = m; loadPreset(card, m, 'DICE ' + (++diceN));
+});
+
+// ---- SAVE: a named preset, or the card's own macros ----
+$('#pSaveBtn').addEventListener('click', e => {
+  e.stopPropagation(); RoneUI.closeAll();
+  const open = pSave.classList.toggle('open');
+  if (open) { const p = findPreset(state.presetName); pSaveName.value = p && p.user ? p.name : ''; setTimeout(() => pSaveName.focus(), 0); }
+});
+pSave.addEventListener('click', e => e.stopPropagation());
+document.addEventListener('click', () => pSave.classList.remove('open'));
+function savePreset() {
+  const name = pSaveName.value.trim().toUpperCase().slice(0, 40); if (!name) { pSaveName.focus(); return; }
+  if (FACTORY.some(p => p.n === name)) { pSaveName.value = name + ' 2'; pSaveName.focus(); return; }   // a factory name stays the factory's
+  const m = macrosNow();
+  userPresets = userPresets.filter(p => p.name.toUpperCase() !== name).concat([{ name, card: state.preset, m }]);
+  state.presetName = name; emit('savePreset', { name, card: state.preset, m }); pSave.classList.remove('open'); renderPresets();
+}
+$('#pSaveOk').addEventListener('click', savePreset);
+pSaveName.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') pSave.classList.remove('open'); });
+$('#pSaveCard').addEventListener('click', () => {
+  const m = macrosNow(); cardMacros[state.preset] = m; cardOwn[state.preset] = true; state.presetName = '';
+  emit('saveCardMacros', { card: state.preset, m }); pSave.classList.remove('open'); renderPresets();
+});
+
+// ---- Settings: RESET TO FACTORY MACROS, delete the loaded user preset ----
+const gearMenu = RoneUI.menu($('#pGear'), { side: 'right', wide: true, items: [] });
+$('#pGear').addEventListener('click', () => {
+  pSave.classList.remove('open');
+  const p = findPreset(state.presetName), mine = cardOwn.filter(Boolean).length;
+  const items = [{ html: '<div class="h">SETTINGS</div>' },
+    { t: 'RESET TO FACTORY MACROS', m: mine ? mine + ' SAVED' : '', action: true, onSelect: () => {
+      cardMacros = PRESETS.map(q => Object.assign({}, q.m)); cardOwn = cardOwn.map(() => false);
+      state.presetName = ''; MKEYS.forEach(k => { state[k] = cardMacros[state.preset][k]; }); emit('resetCardMacros', {}); renderMacros(); } }];
+  if (p && p.user) items.push({ t: 'DELETE "' + p.name + '"', action: true, onSelect: () => {
+      userPresets = userPresets.filter(q => q.name.toUpperCase() !== p.name.toUpperCase()); state.presetName = ''; emit('deletePreset', { name: p.name }); renderPresets(); } });
+  gearMenu.set(items);
+}, true);
+
+function pol(cx, cy, r, a) { const rad = (a - 90) * Math.PI / 180; return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]; }
+function arcPath(cx, cy, r, a0, a1) { const [x0, y0] = pol(cx, cy, r, a0), [x1, y1] = pol(cx, cy, r, a1); const lg = (a1 - a0) > 180 ? 1 : 0; return `M ${x0} ${y0} A ${r} ${r} 0 ${lg} 1 ${x1} ${y1}`; }
+
+// ─────────────────────────────────────────────────────────────────
+// Macros (ADVANCED)
+// ─────────────────────────────────────────────────────────────────
+const macrosEl = $('#macros');
+const MC = 29, MR = 26.25;   // kit .arck size-s: 58 px, stroke 3.5 -> centre 29, radius 29 - 1.75 - 1
+MACROS.forEach(m => {
+  const d = document.createElement('div'); d.className = 'p-mini rone-knobgroup';
+  d.innerHTML = `<div class="p-miniarc arck size-s" data-k="${m.k}"><svg viewBox="0 0 58 58"><path class="track" d="${arcPath(MC, MC, MR, -135, 135)}"/><path class="lit"/></svg><div class="p-miniknob kbody"></div><div class="p-minidot kdot"></div><div class="p-minival cval">0%</div></div><div class="p-minilabel rone-label">${m.n}</div>`;
+  macrosEl.appendChild(d);
+});
+function renderMacros() {
+  macrosEl.querySelectorAll('.p-mini').forEach(d => {
+    const arc = d.querySelector('.p-miniarc'); const t = state[arc.dataset.k];
+    setAttr(arc.querySelector('.lit'), 'd', t > 0.005 ? arcPath(MC, MC, MR, -135, -135 + 270 * t) : '');
+    setStyle(arc.querySelector('.p-minidot'), 'transform', `rotate(${(-135 + 270 * t).toFixed(1)}deg)`);
+    setText(d.querySelector('.p-minival'), arc.dataset.k === 'pitch' ? '+' + Math.round(t * 200) + ' Hz' : Math.round(t * 100) + '%');
+  });
+  renderPresets();
+}
+const chainEl = $('#chain');
+CHAIN.forEach(c => { const d = document.createElement('div'); d.className = 'p-mod'; d.dataset.k = c.k; d.innerHTML = `<div class="n">${c.n}</div><div class="v">OFF</div><div class="b"><i></i></div>`; chainEl.appendChild(d); });
+function renderChain() {
+  const vals = {
+    hpf:   frame.hpf > 21 ? Math.round(frame.hpf) + ' Hz' : 'OFF',
+    rev:   frame.rev > .01 ? Math.round(frame.rev * 100) + '%' : 'OFF',
+    del:   frame.del > .01 ? Math.round(frame.del * 100) + '% · 1/8.' : 'OFF',
+    noise: frame.noise > -80 ? Math.round(frame.noise) + ' dB' : 'OFF',
+    shep:  frame.shep > 1 ? '+' + Math.round(frame.shep) + ' Hz' : 'OFF',
+    drive: frame.drive > .01 ? Math.round(frame.drive * 100) + '%' : 'OFF',
+    lpf:   frame.lpf < 19000 ? (frame.lpf >= 1000 ? (frame.lpf / 1000).toFixed(1) + ' kHz' : Math.round(frame.lpf) + ' Hz') : 'OFF',
+    gate:  frame.gate > 0 ? '1/' + frame.gate : 'OFF',
+    pitch: frame.pitch > .5 ? '+' + Math.round(frame.pitch) + ' Hz' : 'OFF' };
+  const lvl = { hpf: frame.hpf > 21 ? Math.log(frame.hpf / 20) / Math.log(150) : 0, rev: frame.rev, del: frame.del,
+    noise: frame.noise > -80 ? clamp((frame.noise + 60) / 50, 0, 1) : 0, shep: clamp(frame.shep / 1100, 0, 1), drive: frame.drive,
+    lpf: frame.lpf < 19000 ? Math.log(20000 / frame.lpf) / Math.log(40) : 0, gate: frame.gate > 0 ? { 4: .25, 8: .5, 16: .75, 32: 1 }[frame.gate] || 0 : 0,
+    pitch: clamp(frame.pitch / 200, 0, 1) };
+  chainEl.querySelectorAll('.p-mod').forEach(d => { const k = d.dataset.k; const live = lvl[k] > 0.02;
+    setCls(d, 'live', live); setText(d.querySelector('.v'), live ? vals[k] : 'OFF'); setStyle(d.querySelector('.b i'), 'width', (clamp(lvl[k], 0, 1) * 100).toFixed(1) + '%'); });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Hero knob (0..100 % over 270°)
+// ─────────────────────────────────────────────────────────────────
+const R = 150, CX = 170, CY = 170, A0 = -135;
+$('#trk').setAttribute('d', arcPath(CX, CY, R, A0, 135));
+const ticks = $('#ticks'); [0, 25, 50, 75, 100].forEach(v => { const a = A0 + 270 * (v / 100); const [x0, y0] = pol(CX, CY, R - 14, a), [x1, y1] = pol(CX, CY, R - 9, a); ticks.insertAdjacentHTML('beforeend', `<line class="tick" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`); });
+const knobEl = $('#knob');
+// drag (shift = fine), wheel 2 % per notch (shift = fine), gesture-wrapped so touch/latch hosts record it
+function bindDrag(el, id, get, set) {
+  let y0 = 0, v0 = 0, active = false, lingerT = null;
+  const touch = () => { el.classList.add('touch'); clearTimeout(lingerT); lingerT = setTimeout(() => el.classList.remove('touch'), 500); };
+  // left button only: a right-click opens the host's menu (FL: Create automation clip), which swallows the
+  // mouseup - a drag started there never ended, its gesture stayed open and the host's automation was ignored
+  el.addEventListener('mousedown', e => { if (e.button !== 0) return; y0 = e.clientY; v0 = get(); active = true; dragParam = id; el.classList.add('touch'); clearTimeout(lingerT); emit('paramGesture', { name: id, begin: true }); e.preventDefault(); e.stopPropagation(); });
+  document.addEventListener('mousemove', e => { if (active) set(v0 + (y0 - e.clientY) / appScale() / 220 * (e.shiftKey ? .15 : 1)); });
+  const end = () => { if (active) { active = false; emit('paramGesture', { name: id, begin: false }); if (dragParam === id) dragParam = null; lingerT = setTimeout(() => el.classList.remove('touch'), 500); } };
+  document.addEventListener('mouseup', end);
+  window.addEventListener('blur', end);   // a native window took the mouse mid-drag: close the gesture anyway
+  el.addEventListener('wheel', e => { e.preventDefault(); if (id === 'intensity' && frame.running) emit('cancelRun', {}); emit('paramGesture', { name: id, begin: true }); set(get() + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? .003 : .02)); emit('paramGesture', { name: id, begin: false }); touch(); }, { passive: false });
+}
+bindDrag(knobEl, 'intensity', () => state.intensity, v => { if (frame.running) emit('cancelRun', {}); setParam('intensity', clamp(v, 0, 1)); renderKnob(); });
+knobEl.addEventListener('dblclick', () => { if (frame.running) emit('cancelRun', {}); gestured('intensity', 0); renderKnob(); });
+macrosEl.querySelectorAll('.p-miniarc').forEach(arc => { const id = arc.dataset.k; bindDrag(arc, id, () => state[id], v => { setParam(id, clamp(v, 0, 1)); renderMacros(); });
+  arc.addEventListener('dblclick', () => { gestured(id, refMacros()[id]); renderMacros(); }); });
+
+// The knob shows the EFFECTIVE intensity: the run while LAND is running, the parameter otherwise
+// the knob shows the EFFECTIVE intensity: the run, or zero while resting (after a landing or a host stop)
+function shownT() { return (frame.running || (frame.latched && dragParam !== 'intensity')) ? frame.t : state.intensity; }
+const SCENES = [['DAWN', 'SUNRISE', 'SHINING', 'HIGH NOON'], ['DUSK', 'DRIFT', 'ORBIT', 'DEEP SPACE'], ['FLICKER', 'STROBE', 'PULSE', 'SUPERNOVA'],
+                ['LOW TIDE', 'SWELL', 'UNDERTOW', 'DEEP DIVE'], ['WARM', 'HEATED', 'ANGRY', 'MELTDOWN']];
+function sceneName(t) { if (frame.hold) return 'HOLD'; if (CH.cool > .5) return 'DROP'; const s = SCENES[state.preset] || SCENES[0]; return t <= 0.02 ? 'NIGHT' : t < 0.3 ? s[0] : t < 0.6 ? s[1] : t < 0.85 ? s[2] : s[3]; }
+const LAND_BARS = [0, 4, 8, 16, 32, 1, 2];   // by the LAND parameter's index (1 and 2 bars were appended in 1.2.0)
+function renderKnob() {
+  const v = shownT() * 100, a = A0 + 270 * (v / 100), hot = false;
+  setAttr($('#lit'), 'd', v > 0.3 ? arcPath(CX, CY, R, A0, a) : ''); setCls($('#lit'), 'hot', hot);
+  setStyle($('#dot'), 'transform', `rotate(${a.toFixed(2)}deg)`);
+  const kv = $('#kval'); setText(kv, Math.round(v) + '%'); setCls(kv, 'hot', hot);
+  // the ring counts the bars of a LAND run - and of an AUDITION loop (4 bars when LAND is MANUAL)
+  const circ = 2 * Math.PI * 162, land = LAND_BARS[state.land] || 0, bars = frame.audition ? (frame.bars || 4) : land;
+  if (bars > 0) {
+    setAttr($('#barsTrack'), 'stroke-dasharray', `${(circ / bars - 5).toFixed(2)} 5`); setAttr($('#barsTrack'), 'transform', 'rotate(-90 170 170)');
+    const done = frame.running ? clamp(frame.prog, 0, 1) : 0;
+    setAttr($('#barsLit'), 'stroke-dasharray', `${(circ * done).toFixed(2)} ${circ.toFixed(2)}`); setAttr($('#barsLit'), 'transform', 'rotate(-90 170 170)');
+  } else { setAttr($('#barsTrack'), 'stroke-dasharray', '0 2000'); setAttr($('#barsLit'), 'stroke-dasharray', '0 2000'); }
+  setCls($('#pClock'), 'hid', bars === 0);
+  setText($('#clockTxt'), frame.hold ? 'GAP' : frame.armed ? 'NEXT BAR' : frame.running ? `BAR ${frame.bar + 1} / ${bars}` : `BAR — / ${bars}`);
+  $('#beats').querySelectorAll('i').forEach((b, i) => setCls(b, 'on', frame.running && i <= frame.beat));
+  const go = $('#goBtn'), hid = land === 0 ? ' hid' : '';
+  let gt = 'GO', gc = 'p-go rone-btn act wait';
+  if (!frame.audition) {
+    if (frame.armed) { gt = 'ARMED'; gc = 'p-go rone-btn act running'; }
+    else if (frame.running) { gt = 'RUNNING'; gc = 'p-go rone-btn act running'; }
+    else if (frame.tail > 0.001) { gt = 'TAIL'; gc = 'p-go rone-btn hot on tail'; }
+  }
+  setText(go, gt); if (go.className !== gc + hid) go.className = gc + hid;
+  const aud = $('#audBtn'), ac = 'p-aud rone-btn act' + (frame.audition ? '' : ' wait'); if (aud.className !== ac) aud.className = ac;
+  const m = $('#mood'), t = shownT();
+  setText(m.querySelector('.v'), sceneName(t));
+  const mc = 'p-mood rone-chip' + (t >= 0.6 ? (state.preset === 4 ? ' hot' : ' up') : ''); if (m.className !== mc) m.className = mc;
+  CH.target = t;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ADVANCED controls
+// ─────────────────────────────────────────────────────────────────
+$('#landSeg').addEventListener('click', e => { const s = e.target.closest('span'); if (!s) return; if (frame.running && !frame.audition) emit('cancelRun', {}); gestured('land', parseInt(s.dataset.i, 10)); renderLand(); renderKnob(); });
+function renderLand() { $('#landSeg').querySelectorAll('span').forEach(s => setCls(s, 'on', parseInt(s.dataset.i, 10) === state.land)); $('#curveSeg').querySelectorAll('span').forEach(s => setCls(s, 'on', parseInt(s.dataset.i, 10) === state.curve));
+  ['dir', 'gap'].forEach(k => $('#' + k + 'Seg').querySelectorAll('span').forEach(s => setCls(s, 'on', parseInt(s.dataset.i, 10) === state[k]))); }
+$('#curveSeg').addEventListener('click', e => { const s = e.target.closest('span'); if (!s) return; gestured('curve', parseInt(s.dataset.i, 10)); renderLand(); });
+RoneUI.seg($('#landSeg'), { onClass: 'on' }); RoneUI.seg($('#curveSeg'), { onClass: 'on' });
+// RISE / FALL and GAP (1.2.0). A new direction cancels a run in flight; GAP can change while it runs
+['dir', 'gap'].forEach(k => { const sg = $('#' + k + 'Seg');
+  sg.addEventListener('click', e => { const t = e.target.closest('span'); if (!t) return; if (k === 'dir' && frame.running && !frame.audition) emit('cancelRun', {}); gestured(k, parseInt(t.dataset.i, 10)); renderLand(); renderKnob(); });
+  RoneUI.seg(sg, { onClass: 'on' }); });
+// TAIL lives in the header (1.0.15); its second copy in ADVANCED left in 1.2.0 (Liran: it is already out front)
+function renderTail() { $('#tailSeg').querySelectorAll('span').forEach(s => setCls(s, 'on', parseInt(s.dataset.i, 10) === state.tail)); }
+$('#tailSeg').addEventListener('click', e => { const s = e.target.closest('span'); if (!s) return; gestured('tail', parseInt(s.dataset.i, 10)); renderTail(); });
+RoneUI.seg($('#tailSeg'), { onClass: 'on' });
+$('#goBtn').addEventListener('click', () => { if (!frame.running) gestured('intensity', 0); emit('go', {}); });
+$('#audBtn').addEventListener('click', () => emit('audition', { on: !frame.audition }));
+$('#advBtn').addEventListener('click', e => { const on = $('#drawer').classList.toggle('open'); e.currentTarget.classList.toggle('on', on); });
+const bypassBtn = $('#bypassBtn');
+bypassBtn.addEventListener('click', () => { const v = !state.bypass; gestured('bypass', v ? 1 : 0); state.bypass = v; renderBypass(); });
+function renderBypass() { setCls(bypassBtn, 'active', state.bypass); setCls($('#app'), 'bypassed', state.bypass); }
+
+// ---- Type a value (1.2.0): a plain click on the number, Enter applies, Esc leaves it. Double-click still resets ----
+let clickDown = null; document.addEventListener('mousedown', e => { clickDown = [e.clientX, e.clientY]; }, true);
+function typeIn(host, id, shown, toParam) {
+  if (host.querySelector('.p-type')) return;
+  const inp = document.createElement('input'); inp.className = 'p-type'; inp.value = shown; inp.inputMode = 'decimal'; inp.setAttribute('aria-label', id);
+  host.appendChild(inp); host.classList.add('typing'); inp.focus(); inp.select();
+  let done = false;
+  const close = apply => { if (done) return; done = true;
+    if (apply) { const x = parseFloat(String(inp.value).replace(',', '.')); if (isFinite(x)) { if (id === 'intensity' && frame.running) emit('cancelRun', {}); gestured(id, clamp(toParam(x), 0, 1)); } }
+    host.classList.remove('typing'); inp.remove(); renderKnob(); renderMacros(); };
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') close(true); else if (e.key === 'Escape') close(false); });
+  inp.addEventListener('blur', () => close(true));
+  ['mousedown', 'click', 'dblclick', 'wheel', 'contextmenu'].forEach(t => inp.addEventListener(t, e => e.stopPropagation()));
+}
+function plainClick(el, fn) { let timer = null;   // a click that did not drag, and is not the first half of a double-click
+  el.addEventListener('click', e => { if (e.target.closest('.p-type')) return; if (!clickDown || Math.hypot(e.clientX - clickDown[0], e.clientY - clickDown[1]) > 3) return; clearTimeout(timer); timer = setTimeout(fn, 240); });
+  el.addEventListener('dblclick', () => clearTimeout(timer)); }
+plainClick($('#kval'), () => typeIn($('.p-kval'), 'intensity', Math.round(shownT() * 100), x => x / 100));
+macrosEl.querySelectorAll('.p-miniarc').forEach(arc => { const id = arc.dataset.k, k = id === 'pitch' ? 200 : 100;
+  plainClick(arc, () => typeIn(arc, id, Math.round(state[id] * k), x => x / k)); });
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// THE SUN (1.2.0) - one character for every mode. It fills the whole body, its light spills over the knob side.
+//   LIFTOFF  pink, happy             ORBIT     violet, wide-eyed, a ring and two moons
+//   PULSAR   gold, wired, strobing   UNDERTOW  blue, holds its breath and goes under
+//   MELTDOWN red, angry, melting
+// What moves it is what the engine reports in `frame`: the gate chops the light, the delay throws rings,
+// the reverb widens the halo, the noise blows spray, the riser sends chevrons up the sky, DIVE raises
+// the sea over it. On the drop it lands with a bounce and puts its shades on; in a GAP it holds its breath.
+// ─────────────────────────────────────────────────────────────────
+const CH = { target: 0, cur: 0, vel: 0, dropT: -1, blink: 0, nextBlink: 2.5, burst: 0, lastT: 0, pulse: 0, barPhase: 0, beatPos: 0,
+  cool: 0, boing: 9, swap: 0, mode: 0, idle: 0, sleep: 0, px: 0, py: 0, pAt: -1e9, ringAcc: 0, shootT: -1, nextShoot: 7, shootX: 0, shootY: 0,
+  drop() { this.dropT = 0; this.burst = 1; this.cool = 1.7; this.boing = 0; } };
+const MODES = [
+  { col: [255, 95, 184],  warm: [255, 150, 120], b0: [255, 243, 250], b1: [255, 166, 220], b2: [255, 95, 184],  b3: [255, 47, 160], ink: [58, 11, 38], lid: [176, 40, 122] },
+  { col: [170, 110, 255], warm: [255, 120, 214], b0: [248, 242, 255], b1: [214, 180, 255], b2: [163, 107, 255], b3: [122, 61, 240], ink: [31, 11, 61], lid: [96, 48, 190] },
+  { col: [255, 196, 56],  warm: [255, 132, 72],  b0: [255, 252, 232], b1: [255, 228, 128], b2: [255, 194, 31],  b3: [255, 150, 0],  ink: [61, 34, 0],  lid: [204, 124, 0] },
+  { col: [64, 168, 255],  warm: [72, 228, 214],  b0: [239, 250, 255], b1: [160, 222, 255], b2: [63, 168, 255],  b3: [31, 120, 230], ink: [6, 32, 61],  lid: [27, 95, 176] },
+  { col: [255, 76, 48],   warm: [255, 164, 40],  b0: [255, 241, 224], b1: [255, 174, 107], b2: [255, 74, 46],   b3: [216, 30, 18],  ink: [61, 7, 3],   lid: [160, 18, 8] },
+];
+// the colours on screen glide from one mode's to the next; MW is how much of each mode's own props is showing
+const PKEYS = ['col', 'warm', 'b0', 'b1', 'b2', 'b3', 'ink', 'lid'], PAL = {}, MW = [1, 0, 0, 0, 0];
+PKEYS.forEach(k => { PAL[k] = MODES[0][k].slice(); });
+const rgb = c => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`, rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${(a < 0 ? 0 : a > 1 ? 1 : a).toFixed(3)})`;
+const cv = $('#cv'), g = cv.getContext('2d'); let W = 860, H = 526, DPR = 1;
+function sizeCanvas() { const sc = $('#scene'); W = sc.clientWidth || 860; H = sc.clientHeight || 526; DPR = Math.min(2.5, (window.devicePixelRatio || 1) * appScale()); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); }
+function rnd(seed) { const x = Math.sin(seed * 9999.1) * 10000; return x - Math.floor(x); }
+function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+const backOut = x => 1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2);
+// its eyes follow the pointer
+document.addEventListener('mousemove', e => { const b = cv.getBoundingClientRect(); if (!b.width) return; CH.px = (e.clientX - b.left) / b.width * W; CH.py = (e.clientY - b.top) / b.height * H; CH.pAt = performance.now(); });
+
+// ---- the face: one pose (numbers), eased every frame, so every change of mood is a move and not a cut ----
+const POSE = { open: .78, lid: 1, slant: 0, happy: 0, xe: 0, squint: 0, bIn: 8, bOut: 30, pr: 16, spark: 0, fire: 0, half: 54, curve: -42, mopen: 0, teeth: 0, oo: 0, cheek: 0, puff: 0, shades: 0, mask: 0, vein: 0, lx: 0, ly: 0 };
+function poseFor(m, u, x) {
+  const p = { open: lerp(.78, 1.02, u), lid: 1 - sstep(0, .3, u), slant: 0, happy: u >= .86 ? 1 : 0, xe: 0, squint: 0, bIn: lerp(8, -2, u), bOut: lerp(30, -12, u), pr: lerp(16, 20, u), spark: 0, fire: 0,
+    half: lerp(54, 150, u), curve: u < .3 ? lerp(-42, 0, u / .3) : lerp(0, 74, sstep(.3, .75, u)), mopen: sstep(.55, 1, u) * 66, teeth: 0, oo: 0, cheek: sstep(.35, .9, u) * .25, puff: 0, shades: 0, mask: x.dive > .06 ? 1 : 0, vein: 0, lx: 0, ly: 0 };
+  if (m === 1) {          // ORBIT: wide-eyed wonder, big shiny pupils, an "o" at the top
+    p.happy = 0; p.pr = lerp(18, 28, u); p.spark = sstep(.15, .8, u); p.open = lerp(.8, 1.08, u); p.bIn = lerp(6, -16, u); p.bOut = lerp(26, -18, u);
+    p.oo = sstep(.62, .92, u); p.half = lerp(54, 104, u); p.mopen = 0; p.curve = u < .3 ? lerp(-42, 0, u / .3) : lerp(0, 52, sstep(.3, .62, u));
+  } else if (m === 2) {   // PULSAR: wired - small pupils, the grin opens early, the eyes squeeze shut at the top
+    p.happy = 0; p.xe = u >= .86 ? 1 : 0; p.pr = lerp(15, 11, u); p.open = lerp(.8, 1.14, u); p.mopen = sstep(.28, .8, u) * 80; p.half = lerp(54, 158, u); p.bIn = lerp(8, -18, u); p.bOut = lerp(30, -22, u);
+  } else if (m === 3) {   // UNDERTOW: calm, then it holds its breath
+    p.happy = 0; p.puff = sstep(.45, .9, u); p.mopen = 0; p.half = lerp(54, 58, u); p.curve = u < .3 ? lerp(-42, 0, u / .3) : lerp(0, 22, sstep(.3, .75, u)); p.open = lerp(.78, 1.12, u); p.cheek = 0;
+  } else if (m === 4) {   // MELTDOWN: annoyed -> furious -> roaring
+    const a = sstep(.06, .7, u);
+    p.happy = 0; p.bIn = lerp(8, 50, a); p.bOut = lerp(30, -34, a); p.lid = Math.max(p.lid * .7, a * .5); p.slant = a * .42; p.squint = a * .4; p.pr = lerp(16, 12, a); p.fire = sstep(.4, 1, u);
+    p.curve = lerp(-42, -66, a); p.half = lerp(54, 132, u); p.teeth = sstep(.3, .52, u) * (1 - sstep(.84, .9, u)); p.mopen = sstep(.84, .95, u) * 88; p.cheek = 0; p.vein = sstep(.6, .78, u);
+  }
+  if (x.armed) { p.bIn = -16; p.bOut = -16; p.lid = 0; }                                                   // FALL is waiting for the bar line: wide awake
+  if (x.hold) { p.puff = 1; p.happy = 0; p.xe = 0; p.open = 1.16; p.lid = 0; p.squint = 0; p.pr = 11; p.mopen = 0; p.teeth = 0; p.oo = 0; p.half = 38; p.curve = 0; p.bIn = -20; p.bOut = -20; }   // the GAP: not a breath
+  if (x.cool) { p.shades = 1; p.happy = 0; p.xe = 0; p.mopen = 0; p.teeth = 0; p.oo = 0; p.puff = 0; p.half = 98; p.curve = 44; p.vein = 0; p.cheek = .22; p.bIn = -6; p.bOut = -14; }          // the drop landed
+  if (x.sleep > .5) { p.open = .05; p.lid = 1; p.curve = 6; p.half = 40; }
+  return p;
+}
+function face(cx, cy, k, u, blink, C) {
+  const q = POSE, ink = C.ink, eyeDX = lerp(120, 136, u), eyeR = lerp(48, 58, u), ey = -40, tr = Math.max(q.happy, q.xe);
+  g.save(); g.translate(cx, cy); g.scale(k, k); g.lineCap = 'round'; g.lineJoin = 'round';
+  if (q.puff > .02) [-1, 1].forEach(s => { const x = s * (eyeDX + 58), y = ey + 98, R = 30 + 44 * q.puff;        // cheeks full of air
+    g.fillStyle = C.b1; g.globalAlpha = .5 * q.puff; g.beginPath(); g.arc(x, y, R, 0, TAU); g.fill();
+    g.globalAlpha = .8 * q.puff; g.strokeStyle = ink; g.lineWidth = 7; g.beginPath(); g.arc(x, y, R, s > 0 ? -.5 : Math.PI - .9, s > 0 ? .9 : Math.PI + .5); g.stroke(); g.globalAlpha = 1; });
+  if (q.shades < .6) [-1, 1].forEach(s => { const x = s * eyeDX;
+    if (tr > .5) { const a = (tr - .5) * 2; g.strokeStyle = ink; g.lineWidth = 18;                               // laughing eyes: ^ ^, or > < when it is wired
+      if (q.xe > q.happy) { g.beginPath(); g.moveTo(x + s * eyeR * .7, ey - eyeR * .6 * a); g.lineTo(x - s * eyeR * .5, ey + 4); g.lineTo(x + s * eyeR * .7, ey + 8 + eyeR * .6 * a); g.stroke(); }
+      else { g.beginPath(); g.arc(x, ey + 8, eyeR * .95 * (.6 + .4 * a), Math.PI * 1.15, Math.PI * 1.85); g.stroke(); }
+      return; }
+    const open = Math.max(.06, q.open * (1 - blink) * (1 - tr * 2)), ry = eyeR * open;
+    g.fillStyle = '#fff'; g.beginPath(); g.ellipse(x, ey, eyeR, ry, 0, 0, TAU); g.fill();
+    if (open > .2) { g.save(); g.clip();
+      const pr = q.pr, px = x + q.lx * (eyeR - pr) * .75, py = ey + lerp(10, -4, u) + q.ly * (eyeR - pr) * .55;
+      if (q.fire > .02) { g.fillStyle = `rgba(255,70,20,${(.9 * q.fire).toFixed(3)})`; g.beginPath(); g.arc(px, py, pr * 1.6, 0, TAU); g.fill(); }
+      g.fillStyle = ink; g.beginPath(); g.arc(px, py, pr, 0, TAU); g.fill();
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(px - pr * .35, py - pr * .38, pr * (.34 + .14 * q.spark), 0, TAU); g.fill();
+      g.beginPath(); g.arc(px + pr * .32, py + pr * .3, pr * (.14 + .14 * q.spark), 0, TAU); g.fill();
+      g.fillStyle = C.lid;                                                                                        // the lids: heavy when sleepy, slanted when angry, the lower one rises in a squint
+      if (q.lid > .02) { g.beginPath(); g.ellipse(x, ey - eyeR * lerp(1.45, .55, q.lid), eyeR * 1.3, eyeR * .75, -s * q.slant, 0, TAU); g.fill(); }
+      if (q.squint > .02) { g.beginPath(); g.ellipse(x, ey + eyeR * lerp(1.75, 1.0, q.squint), eyeR * 1.3, eyeR * .75, 0, 0, TAU); g.fill(); }
+      g.restore(); }
+  });
+  const browY = ey - lerp(70, 92, u); g.strokeStyle = ink; g.lineWidth = 18; g.globalAlpha = 1 - q.mask;
+  if (q.mask < .98) [-1, 1].forEach(s => { g.beginPath(); g.moveTo(s * (eyeDX - eyeR - 6), browY + q.bIn); g.quadraticCurveTo(s * eyeDX, browY - 12 + (q.bIn + q.bOut) * .25, s * (eyeDX + eyeR * .5), browY + q.bOut); g.stroke(); });
+  g.globalAlpha = 1;
+  if (q.cheek > .01) { g.fillStyle = `rgba(255,255,255,${q.cheek.toFixed(3)})`; [-1, 1].forEach(s => { g.beginPath(); g.ellipse(s * (eyeDX + 62), ey + 52, 30, 18, 0, 0, TAU); g.fill(); }); }
+  if (q.vein > .02) { g.save(); g.translate(eyeDX + 74, ey - 132); g.scale(q.vein * (1 + .12 * CH.pulse), q.vein * (1 + .12 * CH.pulse)); g.rotate(.3); g.strokeStyle = ink; g.lineWidth = 11;   // the anger mark
+    for (let i = 0; i < 4; i++) { g.rotate(Math.PI / 2); g.beginPath(); g.arc(31, 31, 20, Math.PI, Math.PI * 1.5); g.stroke(); } g.restore(); }
+  // the mouth
+  const my = 100, half = q.half, curve = q.curve, open = q.mopen;
+  g.lineWidth = 14; g.strokeStyle = ink;
+  if (q.oo > .5) { const ro = lerp(22, 46, (q.oo - .5) * 2); g.fillStyle = C.mouth; g.beginPath(); g.ellipse(0, my + 16, ro * .82, ro, 0, 0, TAU); g.fill(); g.stroke(); }
+  else if (q.teeth > .25 && open < 45) {                                                                          // gritted teeth
+    const hh = lerp(8, 30, q.teeth), w = half * .92, c0 = my + curve * 1.6;
+    g.beginPath(); g.moveTo(-w, my); g.quadraticCurveTo(0, c0 - hh * 2, w, my); g.quadraticCurveTo(0, c0 + hh * 2, -w, my); g.closePath(); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 12; g.stroke();
+    g.save(); g.clip(); g.lineWidth = 7; g.beginPath(); g.moveTo(-w, my); g.quadraticCurveTo(0, c0, w, my); for (let i = -3; i <= 3; i++) { g.moveTo(i * w / 3.6, my - 120); g.lineTo(i * w / 3.6, my + 60); } g.stroke(); g.restore();
+  }
+  else if (open < 2) { g.beginPath(); g.moveTo(-half, my); g.quadraticCurveTo(0, my + curve * 1.6, half, my); g.stroke(); }
+  else { const top = my + Math.min(0, curve) * .9, bot = my + Math.max(0, curve) * 1.6 + open, roar = curve < -8;
+    g.fillStyle = C.mouth; g.beginPath(); g.moveTo(-half, my - 8); g.quadraticCurveTo(0, top, half, my - 8); g.quadraticCurveTo(0, bot, -half, my - 8); g.closePath(); g.fill(); g.stroke();
+    g.save(); g.clip();
+    g.fillStyle = '#ff4d8d'; g.beginPath(); if (roar) g.ellipse(0, my + open * .5, half * .5, open * .3, 0, 0, TAU); else g.ellipse(10, my + curve * 1.1 + open * .55, half * .55, open * .62, 0, 0, TAU); g.fill();
+    g.strokeStyle = '#fff'; g.lineWidth = lerp(28, 52, u); g.beginPath(); g.moveTo(-half, my - 8); g.quadraticCurveTo(0, top, half, my - 8); g.stroke();   // the upper teeth follow the lip
+    if (roar) { g.fillStyle = '#fff'; [-1, 1].forEach(s => { const x = s * half * .46, y = my - 8 + .385 * (top - my + 8); g.beginPath(); g.moveTo(x - 20, y); g.lineTo(x + 20, y); g.lineTo(x, y + 46); g.closePath(); g.fill(); }); }
+    g.restore(); }
+  // the diving mask and the snorkel: on whenever DIVE closes the filter, in any mode
+  if (q.mask > .02) { const mw = eyeDX + eyeR + 30, mh = eyeR + 30; g.globalAlpha = q.mask; g.strokeStyle = ink;
+    g.lineWidth = 24; g.beginPath(); g.moveTo(-mw, ey); g.lineTo(-322, ey - 26); g.moveTo(mw, ey); g.lineTo(322, ey - 26); g.stroke();
+    rr(-mw, ey - mh, mw * 2, mh * 2 + 14, 58); g.fillStyle = 'rgba(200,244,255,.2)'; g.fill(); g.lineWidth = 16; g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 9; g.beginPath(); g.moveTo(-mw + 44, ey - mh + 52); g.lineTo(-mw + 86, ey - mh + 24); g.stroke();
+    g.strokeStyle = ink; g.lineWidth = 26; g.beginPath(); g.moveTo(half + 6, my + 4); g.quadraticCurveTo(mw + 84, my + 34, mw + 78, ey + 10); g.lineTo(mw + 78, ey - 300); g.stroke();
+    g.strokeStyle = C.warm; g.beginPath(); g.moveTo(mw + 78, ey - 300); g.lineTo(mw + 78, ey - 350); g.stroke(); g.globalAlpha = 1; }
+  // the shades drop in from above when the drop lands
+  if (q.shades > .02) { g.save(); g.translate(0, -260 * (1 - backOut(clamp(q.shades, 0, 1)))); g.globalAlpha = Math.min(1, q.shades * 3); g.fillStyle = '#0c0c12'; g.strokeStyle = '#0c0c12'; g.lineWidth = 16;
+    g.beginPath(); g.moveTo(-eyeDX + 60, ey - 26); g.lineTo(eyeDX - 60, ey - 26); g.moveTo(-eyeDX - 70, ey - 22); g.lineTo(-326, ey - 46); g.moveTo(eyeDX + 70, ey - 22); g.lineTo(326, ey - 46); g.stroke();
+    [-1, 1].forEach(s => { rr(s * eyeDX - 78, ey - 46, 156, 100, 34); g.fillStyle = '#0c0c12'; g.fill();
+      g.save(); g.clip(); g.fillStyle = 'rgba(255,255,255,.26)'; g.beginPath(); g.moveTo(s * eyeDX - 62, ey + 62); g.lineTo(s * eyeDX - 10, ey - 60); g.lineTo(s * eyeDX + 24, ey - 60); g.lineTo(s * eyeDX - 28, ey + 62); g.closePath(); g.fill(); g.restore(); });
+    g.restore(); }
+  g.restore();
+}
+function glowCircle(x, y, r, c, a) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, rgba(c, a)); gr.addColorStop(1, rgba(c, 0)); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); }
+function stars(n, u, time, seed) { for (let i = 0; i < n; i++) { const x = rnd(i + seed) * W, y = rnd(i * 3 + seed) * H * .7, tw = .4 + .6 * Math.abs(Math.sin(time * (1 + rnd(i * 7)) + i)); g.fillStyle = `rgba(255,255,255,${(tw * u * .8).toFixed(3)})`; g.beginPath(); g.arc(x, y, .6 + rnd(i * 5) * 1.4, 0, TAU); g.fill(); } }
+function confetti(P, dt, gravity) { for (const p of P) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += gravity * dt; p.r += p.vr * dt; p.life -= dt; } for (let i = P.length - 1; i >= 0; i--) if (P[i].life <= 0 || P[i].y > H + 20) P.splice(i, 1);
+  for (const p of P) { g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.globalAlpha = clamp(p.life, 0, 1); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s * .3, p.s, p.s * .6); g.restore(); } }
+function burst(P, x, y, n, spread, cols) { for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * spread, sp = 200 + Math.random() * 420; P.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, vr: (Math.random() - .5) * 12, r: Math.random() * TAU, s: 5 + Math.random() * 7, c: cols[i % cols.length], life: 1.6 + Math.random() }); } }
+// a ring of petals around the body: calm ones for the calm modes, flickering flames for MELTDOWN
+function spikes(cx, cy, r0, n, len, wd, rot, fill, flick, time) {
+  g.fillStyle = fill; g.beginPath();
+  for (let i = 0; i < n; i++) { const a = rot + i * TAU / n, L = len * (i % 2 ? .62 : 1) * (flick ? .6 + .55 * Math.abs(Math.sin(time * 9 + i * 2.3)) : 1), a2 = a + (flick ? Math.sin(time * 5 + i) * .1 : 0), rt = r0 + L, rm = r0 + L * .45, wm = wd * .78;
+    g.moveTo(cx + Math.cos(a - wd) * r0, cy + Math.sin(a - wd) * r0);
+    g.quadraticCurveTo(cx + Math.cos(a - wm) * rm, cy + Math.sin(a - wm) * rm, cx + Math.cos(a2) * rt, cy + Math.sin(a2) * rt);
+    g.quadraticCurveTo(cx + Math.cos(a + wm) * rm, cy + Math.sin(a + wm) * rm, cx + Math.cos(a + wd) * r0, cy + Math.sin(a + wd) * r0); g.closePath(); }
+  g.fill();
+}
+
+const sun = { P: [], sparks: [], rings: [], dive: 0, dim: 1, clouds: [{ x: .12, y: .16, s: 1.25, v: 5 }, { x: .5, y: .08, s: .9, v: 3.5 }, { x: .8, y: .22, s: 1.05, v: 4.5 }],
+  draw(u, dt, time, blink) {
+    const col = PAL.col, warm = PAL.warm, m1 = MW[1], m2 = MW[2], m3 = MW[3], m4 = MW[4], hz = H * 0.64;
+    // what the chain is doing right now, 0..1 each
+    const dv = frame.lpf < 19000 ? clamp(Math.log(20000 / frame.lpf) / Math.log(40), 0, 1) : 0, rv = clamp(frame.rev, 0, 1), dl = clamp(frame.del, 0, 1),
+      nz = frame.noise > -80 ? clamp((frame.noise + 60) / 50, 0, 1) : 0, sp = clamp(frame.shep / 1100, 0, 1), dr = clamp(frame.drive, 0, 1), pt = clamp(frame.pitch / 200, 0, 1);
+    this.dive += (dv - this.dive) * Math.min(1, dt * 6); this.dim += ((frame.hold ? .4 : 1) - this.dim) * Math.min(1, dt * 12);
+    const wv = this.dive, dim = this.dim;
+    // the gate chops the light - less and less as the division gets faster: nothing on screen may flash hard at 5 Hz and up
+    let lum = 1; if (frame.gate > 0 && frame.playing && ((CH.beatPos * frame.gate / 4) % 1) >= .5) lum = 1 - (frame.gate >= 16 ? .14 : frame.gate >= 8 ? .3 : .42) * (.55 + .45 * m2);
+    // where it is: the spring lets it overshoot a little, a landing makes it bounce, speed stretches it
+    const shake = m4 * sstep(.55, 1, u) * 2.6, cx = W - 215 + (shake > .05 ? Math.sin(time * 61) * shake : 0);
+    const sy = hz + lerp(30, -186, sstep(0, 1, u) + (CH.cur - u) * 1.5) + (shake > .05 ? Math.cos(time * 53) * shake * .6 : 0);
+    const bo = CH.boing < 1.2 ? Math.exp(-CH.boing * 5.5) * Math.cos(CH.boing * 19) * .2 : 0, sw = Math.sin(clamp(CH.swap, 0, 1) * Math.PI) * .1;
+    const stretch = clamp(Math.abs(CH.vel) * .07, 0, .16) + pt * .07, r = lerp(58, 84, u) * (1 + .05 * CH.pulse + bo + sw);
+    const C = { ink: rgb(PAL.ink), lid: rgb(PAL.lid), b1: rgb(PAL.b1), warm: rgb(warm), mouth: rgb([PAL.ink[0] * .7, PAL.ink[1] * .7, PAL.ink[2] * .7]) };
+
+    const sky = g.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, rgba(col, lerp(.02, .16, u) * dim)); sky.addColorStop(.7, rgba(col, lerp(.04, .3, u) * dim)); sky.addColorStop(1, rgba(warm, lerp(.06, .5, u) * dim)); g.fillStyle = sky; g.fillRect(0, 0, W, hz);
+    stars(70, 1 - u, time, 11);
+    if (u < .2) { CH.nextShoot -= dt; if (CH.nextShoot <= 0) { CH.shootT = 0; CH.nextShoot = 7 + Math.random() * 9; CH.shootX = W * (.12 + Math.random() * .5); CH.shootY = H * (.05 + Math.random() * .2); } }
+    if (CH.shootT >= 0) { CH.shootT += dt / .7; const f = CH.shootT; if (f >= 1) CH.shootT = -1; else { const x = CH.shootX + f * 170, y = CH.shootY + f * 62, gr = g.createLinearGradient(x - 70, y - 26, x, y);   // a shooting star, now and then, at night
+      gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, `rgba(255,255,255,${(Math.sin(f * Math.PI) * .9 * Math.max(0, 1 - u * 4)).toFixed(3)})`); g.strokeStyle = gr; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x - 70, y - 26); g.lineTo(x, y); g.stroke(); } }
+    const sea = g.createLinearGradient(0, hz, 0, H); sea.addColorStop(0, rgba(warm, lerp(.05, .35, u) * dim)); sea.addColorStop(.28, 'rgba(30,22,36,.92)'); sea.addColorStop(1, 'rgba(14,13,18,1)'); g.fillStyle = sea; g.fillRect(0, hz, W, H - hz);
+    glowCircle(cx, sy, W * .95, col, lerp(.10, .42, u) * dim);
+    const haze = g.createLinearGradient(0, hz - 80, 0, hz + 60); haze.addColorStop(0, rgba(warm, 0)); haze.addColorStop(.5, rgba(warm, lerp(.08, .38, u) * dim)); haze.addColorStop(1, rgba(warm, 0)); g.fillStyle = haze; g.fillRect(0, hz - 80, W, 140);
+    // the rays in the sky
+    g.save(); g.globalCompositeOperation = 'lighter'; g.translate(cx, sy);
+    for (let layer = 0; layer < 2; layer++) { const n = layer ? 12 : 24, rot = time * (layer ? -.12 : .2), len = r + lerp(30, layer ? 280 : 180, sstep(.1, 1, u)), wd = layer ? .17 : .06, al = (layer ? .10 : .22) * lerp(.35, 1, u) * lum * dim;
+      g.save(); g.rotate(rot); for (let i = 0; i < n; i++) { const a = i * TAU / n, L = len * (1 + Math.sin(time * 2.5 + i * 1.3) * .12); const gr = g.createLinearGradient(0, 0, Math.cos(a) * L, Math.sin(a) * L); gr.addColorStop(0, rgba(col, al)); gr.addColorStop(1, rgba(col, 0)); g.fillStyle = gr;
+        g.beginPath(); g.moveTo(Math.cos(a - wd) * r * .9, Math.sin(a - wd) * r * .9); g.lineTo(Math.cos(a) * L, Math.sin(a) * L); g.lineTo(Math.cos(a + wd) * r * .9, Math.sin(a + wd) * r * .9); g.closePath(); g.fill(); } g.restore(); }
+    // PULSAR: two beams that turn once a bar, like a lighthouse
+    if (m2 > .02 && u > .03) { g.rotate(frame.playing ? CH.barPhase * TAU : time * .7);
+      for (let i = 0; i < 2; i++) { g.rotate(Math.PI); const L = 560, gr = g.createLinearGradient(0, 0, L, 0); gr.addColorStop(0, rgba(PAL.b1, .36 * u * m2 * lum * dim)); gr.addColorStop(1, rgba(PAL.b1, 0)); g.fillStyle = gr; g.beginPath(); g.moveTo(r * .8, -3); g.lineTo(L, -48); g.lineTo(L, 48); g.lineTo(r * .8, 3); g.closePath(); g.fill(); } }
+    g.restore();
+    // the halo: the reverb widens it
+    glowCircle(cx, sy, r * (2.6 + 2.2 * rv * u), col, (lerp(.25, .7, u) + .2 * CH.pulse) * lum * dim);
+    // the riser: chevrons climb both sides of the sun and never arrive
+    if (sp > .02) { g.save(); g.strokeStyle = rgb(PAL.b1); g.lineWidth = 2; g.lineCap = 'round'; g.lineJoin = 'round'; const y0 = Math.min(hz - 8, sy + r);
+      [-1, 1].forEach(s => { for (let i = 0; i < 5; i++) { const f = (time * (.3 + .5 * u) + i / 5) % 1, x = cx + s * (r * 1.7 + 26), y = y0 - f * 170; g.globalAlpha = sp * Math.sin(f * Math.PI) * .6 * dim; g.beginPath(); g.moveTo(x - 11, y + 6); g.lineTo(x, y); g.lineTo(x + 11, y + 6); g.stroke(); } }); g.restore(); }
+
+    g.save(); g.beginPath(); g.rect(0, 0, W, hz + 2); g.clip();                                                // everything of the sun itself sits behind the horizon
+    // the delay throws a ring on every dotted eighth
+    if (dl > .02) { CH.ringAcc += dt * (frame.bpm || 120) / 60 / .75; if (CH.ringAcc >= 1) { CH.ringAcc %= 1; if (this.rings.length < 6) this.rings.push({ a: 0, l: dl }); } }
+    for (let i = this.rings.length - 1; i >= 0; i--) { const q = this.rings[i]; q.a += dt / 1.5; if (q.a >= 1) { this.rings.splice(i, 1); continue; }
+      g.strokeStyle = rgba(PAL.b1, q.l * .3 * Math.pow(1 - q.a, 2) * dim); g.lineWidth = 2; g.beginPath(); g.arc(cx, sy, r * 1.25 + q.a * 210, 0, TAU); g.stroke(); }
+    // ORBIT: a tilted ring with two moons - the far half goes behind the body, the near half in front
+    const ringRx = r * 1.85, ringRy = r * .52, orbA = time * (.5 + 1.3 * u);
+    const orbit = front => { if (m1 < .02) return; g.save(); g.translate(cx, sy); g.rotate(-.32); g.globalAlpha = m1 * lerp(.35, .9, u);
+      g.strokeStyle = rgb(PAL.b1); g.lineWidth = 2.2; g.beginPath(); g.ellipse(0, 0, ringRx, ringRy, 0, front ? 0 : Math.PI, front ? Math.PI : TAU); g.stroke();
+      for (let i = 0; i < 2; i++) { const a = orbA + i * Math.PI, sn = Math.sin(a); if ((sn >= 0) !== front) continue;
+        g.fillStyle = rgb(i ? warm : PAL.b0); g.beginPath(); g.arc(Math.cos(a) * ringRx, sn * ringRy, (i ? 4.5 : 6.5) * (1 + .25 * sn), 0, TAU); g.fill(); }
+      g.restore(); };
+    orbit(false);
+    const al = lerp(.35, .95, u) * dim;
+    if (MW[0] > .02) { g.globalAlpha = MW[0] * al; spikes(cx, sy, r * 1.07, 12, r * (.1 + .1 * u + .08 * CH.pulse), .15, time * .25, rgb(PAL.b2), false, time); }
+    if (m2 > .02) { g.globalAlpha = m2 * al * lum; spikes(cx, sy, r * 1.1, 8, r * (.3 + .35 * u) * (lum < 1 ? .6 : 1), .07, time * .6, rgb(PAL.b1), false, time); }
+    if (m3 > .02) { g.globalAlpha = m3 * al * (1 - .6 * wv); spikes(cx, sy, r * 1.07, 12, r * (.1 + .08 * u), .15, Math.sin(time * .8) * .25, rgb(PAL.b2), false, time); }
+    if (m4 > .02) { g.globalAlpha = m4 * al; spikes(cx, sy, r * 1.03, 16, r * (.14 + .32 * u), .15, time * .15, rgb(warm), true, time); g.globalAlpha = m4 * al * .9; spikes(cx, sy, r, 16, r * (.07 + .16 * u), .12, time * .15 + .2, rgb(PAL.b2), true, time + 3); }
+    g.globalAlpha = 1;
+    // MELTDOWN: it melts - drops run down from under it
+    const melt = m4 * sstep(.35, .8, u);
+    if (melt > .02) { g.fillStyle = rgb(PAL.b2); for (let i = 0; i < 3; i++) { const f = (time * .33 + i * .37) % 1, x = cx + (i - 1) * r * .5 + (i === 1 ? r * .12 : 0), y0 = sy + r * .82, y = y0 + f * f * r * .95, w = r * .11 * (1 - f * .45) * melt;
+      const ym = y0 + (y - y0) * .4; g.beginPath(); g.moveTo(x - w * 1.3, y0); g.quadraticCurveTo(x - w * .3, ym, x - w * .3, y); g.arc(x, y, w * .75, Math.PI, 0, true); g.lineTo(x + w * .3, y); g.quadraticCurveTo(x + w * .3, ym, x + w * 1.3, y0); g.closePath(); g.fill(); } }
+    // the body: squashed and stretched around its centre
+    g.save(); g.translate(cx, sy); g.scale(1 - stretch * .6, 1 + stretch); g.translate(-cx, -sy);
+    const sg = g.createRadialGradient(cx - r * .3, sy - r * .35, r * .1, cx, sy, r); sg.addColorStop(0, rgb(PAL.b0)); sg.addColorStop(.35, rgb(PAL.b1)); sg.addColorStop(.8, rgb(PAL.b2)); sg.addColorStop(.94, rgb(PAL.b3)); sg.addColorStop(1, rgba(col, 0));
+    g.fillStyle = sg; g.beginPath(); g.arc(cx, sy, r, 0, TAU); g.fill();
+    face(cx, sy, r / 330, u, blink, C);
+    g.restore();
+    orbit(true);
+    // MELTDOWN: steam out of its ears
+    const steam = m4 * sstep(.55, .85, u);
+    if (steam > .02) [-1, 1].forEach(s => { for (let i = 0; i < 3; i++) { const f = (time * 1.1 + i / 3) % 1; g.fillStyle = `rgba(255,255,255,${(steam * (1 - f) * .5).toFixed(3)})`; g.beginPath(); g.arc(cx + s * (r * 1.08 + f * 34), sy - r * .25 - f * 44, 4 + f * 11, 0, TAU); g.fill(); } });
+    g.restore();
+
+    g.save(); g.globalCompositeOperation = 'lighter'; const refl = sstep(0, 1, u);
+    for (let i = 0; i < 22; i++) { const yy = hz + 6 + i * (H - hz - 10) / 22, f = 1 - i / 22, wob = Math.sin(time * 2.2 + i * .9) * lerp(6, 16, u), wdt = lerp(30, 150, refl) * (.6 + f * .8) * (.7 + .3 * Math.sin(time * 3 + i));
+      g.fillStyle = rgba(col, lerp(.05, .26, u) * f * lum * dim); g.beginPath(); g.ellipse(cx + wob, yy, wdt / 2, 2.2, 0, 0, TAU); g.fill(); }
+    g.restore();
+    // DIVE: the sea comes up over the sun, and it breathes through the snorkel
+    if (wv > .01) { const top = Math.max(14, lerp(hz, Math.min(sy - r * 1.7, hz - 60), wv)), wave = x => top + Math.sin(x * .021 + time * 1.7) * 5 + Math.sin(x * .047 - time * 2.3) * 3;
+      g.beginPath(); g.moveTo(0, hz); for (let x = 0; x <= W; x += 20) g.lineTo(x, wave(x)); g.lineTo(W, hz); g.closePath();
+      const wg = g.createLinearGradient(0, top, 0, hz); wg.addColorStop(0, `rgba(60,170,255,${(.2 * wv).toFixed(3)})`); wg.addColorStop(1, `rgba(20,70,190,${(.42 * wv).toFixed(3)})`); g.fillStyle = wg; g.fill();
+      g.strokeStyle = `rgba(210,245,255,${(.55 * wv).toFixed(3)})`; g.lineWidth = 1.5; g.beginPath(); for (let x = 0; x <= W; x += 20) g.lineTo(x, wave(x)); g.stroke();
+      const y0 = Math.min(hz, sy - r * .9); g.lineWidth = 1.3;
+      for (let i = 0; i < 9; i++) { const f = (time * (.35 + rnd(i + 3) * .3) + rnd(i)) % 1, by = y0 - f * (y0 - top); if (y0 < top + 12 || by < top + 5) continue;
+        g.strokeStyle = `rgba(220,246,255,${(.7 * wv * (1 - f * .6)).toFixed(3)})`; g.beginPath(); g.arc(cx + r * (.72 + rnd(i * 7) * .4) + Math.sin(time * 2 + i) * 5, by, 1.5 + rnd(i * 5) * 3.2, 0, TAU); g.stroke(); } }
+    for (const c of this.clouds) { const x = ((c.x * W + time * c.v) % (W + 220)) - 110, y = c.y * H + Math.sin(time * .4 + c.s) * 4; g.fillStyle = rgba(warm, lerp(.03, .13, u) * (1 - .7 * wv));
+      [[0, 0, 62, 18], [-42, 6, 40, 13], [44, 5, 46, 14]].forEach(([dx, dy, rx, ry]) => { g.beginPath(); g.ellipse(x + dx * c.s, y + dy * c.s, rx * c.s, ry * c.s, 0, 0, TAU); g.fill(); }); }
+    // the noise blows spray across the sky
+    if (nz > .02) { g.save(); g.strokeStyle = '#fff'; g.lineCap = 'round'; for (let i = 0; i < 34; i++) { const spd = 180 + rnd(i + 40) * 380, x = W + 60 - ((time * spd + rnd(i + 9) * (W + 160)) % (W + 160)), y = rnd(i * 3 + 2) * hz * .96, L = 10 + rnd(i * 11) * 30;
+      g.globalAlpha = nz * (.07 + rnd(i * 13) * .2) * dim; g.lineWidth = .8 + rnd(i * 17) * 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + L, y - L * .08); g.stroke(); } g.restore(); }
+    // DRIVE throws sparks (MELTDOWN always does)
+    const heat = clamp(dr * .6 + m4 * .35, 0, 1) * u;
+    if (heat > .05 && this.sparks.length < 60 && Math.random() < heat) { const a = Math.random() * TAU; this.sparks.push({ x: cx + Math.cos(a) * r, y: sy + Math.sin(a) * r, vx: Math.cos(a) * (120 + Math.random() * 220), vy: Math.sin(a) * (120 + Math.random() * 220), life: .8 }); }
+    if (this.sparks.length) { for (const p of this.sparks) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; } this.sparks = this.sparks.filter(p => p.life > 0);
+      g.save(); g.globalCompositeOperation = 'lighter'; for (const p of this.sparks) { g.fillStyle = `rgba(255,220,180,${Math.max(0, p.life).toFixed(3)})`; g.beginPath(); g.arc(p.x, p.y, 2, 0, TAU); g.fill(); } g.restore(); }
+    // asleep: z z z
+    if (CH.sleep > .05) { g.save(); g.fillStyle = rgb(PAL.b1); g.textAlign = 'center'; for (let i = 0; i < 3; i++) { const f = (time * .28 + i / 3) % 1; g.globalAlpha = CH.sleep * Math.sin(f * Math.PI) * .9; g.font = `800 ${Math.round(9 + f * 11)}px Sora, sans-serif`; g.fillText('z', cx + r * .9 + f * 34 + Math.sin(f * 6) * 4, Math.min(hz - 6, sy - r * .7) - f * 46); } g.restore(); }
+    // the drop: confetti in the mode's colours, two shockwaves
+    if (CH.burst > 0 && CH.dropT >= 0) { const M = MODES[CH.mode]; burst(this.P, cx, sy, 70, 6.3, [rgb(M.b2), '#fff', rgb(M.warm), '#FFD02B', '#2BD9FF']); CH.burst = 0; }
+    if (CH.dropT >= 0) for (let k = 0; k < 2; k++) { const d = CH.dropT - k * .12; if (d < 0 || d > 1) continue; g.strokeStyle = rgba(k ? PAL.b1 : [255, 255, 255], (1 - d) * (k ? .5 : .8)); g.lineWidth = lerp(k ? 14 : 30, 2, d); g.beginPath(); g.arc(cx, sy, r + d * 900, 0, TAU); g.stroke(); }
+    confetti(this.P, dt, 300);
+  } };
+
+let last = performance.now(), tAcc = 0, pageVisible = true, skipFrame = false, seenPhase = -1, seenAt = 0;
+document.addEventListener('visibilitychange', () => { pageVisible = !document.hidden; });
+function animate(now) {
+  requestAnimationFrame(animate);
+  if (!pageVisible) { last = now; return; }                                   // hidden editor: draw nothing
+  const busy = CH.cur > 0.01 || frame.running || frame.tail > 0.01 || frame.playing || CH.dropT >= 0 || CH.cool > 0 || frame.armed || now - CH.pAt < 1500;
+  if (!busy) { skipFrame = !skipFrame; if (skipFrame) return; }                // at rest: 30 fps is plenty
+  const dt = Math.min(.08, (now - last) / 1000); last = now; tAcc += dt;
+  // the host's bar position arrives about 30 times a second: run it on in between, so the beat and the gate stay smooth
+  if (frame.phase !== seenPhase) { seenPhase = frame.phase; seenAt = now; }
+  const bpb = frame.bpb || 4, ph = frame.playing ? seenPhase + Math.min(.25, (now - seenAt) / 1000) * (frame.bpm || 120) / 60 / bpb : 0;
+  CH.barPhase = ph % 1; CH.beatPos = ph * bpb;
+  // a new mode: the colours glide over, the sun blinks and pops
+  const mode = clamp(state.preset | 0, 0, 4); if (mode !== CH.mode) { CH.mode = mode; CH.swap = 1; }
+  if (CH.swap > 0) CH.swap = Math.max(0, CH.swap - dt * 4);
+  const M = MODES[mode], kp = Math.min(1, dt * 7);
+  for (let i = 0; i < 5; i++) MW[i] += ((i === mode ? 1 : 0) - MW[i]) * kp;
+  for (const k of PKEYS) { const a = PAL[k], b = M[k]; a[0] += (b[0] - a[0]) * kp; a[1] += (b[1] - a[1]) * kp; a[2] += (b[2] - a[2]) * kp; }
+  if (CH.cool > 0) CH.cool = Math.max(0, CH.cool - dt);
+  if (CH.boing < 9) CH.boing += dt;
+  if (CH.dropT >= 0) { CH.dropT += dt; if (CH.dropT > 1.2) CH.dropT = -1; }
+  // the tail keeps the grin: the sun stays up while the reverb spills. After a drop it stays a moment in its shades.
+  let tgt = Math.max(CH.target, frame.running ? 0 : frame.tail * 0.85);
+  if (CH.cool > .55) tgt = Math.max(tgt, .62); if (frame.armed) tgt = Math.max(tgt, .1);
+  CH.vel += ((tgt - CH.cur) * 170 - CH.vel * 18) * dt; CH.cur += CH.vel * dt;   // a spring, a touch under-damped
+  const u = clamp(CH.cur, 0, 1);
+  // left alone at night with the transport stopped, it falls asleep; the pointer wakes it
+  const awake = u > .02 || frame.playing || frame.armed || CH.cool > 0 || now - CH.pAt < 6000;
+  CH.idle = awake ? 0 : CH.idle + dt; CH.sleep += ((CH.idle > 3 ? 1 : 0) - CH.sleep) * Math.min(1, dt * 3);
+  CH.nextBlink -= dt; if (CH.nextBlink <= 0) { CH.blink = 1; CH.nextBlink = 2 + Math.random() * 3.5; } if (CH.blink > 0) CH.blink = Math.max(0, CH.blink - dt * 9);
+  const blink = Math.max(CH.blink > 0 ? Math.sin((1 - CH.blink) * Math.PI) : 0, CH.swap > 0 ? Math.sin(CH.swap * Math.PI) : 0);
+  // where it looks: at the pointer, at the knob while a run is on, or around
+  let lx, ly; const sunY = H * .64 + lerp(30, -186, sstep(0, 1, u));
+  if (frame.hold || CH.sleep > .5) { lx = 0; ly = 0; }
+  else if (now - CH.pAt < 3000) { lx = clamp((CH.px - (W - 215)) / 240, -1, 1); ly = clamp((CH.py - sunY) / 180, -1, 1); }
+  else if (frame.running || frame.armed) { lx = -.75; ly = .35; }
+  else { lx = Math.sin(tAcc * .5) * .45; ly = Math.cos(tAcc * .37) * .25; }
+  const ll = Math.hypot(lx, ly); if (ll > 1) { lx /= ll; ly /= ll; }
+  const tp = poseFor(mode, u, { hold: frame.hold, cool: CH.cool > 0, sleep: CH.sleep, dive: sun.dive, armed: frame.armed }); tp.lx = lx; tp.ly = ly;
+  const kq = Math.min(1, dt * 14); for (const k in tp) POSE[k] += (tp[k] - POSE[k]) * kq;
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+  // the beat: the sun pulses on every beat while the host plays
+  const beatFrac = frame.playing ? CH.beatPos % 1 : 1;
+  CH.pulse = frame.playing ? Math.exp(-beatFrac * 7) * (0.35 + 0.65 * u) : 0;
+  sun.draw(u, dt, tAcc, blink);
+}
+requestAnimationFrame(animate);
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// C++ -> JS
+// ─────────────────────────────────────────────────────────────────
+function rlSetLicensed(ok){var o=document.getElementById('rlOverlay');if(!o)return;if(ok){o.classList.add('rl-hidden');setTimeout(function(){if(o.classList.contains('rl-hidden'))o.style.display='none';},400);}else{o.style.display='';void o.offsetWidth;o.classList.remove('rl-hidden');}}
+function whenBridgeReady(fn) {
+    if (window.__JUCE__ && window.__JUCE__.backend) { fn(); return; }
+    const iv = setInterval(() => { if (window.__JUCE__ && window.__JUCE__.backend) { clearInterval(iv); fn(); } }, 50);
+}
+whenBridgeReady(() => {
+    window.__JUCE__.backend.addEventListener('licenseStatus', d => rlSetLicensed(!!(d && d.licensed)));
+    document.addEventListener('click', e => { const t = e.target; if (t && t.closest && t.closest('#rlLaunch')) emit('launchCenter', {}); });
+    window.__JUCE__.backend.addEventListener('paramState', p => {
+        Object.keys(state).forEach(k => { if (p[k] === undefined) return; if (dragParam === k) return; state[k] = p[k]; });
+        if (p.presetName !== undefined) state.presetName = p.presetName;
+        renderKnob(); renderMacros(); renderPresets(); renderLand(); renderTail(); renderBypass();
+    });
+    window.__JUCE__.backend.addEventListener('presetStore', d => {
+        if (!d) return;
+        if (Array.isArray(d.cards)) cardMacros = d.cards.map((m, i) => Object.assign({}, PRESETS[i].m, m));
+        if (Array.isArray(d.own)) cardOwn = d.own.map(Boolean);
+        if (Array.isArray(d.user)) userPresets = d.user.filter(p => p && p.name).map(p => ({ name: String(p.name), card: p.card | 0, m: Object.assign(FM({}), p.m || {}) })).map(p => { if (p.m.drive === undefined) p.m.drive = DRIVE_W[p.card] !== undefined ? DRIVE_W[p.card] : .15; return p; });
+        if (d.name !== undefined) state.presetName = d.name;
+        renderPresets();
+    });
+    window.__JUCE__.backend.addEventListener('frame', f => {
+        Object.keys(frame).forEach(k => { if (f[k] !== undefined) frame[k] = f[k]; });
+        // the drop: from up to nothing -> shockwave + confetti + a white flash
+        if (CH.lastT > 0.35 && frame.t < 0.05) { CH.drop(); const fl = $('#flash'); fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 30); }
+        CH.lastT = frame.t;
+        renderKnob(); renderChain();
+    });
+    window.__JUCE__.backend.addEventListener('uiConfig', cfg => {
+        if (cfg && cfg.version) { const vl = document.querySelector('.bp-verline'); if (vl) vl.textContent = vl.textContent.replace(/^[^\/]+\//, cfg.version + ' /'); }
+        if (cfg && cfg.customTitleBar) { document.getElementById('titleBar').style.display = 'flex'; document.body.classList.add('has-titlebar'); fitScale(); }
+    });
+    emit('requestState', {});
+    emit('requestUiConfig', {});
+});
+
+// Custom title bar (standalone, Windows): drag + window controls
+(function setupTitleBar() {
+    const dragArea = document.getElementById('titleBarDrag'); let barDragging = false;
+    dragArea.addEventListener('mousedown', e => { if (e.target.closest('button')) return; barDragging = true; emit('windowDrag', { action: 'start', x: e.screenX, y: e.screenY }); e.preventDefault(); });
+    window.addEventListener('mousemove', e => { if (barDragging) emit('windowDrag', { action: 'move', x: e.screenX, y: e.screenY }); });
+    window.addEventListener('mouseup', () => { if (barDragging) { barDragging = false; emit('windowDrag', { action: 'end' }); } });
+    document.getElementById('btnAudio').addEventListener('click', () => emit('audioSettings', {}));
+    document.getElementById('btnMinimize').addEventListener('click', () => emit('windowControl', { action: 'minimize' }));
+    document.getElementById('btnClose').addEventListener('click', () => emit('windowControl', { action: 'close' }));
+})();
+
+// Right-click = the host's parameter menu (FL: automation/link), never the browser menu
+document.addEventListener('contextmenu', e => e.preventDefault());
+(function setupParamContextMenus() {
+    function bind(el, id) { if (el) el.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); emit('paramContextMenu', { name: id }); }); }
+    bind($('#knob'), 'intensity'); bind(bypassBtn, 'bypass'); bind($('#landSeg'), 'land'); bind($('#curveSeg'), 'curve'); bind($('#dirSeg'), 'dir'); bind($('#gapSeg'), 'gap'); bind($('#tailSeg'), 'tail'); bind($('#goBtn'), 'go'); bind(presetsEl, 'preset');
+    macrosEl.querySelectorAll('.p-miniarc').forEach(arc => bind(arc, arc.dataset.k));
+})();
+
+// ─────────────────────────────────────────────────────────────────
+// Proportional UI scaling + corner resize grip (bundle standard)
+// ─────────────────────────────────────────────────────────────────
+const appEl = document.getElementById('app'), appVp = document.getElementById('app-viewport');
+const BASE_W = 860, BASE_H = 580; let curScale = 1;
+function appScale() { return curScale; }
+function fitScale() {
+    const k = Math.min(appVp.clientWidth / BASE_W, appVp.clientHeight / BASE_H) || 1;
+    const ox = Math.max(0, (appVp.clientWidth - BASE_W * k) / 2), oy = Math.max(0, (appVp.clientHeight - BASE_H * k) / 2);
+    curScale = k;
+    appEl.style.transform = 'translate(' + ox.toFixed(1) + 'px,' + oy.toFixed(1) + 'px) scale(' + k.toFixed(4) + ')';
+    sizeCanvas();
+}
+window.addEventListener('resize', fitScale);
+new ResizeObserver(fitScale).observe(appVp);
+fitScale();
+
+let rsDrag = null;
+document.getElementById('resize-handle').addEventListener('mousedown', e => { rsDrag = { x: e.screenX, y: e.screenY }; emit('beginResize', {}); e.preventDefault(); e.stopPropagation(); });
+document.addEventListener('mousemove', e => { if (rsDrag) emit('requestResize', { dx: e.screenX - rsDrag.x, dy: e.screenY - rsDrag.y }); });
+document.addEventListener('mouseup', () => { rsDrag = null; });
+
+// ─────────────────────────────────────────────────────────────────
+// About - hardware back panel overlay (header brand opens it)
+// ─────────────────────────────────────────────────────────────────
+(function setupAbout() {
+    const bpM = document.getElementById('bp-about'); if (!bpM) return;
+    const bpU = bpM.querySelector('.bp-unit'), bpRocker = document.getElementById('bp-rocker');
+    function bpRescale() { let s = Math.min(window.innerWidth / 1240, window.innerHeight / 780); s = Math.min(Math.max(s, 0.22), 1.45); bpU.style.setProperty('--s', s); }
+    function bpClose() { bpM.classList.add('bp-hidden'); }
+    document.getElementById('pLogo').addEventListener('click', () => {
+        bpM.classList.remove('bp-hidden'); bpRescale();
+        bpU.classList.remove('bp-off', 'bp-entering'); void bpU.offsetWidth; bpU.classList.add('bp-entering');
+        bpRocker.setAttribute('aria-pressed', 'true');
+    });
+    document.getElementById('bp-close-btn').addEventListener('click', bpClose);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !bpM.classList.contains('bp-hidden')) bpClose(); });
+    window.addEventListener('resize', () => { if (!bpM.classList.contains('bp-hidden')) bpRescale(); });
+    bpU.addEventListener('animationend', e => { if (e.animationName === 'bpSwingIn') bpU.classList.remove('bp-entering'); });
+    bpRocker.addEventListener('click', () => { const off = bpU.classList.toggle('bp-off'); bpRocker.setAttribute('aria-pressed', off ? 'false' : 'true'); });
+    document.getElementById('bp-site').addEventListener('click', e => { e.preventDefault(); emit('openExternalUrl', { url: 'https://roneaudio.com' }); });
+})();
+
+renderKnob(); renderMacros(); renderPresets(); renderLand(); renderTail(); renderBypass(); renderChain();
+</script>
+<script>
+// Touch: the page listens to the mouse; a finger drives the same handlers
+(function () {
+  const plug = document.querySelector('.plug'); let live = null;
+  const fire = (type, t, target) => target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: t.clientX, clientY: t.clientY, screenX: t.screenX, screenY: t.screenY, button: 0 }));
+  plug.addEventListener('touchstart', e => { const k = e.target.closest('.arck'); if (!k || e.target.closest('.p-type')) return; live = e.changedTouches[0].identifier; fire('mousedown', e.changedTouches[0], e.target); e.preventDefault(); }, { passive: false });
+  plug.addEventListener('touchmove', e => { if (live === null) return; for (const t of e.changedTouches) if (t.identifier === live) { fire('mousemove', t, document); e.preventDefault(); } }, { passive: false });
+  const end = e => { if (live === null) return; for (const t of e.changedTouches) if (t.identifier === live) { fire('mouseup', t, document); live = null; } };
+  plug.addEventListener('touchend', end); plug.addEventListener('touchcancel', end);
+})();
+
+// ============================================================================
+// The transport strip above the plugin
+// ============================================================================
+(function () {
+  const H = window.RiseHost, play = $('#mkPlay'), msg = $('#mkMsg');
+  const say = t => { msg.hidden = !t; msg.textContent = t || ''; };
+  function paint() {
+    play.textContent = H.playing ? 'STOP' : 'PLAY'; play.className = 'rone-btn act mk-play' + (H.playing ? '' : ' wait');
+    if (H.fail) say('הדפדפן הזה לא נתן לפתוח אודיו. נסה לפתוח את הדף ב-Chrome או ב-Edge.');
+  }
+  H.onChange = paint;
+  play.addEventListener('click', () => { H.playing ? H.stop() : H.play(); });
+  document.addEventListener('keydown', e => { if (e.code !== 'Space' || e.target.closest('input, button')) return; e.preventDefault(); H.playing ? H.stop() : H.play(); });
+  $('#mkBpm').addEventListener('change', e => { H.setBpm(parseFloat(e.target.value)); e.target.value = H.proc.bpm; });
+  $('#mkVol').addEventListener('input', e => H.setVol(parseFloat(e.target.value)));
+  const seg = (id, fn) => { const s = $(id); s.addEventListener('click', e => { const t = e.target.closest('span'); if (!t) return; s.querySelectorAll('span').forEach(x => x.classList.toggle('on', x === t)); fn(parseInt(t.dataset.i, 10)); }); RoneUI.seg(s, { onClass: 'on' }); };
+  seg('#mkDrop', i => H.setFixed(i === 1));
+  const fileBtn = $('#mkFileBtn'), file = $('#mkFile');
+  seg('#mkSrc', i => { H.src = i; fileBtn.hidden = i !== 1; say(i === 1 && !H.user ? 'בחר קובץ אודיו. עד אז מתנגן הלופ המובנה.' : ''); });
+  fileBtn.addEventListener('click', () => file.click());
+  file.addEventListener('change', () => { const f = file.files && file.files[0]; if (!f) return; say('טוען את ' + f.name + '…');
+    H.loadFile(f, ok => { say(ok ? 'מנגן את ' + f.name + '. כתוב את ה-BPM שלו כדי שהתיבות יתיישרו.' : 'לא הצלחתי לקרוא את הקובץ הזה. נסה WAV או MP3.'); if (ok) fileBtn.textContent = f.name.length > 22 ? f.name.slice(0, 20) + '…' : f.name; }); });
+  setInterval(() => { const pr = H.proc, b = pr.ppq; $('#mkPos').textContent = H.playing ? 'BAR ' + (Math.floor(b / 4) + 1) + ' · BEAT ' + (Math.floor(b % 4) + 1) : 'BAR 1 · BEAT 1'; }, 60);
+  paint();
+})();
+renderKnob(); renderLand();
+</script>
+</body>
+</html>

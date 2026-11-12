@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RONE Rise</title>
+<style>
+/* RONE UI fonts, served by the plugin itself (Shared/fonts, roneFontResource):
+   the page has its type with no network. Latin subsets from @fontsource 5.3.0,
+   SIL OFL 1.1. Sora / Manrope / Archivo are variable: one file, every weight. */
+@font-face{font-family:'Sora';font-style:normal;font-weight:100 800;font-display:swap;src:url('fonts/sora-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/sora-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:200 800;font-display:swap;src:url('fonts/manrope-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/manrope-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Archivo';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/archivo-latin-wght-normal.woff2') format('woff2-variations'),url('fonts/archivo-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-latin-600-normal.woff2') format('woff2')}
+</style>
+<style>/* rone-ui v2 */
+/* ============================================================================
+   RONE UI kit v2 (26.10.2026) - the graphite house language as one stylesheet.
+   Decided with Liran on the controls-finish mockup (claude.ai/artifact/PL1XNPMJeg44Dqu24SAQXC):
+     - the knob is the .arck of Reverse Reverb / Flanger (value inside, white dot, arc outside,
+       no ticks); its lit arc glows only while touched (.touch) and on the hero (.hero)
+     - keys are machined: no 1px grey border, a top highlight and a dark bottom edge, ONE on-state
+       (neon fill), an action key carries a LED; a pressed key only sinks 1px (no animation)
+     - only things that MOVE animate: the segment pill glides (380 ms, --pop), the switch thumb pops
+     - one popover for everything that opens (presets, selects, header menus, pickers)
+     - a 3 % grain on caps and panels (.rone-grain)
+   Use: paste after Shared/fonts/rone-fonts.css, then set the plugin's neon once:
+       :root { --neon:#FF5FB8; --neon-rgb:255,95,184; }
+   Pair with rone-ui.js (RoneUI.knob / seg / menu / select / switch). Demo: Shared/ui/demo.html.
+   ============================================================================ */
+
+:root {
+    --ground:#14161A; --panel:#17191E; --card:#101216; --drawer:#1B1E23;
+    --line:#23262C; --line2:#2A2E35; --line3:#383D45;
+    --text:#E8EAED; --text2:#B9BDC4;
+    --dim:#7A7F88;      /* the lowest colour for a label anyone has to read (4.5:1) */
+    --faint:#4E535B;    /* decoration only: ticks, dividers, disabled - never a label */
+    --hot:#FF3B3B; --hot-rgb:255,59,59;
+    --ink:#0F1114;      /* text on a lit neon surface */
+    --neon:#E8EAED; --neon-rgb:232,234,237;
+    --pop:cubic-bezier(.34,1.56,.64,1);   /* the one overshoot curve for things that move */
+    --font-display:'Sora','Segoe UI',-apple-system,sans-serif;
+    --font-ui:'Manrope','Segoe UI',-apple-system,sans-serif;
+    --font-mono:'IBM Plex Mono','Consolas',monospace;
+    --rone-noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---- type roles: nothing under 9 px on the design canvas ---- */
+.rone-display { font-family:var(--font-display); font-weight:800; letter-spacing:.02em; color:var(--text); }
+.rone-label   { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); }
+.rone-value   { font-family:var(--font-display); font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.rone-mono    { font-family:var(--font-mono); font-weight:500; font-variant-numeric:tabular-nums; }
+
+/* ---- grain: a 3 % noise overlay on any panel (the element needs position:relative) ---- */
+.rone-grain::before { content:''; position:absolute; inset:0; background:var(--rone-noise); opacity:.5; mix-blend-mode:screen; pointer-events:none; border-radius:inherit; }
+.rone-panel { position:relative; background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); border-radius:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
+
+/* ---- the knob: .arck, as Reverse Reverb / Flanger draw it (geometry untouched) ----
+   DOM: .arck.size-m > svg(path.track, path.lit) + .kbody + .kdot + .cval        */
+.arck { position:relative; flex-shrink:0; cursor:grab; outline:none; touch-action:none; }
+.arck:active { cursor:grabbing; }
+.arck.locked { cursor:default; }
+.arck svg { position:absolute; inset:0; pointer-events:none; overflow:visible; }
+.arck .track { fill:none; stroke:var(--line); stroke-linecap:round; }
+.arck .lit { fill:none; stroke:var(--neon); stroke-linecap:round; transition:filter .5s ease-out, opacity .1s; }
+.arck.touch .lit, .arck.hero .lit { filter:drop-shadow(0 0 5px rgba(var(--neon-rgb),.6)); }
+.arck .kbody { position:absolute; border-radius:50%;
+    background:radial-gradient(circle at 38% 30%,#363B42 0%,#26292F 52%,#1A1C21 100%);
+    box-shadow:0 12px 24px rgba(0,0,0,.55), inset 0 2px 3px rgba(255,255,255,.07), inset 0 -7px 16px rgba(0,0,0,.45); }
+.arck .kbody::before { content:''; position:absolute; inset:9%; border-radius:50%;
+    background:radial-gradient(circle at 40% 32%,#2C3037 0%,#1D2025 60%,#16181C 100%);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.05), 0 2px 6px rgba(0,0,0,.4); }
+.arck .kbody::after { content:''; position:absolute; inset:0; border-radius:50%; background:var(--rone-noise); opacity:.3; mix-blend-mode:overlay; pointer-events:none; }
+.arck .kdot { position:absolute; left:50%; border-radius:50%; background:#F2F4F6; box-shadow:0 0 7px rgba(255,255,255,.5); transform:rotate(-135deg); z-index:2; pointer-events:none; }
+.arck .cval { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;
+    font-family:var(--font-display); font-weight:700; color:var(--text); text-transform:uppercase; z-index:3; font-variant-numeric:tabular-nums; }
+.arck .cval small { font-size:.55em; font-weight:700; margin-left:2px; }
+.arck.size-s { width:58px;  height:58px;  } .arck.size-s .track, .arck.size-s .lit { stroke-width:3.5; } .arck.size-s .kbody { inset:8px;  } .arck.size-s .kdot { top:11px; width:4px;  height:4px;  margin-left:-2px;   transform-origin:50% 18px; } .arck.size-s .cval { font-size:10px; }
+.arck.size-m { width:104px; height:104px; } .arck.size-m .track, .arck.size-m .lit { stroke-width:4.5; } .arck.size-m .kbody { inset:13px; } .arck.size-m .kdot { top:21px; width:6px;  height:6px;  margin-left:-3px;   transform-origin:50% 31px; } .arck.size-m .cval { font-size:15px; }
+.arck.size-l { width:124px; height:124px; } .arck.size-l .track, .arck.size-l .lit { stroke-width:5;   } .arck.size-l .kbody { inset:15px; } .arck.size-l .kdot { top:23px; width:7px;  height:7px;  margin-left:-3.5px; transform-origin:50% 39px; } .arck.size-l .cval { font-size:18px; }
+/* hero: the same knob scaled; value + name inside, the lit arc always glows */
+.arck.size-xl { width:200px; height:200px; } .arck.size-xl .track, .arck.size-xl .lit { stroke-width:7; } .arck.size-xl .kbody { inset:24px; } .arck.size-xl .kdot { top:36px; width:10px; height:10px; margin-left:-5px; transform-origin:50% 64px; }
+.arck.size-xl .cval { font-size:36px; flex-direction:column; gap:2px; letter-spacing:-.02em; }
+.arck .cval .sub { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.24em; color:var(--dim); }
+.arck:focus-visible .kbody { box-shadow:0 0 0 2px var(--neon), 0 12px 24px rgba(0,0,0,.55); }
+.rone-knobgroup { display:flex; flex-direction:column; align-items:center; gap:6px; }
+
+/* ---- keys ---- */
+.rone-btn { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text2);
+    background:linear-gradient(180deg,#1E2126,#15171B); border:0; border-radius:7px; padding:9px 14px; cursor:pointer; position:relative; white-space:nowrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35);
+    transition:box-shadow .18s, color .15s, background .18s; }
+.rone-btn:hover { color:var(--text); }
+.rone-btn:active { transform:translateY(1px); box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+.rone-btn.on, .rone-btn[aria-pressed="true"] { color:var(--ink);
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.25), 0 1px 0 rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.35); }
+.rone-btn.hot.on { background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--hot); color:#fff; }
+.rone-btn.act { color:var(--text); }
+.rone-btn.act::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); margin-right:8px; vertical-align:1px; }
+.rone-btn.act.wait::before { background:var(--faint); box-shadow:none; }
+.rone-btn.dd::after { content:''; display:inline-block; width:5px; height:5px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); margin-left:9px; vertical-align:2px; transition:transform .2s; }
+.rone-btn.dd.open::after { transform:rotate(225deg) translate(-1px,-1px); }
+.rone-btn.icon { padding:9px 11px; }
+.rone-btn.arrow { padding:9px 10px; color:var(--dim); }
+.rone-btn:disabled { color:var(--faint); cursor:default; transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+.rone-btn:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+
+/* ---- preset bar: ◀ name ▶ (the name opens the preset popover) ---- */
+.rone-preset { display:inline-flex; align-items:center; gap:2px; background:var(--card); border-radius:8px; padding:3px; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-preset .nm { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text); padding:6px 14px; min-width:120px; text-align:center; cursor:pointer; }
+.rone-preset .rone-btn { padding:6px 9px; color:var(--dim); box-shadow:none; background:transparent; }
+.rone-preset .rone-btn:hover { color:var(--text); }
+
+/* ---- segment: one of N, a sliding pill (rone-ui.js RoneUI.seg places it) ---- */
+.rone-seg { display:inline-flex; gap:2px; padding:3px; background:var(--card); border-radius:8px; position:relative; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-seg .pill { position:absolute; top:3px; left:0; height:calc(100% - 6px); width:0; border-radius:5px; pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)), var(--neon);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 1px 2px rgba(0,0,0,.5); transition:transform .38s var(--pop), width .38s var(--pop); }
+.rone-seg > :not(.pill) { font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:6px 11px; color:var(--dim); cursor:pointer;
+    border-radius:5px; position:relative; z-index:1; transition:color .2s; white-space:nowrap; background:none; border:0; }
+.rone-seg > :not(.pill):hover { color:var(--text2); }
+.rone-seg > .on, .rone-seg > .active, .rone-seg > [aria-checked="true"], .rone-seg > [aria-pressed="true"] { color:var(--ink); }
+.rone-seg.squash .pill { animation:rone-squash .38s var(--pop); }
+@keyframes rone-squash { 0% { transform:scaleY(.8) translateX(var(--px)); } 50% { transform:scaleY(1.08) translateX(var(--px)); } 100% { transform:scaleY(1) translateX(var(--px)); } }
+.rone-seg.off .pill { background:var(--line2); box-shadow:none; }   /* the row is switched off: the pill goes grey */
+.rone-seg.off > .on { color:var(--text2); }
+
+/* ---- chip (a read-out) ---- */
+.rone-chip { display:inline-flex; align-items:baseline; gap:8px; background:var(--card); border-radius:7px; padding:6px 10px; white-space:nowrap; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
+.rone-chip .k { font-family:var(--font-ui); font-size:9px; font-weight:700; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
+.rone-chip .v { font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.rone-chip .v small { font-size:9px; color:var(--dim); margin-left:3px; }
+
+/* ---- switch ---- */
+.rone-switch { display:inline-flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:10px; font-weight:700; letter-spacing:.12em; color:var(--dim); text-transform:uppercase; cursor:pointer; transition:color .2s; user-select:none; }
+.rone-switch i { width:34px; height:18px; border-radius:9px; background:var(--card); box-shadow:inset 0 1px 3px rgba(0,0,0,.7); position:relative; flex:0 0 auto; }
+.rone-switch i::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:linear-gradient(180deg,#3A3F47,#24272C); box-shadow:0 1px 2px rgba(0,0,0,.6); transition:transform .32s var(--pop), background .2s; }
+.rone-switch.on { color:var(--text); }
+.rone-switch.on i::after { transform:translateX(16px); background:var(--neon); box-shadow:0 1px 2px rgba(0,0,0,.6), 0 0 8px rgba(var(--neon-rgb),.6); }
+.rone-led { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); vertical-align:1px; }
+.rone-led.off { background:var(--faint); box-shadow:none; }
+
+/* ---- popover: presets, selects, header menus, pickers (rone-ui.js RoneUI.menu / RoneUI.select) ---- */
+.rone-anchor { position:relative; display:inline-block; }
+.rone-menu { position:absolute; top:calc(100% + 6px); left:0; min-width:200px; z-index:60; background:var(--drawer); border-radius:9px; padding:5px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(0,0,0,.6), 0 18px 40px rgba(0,0,0,.6);
+    opacity:0; transform:translateY(-6px) scale(.98); transform-origin:top left; pointer-events:none; transition:opacity .16s ease-out, transform .18s var(--pop); max-height:420px; overflow-y:auto; }
+.rone-menu.right { left:auto; right:0; transform-origin:top right; }
+.rone-menu.up { top:auto; bottom:calc(100% + 6px); transform:translateY(6px) scale(.98); transform-origin:bottom left; }
+.rone-menu.open { opacity:1; transform:none; pointer-events:auto; }
+.rone-menu.closing { transition:opacity .1s ease-in, transform .1s ease-in; }
+.rone-menu .h { font-family:var(--font-ui); font-size:9px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:7px 10px 5px; }
+.rone-menu .it { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:5px; cursor:pointer; font-family:var(--font-ui); font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); transition:background .12s, color .12s; white-space:nowrap; }
+.rone-menu .it:hover, .rone-menu .it.hi { background:var(--line2); color:var(--text); }
+.rone-menu .it .d { width:6px; height:6px; border-radius:50%; background:transparent; flex:0 0 auto; transition:background .15s, box-shadow .15s; }
+.rone-menu .it.on { color:var(--text); }
+.rone-menu .it.on .d { background:var(--neon); box-shadow:0 0 6px rgba(var(--neon-rgb),.8); }
+.rone-menu .it .m { margin-left:auto; padding-left:14px; font-family:var(--font-mono); font-size:10px; font-weight:500; letter-spacing:.02em; text-transform:none; color:var(--dim); }
+.rone-menu .it .star { margin-left:6px; color:var(--faint); font-size:11px; }
+.rone-menu .it .star.on { color:var(--neon); }
+.rone-menu .it.disabled { color:var(--faint); cursor:default; background:none; }
+.rone-menu .sep { height:1px; background:var(--line); margin:4px 6px; }
+.rone-menu .ft { font-family:var(--font-ui); font-size:10px; font-weight:600; color:var(--dim); padding:7px 10px 6px; max-width:260px; white-space:normal; line-height:1.5; }
+.rone-menu.wide { min-width:300px; }
+.rone-menu::-webkit-scrollbar { width:8px; } .rone-menu::-webkit-scrollbar-thumb { background:var(--line2); border-radius:4px; }
+/* a native <select> wrapped by RoneUI.select: the select stays in the DOM (hidden), the key shows its text */
+.rone-select-native { position:absolute !important; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; }
+
+/* Rise: BYPASS toggles .active (kept), the ADVANCED / preset / GO keys use the kit's .on */
+.rone-btn.active{color:var(--ink);background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)),var(--neon);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.25),0 1px 0 rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.35)}
+.rone-btn.hot.active{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0)),var(--hot);color:#fff}
+</style>
+<style>
+/* ============================================================================
+   RONE Rise - RONE graphite design language (bundle standard), Rise Pink.
+   Design canvas 860x580 in #app, scaled into #app-viewport (fitScale).
+   One INTENSITY knob over a sunrise that lights the whole plugin; presets at
+   the bottom; everything else behind ADVANCED.
+   ============================================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+    --ground:#14161A; --panel:#17191E; --card:#101216; --line:#23262C; --line2:#2A2E35;
+    --text:#E8EAED; --dim:#7A7F88; --faint:#4E535B; --hot:#FF3B3B; --hot-rgb:255,59,59;
+    --neon:#FF5FB8; --neon-rgb:255,95,184;
+}
+html, body { width:100%; height:100%; overflow:hidden; font-family:'Manrope','Segoe UI',-apple-system,sans-serif;
+    background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); color:var(--text);
+    user-select:none; -webkit-user-select:none; cursor:default; }
+body { display:flex; flex-direction:column; }
+#app-viewport { position:relative; flex:1; overflow:hidden; }
+#app { position:absolute; left:0; top:0; width:860px; height:580px; transform-origin:top left; overflow:hidden;
+    background:linear-gradient(180deg,var(--panel) 0%,var(--ground) 100%); }
+#app.bypassed .p-body { opacity:.5; filter:saturate(.3); }
+
+/* ---- Corner resize grip (bundle-standard triangle, bottom right) ---- */
+#resize-handle { position:fixed; bottom:0; right:0; width:18px; height:18px; cursor:nwse-resize; z-index:90; background:transparent; }
+#resize-handle::before, #resize-handle::after { content:""; position:absolute; background:var(--dim); border-radius:1px; transform:rotate(-45deg); transform-origin:bottom right; }
+#resize-handle::before { width:10px; height:1.5px; bottom:7px; right:2px; }
+#resize-handle::after  { width:6px;  height:1.5px; bottom:4px; right:2px; }
+#resize-handle:hover::before, #resize-handle:hover::after { background:var(--neon); }
+
+/* ---- Custom Title Bar (standalone, Windows) ---- */
+.title-bar { display:flex; align-items:center; height:30px; min-height:30px; background:var(--card); border-bottom:1px solid var(--line); }
+.title-bar-drag { flex:1; display:flex; align-items:center; padding-left:12px; height:100%; cursor:grab; }
+.title-bar-drag:active { cursor:grabbing; }
+.title-bar-text { font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--dim); }
+.title-bar-controls { display:flex; height:100%; }
+.title-btn { width:40px; height:100%; border:none; background:transparent; color:var(--dim); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; padding:0; }
+.title-btn:hover { background:rgba(255,255,255,.08); color:var(--text); }
+.title-btn-close:hover { background:#e81123; color:#fff; }
+.title-btn-text { width:auto; padding:0 12px; font-family:inherit; font-size:10px; font-weight:700; letter-spacing:1.5px; }
+body.has-titlebar #bp-about { top:30px; }
+
+/* ---- Licence lock ---- */
+.rl-overlay{position:fixed;inset:0;z-index:99999;background:#14161A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:'Manrope','Segoe UI',sans-serif;transition:opacity .35s ease}
+.rl-overlay.rl-hidden{opacity:0;pointer-events:none}
+.rl-name{font-family:'Sora','Segoe UI',sans-serif;font-size:22px;font-weight:800;letter-spacing:.14em;color:#E8EAED}
+.rl-name i{font-style:normal;color:#FF5FB8}
+.rl-prompt{font-family:'Sora','Segoe UI',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;color:#E8EAED;margin-top:6px}
+.rl-hint,.rl-sub{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7A7F88;text-align:center;max-width:80%;line-height:1.6}
+.rl-btn{margin-top:8px;padding:11px 24px;background:#FF5FB8;border:1px solid #FF5FB8;border-radius:8px;color:#0F1114;font-family:'Manrope','Segoe UI',sans-serif;font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+
+/* ---- Header ---- */
+.p-head{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative;z-index:3}
+.p-hcenter{position:relative;display:flex;align-items:center;gap:6px;margin-left:auto;margin-right:22px}
+.p-hright{display:flex;align-items:center;gap:10px}
+.p-pbar .nm{min-width:150px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-pbar .nm.mod::after{content:' *';color:var(--neon)}
+.p-pbar .nm small{color:var(--dim);font-size:8.5px;letter-spacing:.16em;margin-right:7px}
+.p-hbtn{padding:8px 11px}
+.p-gear svg{width:13px;height:13px;display:block}
+.p-tailq{display:flex;align-items:center;gap:7px}
+.p-tailq .rone-seg > :not(.pill){padding:6px 8px}
+.p-save{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);width:270px;z-index:61;background:var(--drawer);border-radius:9px;padding:10px;display:none;flex-direction:column;gap:8px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px rgba(0,0,0,.6),0 18px 40px rgba(0,0,0,.6)}
+.p-save.open{display:flex}
+.p-save input{font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text);background:var(--card);border:0;border-radius:6px;padding:8px 10px;outline:none;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
+.p-save input:focus{box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 0 0 1px rgba(var(--neon-rgb),.6)}
+.p-save .row{display:flex;gap:6px}
+.p-save .row .rone-btn{flex:1}
+.p-save .note{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--dim);line-height:1.5}
+.p-logo{display:flex;align-items:center;gap:9px;cursor:pointer;transform-origin:left center;transition:transform .18s ease}
+.p-logo:hover{transform:scale(1.06)}
+.p-logo:active{transform:scale(.99)}
+.p-logo:hover .p-glyph{filter:drop-shadow(0 0 11px rgba(var(--neon-rgb),.95))}
+.p-glyph{width:40px;height:21px;flex-shrink:0;overflow:visible;filter:drop-shadow(0 0 6px rgba(var(--neon-rgb),.5));transition:filter .18s}
+.p-glyph .r-stem{fill:var(--neon)} .p-glyph .r-line{fill:none;stroke:var(--neon);stroke-width:4.2}
+.p-name{font-family:'Sora',sans-serif;font-weight:800;font-size:16px;letter-spacing:.16em;white-space:nowrap}
+.p-name i{font-style:normal;color:var(--neon);text-shadow:0 0 12px rgba(var(--neon-rgb),.55)}
+
+/* ---- Body: the scene canvas fills it, the knob floats over it ---- */
+.p-body{position:absolute;inset:54px 0 0 0}
+.p-scene{position:absolute;inset:0}
+.p-scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.p-mood{position:absolute;top:12px;left:645px;transform:translateX(-50%);pointer-events:none}
+.p-mood .v{letter-spacing:.14em;transition:color .2s,text-shadow .2s}
+.p-mood.up .v{color:var(--neon);text-shadow:0 0 10px rgba(var(--neon-rgb),.5)}
+.p-mood.hot .v{color:var(--hot);text-shadow:0 0 10px rgba(var(--hot-rgb),.6)}
+
+/* ---- Hero knob ---- */
+.p-knobwrap{position:absolute;left:62px;top:36px;width:340px;height:340px;cursor:grab}
+.p-knobwrap:active{cursor:grabbing}
+.p-knobwrap svg{position:absolute;inset:0;overflow:visible;pointer-events:none}
+.p-knobwrap .track{fill:none;stroke:var(--line);stroke-width:8;stroke-linecap:round}
+.p-knobwrap .over{fill:none;stroke:rgba(var(--hot-rgb),.28);stroke-width:8;stroke-linecap:round}
+.p-knobwrap .lit{fill:none;stroke:var(--neon);stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 10px rgba(var(--neon-rgb),.85))}
+.p-knobwrap .lit.hot{stroke:var(--hot);filter:drop-shadow(0 0 12px rgba(var(--hot-rgb),.9))}
+.p-knobwrap .bars{fill:none;stroke:var(--line);stroke-width:3;stroke-linecap:round}
+.p-knobwrap .barsLit{fill:none;stroke:#F1F4F7;stroke-width:3;stroke-linecap:round;opacity:.85}
+.p-knobwrap .tick{stroke:var(--faint);stroke-width:1.5}
+.p-knob{position:absolute;inset:46px}
+.p-knobwrap .kbody{box-shadow:0 18px 40px rgba(0,0,0,.6),inset 0 2px 3px rgba(255,255,255,.07),inset 0 -10px 22px rgba(0,0,0,.45)}
+.p-dot{top:11px;width:11px;height:11px;margin-left:-5.5px;transform-origin:50% 113px}
+.p-kval{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none}
+.p-kval b{display:block;font-family:'Sora',sans-serif;font-size:52px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.p-kval b.hot{color:var(--hot);text-shadow:0 0 16px rgba(var(--hot-rgb),.6)}
+.p-kval span{display:block;font-size:10px;font-weight:800;letter-spacing:.3em;color:var(--dim);margin-top:8px}
+
+/* ---- GO pill under the knob: only when LAND ON BAR is armed ---- */
+.p-gopill{position:absolute;left:62px;width:340px;top:392px;display:none;align-items:center;justify-content:center;gap:14px}
+.p-gopill.show{display:flex}
+.p-go{padding:9px 22px}
+.p-clock{font-size:11px;font-weight:800;letter-spacing:.14em;color:#B9BDC4;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;gap:5px}
+.p-beats{display:flex;gap:4px}
+.p-beats i{width:9px;height:4px;border-radius:2px;background:var(--line2)}
+.p-beats i.on{background:var(--neon);box-shadow:0 0 6px rgba(var(--neon-rgb),.8)}
+
+/* ---- Bottom: ADVANCED at the left corner, presets centred ---- */
+.p-bottom{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;padding:0 16px;gap:14px;z-index:4}
+.p-adv{display:flex;align-items:center;gap:7px}
+.p-adv i{display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid currentColor;transition:transform .2s}
+.p-adv.on i{transform:rotate(180deg)}
+.p-presets{display:flex;gap:6px;flex:1;justify-content:center;margin-right:30px}
+.p-preset{width:118px;text-align:center;padding:7px 4px}
+.p-preset small{display:block;font-size:9px;letter-spacing:.2em;color:var(--dim);margin-bottom:2px}
+.p-preset.on small{color:rgba(15,17,20,.6)}
+.p-preset.mod::after{content:'';position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:#0F1114;opacity:.55}
+
+/* ---- ADVANCED drawer ---- */
+.p-drawer{position:absolute;left:0;right:0;bottom:0;background:rgba(20,22,25,.97);border-top:1px solid var(--line2);box-shadow:0 -18px 40px rgba(0,0,0,.55);
+  transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);padding:14px 18px 76px;display:flex;flex-direction:column;gap:12px;z-index:3}
+.p-drawer.open{transform:translateY(0)}
+.p-drow{display:flex;align-items:center;gap:14px}
+.p-lbl{width:92px;flex-shrink:0}
+.p-hint{font-size:9.5px;color:var(--dim);font-weight:700;letter-spacing:.06em;margin-left:auto;flex:1;min-width:0;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-tailbar{flex:1;max-width:200px;height:8px;border-radius:4px;background:var(--card);box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden;cursor:pointer}
+.p-tailbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--hot);box-shadow:0 0 8px rgba(var(--hot-rgb),.8)}
+.p-tailval{min-width:72px;justify-content:center}
+.p-tailval .v{font-size:11px;letter-spacing:.1em}
+.p-macros{display:flex;justify-content:space-around;padding:2px 0 0}
+.p-minilabel{white-space:nowrap}
+.p-minival{letter-spacing:-.01em}
+.p-chain{display:flex;gap:6px}
+.p-mod{flex:1;min-width:0;background:var(--card);border-radius:7px;padding:6px 6px 7px;display:flex;flex-direction:column;gap:4px;box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.04);transition:box-shadow .2s}
+.p-mod.live{box-shadow:inset 0 0 0 1px rgba(var(--neon-rgb),.45),inset 0 1px 3px rgba(0,0,0,.6)}
+.p-mod .n{font-size:9px;font-weight:800;letter-spacing:.14em;color:var(--dim);white-space:nowrap}
+.p-mod.live .n{color:var(--text)}
+.p-mod .v{font-size:9.5px;font-weight:700;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.p-mod.live .v{color:var(--neon)}
+.p-mod .b{height:3px;border-radius:2px;background:var(--line2);overflow:hidden}
+.p-mod .b i{display:block;height:100%;width:0;background:var(--neon);box-shadow:0 0 6px rgba(var(--neon-rgb),.7)}
+.p-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s ease-out;z-index:8}
+.p-flash.on{opacity:.45;transition:none}
+</style>
+</head>
+<body>
+
+<!-- Custom Title Bar (standalone, Windows) -->
+<div class="title-bar" id="titleBar" style="display:none;">
+    <div class="title-bar-drag" id="titleBarDrag"><span class="title-bar-text">RONE Rise</span></div>
+    <div class="title-bar-controls">
+        <button class="title-btn title-btn-text" id="btnAudio" title="Audio + MIDI devices">AUDIO</button>
+        <button class="title-btn" id="btnMinimize" title="Minimize"><svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg></button>
+        <button class="title-btn title-btn-close" id="btnClose" title="Close"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0 L10 10 M10 0 L0 10" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    </div>
+</div>
+
+<div id="app-viewport">
+<div id="app">
+  <div class="p-flash" id="flash"></div>
+  <div class="p-head">
+    <div class="p-logo" id="pLogo" title="About" role="button">
+      <svg class="p-glyph" viewBox="0 0 100 52" aria-label="RONE" role="img">
+        <path class="r-stem" d="M 0 0 L 4.9 0 L 4.9 16.4 L 0 19.2 Z"/>
+        <path class="r-line" d="M 0 2.1 H 46.7 A 10.5 10.5 0 0 1 46.7 23.1 H 11.6 A 6.9 6.9 0 0 0 11.6 36.9 H 34 C 46 36.9 47 48.2 59 48.2 H 100"/>
+      </svg>
+      <div class="p-name">RI<i>SE</i></div>
+    </div>
+    <div class="p-hcenter">
+      <div class="rone-preset p-pbar" id="pbar">
+        <button class="rone-btn arrow" id="pPrev" title="Previous preset">&#9664;</button>
+        <div class="nm" id="pName" title="Presets">LIFTOFF</div>
+        <button class="rone-btn arrow" id="pNext" title="Next preset">&#9654;</button>
+      </div>
+      <button class="rone-btn p-hbtn" id="pSaveBtn" title="Save the macros as a preset">SAVE</button>
+      <button class="rone-btn p-hbtn p-gear" id="pGear" title="Settings"><svg viewBox="0 0 16 16"><path fill="currentColor" d="M9.2 1l.4 1.9c.4.1.8.3 1.1.5l1.7-1 1.2 1.2-1 1.7c.2.3.4.7.5 1.1l1.9.4v1.6l-1.9.4c-.1.4-.3.8-.5 1.1l1 1.7-1.2 1.2-1.7-1c-.3.2-.7.4-1.1.5L9.2 15H7.6l-.4-1.9c-.4-.1-.8-.3-1.1-.5l-1.7 1-1.2-1.2 1-1.7c-.2-.3-.4-.7-.5-1.1L1.8 9.2V7.6l1.9-.4c.1-.4.3-.8.5-1.1l-1-1.7 1.2-1.2 1.7 1c.3-.2.7-.4 1.1-.5L7.6 1h1.6zM8.4 5.6a2.8 2.8 0 100 5.6 2.8 2.8 0 000-5.6z"/></svg></button>
+      <div class="p-save" id="pSave">
+        <div class="rone-label">SAVE PRESET</div>
+        <input id="pSaveName" maxlength="40" placeholder="PRESET NAME" spellcheck="false">
+        <div class="row"><button class="rone-btn" id="pSaveOk">SAVE PRESET</button></div>
+        <div class="row"><button class="rone-btn" id="pSaveCard">SAVE AS LIFTOFF MACROS</button></div>
+        <div class="note">Saved for you on this computer, in every project. SAVE AS &hellip; MACROS makes these the card's own macros; Settings &gt; RESET TO FACTORY MACROS brings the factory ones back.</div>
+      </div>
+    </div>
+    <div class="p-hright">
+      <div class="p-tailq" title="TAIL: reverb + delay release after the knob falls (CUT = hard stop)">
+        <div class="rone-label">TAIL</div>
+        <div class="p-seg rone-seg" id="tailSeg"><span data-i="0" class="on">CUT</span><span data-i="1">1</span><span data-i="2">2</span><span data-i="3">3</span><span data-i="4">4</span></div>
+      </div>
+      <div class="p-bypass rone-btn hot" id="bypassBtn" title="Bypass">BYPASS</div>
+    </div>
+  </div>
+
+  <div class="p-body">
+    <div class="p-scene" id="scene"><canvas id="cv"></canvas><div class="p-mood rone-chip" id="mood"><span class="k">SCENE</span><span class="v">NIGHT</span></div></div>
+
+    <div class="p-knobwrap arck hero" id="knob" title="INTENSITY 0..100 - drag, wheel (shift = fine), double-click = 0">
+      <svg viewBox="0 0 340 340">
+        <g id="ticks"></g>
+        <circle class="bars" cx="170" cy="170" r="162" id="barsTrack" stroke-dasharray="0 2000"/>
+        <circle class="barsLit" cx="170" cy="170" r="162" id="barsLit" stroke-dasharray="0 2000"/>
+        <path class="track" id="trk"/><path class="lit" id="lit"/>
+      </svg>
+      <div class="p-knob kbody"><div class="p-dot kdot" id="dot"></div></div>
+      <div class="p-kval"><b id="kval">0%</b><span>INTENSITY</span></div>
+    </div>
+    <div class="p-gopill" id="gopill">
+      <button class="p-go rone-btn act wait" id="goBtn">GO</button>
+      <div class="p-clock"><span id="clockTxt">BAR &mdash; / 8</span><div class="p-beats" id="beats"><i></i><i></i><i></i><i></i></div></div>
+    </div>
+
+    <div class="p-drawer" id="drawer">
+      <div class="p-drow">
+        <div class="p-lbl rone-label">LAND ON BAR</div>
+        <div class="p-seg rone-seg" id="landSeg"><span data-i="0" class="on">MANUAL</span><span data-i="1">4</span><span data-i="2">8</span><span data-i="3">16</span><span data-i="4">32</span></div>
+        <div class="p-lbl rone-label" style="width:auto;margin-left:6px">CURVE</div>
+        <div class="p-seg rone-seg" id="curveSeg" title="How the LAND run climbs: straight, soft (default), quiet-then-everything, or with a last-stretch push"><span data-i="0">LIN</span><span data-i="1" class="on">SOFT</span><span data-i="2">EXP</span><span data-i="3">S</span></div>
+        <div class="p-hint">GO runs the rise and lands it &middot; MIDI C1 = GO</div>
+      </div>
+      <div class="p-drow">
+        <div class="p-lbl rone-label">TAIL</div>
+        <div class="p-tailbar" id="tailBar"><i id="tailFill"></i></div>
+        <div class="p-tailval rone-chip"><span class="v" id="tailVal">1 BAR</span></div>
+        <div class="p-hint">reverb + delay release after the knob falls (CUT = hard stop)</div>
+      </div>
+      <div class="p-macros" id="macros"></div>
+      <div class="p-chain" id="chain"></div>
+    </div>
+
+    <div class="p-bottom">
+      <button class="p-adv rone-btn" id="advBtn"><i></i>ADVANCED</button>
+      <div class="p-presets" id="presets"></div>
+    </div>
+  </div>
+</div><!-- /#app -->
+</div><!-- /#app-viewport -->
+
+<div id="resize-handle" title="Resize"></div>
+
+<div class="rl-overlay rl-hidden" id="rlOverlay" style="display:none">
+  <div class="rl-name">RONE <i>RISE</i></div>
+  <span class="rl-prompt">A RONE Rise licence or RONE ALL ACCESS is required</span>
+  <span class="rl-hint">Sign in with your roneaudio.com account in the RONE Plugins Center</span>
+  <button class="rl-btn" id="rlLaunch">OPEN RONE PLUGINS CENTER</button>
+  <span class="rl-sub">No account yet? 7-day free trial at roneaudio.com</span>
+</div>
+
+<!--ABOUT-->
+
+<script>/* rone-ui v2 */
+// RONE UI kit v2 (26.10.2026) - the behaviour behind rone-ui.css. Paste after the CSS.
+//   RoneUI.knob(el, {size:'m', value:.5, def:.5, fmt:v=>..., label:'Mix', hero:false, onChange:v=>...})
+//       -> {set(v), get(), setText(html), lock(bool), el}      drag (shift = fine), wheel 2 %/notch, dbl-click = default, arrows
+//   RoneUI.seg(el, {onClass:'on'})     -> adds the sliding pill; the plugin keeps toggling its own on-class, the pill follows
+//   RoneUI.switch(el)                  -> toggles .on on click (optional helper)
+//   RoneUI.menu(trigger, {items, header, footer, wide, side, onSelect}) -> {open(), close(), set(items), el}
+//   RoneUI.select(selectEl, {wide})    -> wraps a native <select> in a key + popover; select.value / 'change' keep working
+(function (root) {
+  'use strict';
+  const NS = 'http://www.w3.org/2000/svg';
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const SIZES = { s: { S: 58, st: 3.5 }, m: { S: 104, st: 4.5 }, l: { S: 124, st: 5 }, xl: { S: 200, st: 7 } };
+
+  function arcPath(cx, cy, r, a0, a1) {
+    const p = a => { const t = (a - 90) * Math.PI / 180; return [cx + r * Math.cos(t), cy + r * Math.sin(t)]; };
+    const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+  }
+  function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+
+  // ---------------------------------------------------------------- knob (.arck)
+  function knob(target, opt) {
+    const o = Object.assign({ size: 'm', value: 0, def: null, fmt: null, label: '', hero: false, onChange: null, locked: false }, opt || {});
+    const { S, st } = SIZES[o.size] || SIZES.m, c = S / 2, r = c - st / 2 - 1;
+    const k = target; k.classList.add('arck', 'size-' + o.size); if (o.hero) k.classList.add('hero'); if (!k.hasAttribute('tabindex')) k.tabIndex = 0;
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${S} ${S}`);
+    const track = document.createElementNS(NS, 'path'), lit = document.createElementNS(NS, 'path');
+    track.setAttribute('class', 'track'); lit.setAttribute('class', 'lit'); track.setAttribute('d', arcPath(c, c, r, -135, 135));
+    svg.append(track, lit);
+    const body = el('div', 'kbody'), dot = el('div', 'kdot'), cval = el('div', 'cval');
+    k.textContent = ''; k.append(svg, body, dot, cval);   // not replaceChildren: Safari 14+, older Macs run these pages
+    let v = clamp(o.value, 0, 1), text = null, lingerT = null;
+    const def = o.def == null ? v : o.def;
+    function draw() {
+      const a = -135 + 270 * v;
+      lit.setAttribute('d', v > 0.003 ? arcPath(c, c, r, -135, a) : '');
+      dot.style.transform = `rotate(${a.toFixed(1)}deg)`;
+      const t = text != null ? text : (o.fmt ? o.fmt(v) : Math.round(v * 100) + '%');
+      cval.innerHTML = o.hero ? `<span>${t}</span><span class="sub">${o.label}</span>` : t;
+    }
+    function touch() { k.classList.add('touch'); clearTimeout(lingerT); lingerT = setTimeout(() => k.classList.remove('touch'), 500); }
+    function user(nv) { nv = clamp(nv, 0, 1); if (nv === v) return; v = nv; text = null; draw(); if (o.onChange) o.onChange(v); }
+    let y0 = 0, v0 = 0;
+    k.addEventListener('pointerdown', e => { if (o.locked || e.button !== 0) return; k.setPointerCapture(e.pointerId); y0 = e.clientY; v0 = v; k.classList.add('touch'); clearTimeout(lingerT); e.preventDefault(); });
+    k.addEventListener('pointermove', e => { if (!k.hasPointerCapture(e.pointerId)) return; user(v0 + (y0 - e.clientY) / (e.shiftKey ? 800 : 200)); });
+    const up = () => { lingerT = setTimeout(() => k.classList.remove('touch'), 500); };
+    k.addEventListener('pointerup', up); k.addEventListener('pointercancel', up);
+    k.addEventListener('wheel', e => { if (o.locked) return; e.preventDefault(); user(v + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? .005 : .02)); touch(); }, { passive: false });
+    k.addEventListener('dblclick', () => { if (!o.locked) user(def); });
+    k.addEventListener('keydown', e => { if (o.locked) return; const d = (e.key === 'ArrowUp' || e.key === 'ArrowRight') ? .02 : (e.key === 'ArrowDown' || e.key === 'ArrowLeft') ? -.02 : 0; if (!d) return; user(v + d); touch(); e.preventDefault(); });
+    draw();
+    return { set(nv) { v = clamp(nv, 0, 1); text = null; draw(); }, get: () => v, setText(t) { text = t; draw(); },
+             lock(b) { o.locked = !!b; k.classList.toggle('locked', !!b); }, el: k };
+  }
+
+  // ---------------------------------------------------------------- segment pill
+  function seg(s, opt) {
+    const o = Object.assign({ onClass: 'on' }, opt || {});
+    s.classList.add('rone-seg');
+    let pill = s.querySelector(':scope > .pill');
+    if (!pill) { pill = el('i', 'pill'); s.appendChild(pill); }   // LAST child: index-based plugin code (children[i]) keeps its indices
+    const isOn = b => b.classList.contains(o.onClass) || b.getAttribute('aria-checked') === 'true' || b.getAttribute('aria-pressed') === 'true';
+    function current() { return Array.from(s.children).find(b => b !== pill && isOn(b)); }
+    function place(anim) {
+      const b = current();
+      if (!b) { pill.style.width = '0px'; return; }
+      const x = b.offsetLeft;
+      pill.style.setProperty('--px', x + 'px'); pill.style.transform = `translateX(${x}px)`; pill.style.width = b.offsetWidth + 'px';
+      if (anim) { s.classList.remove('squash'); void pill.offsetWidth; s.classList.add('squash'); }
+    }
+    pill.style.transition = 'none'; place(false); void pill.offsetWidth; pill.style.transition = '';
+    // the segment's own class (squash) and the pill must not re-trigger the placement, or it loops forever
+    new MutationObserver(ms => { if (ms.some(m => m.target !== s && m.target !== pill)) place(true); })
+      .observe(s, { attributes: true, subtree: true, attributeFilter: ['class', 'aria-checked', 'aria-pressed'] });
+    if (root.ResizeObserver) new ResizeObserver(() => { pill.style.transition = 'none'; place(false); void pill.offsetWidth; pill.style.transition = ''; }).observe(s);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => place(false));
+    return { place };
+  }
+  function switchEl(s) { s.classList.add('rone-switch'); if (!s.querySelector('i')) s.insertBefore(el('i'), s.firstChild); s.addEventListener('click', () => s.classList.toggle('on')); return s; }
+
+  // ---------------------------------------------------------------- popover
+  let openMenu = null;
+  function closeAll() { if (openMenu) openMenu.close(); }
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
+  function menu(trigger, opt) {
+    const o = Object.assign({ items: [], header: null, footer: null, wide: false, side: 'left', up: false, onSelect: null }, opt || {});
+    let anchor = trigger.parentElement;
+    if (!anchor || !anchor.classList.contains('rone-anchor')) { anchor = el('div', 'rone-anchor'); trigger.parentNode.insertBefore(anchor, trigger); anchor.appendChild(trigger); }
+    const m = el('div', 'rone-menu' + (o.wide ? ' wide' : '') + (o.side === 'right' ? ' right' : '') + (o.up ? ' up' : ''));
+    anchor.appendChild(m);
+    const api = {
+      el: m, trigger,
+      set(items) {
+        m.textContent = '';
+        if (o.header) m.appendChild(el('div', 'h', o.header));
+        items.forEach(it => {
+          if (it === '-') { m.appendChild(el('div', 'sep')); return; }
+          if (it.html) { const w = el('div'); w.innerHTML = it.html; m.appendChild(w); return; }
+          const r = el('div', 'it' + (it.on ? ' on' : '') + (it.disabled ? ' disabled' : ''));
+          r.innerHTML = `<span class="d"></span><span class="t">${it.t}</span>${it.m != null ? `<span class="m">${it.m}</span>` : ''}${it.star != null ? `<span class="star${it.star ? ' on' : ''}">★</span>` : ''}`;
+          r.addEventListener('click', e => {
+            e.stopPropagation(); if (it.disabled) return;
+            if (!it.action) m.querySelectorAll('.it').forEach(x => x.classList.toggle('on', x === r));
+            api.close(); if (it.onSelect) it.onSelect(it); if (o.onSelect) o.onSelect(it);
+          });
+          m.appendChild(r);
+        });
+        if (o.footer) m.appendChild(el('div', 'ft', o.footer));
+      },
+      open() { if (openMenu && openMenu !== api) openMenu.close(); m.classList.remove('closing'); m.classList.add('open'); trigger.classList.add('open'); openMenu = api; },
+      close() { if (!m.classList.contains('open')) return; m.classList.add('closing'); m.classList.remove('open'); trigger.classList.remove('open'); if (openMenu === api) openMenu = null; },
+      toggle() { m.classList.contains('open') ? api.close() : api.open(); }
+    };
+    api.set(o.items);
+    trigger.addEventListener('click', e => { e.stopPropagation(); api.toggle(); });
+    m.addEventListener('click', e => e.stopPropagation());
+    return api;
+  }
+
+  // ---------------------------------------------------------------- native <select> -> key + popover
+  function select(sel, opt) {
+    const o = Object.assign({ wide: false, side: 'left', up: false, className: '' }, opt || {});
+    if (sel._rone) return sel._rone;
+    const btn = el('button', 'rone-btn dd ' + o.className); btn.type = 'button';
+    sel.parentNode.insertBefore(btn, sel); sel.classList.add('rone-select-native'); sel.tabIndex = -1;
+    const label = () => { const op = sel.options[sel.selectedIndex]; btn.textContent = op ? op.textContent : ''; };
+    const items = () => Array.from(sel.options).map(op => ({ t: op.textContent, on: op.selected, disabled: op.disabled, value: op.value,
+      onSelect() { if (sel.value === op.value) return; sel.value = op.value; label(); sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); } }));
+    const m = menu(btn, { wide: o.wide, side: o.side, up: o.up, items: items() });
+    btn.addEventListener('click', () => m.set(items()));          // rebuild from the live options every time it opens
+    sel.addEventListener('change', label);
+    // code that assigns sel.value / sel.selectedIndex (host -> UI) must move the key's text too
+    ['value', 'selectedIndex'].forEach(p => { const d = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, p);
+      if (d && d.set) Object.defineProperty(sel, p, { get() { return d.get.call(sel); }, set(x) { d.set.call(sel, x); label(); }, configurable: true }); });
+    new MutationObserver(label).observe(sel, { childList: true, subtree: true, attributes: true });
+    if (sel.disabled) btn.disabled = true;
+    label();
+    sel._rone = { button: btn, menu: m, refresh: label };
+    return sel._rone;
+  }
+
+  root.RoneUI = { knob, seg, switch: switchEl, menu, select, arcPath, closeAll };
+})(window);
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// Bridge helpers + write-if-changed
+// ─────────────────────────────────────────────────────────────────
+function emit(name, payload) { if (window.__JUCE__ && window.__JUCE__.backend) window.__JUCE__.backend.emitEvent(name, payload); }
+function setText(el, v) { if (el && el.__t !== v) { el.textContent = v; el.__t = v; } }
+function setStyle(el, k, v) { if (el && el.__s !== undefined ? el.__s[k] !== v : true) { el.__s = el.__s || {}; el.style[k] = v; el.__s[k] = v; } }
+function setCls(el, c, on) { if (el && el.classList.contains(c) !== on) el.classList.toggle(c, on); }
+function setAttr(el, k, v) { if (el && el.__a === undefined) el.__a = {}; if (el && el.__a[k] !== v) { el.setAttribute(k, v); el.__a[k] = v; } }
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const TAU = Math.PI * 2;
+
+// Host-side state (paramState) and the live frame (audio thread readouts)
+const state = { intensity: 0, preset: 0, rise: 0, noise: 0, space: .73, delay: 0, kill: .35, dive: 0, gate: 0, sink: .55, pitch: 0, tail: 0, land: 0, curve: 1, bypass: false, presetName: '' };
+const frame = { t: 0, latched: false, running: false, bar: 0, beat: 0, bars: 0, tail: 0, bpm: 120, playing: false, phase: 0, bpb: 4, hpf: 20, rev: 0, del: 0, noise: -90, shep: 0, drive: 0, lpf: 20000, gate: 0, pitch: 0, wet: 0 };
+let dragParam = null;
+
+function setParam(id, v) { state[id] = v; emit('setParameter', { name: id, value: v }); }
+function gestured(id, v) { emit('paramGesture', { name: id, begin: true }); setParam(id, v); emit('paramGesture', { name: id, begin: false }); }
+
+// ─────────────────────────────────────────────────────────────────
+// Modes + presets (weights live in the engine; the page loads the macros)
+// ─────────────────────────────────────────────────────────────────
+// The five mode cards - the factory macros mirror RoneRiseEngine::presetMacros (renamed 29.10, 1.0.15).
+// KILL LOW sets its own reach since 1.0.15 (100 % = 3 kHz): the cards keep their old sound with
+// the old mode scale folded into their KILL value.
+const PRESETS = [
+  { n: 'LIFTOFF',  t: 'CLEAN',   m: { rise: 0,  noise: 0,   space: .73, delay: 0,    kill: .35,  dive: 0, gate: 0,  sink: .55, pitch: 0 } },
+  { n: 'ORBIT',    t: 'ECHO',    m: { rise: 0,  noise: .25, space: .82, delay: .656, kill: .35,  dive: 0, gate: 0,  sink: .55, pitch: 0 } },
+  { n: 'PULSAR',   t: 'GATED',   m: { rise: .4, noise: .5,  space: .76, delay: .304, kill: .8,   dive: 0, gate: .7, sink: .6,  pitch: .5 } },
+  { n: 'UNDERTOW', t: 'FILTER',  m: { rise: 0,  noise: 0,   space: .91, delay: .637, kill: .125, dive: 1, gate: 0,  sink: .7,  pitch: 0 } },
+  { n: 'MELTDOWN', t: 'EXTREME', m: { rise: 1,  noise: 1,   space: .88, delay: .704, kill: 1,    dive: 0, gate: .5, sink: .7,  pitch: 1 } },
+];
+// The card macros in use: the factory ones until the plugin sends the user's own (SAVE AS ... MACROS)
+let cardMacros = PRESETS.map(p => Object.assign({}, p.m)), cardOwn = [false, false, false, false, false];
+// Factory presets: a mode card + its nine macros. Missing macros = 0, except SINK (.55).
+const FM = o => Object.assign({ rise: 0, noise: 0, space: 0, delay: 0, kill: 0, dive: 0, gate: 0, sink: .55, pitch: 0 }, o);
+const FACTORY = [
+  { n: 'CLEAN LIFT',      c: 0, m: FM({ space: .73, kill: .35 }) },
+  { n: 'AIR LIFT',        c: 0, m: FM({ noise: .35, space: .8, kill: .5, sink: .5 }) },
+  { n: 'FILTER CLIMB',    c: 0, m: FM({ space: .55, kill: 1, sink: .5 }) },
+  { n: 'WASH OUT',        c: 0, m: FM({ space: 1, delay: .4, kill: .6, sink: .3 }) },
+  { n: 'TAPE RISE',       c: 0, m: FM({ noise: .15, space: .6, kill: .45, sink: .6, pitch: .6 }) },
+  { n: 'DUB THROW',       c: 1, m: FM({ space: .5, delay: .9, kill: .4, sink: .5 }) },
+  { n: 'PING PONG CLIMB', c: 1, m: FM({ space: .6, delay: .75, kill: .55, gate: .35 }) },
+  { n: 'STARFIELD',       c: 1, m: FM({ rise: .5, noise: .3, space: .85, delay: .6, kill: .45, sink: .5 }) },
+  { n: 'STUTTER CLIMB',   c: 2, m: FM({ noise: .3, space: .5, delay: .2, kill: .8, gate: 1, sink: .65, pitch: .3 }) },
+  { n: 'PSY GATE',        c: 2, m: FM({ rise: .3, noise: .6, space: .7, delay: .4, kill: .9, gate: .8, sink: .6, pitch: .6 }) },
+  { n: 'TRANCE BUILD',    c: 2, m: FM({ rise: .6, noise: .7, space: .8, delay: .5, kill: .85, gate: .4, sink: .6, pitch: .4 }) },
+  { n: 'SUBMARINE',       c: 3, m: FM({ space: .95, delay: .4, kill: .2, dive: 1, sink: .75 }) },
+  { n: 'MUFFLED ROOM',    c: 3, m: FM({ noise: .2, space: .7, dive: .7, sink: .7 }) },
+  { n: 'DEEP SPACE',      c: 3, m: FM({ rise: .4, space: 1, delay: .7, kill: .3, dive: .8, sink: .8 }) },
+  { n: 'BLAST OFF',       c: 4, m: FM({ rise: .8, noise: .8, space: .8, delay: .5, kill: 1, gate: .3, sink: .7, pitch: .8 }) },
+  { n: 'WARP DRIVE',      c: 4, m: FM({ rise: 1, noise: .5, space: .7, delay: .3, kill: .7, sink: .75, pitch: 1 }) },
+  { n: 'CHAOS',           c: 4, m: FM({ rise: 1, noise: 1, space: 1, delay: .9, kill: 1, gate: 1, sink: .8, pitch: 1 }) },
+];
+let userPresets = [];   // [{ name, card, m }] - the plugin's per-user file (every project)
+const MACROS = [{ k: 'rise', n: 'RISE' }, { k: 'noise', n: 'NOISE' }, { k: 'space', n: 'REVERB' }, { k: 'delay', n: 'DELAY' }, { k: 'kill', n: 'KILL LOW' }, { k: 'dive', n: 'DIVE' }, { k: 'gate', n: 'GATE' }, { k: 'sink', n: 'SINK' }, { k: 'pitch', n: 'PITCH' }];
+const MKEYS = MACROS.map(m => m.k);
+const CHAIN = [{ k: 'hpf', n: 'HPF' }, { k: 'lpf', n: 'DIVE' }, { k: 'gate', n: 'GATE' }, { k: 'pitch', n: 'PITCH' }, { k: 'rev', n: 'REVERB' }, { k: 'del', n: 'DELAY' }, { k: 'noise', n: 'NOISE' }, { k: 'shep', n: 'SHEPARD' }, { k: 'drive', n: 'DRIVE' }];
+
+// Every preset in browse order: the factory ones, then the user's
+function allPresets() { return FACTORY.map(p => ({ name: p.n, card: p.c, m: p.m, user: false })).concat(userPresets.map(p => ({ name: p.name, card: p.card, m: p.m, user: true }))); }
+function findPreset(name) { return name ? allPresets().find(p => p.name.toUpperCase() === name.toUpperCase()) : null; }
+// What the dot / * compare with and a double-click goes back to: the loaded preset's macros, else the card's
+function refMacros() { const p = findPreset(state.presetName); return p && p.card === state.preset ? p.m : cardMacros[state.preset]; }
+function macrosNow() { const m = {}; MKEYS.forEach(k => { m[k] = state[k]; }); return m; }
+// Loading goes through the plugin: it sets the mode and the macros together (the mode alone would load the card's)
+function loadPreset(card, m, name) {
+  state.preset = card; state.presetName = name || ''; MKEYS.forEach(k => { if (m[k] !== undefined) state[k] = m[k]; });
+  emit('loadPreset', { card, m, name: name || '' }); renderMacros();
+}
+
+const presetsEl = $('#presets');
+PRESETS.forEach((p, i) => {
+  const b = document.createElement('button'); b.className = 'p-preset rone-btn'; b.innerHTML = `<small>${p.t}</small>${p.n}`;
+  b.addEventListener('click', () => loadPreset(i, cardMacros[i], ''));
+  presetsEl.appendChild(b);
+});
+function presetModified() { const m = refMacros(); return Object.keys(m).some(k => Math.abs(state[k] - m[k]) > 0.011); }
+function renderPresets() {
+  const mod = presetModified();
+  presetsEl.querySelectorAll('.p-preset').forEach((x, j) => { setCls(x, 'on', j === state.preset); setCls(x, 'mod', j === state.preset && mod); });
+  const p = findPreset(state.presetName), nm = $('#pName');
+  const html = p ? `${p.user ? '<small>USER</small>' : ''}${p.name}` : `<small>MODE</small>${PRESETS[state.preset].n}${cardOwn[state.preset] ? ' (MINE)' : ''}`;
+  if (nm.__h !== html) { nm.innerHTML = html; nm.__h = html; }
+  setCls(nm, 'mod', mod);
+  setText($('#pSaveCard'), 'SAVE AS ' + PRESETS[state.preset].n + ' MACROS');
+}
+
+// ---- the preset bar: the name opens the list, the arrows step through it ----
+const pMenu = RoneUI.menu($('#pName'), { wide: true, items: [] });
+function presetItems() {
+  const cur = (state.presetName || '').toUpperCase(), items = [{ html: '<div class="h">FACTORY</div>' }];
+  FACTORY.forEach(p => items.push({ t: p.n, m: PRESETS[p.c].n, on: p.n === cur, action: true, onSelect: () => loadPreset(p.c, p.m, p.n) }));
+  items.push('-', { html: '<div class="h">USER</div>' });
+  if (!userPresets.length) items.push({ t: 'NOTHING SAVED YET', disabled: true });
+  userPresets.forEach(p => items.push({ t: p.name, m: PRESETS[p.card] ? PRESETS[p.card].n : '', on: p.name.toUpperCase() === cur, action: true, onSelect: () => loadPreset(p.card, p.m, p.name) }));
+  return items;
+}
+$('#pName').addEventListener('click', () => pMenu.set(presetItems()), true);   // rebuilt every time it opens
+function stepPreset(d) {
+  const all = allPresets();
+  const i = all.findIndex(p => p.name.toUpperCase() === (state.presetName || '').toUpperCase());
+  const p = all[i < 0 ? (d > 0 ? 0 : all.length - 1) : (i + d + all.length) % all.length];
+  loadPreset(p.card, p.m, p.name);
+}
+$('#pPrev').addEventListener('click', () => stepPreset(-1));
+$('#pNext').addEventListener('click', () => stepPreset(1));
+
+// ---- SAVE: a named preset, or the card's own macros ----
+const pSave = $('#pSave'), pSaveName = $('#pSaveName');
+$('#pSaveBtn').addEventListener('click', e => {
+  e.stopPropagation(); RoneUI.closeAll();
+  const open = pSave.classList.toggle('open');
+  if (open) { const p = findPreset(state.presetName); pSaveName.value = p && p.user ? p.name : ''; setTimeout(() => pSaveName.focus(), 0); }
+});
+pSave.addEventListener('click', e => e.stopPropagation());
+document.addEventListener('click', () => pSave.classList.remove('open'));
+function savePreset() {
+  const name = pSaveName.value.trim().toUpperCase().slice(0, 40); if (!name) { pSaveName.focus(); return; }
+  if (FACTORY.some(p => p.n === name)) { pSaveName.value = name + ' 2'; pSaveName.focus(); return; }   // a factory name stays the factory's
+  const m = macrosNow();
+  userPresets = userPresets.filter(p => p.name.toUpperCase() !== name).concat([{ name, card: state.preset, m }]);
+  state.presetName = name; emit('savePreset', { name, card: state.preset, m }); pSave.classList.remove('open'); renderPresets();
+}
+$('#pSaveOk').addEventListener('click', savePreset);
+pSaveName.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') pSave.classList.remove('open'); });
+$('#pSaveCard').addEventListener('click', () => {
+  const m = macrosNow(); cardMacros[state.preset] = m; cardOwn[state.preset] = true; state.presetName = '';
+  emit('saveCardMacros', { card: state.preset, m }); pSave.classList.remove('open'); renderPresets();
+});
+
+// ---- Settings: RESET TO FACTORY MACROS, delete the loaded user preset ----
+const gearMenu = RoneUI.menu($('#pGear'), { side: 'right', wide: true, items: [] });
+$('#pGear').addEventListener('click', () => {
+  pSave.classList.remove('open');
+  const p = findPreset(state.presetName), mine = cardOwn.filter(Boolean).length;
+  const items = [{ html: '<div class="h">SETTINGS</div>' },
+    { t: 'RESET TO FACTORY MACROS', m: mine ? mine + ' SAVED' : '', action: true, onSelect: () => {
+      cardMacros = PRESETS.map(q => Object.assign({}, q.m)); cardOwn = cardOwn.map(() => false);
+      state.presetName = ''; MKEYS.forEach(k => { state[k] = cardMacros[state.preset][k]; }); emit('resetCardMacros', {}); renderMacros(); } }];
+  if (p && p.user) items.push({ t: 'DELETE "' + p.name + '"', action: true, onSelect: () => {
+      userPresets = userPresets.filter(q => q.name.toUpperCase() !== p.name.toUpperCase()); state.presetName = ''; emit('deletePreset', { name: p.name }); renderPresets(); } });
+  gearMenu.set(items);
+}, true);
+
+function pol(cx, cy, r, a) { const rad = (a - 90) * Math.PI / 180; return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)]; }
+function arcPath(cx, cy, r, a0, a1) { const [x0, y0] = pol(cx, cy, r, a0), [x1, y1] = pol(cx, cy, r, a1); const lg = (a1 - a0) > 180 ? 1 : 0; return `M ${x0} ${y0} A ${r} ${r} 0 ${lg} 1 ${x1} ${y1}`; }
+
+// ─────────────────────────────────────────────────────────────────
+// Macros (ADVANCED)
+// ─────────────────────────────────────────────────────────────────
+const macrosEl = $('#macros');
+const MC = 29, MR = 26.25;   // kit .arck size-s: 58 px, stroke 3.5 -> centre 29, radius 29 - 1.75 - 1
+MACROS.forEach(m => {
+  const d = document.createElement('div'); d.className = 'p-mini rone-knobgroup';
+  d.innerHTML = `<div class="p-miniarc arck size-s" data-k="${m.k}"><svg viewBox="0 0 58 58"><path class="track" d="${arcPath(MC, MC, MR, -135, 135)}"/><path class="lit"/></svg><div class="p-miniknob kbody"></div><div class="p-minidot kdot"></div><div class="p-minival cval">0%</div></div><div class="p-minilabel rone-label">${m.n}</div>`;
+  macrosEl.appendChild(d);
+});
+function renderMacros() {
+  macrosEl.querySelectorAll('.p-mini').forEach(d => {
+    const arc = d.querySelector('.p-miniarc'); const t = state[arc.dataset.k];
+    setAttr(arc.querySelector('.lit'), 'd', t > 0.005 ? arcPath(MC, MC, MR, -135, -135 + 270 * t) : '');
+    setStyle(arc.querySelector('.p-minidot'), 'transform', `rotate(${(-135 + 270 * t).toFixed(1)}deg)`);
+    setText(d.querySelector('.p-minival'), arc.dataset.k === 'pitch' ? '+' + Math.round(t * 200) + ' Hz' : Math.round(t * 100) + '%');
+  });
+  renderPresets();
+}
+const chainEl = $('#chain');
+CHAIN.forEach(c => { const d = document.createElement('div'); d.className = 'p-mod'; d.dataset.k = c.k; d.innerHTML = `<div class="n">${c.n}</div><div class="v">OFF</div><div class="b"><i></i></div>`; chainEl.appendChild(d); });
+function renderChain() {
+  const vals = {
+    hpf:   frame.hpf > 21 ? Math.round(frame.hpf) + ' Hz' : 'OFF',
+    rev:   frame.rev > .01 ? Math.round(frame.rev * 100) + '%' : 'OFF',
+    del:   frame.del > .01 ? Math.round(frame.del * 100) + '% · 1/8.' : 'OFF',
+    noise: frame.noise > -80 ? Math.round(frame.noise) + ' dB' : 'OFF',
+    shep:  frame.shep > 1 ? '+' + Math.round(frame.shep) + ' Hz' : 'OFF',
+    drive: frame.drive > .01 ? Math.round(frame.drive * 100) + '%' : 'OFF',
+    lpf:   frame.lpf < 19000 ? (frame.lpf >= 1000 ? (frame.lpf / 1000).toFixed(1) + ' kHz' : Math.round(frame.lpf) + ' Hz') : 'OFF',
+    gate:  frame.gate > 0 ? '1/' + frame.gate : 'OFF',
+    pitch: frame.pitch > .5 ? '+' + Math.round(frame.pitch) + ' Hz' : 'OFF' };
+  const lvl = { hpf: frame.hpf > 21 ? Math.log(frame.hpf / 20) / Math.log(150) : 0, rev: frame.rev, del: frame.del,
+    noise: frame.noise > -80 ? clamp((frame.noise + 60) / 50, 0, 1) : 0, shep: clamp(frame.shep / 1100, 0, 1), drive: frame.drive,
+    lpf: frame.lpf < 19000 ? Math.log(20000 / frame.lpf) / Math.log(40) : 0, gate: frame.gate > 0 ? { 4: .25, 8: .5, 16: .75, 32: 1 }[frame.gate] || 0 : 0,
+    pitch: clamp(frame.pitch / 200, 0, 1) };
+  chainEl.querySelectorAll('.p-mod').forEach(d => { const k = d.dataset.k; const live = lvl[k] > 0.02;
+    setCls(d, 'live', live); setText(d.querySelector('.v'), live ? vals[k] : 'OFF'); setStyle(d.querySelector('.b i'), 'width', (clamp(lvl[k], 0, 1) * 100).toFixed(1) + '%'); });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Hero knob (0..100 % over 270°)
+// ─────────────────────────────────────────────────────────────────
+const R = 150, CX = 170, CY = 170, A0 = -135;
+$('#trk').setAttribute('d', arcPath(CX, CY, R, A0, 135));
+const ticks = $('#ticks'); [0, 25, 50, 75, 100].forEach(v => { const a = A0 + 270 * (v / 100); const [x0, y0] = pol(CX, CY, R - 14, a), [x1, y1] = pol(CX, CY, R - 9, a); ticks.insertAdjacentHTML('beforeend', `<line class="tick" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`); });
+const knobEl = $('#knob');
+// drag (shift = fine), wheel 2 % per notch (shift = fine), gesture-wrapped so touch/latch hosts record it
+function bindDrag(el, id, get, set) {
+  let y0 = 0, v0 = 0, active = false, lingerT = null;
+  const touch = () => { el.classList.add('touch'); clearTimeout(lingerT); lingerT = setTimeout(() => el.classList.remove('touch'), 500); };
+  // left button only: a right-click opens the host's menu (FL: Create automation clip), which swallows the
+  // mouseup - a drag started there never ended, its gesture stayed open and the host's automation was ignored
+  el.addEventListener('mousedown', e => { if (e.button !== 0) return; y0 = e.clientY; v0 = get(); active = true; dragParam = id; el.classList.add('touch'); clearTimeout(lingerT); emit('paramGesture', { name: id, begin: true }); e.preventDefault(); e.stopPropagation(); });
+  document.addEventListener('mousemove', e => { if (active) set(v0 + (y0 - e.clientY) / appScale() / 220 * (e.shiftKey ? .15 : 1)); });
+  const end = () => { if (active) { active = false; emit('paramGesture', { name: id, begin: false }); if (dragParam === id) dragParam = null; lingerT = setTimeout(() => el.classList.remove('touch'), 500); } };
+  document.addEventListener('mouseup', end);
+  window.addEventListener('blur', end);   // a native window took the mouse mid-drag: close the gesture anyway
+  el.addEventListener('wheel', e => { e.preventDefault(); if (id === 'intensity' && frame.running) emit('cancelRun', {}); emit('paramGesture', { name: id, begin: true }); set(get() + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? .003 : .02)); emit('paramGesture', { name: id, begin: false }); touch(); }, { passive: false });
+}
+bindDrag(knobEl, 'intensity', () => state.intensity, v => { if (frame.running) emit('cancelRun', {}); setParam('intensity', clamp(v, 0, 1)); renderKnob(); });
+knobEl.addEventListener('dblclick', () => { if (frame.running) emit('cancelRun', {}); gestured('intensity', 0); renderKnob(); });
+macrosEl.querySelectorAll('.p-miniarc').forEach(arc => { const id = arc.dataset.k; bindDrag(arc, id, () => state[id], v => { setParam(id, clamp(v, 0, 1)); renderMacros(); });
+  arc.addEventListener('dblclick', () => { gestured(id, refMacros()[id]); renderMacros(); }); });
+
+// The knob shows the EFFECTIVE intensity: the run while LAND is running, the parameter otherwise
+// the knob shows the EFFECTIVE intensity: the run, or zero while resting (after a landing or a host stop)
+function shownT() { return (frame.running || (frame.latched && dragParam !== 'intensity')) ? frame.t : state.intensity; }
+function renderKnob() {
+  const v = shownT() * 100, a = A0 + 270 * (v / 100), hot = false;
+  setAttr($('#lit'), 'd', v > 0.3 ? arcPath(CX, CY, R, A0, a) : ''); setCls($('#lit'), 'hot', hot);
+  setStyle($('#dot'), 'transform', `rotate(${a.toFixed(2)}deg)`);
+  const kv = $('#kval'); setText(kv, Math.round(v) + '%'); setCls(kv, 'hot', hot);
+  const circ = 2 * Math.PI * 162, bars = [0, 4, 8, 16, 32][state.land];
+  if (bars > 0) {
+    setAttr($('#barsTrack'), 'stroke-dasharray', `${(circ / bars - 5).toFixed(2)} 5`); setAttr($('#barsTrack'), 'transform', 'rotate(-90 170 170)');
+    const done = frame.running ? clamp((frame.bar + frame.beat / 4) / bars, 0, 1) : 0;
+    setAttr($('#barsLit'), 'stroke-dasharray', `${(circ * done).toFixed(2)} ${circ.toFixed(2)}`); setAttr($('#barsLit'), 'transform', 'rotate(-90 170 170)');
+  } else { setAttr($('#barsTrack'), 'stroke-dasharray', '0 2000'); setAttr($('#barsLit'), 'stroke-dasharray', '0 2000'); }
+  setCls($('#gopill'), 'show', bars > 0);
+  setText($('#clockTxt'), frame.running ? `BAR ${frame.bar + 1} / ${bars}` : `BAR — / ${bars}`);
+  $('#beats').querySelectorAll('i').forEach((b, i) => setCls(b, 'on', frame.running && i <= frame.beat));
+  const go = $('#goBtn');
+  if (frame.running) { setText(go, 'RUNNING'); go.className = 'p-go rone-btn act running'; }
+  else if (frame.tail > 0.001) { setText(go, 'TAIL'); go.className = 'p-go rone-btn hot on tail'; }
+  else { setText(go, 'GO'); go.className = 'p-go rone-btn act wait'; }
+  const m = $('#mood'), t = shownT();
+  setText(m.querySelector('.v'), t <= 0.02 ? 'NIGHT' : t < 0.3 ? 'DAWN' : t < 0.6 ? 'SUNRISE' : t < 0.85 ? 'SHINING' : 'HIGH NOON');
+  const mc = 'p-mood rone-chip' + (t >= 0.6 ? ' up' : ''); if (m.className !== mc) m.className = mc;
+  CH.target = t;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ADVANCED controls
+// ─────────────────────────────────────────────────────────────────
+$('#landSeg').addEventListener('click', e => { const s = e.target.closest('span'); if (!s) return; if (frame.running) emit('cancelRun', {}); gestured('land', parseInt(s.dataset.i, 10)); renderLand(); renderKnob(); });
+function renderLand() { $('#landSeg').querySelectorAll('span').forEach(s => setCls(s, 'on', parseInt(s.dataset.i, 10) === state.land)); $('#curveSeg').querySelectorAll('span').forEach(s => setCls(s, 'on', parseInt(s.dataset.i, 10) === state.curve)); }
+$('#curveSeg').addEventListener('click', e => { const s = e.target.closest('span'); if (!s) return; gestured('curve', parseInt(s.dataset.i, 10)); renderLand(); });
+RoneUI.seg($('#landSeg'), { onClass: 'on' }); RoneUI.seg($('#curveSeg'), { onClass: 'on' });
+$('#tailBar').addEventListener('click', e => { const r = e.currentTarget.getBoundingClientRect(); gestured('tail', Math.round(clamp((e.clientX - r.left) / r.width, 0, 1) * 4)); renderTail(); });
+$('#tailBar').addEventListener('wheel', e => { e.preventDefault(); gestured('tail', clamp(state.tail + (e.deltaY < 0 ? 1 : -1), 0, 4)); renderTail(); }, { passive: false });
+function renderTail() { setText($('#tailVal'), state.tail === 0 ? 'CUT' : state.tail === 1 ? '1 BAR' : state.tail + ' BARS'); setStyle($('#tailFill'), 'width', (state.tail / 4 * 100) + '%');
+  $('#tailSeg').querySelectorAll('span').forEach(s => setCls(s, 'on', parseInt(s.dataset.i, 10) === state.tail)); }
+// the quick TAIL in the header (1.0.15, Liran: not only in ADVANCED)
+$('#tailSeg').addEventListener('click', e => { const s = e.target.closest('span'); if (!s) return; gestured('tail', parseInt(s.dataset.i, 10)); renderTail(); });
+RoneUI.seg($('#tailSeg'), { onClass: 'on' });
+$('#goBtn').addEventListener('click', () => { if (!frame.running) gestured('intensity', 0); emit('go', {}); });
+$('#advBtn').addEventListener('click', e => { const on = $('#drawer').classList.toggle('open'); e.currentTarget.classList.toggle('on', on); });
+const bypassBtn = $('#bypassBtn');
+bypassBtn.addEventListener('click', () => { const v = !state.bypass; gestured('bypass', v ? 1 : 0); state.bypass = v; renderBypass(); });
+function renderBypass() { setCls(bypassBtn, 'active', state.bypass); setCls($('#app'), 'bypassed', state.bypass); }
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// THE SUN - fills the whole body, its light spills over the knob side
+// ─────────────────────────────────────────────────────────────────
+const CH = { target: 0, cur: 0, dropT: -1, blink: 0, nextBlink: 2.5, burst: 0, lastT: 0, drop() { this.dropT = 0; this.burst = 1; } };
+const PINK = '#FF5FB8', PINK2 = '#FF2FA0', DEEP = '#B0287A';
+const cv = $('#cv'), g = cv.getContext('2d'); let W = 860, H = 526, DPR = 1;
+function sizeCanvas() { const sc = $('#scene'); W = sc.clientWidth || 860; H = sc.clientHeight || 526; DPR = Math.min(2.5, (window.devicePixelRatio || 1) * appScale()); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); }
+function rnd(seed) { const x = Math.sin(seed * 9999.1) * 10000; return x - Math.floor(x); }
+
+function face(cx, cy, k, u, hot, blink, time, ink) {
+  g.save(); g.translate(cx, cy); g.scale(k, k); ink = ink || '#14060e';
+  const eyeDX = lerp(120, 136, u), eyeR = lerp(48, 58, u), ey = -40;
+  const happy = u >= 0.86 && !hot;
+  g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = ink; g.lineWidth = 18;
+  const browY = ey - lerp(70, 92, u), inner = lerp(-30, 12, u), outer = lerp(8, -2, u);
+  [-1, 1].forEach(s => { g.beginPath(); g.moveTo(s * (eyeDX - eyeR - 6), browY + outer); g.quadraticCurveTo(s * eyeDX, browY - 10, s * (eyeDX - eyeR + 50), browY - inner); g.stroke(); });
+  [-1, 1].forEach(s => { const x = s * eyeDX;
+    if (hot) { g.save(); g.translate(x, ey); g.rotate(time * 6); g.fillStyle = '#fff'; g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? eyeR * .42 : eyeR * 1.05, a = i * Math.PI / 5; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fill(); g.restore(); return; }
+    if (happy) { g.lineWidth = 18; g.beginPath(); g.arc(x, ey + 8, eyeR * .95, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); return; }
+    const open = 1 - blink;
+    g.fillStyle = '#fff'; g.beginPath(); g.ellipse(x, ey, eyeR, eyeR * Math.max(.08, open * lerp(.78, 1.02, u)), 0, 0, TAU); g.fill();
+    if (open > .25) { const py = ey + lerp(10, -4, u), pr = lerp(16, 20, u);
+      g.fillStyle = ink; g.beginPath(); g.ellipse(x, py, pr, pr * open, 0, 0, TAU); g.fill();
+      g.fillStyle = '#fff'; g.beginPath(); g.ellipse(x - pr * .35, py - pr * .38, pr * .34, pr * .34 * open, 0, 0, TAU); g.fill();
+      g.beginPath(); g.ellipse(x + pr * .3, py + pr * .3, pr * .14, pr * .14 * open, 0, 0, TAU); g.fill(); }
+    if (u < 0.3 && open > .25) { g.fillStyle = DEEP; g.beginPath(); g.ellipse(x, ey - eyeR * lerp(.55, 1.4, u / 0.3), eyeR * 1.15, eyeR * .75, 0, 0, TAU); g.fill(); }
+  });
+  const ch = sstep(.35, .9, u); if (ch > 0) { g.fillStyle = `rgba(255,255,255,${.25 * ch})`; [-1, 1].forEach(s => { g.beginPath(); g.ellipse(s * (eyeDX + 62), ey + 52, 30, 18, 0, 0, TAU); g.fill(); }); }
+  const my = 100, half = lerp(54, 150, u), curve = u < 0.3 ? lerp(-42, 0, u / 0.3) : lerp(0, 74, sstep(.3, .75, u)), open = sstep(.55, 1, u) * 66;
+  g.lineWidth = 14; g.strokeStyle = ink;
+  if (open < 2) { g.beginPath(); g.moveTo(-half, my); g.quadraticCurveTo(0, my + curve * 1.6, half, my); g.stroke(); }
+  else { g.fillStyle = '#2a0a1c'; g.beginPath(); g.moveTo(-half, my - 8); g.quadraticCurveTo(0, my, half, my - 8); g.quadraticCurveTo(0, my + curve * 1.6 + open, -half, my - 8); g.closePath(); g.fill(); g.stroke();
+    g.save(); g.clip(); g.fillStyle = '#fff'; g.fillRect(-half, my - 14, half * 2, lerp(14, 26, u)); g.fillStyle = '#ff4d8d'; g.beginPath(); g.ellipse(10, my + curve * 1.1 + open * .55, half * .55, open * .62, 0, 0, TAU); g.fill(); g.restore(); }
+  g.restore();
+}
+function glowCircle(x, y, r, color, a) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, color.replace('A', a)); gr.addColorStop(1, color.replace('A', 0)); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); }
+function stars(n, u, time, seed) { for (let i = 0; i < n; i++) { const x = rnd(i + seed) * W, y = rnd(i * 3 + seed) * H * .7, tw = .4 + .6 * Math.abs(Math.sin(time * (1 + rnd(i * 7)) + i)); g.fillStyle = `rgba(255,255,255,${tw * u * .8})`; g.beginPath(); g.arc(x, y, .6 + rnd(i * 5) * 1.4, 0, TAU); g.fill(); } }
+function confetti(P, dt, gravity) { for (const p of P) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += gravity * dt; p.r += p.vr * dt; p.life -= dt; } for (let i = P.length - 1; i >= 0; i--) if (P[i].life <= 0 || P[i].y > H + 20) P.splice(i, 1);
+  for (const p of P) { g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.globalAlpha = clamp(p.life, 0, 1); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s * .3, p.s, p.s * .6); g.restore(); } }
+function burst(P, x, y, n, spread) { const cols = [PINK, '#fff', '#FFD02B', '#3DE8A0', '#2BD9FF']; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * spread, sp = 200 + Math.random() * 420; P.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, vr: (Math.random() - .5) * 12, r: Math.random() * TAU, s: 5 + Math.random() * 7, c: cols[i % cols.length], life: 1.6 + Math.random() }); } }
+
+const sun = { P: [], sparks: [], clouds: [{ x: .12, y: .16, s: 1.25, v: 5 }, { x: .5, y: .08, s: .9, v: 3.5 }, { x: .8, y: .22, s: 1.05, v: 4.5 }],
+  draw(t, u, hot, dt, time, blink) {
+    const hz = H * 0.64, cx = W - 215;
+    const sy = hz + lerp(30, -196, sstep(0, 1, u)) + (hot ? Math.sin(time * 60) * 3 : 0), r = lerp(58, 84, u) * (1 + 0.05 * (CH.pulse || 0));
+    const col = hot ? [255, 70, 70] : [255, 95, 184], warm = hot ? [255, 140, 90] : [255, 150, 120];
+    const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`, ph = c => `rgba(${c[0]},${c[1]},${c[2]},A)`;
+    const sky = g.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, rgba(col, lerp(.02, .16, u))); sky.addColorStop(.7, rgba(col, lerp(.04, .3, u))); sky.addColorStop(1, rgba(warm, lerp(.06, .5, u))); g.fillStyle = sky; g.fillRect(0, 0, W, hz);
+    stars(70, 1 - u, time, 11);
+    const sea = g.createLinearGradient(0, hz, 0, H); sea.addColorStop(0, rgba(warm, lerp(.05, .35, u))); sea.addColorStop(.28, 'rgba(30,22,36,.92)'); sea.addColorStop(1, 'rgba(14,13,18,1)'); g.fillStyle = sea; g.fillRect(0, hz, W, H - hz);
+    glowCircle(cx, sy, W * .95, ph(col), lerp(.10, .42, u));
+    const haze = g.createLinearGradient(0, hz - 80, 0, hz + 60); haze.addColorStop(0, rgba(warm, 0)); haze.addColorStop(.5, rgba(warm, lerp(.08, .38, u))); haze.addColorStop(1, rgba(warm, 0)); g.fillStyle = haze; g.fillRect(0, hz - 80, W, 140);
+    g.save(); g.globalCompositeOperation = 'lighter'; g.translate(cx, sy);
+    for (let layer = 0; layer < 2; layer++) { const n = layer ? 12 : 24, rot = time * (layer ? -.12 : .2), len = r + lerp(30, layer ? 280 : 180, sstep(.1, 1, u)), wd = layer ? .17 : .06, al = (layer ? .10 : .22) * lerp(.35, 1, u);
+      g.save(); g.rotate(rot); for (let i = 0; i < n; i++) { const a = i * TAU / n, L = len * (1 + Math.sin(time * 2.5 + i * 1.3) * .12); const gr = g.createLinearGradient(0, 0, Math.cos(a) * L, Math.sin(a) * L); gr.addColorStop(0, rgba(col, al)); gr.addColorStop(1, rgba(col, 0)); g.fillStyle = gr;
+        g.beginPath(); g.moveTo(Math.cos(a - wd) * r * .9, Math.sin(a - wd) * r * .9); g.lineTo(Math.cos(a) * L, Math.sin(a) * L); g.lineTo(Math.cos(a + wd) * r * .9, Math.sin(a + wd) * r * .9); g.closePath(); g.fill(); } g.restore(); }
+    g.restore();
+    glowCircle(cx, sy, r * 2.6, ph(col), lerp(.25, .7, u) + (hot ? Math.sin(time * 20) * .15 : 0) + 0.2 * (CH.pulse || 0));
+    g.save(); g.beginPath(); g.rect(0, 0, W, hz + 2); g.clip();
+    const sg = g.createRadialGradient(cx - r * .3, sy - r * .35, r * .1, cx, sy, r); sg.addColorStop(0, '#fff3fa'); sg.addColorStop(.35, hot ? '#ff8a8a' : '#ffa6dc'); sg.addColorStop(.8, hot ? '#ff4a4a' : PINK); sg.addColorStop(.94, hot ? '#e02a2a' : PINK2); sg.addColorStop(1, rgba(col, 0));
+    g.fillStyle = sg; g.beginPath(); g.arc(cx, sy, r, 0, TAU); g.fill();
+    face(cx, sy, r / 330, u, hot, blink, time, '#3a0b26');
+    g.restore();
+    g.save(); g.globalCompositeOperation = 'lighter'; const refl = sstep(0, 1, u);
+    for (let i = 0; i < 22; i++) { const yy = hz + 6 + i * (H - hz - 10) / 22, f = 1 - i / 22, wv = Math.sin(time * 2.2 + i * .9) * lerp(6, 16, u), wdt = lerp(30, 150, refl) * (.6 + f * .8) * (.7 + .3 * Math.sin(time * 3 + i));
+      g.fillStyle = rgba(col, lerp(.05, .26, u) * f); g.beginPath(); g.ellipse(cx + wv, yy, wdt / 2, 2.2, 0, 0, TAU); g.fill(); }
+    g.restore();
+    for (const c of this.clouds) { const x = ((c.x * W + time * c.v) % (W + 220)) - 110, y = c.y * H + Math.sin(time * .4 + c.s) * 4; g.fillStyle = rgba(warm, lerp(.03, .13, u));
+      [[0, 0, 62, 18], [-42, 6, 40, 13], [44, 5, 46, 14]].forEach(([dx, dy, rx, ry]) => { g.beginPath(); g.ellipse(x + dx * c.s, y + dy * c.s, rx * c.s, ry * c.s, 0, 0, TAU); g.fill(); }); }
+    if (hot && Math.random() < .7) { const a = Math.random() * TAU; this.sparks.push({ x: cx + Math.cos(a) * r, y: sy + Math.sin(a) * r, vx: Math.cos(a) * (120 + Math.random() * 220), vy: Math.sin(a) * (120 + Math.random() * 220), life: .8 }); }
+    for (const p of this.sparks) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; } this.sparks = this.sparks.filter(p => p.life > 0);
+    g.save(); g.globalCompositeOperation = 'lighter'; for (const p of this.sparks) { g.fillStyle = `rgba(255,220,180,${p.life})`; g.beginPath(); g.arc(p.x, p.y, 2, 0, TAU); g.fill(); } g.restore();
+    if (CH.burst > 0 && CH.dropT >= 0) { burst(this.P, cx, sy, 60, 6.3); CH.burst = 0; }
+    if (CH.dropT >= 0) { const d = CH.dropT; g.strokeStyle = `rgba(255,255,255,${(1 - d) * .8})`; g.lineWidth = lerp(30, 2, d); g.beginPath(); g.arc(cx, sy, r + d * 900, 0, TAU); g.stroke(); }
+    confetti(this.P, dt, 300);
+  } };
+
+let last = performance.now(), tAcc = 0, pageVisible = true, skipFrame = false;
+document.addEventListener('visibilitychange', () => { pageVisible = !document.hidden; });
+function animate(now) {
+  requestAnimationFrame(animate);
+  if (!pageVisible) { last = now; return; }                                   // hidden editor: draw nothing
+  const busy = CH.cur > 0.01 || frame.running || frame.tail > 0.01 || frame.playing || CH.dropT >= 0;
+  if (!busy) { skipFrame = !skipFrame; if (skipFrame) return; }                // at rest: 30 fps is plenty
+  const dt = Math.min(.08, (now - last) / 1000); last = now; tAcc += dt;
+  // the tail keeps the grin: the sun stays up while the reverb spills
+  const tgt = Math.max(CH.target, frame.running ? 0 : frame.tail * 0.85);
+  CH.cur += (tgt - CH.cur) * Math.min(1, dt * 9);
+  const t = CH.cur, u = clamp(t, 0, 1), hot = false;
+  CH.nextBlink -= dt; if (CH.nextBlink <= 0) { CH.blink = 1; CH.nextBlink = 2 + Math.random() * 3.5; } if (CH.blink > 0) CH.blink = Math.max(0, CH.blink - dt * 9);
+  const blink = CH.blink > 0 ? Math.sin((1 - CH.blink) * Math.PI) : 0;
+  if (CH.dropT >= 0) { CH.dropT += dt; if (CH.dropT > 1.2) CH.dropT = -1; }
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+  // the beat: the sun pulses on every beat while the host plays
+  const beatFrac = frame.playing ? ((frame.phase * (frame.bpb || 4)) % 1) : 1;
+  CH.pulse = frame.playing ? Math.exp(-beatFrac * 7) * (0.35 + 0.65 * u) : 0;
+  sun.draw(t, u, hot, dt, tAcc, blink);
+}
+requestAnimationFrame(animate);
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// C++ -> JS
+// ─────────────────────────────────────────────────────────────────
+function rlSetLicensed(ok){var o=document.getElementById('rlOverlay');if(!o)return;if(ok){o.classList.add('rl-hidden');setTimeout(function(){if(o.classList.contains('rl-hidden'))o.style.display='none';},400);}else{o.style.display='';void o.offsetWidth;o.classList.remove('rl-hidden');}}
+function whenBridgeReady(fn) {
+    if (window.__JUCE__ && window.__JUCE__.backend) { fn(); return; }
+    const iv = setInterval(() => { if (window.__JUCE__ && window.__JUCE__.backend) { clearInterval(iv); fn(); } }, 50);
+}
+whenBridgeReady(() => {
+    window.__JUCE__.backend.addEventListener('licenseStatus', d => rlSetLicensed(!!(d && d.licensed)));
+    document.addEventListener('click', e => { const t = e.target; if (t && t.closest && t.closest('#rlLaunch')) emit('launchCenter', {}); });
+    window.__JUCE__.backend.addEventListener('paramState', p => {
+        Object.keys(state).forEach(k => { if (p[k] === undefined) return; if (dragParam === k) return; state[k] = p[k]; });
+        if (p.presetName !== undefined) state.presetName = p.presetName;
+        renderKnob(); renderMacros(); renderPresets(); renderLand(); renderTail(); renderBypass();
+    });
+    window.__JUCE__.backend.addEventListener('presetStore', d => {
+        if (!d) return;
+        if (Array.isArray(d.cards)) cardMacros = d.cards.map((m, i) => Object.assign({}, PRESETS[i].m, m));
+        if (Array.isArray(d.own)) cardOwn = d.own.map(Boolean);
+        if (Array.isArray(d.user)) userPresets = d.user.filter(p => p && p.name).map(p => ({ name: String(p.name), card: p.card | 0, m: Object.assign(FM({}), p.m || {}) }));
+        if (d.name !== undefined) state.presetName = d.name;
+        renderPresets();
+    });
+    window.__JUCE__.backend.addEventListener('frame', f => {
+        Object.keys(frame).forEach(k => { if (f[k] !== undefined) frame[k] = f[k]; });
+        // the drop: from up to nothing -> shockwave + confetti + a white flash
+        if (CH.lastT > 0.35 && frame.t < 0.05) { CH.drop(); const fl = $('#flash'); fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 30); }
+        CH.lastT = frame.t;
+        renderKnob(); renderChain();
+    });
+    window.__JUCE__.backend.addEventListener('uiConfig', cfg => {
+        if (cfg && cfg.version) { const vl = document.querySelector('.bp-verline'); if (vl) vl.textContent = vl.textContent.replace(/^[^\/]+\//, cfg.version + ' /'); }
+        if (cfg && cfg.customTitleBar) { document.getElementById('titleBar').style.display = 'flex'; document.body.classList.add('has-titlebar'); fitScale(); }
+    });
+    emit('requestState', {});
+    emit('requestUiConfig', {});
+});
+
+// Custom title bar (standalone, Windows): drag + window controls
+(function setupTitleBar() {
+    const dragArea = document.getElementById('titleBarDrag'); let barDragging = false;
+    dragArea.addEventListener('mousedown', e => { if (e.target.closest('button')) return; barDragging = true; emit('windowDrag', { action: 'start', x: e.screenX, y: e.screenY }); e.preventDefault(); });
+    window.addEventListener('mousemove', e => { if (barDragging) emit('windowDrag', { action: 'move', x: e.screenX, y: e.screenY }); });
+    window.addEventListener('mouseup', () => { if (barDragging) { barDragging = false; emit('windowDrag', { action: 'end' }); } });
+    document.getElementById('btnAudio').addEventListener('click', () => emit('audioSettings', {}));
+    document.getElementById('btnMinimize').addEventListener('click', () => emit('windowControl', { action: 'minimize' }));
+    document.getElementById('btnClose').addEventListener('click', () => emit('windowControl', { action: 'close' }));
+})();
+
+// Right-click = the host's parameter menu (FL: automation/link), never the browser menu
+document.addEventListener('contextmenu', e => e.preventDefault());
+(function setupParamContextMenus() {
+    function bind(el, id) { if (el) el.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); emit('paramContextMenu', { name: id }); }); }
+    bind($('#knob'), 'intensity'); bind(bypassBtn, 'bypass'); bind($('#landSeg'), 'land'); bind($('#curveSeg'), 'curve'); bind($('#tailBar'), 'tail'); bind($('#tailSeg'), 'tail'); bind($('#goBtn'), 'go'); bind(presetsEl, 'preset');
+    macrosEl.querySelectorAll('.p-miniarc').forEach(arc => bind(arc, arc.dataset.k));
+})();
+
+// ─────────────────────────────────────────────────────────────────
+// Proportional UI scaling + corner resize grip (bundle standard)
+// ─────────────────────────────────────────────────────────────────
+const appEl = document.getElementById('app'), appVp = document.getElementById('app-viewport');
+const BASE_W = 860, BASE_H = 580; let curScale = 1;
+function appScale() { return curScale; }
+function fitScale() {
+    const k = Math.min(appVp.clientWidth / BASE_W, appVp.clientHeight / BASE_H) || 1;
+    const ox = Math.max(0, (appVp.clientWidth - BASE_W * k) / 2), oy = Math.max(0, (appVp.clientHeight - BASE_H * k) / 2);
+    curScale = k;
+    appEl.style.transform = 'translate(' + ox.toFixed(1) + 'px,' + oy.toFixed(1) + 'px) scale(' + k.toFixed(4) + ')';
+    sizeCanvas();
+}
+window.addEventListener('resize', fitScale);
+new ResizeObserver(fitScale).observe(appVp);
+fitScale();
+
+let rsDrag = null;
+document.getElementById('resize-handle').addEventListener('mousedown', e => { rsDrag = { x: e.screenX, y: e.screenY }; emit('beginResize', {}); e.preventDefault(); e.stopPropagation(); });
+document.addEventListener('mousemove', e => { if (rsDrag) emit('requestResize', { dx: e.screenX - rsDrag.x, dy: e.screenY - rsDrag.y }); });
+document.addEventListener('mouseup', () => { rsDrag = null; });
+
+// ─────────────────────────────────────────────────────────────────
+// About - hardware back panel overlay (header brand opens it)
+// ─────────────────────────────────────────────────────────────────
+(function setupAbout() {
+    const bpM = document.getElementById('bp-about'); if (!bpM) return;
+    const bpU = bpM.querySelector('.bp-unit'), bpRocker = document.getElementById('bp-rocker');
+    function bpRescale() { let s = Math.min(window.innerWidth / 1240, window.innerHeight / 780); s = Math.min(Math.max(s, 0.22), 1.45); bpU.style.setProperty('--s', s); }
+    function bpClose() { bpM.classList.add('bp-hidden'); }
+    document.getElementById('pLogo').addEventListener('click', () => {
+        bpM.classList.remove('bp-hidden'); bpRescale();
+        bpU.classList.remove('bp-off', 'bp-entering'); void bpU.offsetWidth; bpU.classList.add('bp-entering');
+        bpRocker.setAttribute('aria-pressed', 'true');
+    });
+    document.getElementById('bp-close-btn').addEventListener('click', bpClose);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !bpM.classList.contains('bp-hidden')) bpClose(); });
+    window.addEventListener('resize', () => { if (!bpM.classList.contains('bp-hidden')) bpRescale(); });
+    bpU.addEventListener('animationend', e => { if (e.animationName === 'bpSwingIn') bpU.classList.remove('bp-entering'); });
+    bpRocker.addEventListener('click', () => { const off = bpU.classList.toggle('bp-off'); bpRocker.setAttribute('aria-pressed', off ? 'false' : 'true'); });
+    document.getElementById('bp-site').addEventListener('click', e => { e.preventDefault(); emit('openExternalUrl', { url: 'https://roneaudio.com' }); });
+})();
+
+renderKnob(); renderMacros(); renderPresets(); renderLand(); renderTail(); renderBypass(); renderChain();
+</script>
+</body>
+</html>
