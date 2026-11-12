@@ -716,24 +716,24 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "0.9.27",
+      "version": "0.9.28",
       "type": "standalone",
       "formats": [
         "App"
       ],
       "description": "Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig, FL Studio, Cubase, and on a Mac in Logic Pro and Pro Tools - or from the side strip right next to your DAW (Ctrl+Alt+V, or any key you choose in Setup). Free for good with any RONE plugin; 14 days free for every producer.",
-      "whats_new": "0.9.27 - Mac keyboard: shortcuts can use Cmd, and every key shows as ⌘ ⌥ ⌃ ⇧ (Setup and the Map keyboard). 0.9.26 - The strip key now goes straight into the search on Mac too: press it and type, no click needed (also when the strip was left open behind your DAW). Bitwig: plugins, MIDI files and actions now really load onto the selected track - Bitwig used to drop them silently. Add the controller once in Bitwig: Settings > Controllers > Add controller > RONE > RONE VST Manager.",
+      "whats_new": "0.9.28 - Mac: the strip key puts you in the search every time, also after you load a plugin and go back to your DAW (it used to work once, then needed a click). \"Closes by itself after a plugin loads\" closes the strip again instead of bringing it back. 0.9.27 - Mac keyboard: shortcuts can use Cmd, and every key shows as ⌘ ⌥ ⌃ ⇧ (Setup and the Map keyboard). 0.9.26 - The strip key now goes straight into the search on Mac too: press it and type, no click needed (also when the strip was left open behind your DAW). Bitwig: plugins, MIDI files and actions now really load onto the selected track - Bitwig used to drop them silently. Add the controller once in Bitwig: Settings > Controllers > Add controller > RONE > RONE VST Manager.",
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
       "video": "https://www.youtube.com/watch?v=5O7U35jwAzI",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.27.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.27.31.pkg",
-      "sha256": "c53b3ab5ca80e6728cf02ee604b53b6e89a9742fa4c68866f890416681b66c1c",
-      "sha256_mac": "041bfc8396454677bbe484b70c6299569d1fbbf567426dae8128164a39b6c685",
-      "size": 5196421,
-      "size_mac": 10413342,
-      "version_mac": "0.9.27.31",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.28.exe",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-0.9.28.33.pkg",
+      "sha256": "655df3c519a3401341c4575140af6fa8b61a56b619e047772b891bc04f832e6c",
+      "sha256_mac": "a3bddaf2d699404a81bd62d337cec92f8145015781a7a02c69f1f424e35d3bf7",
+      "size": 5196318,
+      "size_mac": 10414907,
+      "version_mac": "0.9.28.33",
       "released": "2026-11-11"
     }
   ],
