@@ -96,6 +96,8 @@ public:
         nativeCoverDone = false;
         coverStartMs = 0;
         startTimer (10);
+
+        noJuceUia (b);   // support #162, below: again whenever the browser moves to a new window
        #else
         juce::ignoreUnused (pagePainted);
        #endif
@@ -153,8 +155,30 @@ private:
             if (wasResized)
                 coverRef.setBounds (b.getLocalBounds());
         }
+        void componentParentHierarchyChanged (juce::Component& b) override { noJuceUia (b); }
         juce::Component& coverRef;
     };
+
+    // Support #162 (FL Studio, Sidechain 1.2.3, 14.11.2026): FL crashed inside uiautomationcore.dll while
+    // the last RONE Sidechain instance unloaded. JUCE 8.0.4 answers Windows UI Automation for a plug-in's
+    // window through a singleton (WindowsUIAWrapper) that it deletes with the DLL's last instance
+    // (DeletedAtShutdown), and that destructor calls UiaDisconnectAllProviders: process-wide, every UIA
+    // object of every program inside the DAW, pumping COM messages while it waits. With a UIA client
+    // running (a screen reader, Voice Access, a password manager, a tablet keyboard) an incoming call
+    // there read freed memory. JUCE itself makes that call only in a standalone app everywhere else
+    // (AccessibilityNativeImpl), and the destructor is still unconditional in JUCE's master.
+    // The singleton is made only when a UIA client asks the plug-in's window for JUCE's tree
+    // (WM_GETOBJECT -> getAccessibilityHandler). Our windows are a WebView whose page WebView2 serves
+    // to UIA from its own window, so JUCE's tree adds only the empty frame around it: switched off on the
+    // window's top component, the question falls through to Windows, the singleton is never made, and
+    // nothing is torn down at unload. A standalone app keeps it (it exits with its process).
+    static void noJuceUia (juce::Component& c)
+    {
+        if (juce::JUCEApplicationBase::isStandaloneApp())
+            return;
+        if (auto* top = c.getTopLevelComponent(); top != nullptr && top->isAccessible())
+            top->setAccessible (false);
+    }
 
     // A plain child window of the plug-in's window, dark, on top. Its class uses
     // DefWindowProcW, never a function of this DLL, so a class left registered by
@@ -233,7 +257,10 @@ private:
 
         const auto hwnd = (HWND) peer->getNativeHandle();
         if (! nativeCoverDone)
+        {
+            noJuceUia (peer->getComponent());   // the window's own component, whatever the wrapper (#162)
             updateNativeCover (hwnd);
+        }
 
         const bool covered = coveredUnderMouse (hwnd);
         const bool hide = ! reallyShown (hwnd) || (covered && entirelyCovered (hwnd));
