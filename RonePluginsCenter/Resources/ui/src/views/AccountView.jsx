@@ -26,7 +26,7 @@ export default function AccountView ({ t, locale, license, account = {}, onSignI
 
   const signedIn = !!account.signedIn
   const displayName = account.name || account.email || license.customerName || ''
-  const lifetime = ownedPlugins.filter(p => !p.free)
+  const lifetime = ownedPlugins.filter(p => !p.free && !p.gift)
   const hasLifetime = lifetime.length > 0
   const gift = isGiftPass(account.passSource)
   const date = (ms) => ms ? new Date(ms).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) : ''

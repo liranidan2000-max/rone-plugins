@@ -981,6 +981,7 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
 
         // Center 2.0 catalog fields
         info.free       = (bool) entry.getProperty ("free", false);
+        info.giftMinPaid = (int) entry.getProperty ("gift_min_paid", 0);
         info.categories = stringList (entry.getProperty ("category", {}));
         info.tags       = stringList (entry.getProperty ("tags", {}));
         info.accent     = entry.getProperty ("accent",   {}).toString().trim();

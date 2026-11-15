@@ -64,6 +64,7 @@ struct PluginInfo
     // Center 2.0 catalog fields. All optional: an older manifest leaves them
     // empty and the page falls back to what it can say without them.
     bool              free = false;   // unlocked by any signed-in RONE account
+    int               giftMinPaid = 0; // a gift (RONE Hook): opens only when the server lists it in this account's owned (3 paid plugins or a paid ALL ACCESS)
     bool              dev  = false;   // from the DEV CHANNEL: a plug-in in development, shown only to Liran's accounts
     bool              app  = false;   // the manifest's "apps": a RONE app given to customers (RONE VST MANAGER), not a plug-in
     juce::StringArray categories;     // "transitions", "space", "rhythm", "vocal", "mix"

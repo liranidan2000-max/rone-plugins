@@ -641,6 +641,10 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     // signed-out visitor saw RONE Clipper as LOCKED with no way in.
     if (info.free) obj->setProperty ("free", true);
 
+    // A gift for owners of N paid plugins (RONE Hook, 15.11.2026): the card opens
+    // only when the server put it in this account's owned list.
+    if (info.giftMinPaid > 0) obj->setProperty ("gift", info.giftMinPaid);
+
     // A RONE app (RONE VST MANAGER): the page gives it its own gift card, never a
     // library card, and shows it only when this account is a customer.
     if (info.app)
@@ -776,6 +780,17 @@ bool MainComponent::mayUse (const PluginInfo& p)
 {
     if (p.app)
         return isRoneCustomer();
+
+    // A gift (RONE Hook) is never opened by ALL ACCESS alone - a comp pass or a
+    // trial would ride in. Only the server's owned list decides it, the same
+    // list the plug-in itself checks in its signed licence.
+    if (p.giftMinPaid > 0)
+    {
+        auto owned = accountClient.getState().ownedProducts;
+        owned.trim();
+        owned.removeEmptyStrings();
+        return owned.contains (p.id.trim(), true);
+    }
 
     // A free plugin is unlocked by any signed-in account (the server lists it in
     // `owned` too; this keeps it installable even before that answer arrives).

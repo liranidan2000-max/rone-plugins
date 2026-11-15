@@ -154,7 +154,10 @@ export const isBusy = (p) => BUSY.has(p?.status)
 export const isInstalled = (p) => p?.status === 'up_to_date' || p?.status === 'update_available'
 
 // Locked = nothing this account holds opens it. Free plugins open with any account.
+// A gift (RONE Hook: 3 paid plugins or a paid ALL ACCESS) opens only when the
+// server listed it in this account's owned - never ALL ACCESS alone (comp, trial).
 export function isUnlocked (plugin, { licensed, signedIn }) {
+  if (plugin?.gift) return plugin?.owned === true
   return !!licensed || plugin?.owned === true || (plugin?.free === true && !!signedIn)
 }
 

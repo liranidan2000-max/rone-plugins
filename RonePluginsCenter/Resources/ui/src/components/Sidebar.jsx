@@ -31,7 +31,7 @@ export default function Sidebar ({ t, view, onNavigate, updatesCount, account, l
   const navView = view === 'detail' ? 'library' : view
   const signedIn = !!account.signedIn
   const pass = !!license.licensed
-  const owned = ownedPlugins.filter(p => !p.free)
+  const owned = ownedPlugins.filter(p => !p.free && !p.gift)
   const gift = isGiftPass(account.passSource)
 
   // The plan card says what is true for this person - before 2.0 a guest read

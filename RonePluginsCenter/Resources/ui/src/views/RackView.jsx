@@ -36,7 +36,7 @@ export default function RackView ({ t, plugins, access, onDetail }) {
           const status = on
             ? (p.status === 'up_to_date' ? t('rack.installed') : p.status === 'update_available'
                 ? t('rack.update', { v: (p.remoteVersion || '').split('.').slice(0, 3).join('.') }) : t('rack.notInstalled'))
-            : p.free ? t('card.free') : price ? t('rack.price', { price: usd(price.live) }) : ''
+            : p.free ? t('card.free') : p.gift ? t('card.gift') : price ? t('rack.price', { price: usd(price.live) }) : ''
           return (
             <button key={p.id} onClick={() => onDetail(p.id)}
                     className={`relative h-[240px] rounded-[12px] border border-[#1E2126] flex flex-col items-center justify-end px-2 pb-2.5 overflow-hidden text-center ${on ? '' : 'slot-off'}`}

@@ -34,6 +34,7 @@ export function cardAction (plugin, access, t) {
   if (st === 'uninstalling') return { status: t('card.uninstalling'), busy: true }
   if (!un) {
     if (plugin.free) return { status: t('card.freeLine'), primary: { label: t('card.getFree'), kind: 'signin' } }
+    if (plugin.gift) return { status: t('card.giftLine', { n: plugin.gift }), primary: { label: t('card.giftHow'), kind: 'buy' } }
     const price = priceOf(plugin)
     return { price, primary: { label: t('card.getIt'), kind: 'buy' } }
   }
@@ -103,7 +104,8 @@ function PluginCard ({ t, plugin, access, catLabel, onInstall, onCancel, onOpen,
             {isNew(plugin) && <span className="pill pill-new">{t('card.new')}</span>}
             {plugin.dev && <span className="pill pill-dev" title="In development: only your account sees it">DEV</span>}
             {plugin.free && <span className="pill pill-free">{t('card.free')}</span>}
-            {plugin.owned && !plugin.free && <span className="pill pill-own">{t('card.lifetime')}</span>}
+            {plugin.gift && <span className="pill pill-free">{t('card.gift')}</span>}
+            {plugin.owned && !plugin.free && !plugin.gift && <span className="pill pill-own">{t('card.lifetime')}</span>}
           </div>
         </div>
         {LED[plugin.status] && <span className={`led mt-1.5 ${LED[plugin.status]}`} aria-hidden="true" />}

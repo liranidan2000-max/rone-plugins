@@ -102,3 +102,10 @@ test('versions and sizes', () => {
   assert.equal(formatSize(48 * 1024 * 1024), '48 MB')
   assert.equal(formatSize(0), '')
 })
+
+test('a gift (RONE Hook) opens only when owned - never ALL ACCESS alone', () => {
+  const hook = { id: 'RoneHook', gift: 3 }
+  assert.equal(isUnlocked(hook, { licensed: true, signedIn: true }), false)
+  assert.equal(isUnlocked({ ...hook, owned: true }, { licensed: false, signedIn: true }), true)
+  assert.equal(isUnlocked(hook, { licensed: false, signedIn: true }), false)
+})
