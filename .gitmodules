@@ -44,3 +44,6 @@
 	path = RoneGrain
 	url = https://github.com/liranidan2000-max/RoneGrain.git
 	branch = release/1.0
+[submodule "RoneHook"]
+	path = RoneHook
+	url = https://github.com/liranidan2000-max/RoneHook.git

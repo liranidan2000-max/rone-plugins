@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       products:
-        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,sidechain,delay,dmt,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
+        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,sidechain,delay,dmt,hook,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
         required: true
         default: stutter
 
@@ -208,6 +208,14 @@ jobs:
               - 'docs/manuals/RONE DMT - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
+            hook:
+              - 'RoneHook'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests|RoneControlRack)/**/*'
+              - 'Shared/tests?*/**/*'
+              - 'installer/RoneHook.iss'
+              - 'docs/manuals/RONE Hook - User Manual.pdf'
+              - '.github/workflows/main.yml'
             flanger:
               - 'rone-flanger-'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -289,6 +297,7 @@ jobs:
           SC=${{ steps.filter.outputs.sidechain       || 'false' }}
           DL=${{ steps.filter.outputs.delay           || 'false' }}
           DM=${{ steps.filter.outputs.dmt             || 'false' }}
+          HK=${{ steps.filter.outputs.hook            || 'false' }}
           FL=${{ steps.filter.outputs.flanger         || 'false' }}
           SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
           PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
@@ -301,14 +310,14 @@ jobs:
             want=",$(printf '%s' "$DISPATCH_PRODUCTS" | tr -d ' ' | tr 'A-Z' 'a-z'),"
             for p in $(printf '%s' "$want" | tr ',' ' '); do
               case "$p" in
-                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|sidechain|delay|dmt|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
+                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|sidechain|delay|dmt|hook|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
                 *) echo "::error::dry run: unknown product '$p'"; exit 1 ;;
               esac
             done
             pick() { case "$want" in *,all,*|*",$1,"*) echo true ;; *) echo false ;; esac; }
             RR=$(pick reverse_reverb); SF=$(pick stems_fixer); ST=$(pick stutter); SK=$(pick stucker)
             TH=$(pick throw); CL=$(pick clipper); RI=$(pick rise); IR=$(pick iron); FL=$(pick flanger)
-            C76=$(pick rone1176); C2A=$(pick rone2a); SC=$(pick sidechain); DL=$(pick delay); DM=$(pick dmt)
+            C76=$(pick rone1176); C2A=$(pick rone2a); SC=$(pick sidechain); DL=$(pick delay); DM=$(pick dmt); HK=$(pick hook)
             SV=$(pick sync_verb); PC=$(pick plugins_center); AN=$(pick analyzer); AS=$(pick afterspace)
             echo "dry run, nothing is published: $DISPATCH_PRODUCTS"
           fi
@@ -316,7 +325,7 @@ jobs:
           win='[]'; mac='[]'; changed='[]'
 
           add() {
-            local flag=$1 id=$2 folder=$3 cmake=$4 tag=$5 inst=$6 wv=$7 wvf=${8:-} flg=$9 iss=${10} manual=${11:-} legacy=${12:-}
+            local flag=$1 id=$2 folder=$3 cmake=$4 tag=$5 inst=$6 wv=$7 wvf=${8:-} flg=$9 iss=${10} manual=${11:-} legacy=${12:-} winonly=${13:-}
             [ "$flag" != "true" ] && return
             changed=$(echo "$changed" | jq -c ". + [\"$id\"]")
             local e
@@ -334,7 +343,8 @@ jobs:
               --arg legacy_name    "$legacy" \
               '$ARGS.named')
             [ "$SKIP_WIN" != "true" ] && win=$(echo "$win" | jq -c ". + [$e]")
-            [ "$SKIP_MAC" != "true" ] && mac=$(echo "$mac" | jq -c ". + [$e]")
+            # win-only (13th column): no Mac leg at all - RONE Hook has no Mac build yet
+            [ "$SKIP_MAC" != "true" ] && [ "$winonly" != "win-only" ] && mac=$(echo "$mac" | jq -c ". + [$e]")
           }
 
           #        flag  id                folder              cmake             release-tag               installer-name        wv     wv-flag                           flanger  iss                 manual (docs/manuals)                   legacy name (pre-#155)
@@ -352,6 +362,8 @@ jobs:
           add "$SC" sidechain      RoneSidechain      RoneSidechain     RoneSidechain-latest       RoneSidechain             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneSidechain.iss   "RONE Sidechain - User Manual.pdf"      ""
           add "$DL" delay          RoneDelay          RoneDelay         RoneDelay-latest           RoneDelay                 true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneDelay.iss       "RONE Delay - User Manual.pdf"          ""
           add "$DM" dmt            RoneGrain          RoneGrain         RoneGrain-latest           RoneGrain                 true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneGrain.iss       "RONE DMT - User Manual.pdf"            ""
+          # Windows only (15.11.2026): the engine is DirectML + Windows APIs; versions.json says "platforms": ["windows"]
+          add "$HK" hook           RoneHook           RoneHook          RoneHook-latest            RoneHook                  true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneHook.iss        "RONE Hook - User Manual.pdf"           ""                 win-only
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
@@ -441,6 +453,34 @@ jobs:
           done
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
           exit 1
+
+      # RONE Hook (Windows only, 15.11.2026) compiles ONE NOTE from RONE Iron's own tree
+      # (../RoneIron/Source/Engine/analysis, see RoneHook/CMakeLists.txt) - Iron's submodule at the
+      # monorepo's pointer. The PAT reaches only this fetch and is removed on exit (audit R027).
+      - name: HOOK - RONE Iron's sources
+        if: matrix.plugin_id == 'hook'
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          rule="url.https://${GH_PAT}@github.com/.insteadOf"
+          trap 'git config --global --unset-all "$rule" || true' EXIT
+          git config --global "$rule" "https://github.com/"
+          for i in 1 2 3; do
+            if git submodule update --init --depth 1 -- RoneIron; then exit 0; fi
+            echo "::warning::submodule RoneIron could not be fetched (try $i)"
+            sleep $((10 * i))
+          done
+          echo "::error::RoneIron could not be fetched - HOOK not built"
+          exit 1
+
+      # HOOK's third-party runtime (yt-dlp, Python, Node, QuickJS, ffmpeg, onnxruntime/DirectML, the two
+      # models): not in git. The exact set tested on Liran's PC, from the monorepo's prerelease
+      # RoneHook-runtime-<N>, zip and every file checked against pinned sha256 (RoneHook/tools/fetch_runtime.py).
+      - name: HOOK - the runtime
+        if: matrix.plugin_id == 'hook'
+        shell: bash
+        run: python RoneHook/tools/fetch_runtime.py
 
       # A pointer that is not on the product's release line is a dev build (reset audit,
       # 2026-11-05): every plugin submodule in the monorepo working tree sits on its rack-dev
@@ -634,6 +674,13 @@ jobs:
       - name: CMake build
         working-directory: ${{ matrix.folder }}
         run: cmake --build build-ci --config Release --parallel
+
+      # HOOK: this build's RoneHookEngine.exe + tools/hookworker.py join the runtime in RoneHook/payload,
+      # and the script stops the build if any piece the installer takes is missing.
+      - name: HOOK - stage the runtime
+        if: matrix.plugin_id == 'hook'
+        shell: bash
+        run: python RoneHook/tools/stage_payload.py build-ci
 
       # Symbols are what turn a crash report's module+offset into a file and line.
       # This repo is public, so they go to the private crash tracker's release, one
@@ -1521,6 +1568,7 @@ jobs:
               sidechain)      f=RoneSidechain ;;
               delay)          f=RoneDelay ;;
               dmt)            f=RoneGrain ;;
+              hook)           f=RoneHook ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;
@@ -1642,6 +1690,7 @@ jobs:
               sidechain)      f=RoneSidechain ;;
               delay)          f=RoneDelay ;;
               dmt)            f=RoneGrain ;;
+              hook)           f=RoneHook ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;
