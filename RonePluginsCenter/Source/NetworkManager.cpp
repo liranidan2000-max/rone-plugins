@@ -925,6 +925,20 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
     for (int n = 0; n < entries.size(); ++n)
     {
         const auto& entry = entries.getReference (n);
+
+        // "platforms" (2.1.32, 15.11.2026): a product built for some platforms only is not shown where it
+        // cannot be installed - RONE Hook is Windows-only for now. No field = every platform, as before.
+        if (const auto* platforms = entry.getProperty ("platforms", {}).getArray())
+        {
+           #if JUCE_MAC
+            const juce::var here ("mac");
+           #else
+            const juce::var here ("windows");
+           #endif
+            if (! platforms->contains (here))
+                continue;
+        }
+
         PluginInfo info;
         info.app           = n >= firstApp;
         info.id            = entry.getProperty ("id",           {}).toString();

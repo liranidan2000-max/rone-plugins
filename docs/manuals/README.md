@@ -23,6 +23,7 @@ Plugins/Manuals/`) and the Plugins Center opens it from the card menu
 | RONE Gater | `RONE Gater - User Manual.pdf` |
 | RONE Delay | `RONE Delay - User Manual.pdf` |
 | RONE DMT | `RONE DMT - User Manual.pdf` |
+| RONE Hook | `RONE Hook - User Manual.pdf` |
 
 Changing a PDF triggers that plugin's CI build (see the path filters in
 `.github/workflows/main.yml`), so a manual update ships on its own.
@@ -56,6 +57,13 @@ The same manuals are published as web pages on roneaudio.com (`/manuals/<plugin>
 since 5.11.2026). They are generated from these content modules by the site's
 `WEBSITE RONE AUDIO\scriptsuild-web-manuals.py` - after rebuilding a PDF here, run
 that script and deploy the site, or the web manual drifts from the PDF.
+
+One manual alone (its screenshots, the callouts, its PDF - no Analyzer capture, no Iron shots, every
+other PDF left as it is):
+
+```
+python docs/manuals/tools/pipeline.py --only hook
+```
 
 Only the PDFs need rebuilding after editing text:
 
@@ -94,3 +102,9 @@ those callouts as image-pixel boxes. The Center's tour image is not re-shot for 
 Center bundle opens on a welcome wizard that the hand-placed Center boxes do not fit.
 A state whose look is a CSS :hover rule (Sidechain's shape tile x) gets a real mouse hover over
 DevTools: list the shot in `shoot.HOVER` with the editor-pixel point to move the mouse to.
+
+RONE Hook (860x700, free, Windows only for now) draws only what the host sends - the voice's columns, the
+frame, the video's words - so every state runs `_mock.js`'s `__scn_hook`, a port of the unit-render pose
+(`WEBSITE RONE AUDIO/scripts/unit-render/poses/rone-hook.js`): a made-up vocal session, no real artist or
+song. The FIT / CHOPS / MARKS / BANK pictures are plain crops (tables in the text, no badges). Its
+`versions.json` entry (15.11.2026) names the PDF and the CI path filter rebuilds HOOK when it changes.

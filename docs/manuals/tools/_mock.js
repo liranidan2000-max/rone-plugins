@@ -294,3 +294,83 @@ window.__scn_dmt = function (opts) {
   // _shot.js photographs ~1.6 s after the state: keep the grains alive (playing) at that moment
   events.forEach(function (e, i) { e.born += 1500 - i * 25; });
 };
+
+// ---- Scenario: RONE Hook with a voice taken out of a video (the unit-render pose, rone-hook.js) ----
+// The page runs without a host, so this hands it what the processor would send: the separated voice's
+// columns, the frame, the video's words. Deterministic (a seeded hash). Title and words are made up -
+// no real artist, no real song.
+// opts: { tab:'words'|'shape'|'chops'|'marks', fit:bool, character:0..6, oneNote:0..12, marks:bool,
+//         bank:bool, finder:bool, working:bool, sep:false }
+window.__scn_hook = function (opts) {
+  opts = opts || {};
+  var hash = function (i) { var s = Math.sin(i * 12.9898) * 43758.5453; return s - Math.floor(s); };
+  var total = 196.0;
+  var ph = [[8.2,12.9],[13.6,18.1],[19.0,23.4],[24.3,29.0],[33.5,37.8],[38.4,43.2],[44.0,48.6],[49.2,54.1],
+            [62.0,66.3],[66.9,71.5],[72.2,76.8],[77.4,82.0],[91.5,95.9],[96.4,101.0],[101.6,106.2],[106.8,111.5],
+            [121.0,125.2],[125.9,130.4],[131.0,135.6],[136.3,141.0],[150.2,154.6],[155.2,159.9],[160.5,165.0],[165.6,170.4],[178.0,184.5]];
+  var lvl = function (t) {
+    for (var p = 0; p < ph.length; p++) {
+      var a = ph[p][0], b = ph[p][1];
+      if (t >= a && t <= b) { var u = (t - a) / (b - a), edge = Math.min(1, u / .06, (1 - u) / .1);
+        return edge * (.45 + .4 * Math.abs(Math.sin(u * Math.PI * (4 + p % 3)))) * (p >= 8 && p < 12 ? 1.15 : 1); }
+    }
+    return .012;
+  };
+  var readyCols = opts.working ? Math.round(COLS * 0.46) : COLS;
+  for (var i = 0; i < COLS; i++) cols[i] = i < readyCols ? Math.round(Math.min(.99, lvl(i / COLS * total) * (.8 + .2 * hash(i))) * 999) : -1;
+  linkIn.value = 'night drive vocal';
+  wordIn.value = opts.finder ? 'higher' : '';
+  setGoLabel();
+  var mark = !opts.working;
+  f = Object.assign(f, { stage: opts.working ? 'SEPARATING' : 'DONE', pct: opts.working ? 46 : 100, title: 'NIGHT DRIVE - LIVE VOCAL SESSION', device: 'GPU', total: total,
+                         ready: opts.working ? total * 0.46 : total, elapsed: 6.4, done: !opts.working, cached: false,
+                         file: 'RONE Hook - Night Drive 01-02.4.wav', fileReady: !opts.working, playing: false,
+                         pos: 66.9 / total, selA: mark ? 66.9 / total : -1, selB: mark ? 76.8 / total : -1, voice: 1, subs: 1, mix: 0,
+                         hook: { valid: true, key: 'F#m', music: true, vbpm: 140, bpm: 145, semis: 3, T: 0.97, host: false } });
+  var lines = [[8.2,12.9,'tell me where the night is going'],[13.6,18.1,'I can feel the city breathing'],
+               [19.0,23.4,'every light is calling out my name'],[24.3,29.0,'and I never felt the same'],
+               [33.5,37.8,'hold on to the fire'],[38.4,43.2,'hold on to the higher ground'],
+               [44.0,48.6,'we are running through the wire'],[49.2,54.1,'and we never make a sound'],
+               [62.0,66.3,'take me higher'],[66.9,71.5,'take me higher than the stars tonight'],
+               [72.2,76.8,'I will follow every light'],[77.4,82.0,'till the morning comes alive'],
+               [91.5,95.9,'tell me where the night is going'],[96.4,101.0,'I can hear the engines roaring'],
+               [101.6,106.2,'every road is leading back to you'],[106.8,111.5,'and the sky is breaking through']];
+  takeWords({ voice: 1, json: JSON.stringify({ v: 1, src: 'youtube', segs: lines.map(function (l) {
+    // word times as YouTube's captions give them: the line's words spread over it
+    var ws = l[2].split(' '), d = (l[1] - l[0]) / ws.length;
+    return { a: l[0], b: l[1], t: l[2], w: ws.map(function (w, k) { return [Math.round((l[0] + k * d) * 100) / 100, w]; }) }; }) }) });
+  [['denoise',.42],['lowcut',.30],['comp',.35],['air',.28],['reverb',0],['dereverb',.55]].forEach(function (kv) { P[kv[0]] = kv[1]; KN[kv[0]].set(kv[1]); });
+  if (opts.sep === false) { P.separation = 0; f.mix = 2; }
+  if (opts.character != null) P.character = opts.character;
+  if (opts.oneNote != null) P.oneNote = opts.oneNote;
+  if (opts.fit) { P.fit = 1; P.trackKey = 9; P.trackBpm = 145; }
+  paintShape();
+  noteSel._rone.button.id = 'noteBtn';         // ids for the callouts (RoneUI's own buttons)
+  tKeyUi.button.id = 'tKeyBtn';
+  document.getElementById('findIn').value = 'higher'; runFind(false);
+  if (opts.marks) {
+    marksVoice = f.voice;
+    marks = [{ a: 62.0, b: 66.3, text: 'take me higher' }, { a: 66.9, b: 76.8, text: 'take me higher than the stars tonight I will follow every light' },
+             { a: 33.5, b: 37.8, text: 'hold on to the fire' }].sort(function (x, y) { return x.a - y.a; });
+  }
+  if (opts.tab) setTab(opts.tab);
+  if (opts.bank) {
+    onBank({ pending: [], items: [
+      { id: 'b1', text: 'take me higher', title: 'NIGHT DRIVE - LIVE VOCAL SESSION', channel: 'Studio Sessions', video: 'nd01', at: 62.0, len: 4.3, key: 'F#m', tags: ['SUNG', 'BUILD'] },
+      { id: 'b2', text: 'are you ready for this', title: 'MORNING TALK - EPISODE 12', channel: 'Morning Talk', video: 'mt12', at: 14.2, len: 2.1, key: '', tags: ['SPEECH', 'INTRO'] },
+      { id: 'b3', text: 'the future is now', title: 'KEYNOTE - OPEN STAGE', channel: 'Open Stage', video: 'os03', at: 301.5, len: 1.8, key: '', tags: ['SPEECH'] },
+      { id: 'b4', text: 'hold on to the fire', title: 'NIGHT DRIVE - LIVE VOCAL SESSION', channel: 'Studio Sessions', video: 'nd01', at: 33.5, len: 4.3, key: 'F#m', tags: ['SUNG'], raw: true }] });
+    openBank();
+  }
+  if (opts.finder) {
+    phr = { key: 'night drive|higher', w: 'higher', q: 'night drive', done: true, prog: '', items: [
+      { id: 'nd01', at: 62.0, line: 'take me higher', title: 'NIGHT DRIVE - LIVE VOCAL SESSION', channel: 'Studio Sessions', clean: 94, cc: false, dur: 196 },
+      { id: 'nd02', at: 118.4, line: 'we keep on going higher and higher', title: 'NIGHT DRIVE (ACAPELLA)', channel: 'Vocal Rooms', clean: 88, cc: true, dur: 204 },
+      { id: 'nd03', at: 41.0, line: 'hold on to the higher ground', title: 'NIGHT DRIVE - ACOUSTIC', channel: 'Late Sessions', clean: 61, cc: false, dur: 231 },
+      { id: 'nd04', at: 8.7, line: 'the only way is higher', title: 'NIGHT DRIVE TALK - THE STORY BEHIND IT', channel: 'Studio Sessions', clean: 39, cc: false, dur: 912 }] };
+    fMode = 'phrase'; fOpen = true; finder.classList.add('open'); renderFinder();
+    // made-up video ids have no YouTube thumbnail: draw a plain tile instead
+    var st = document.createElement('style'); st.textContent = '.f-it .th{background-image:linear-gradient(135deg,#2a2d33,#17191d)!important}'; document.head.appendChild(st);
+  }
+  render(); sizeCanvas(); draw(); paintRows();
+};

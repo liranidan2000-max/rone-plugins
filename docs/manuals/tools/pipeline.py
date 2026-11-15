@@ -3,6 +3,8 @@
   python docs/manuals/tools/pipeline.py            everything (UIs -> screenshots -> callouts -> PDFs)
   python docs/manuals/tools/pipeline.py --no-native  skip launching the installed Analyzer / capturing native windows
   python docs/manuals/tools/pipeline.py --pdf-only    only rebuild the PDFs from the existing work/docimg images
+  python docs/manuals/tools/pipeline.py --only hook   one manual: its screenshots, the callouts, its PDF (no Analyzer
+                                                      capture, no Iron shots, every other PDF left as it is)
 
 Steps
   1. extract   the embedded WebUI.h HTML (Stutter, Stucker, AFTERSPACE, Choir) and copy the
@@ -35,6 +37,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "sidechain":  ROOT / "RoneSidechain" / "Source" / "WebUI.h",
     "delay":      ROOT / "RoneDelay" / "Source" / "WebUI.h",
     "dmt":        ROOT / "RoneGrain" / "Source" / "WebUI.h",
+    "hook":       ROOT / "RoneHook" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -150,6 +153,19 @@ STATES = [
     ("dmt", "_presets", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_dmt({preset:'MELTING WALLS'});document.getElementById('prName').click()", None),
     ("dmt", "_empty", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__mockEmit('licenseStatus',{licensed:true})", None),
     ("dmt", "_about", f"js:window.__mockEmit('licenseStatus',{{licensed:true}});window.__mockEmit('uiConfig',{{version:'{_cmake_version('RoneGrain')}'}}),click:pLogo", None),
+    # RONE Hook (860x700): the page draws only what the host sends (the voice's columns, the frame, the words),
+    # so every state runs _mock.js's __scn_hook - the unit-render pose (a made-up vocal session, 3:16, one line
+    # MARKED, FIND on "higher", DENOISE / DE-VERB / AIR dialled). Transitions off first (the panels slide).
+    ("hook", "", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook()", None),
+    ("hook", "_empty", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);render();draw()", None),
+    ("hook", "_working", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({working:true})", None),
+    ("hook", "_finder", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({finder:true})", None),
+    ("hook", "_fit", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({tab:'shape',fit:true})", None),
+    ("hook", "_chops", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({tab:'chops'})", None),
+    ("hook", "_marks", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({tab:'marks',marks:true})", None),
+    ("hook", "_bank", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({bank:true})", None),
+    ("hook", "_char", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({character:1,oneNote:10});noteSel._rone.button.click()", None),
+    ("hook", "_about", f"js:window.__mockEmit('uiConfig',{{version:'{_cmake_version('RoneHook')}'}}),click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power,js:setTremMode('free')", None), ("reversereverb_m", "_about", "click:p-logo", None),
@@ -216,13 +232,13 @@ def prepare_ui():
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
     # the Clipper only draws what the host pushes as `frame` events, so its manual states feed them through the fake bridge (in place, no copy)
     # (Gater and Delay the same: their displays draw only from host frames)
-    for src in ("clipper", "gater", "delay", "dmt"):
+    for src in ("clipper", "gater", "delay", "dmt", "hook"):
         f = UI / src / "index.html"
         if not f.exists(): continue          # a worktree without that submodule
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
     # RONE Delay asks for its type as fonts/<file>.woff2 (the plugin serves Shared/fonts): serve the same files
     fonts = ROOT / "Shared" / "fonts"
-    for name in ("delay", "dmt"):          # RONE DMT the same
+    for name in ("delay", "dmt", "hook"):  # RONE DMT and RONE Hook the same
         if (UI / name).exists() and fonts.exists():
             (UI / name / "fonts").mkdir(exist_ok=True)
             for f in fonts.glob("*.woff2"): shutil.copy(f, UI / name / "fonts" / f.name)
@@ -295,18 +311,23 @@ def capture_native():
 
 def main(argv):
     pdf_only = "--pdf-only" in argv; native = "--no-native" not in argv
+    # --only <manual>: that manual's states (served name before any "_m" copy suffix) and its PDF alone
+    only = argv[argv.index("--only") + 1] if "--only" in argv and argv.index("--only") + 1 < len(argv) else None
+    if only: native = False
     if not pdf_only:
-        log("1-2. preparing UIs"); prepare_ui(); shoot_iron.prepare()
+        log("1-2. preparing UIs"); prepare_ui()
+        if not only: shoot_iron.prepare()
         log("3-4. screenshots")
         with Server():
             for name, suffix, state, size in STATES:
+                if only and name.split("_")[0] != only: continue
                 shoot.shoot(name, suffix, state, size)
-            shoot_iron.shoot_all()
+            if not only: shoot_iron.shoot_all()
         if native:
             log("5. native captures"); capture_native()
         log("6. callouts"); annotate.main()
     log("7. PDFs")
-    ok = all(build_manuals.build(n) for n in build_manuals.ALL)
+    ok = all(build_manuals.build(n) for n in ([only] if only else build_manuals.ALL))
     log("done" if ok else "FAILED")
     return 0 if ok else 1
 

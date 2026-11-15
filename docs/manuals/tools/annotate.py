@@ -27,7 +27,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # Delay Champagne #E9D6A6 is too pale for white paper; a deeper champagne-gold for badges
           "delay": "#B39352",
           # DMT Aqua Teal #2EE6C8 is too light on paper; a deeper teal for badges
-          "dmt": "#14A58F"}
+          "dmt": "#14A58F",
+          # Hook Red #FF2E4D prints as it is
+          "hook": "#FF2E4D"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -449,6 +451,29 @@ def main():
     annotate("dmt_note", "dmt/note.png", [], A, crops=[("note", "#piano+#octUp", 8)])
     annotate("dmt_sync", "dmt/sync.png", [], A, crops=[("knobs", "#syncSeg+#knobs", 8)])
     plain("dmt", "dmt/main.png"); plain("dmt_presets", "dmt/presets.png"); plain("dmt_empty", "dmt/empty.png"); plain("dmt_about", "dmt/about.png")
+    # ------------------------------------------------------------ HOOK
+    A = ACCENT["hook"]
+    # Order here IS the legend order in content_hook.py - keep the two lists in step.
+    # #noteBtn / #tKeyBtn are RoneUI's select buttons, given ids by _mock.js's __scn_hook.
+    annotate("hook", "hook/tour.png", [
+        ("#pLogo", "Header logo"), ("#rdLine", "Voice readout"), ("#devTag", "GPU / CPU"), ("#bankBtn", "BANK"),
+        ("#folderBtn", "OPEN FOLDER"), ("#delBtn", "DELETE"), ("#linkIn", "Search / link"), ("#wordIn", "A word they say"),
+        ("#pasteBtn", "PASTE LINK"), ("#getBtn", "GO / SEARCH / FIND"), ("#view", "The voice"), ("#capTag", "Mark and position"),
+        ("#cap", "The words as they play"), ("#playBtn", "PLAY"), ("#kDen+#kVerb", "The six knobs"), ("#swNorm", "NORMALIZE"),
+        ("#swSep", "VOCAL SEP"), ("#dragTile", "DRAG TO DAW"), ("#keepBtn", "Keep"), ("#chars", "CHARACTER"),
+        ("#noteBtn", "ONE NOTE"), ("#wTabs", "Tabs"), ("#wFind", "FIND"), ("#wList", "WORDS"), ("#resize-handle", "Resize grip")], A,
+        badge_scale=0.9, crops=[("deck", "#playBtn+#dragTile", 8), ("view", "#view+#cap", 6), ("head", "#rdLine+#delBtn", 6)])
+    annotate("hook_working", "hook/working.png", [("#stTag", "Progress"), ("#devTag", "GPU / CPU"), ("#rdLine", "Ready so far")], A,
+        crops=[("view", "#view+#cap", 6)])
+    annotate("hook_finder", "hook/finder.png", [("#linkIn", "Search"), ("#wordIn", "A word they say"), ("#fHead", "What was found"),
+        ("#fSort", "SORT"), ("#fFilt", "Filters"), ("button.ht", "Keep"), ("button.pv", "Hear it"), ("#fMore", "+20 MORE")], A)
+    # FIT / CHOPS / MARKS / BANK: only their crops are used (crops come from the un-annotated shot, so no badges here)
+    annotate("hook_fit", "hook/fit.png", [], A, crops=[("pane", "#wTabs+#shNote", 8)])
+    annotate("hook_chops", "hook/chops.png", [], A, crops=[("pane", "#wTabs+#pChops", 8)])
+    annotate("hook_marks", "hook/marks.png", [], A, crops=[("pane", "#wTabs+#pMarks", 8)])
+    annotate("hook_bank", "hook/bank.png", [], A, crops=[("panel", "#bank", 4)])
+    annotate("hook_char", "hook/char.png", [("#chars", "CHARACTER"), ("#noteBtn", "ONE NOTE")], A)
+    plain("hook", "hook/main.png"); plain("hook_empty", "hook/empty.png"); plain("hook_about", "hook/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

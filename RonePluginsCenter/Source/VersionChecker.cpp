@@ -46,6 +46,7 @@ static const std::map<juce::String, juce::String>& innoAppIds()
         { "RoneDelay",      "{04213AF9-9AD6-4447-B6AE-7F544C41994C}" },   // installer/RoneDelay.iss (same AppId as the dev builds)
         { "RoneGrain",      "{6025BEC5-E441-415F-9CA3-825DBEC49685}" },   // installer/RoneGrain.iss = RONE DMT (same AppId as the dev builds)
         { "RoneGater",      "{6720533E-A799-4898-9EFA-0AAFEEDFDD7E}" },   // installer/RoneGater.iss
+        { "RoneHook",       "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}" },   // installer/RoneHook.iss (same AppId as the dev builds)
         // 2.1.26: the four products released after the manifest's inno_app_id took
         // over (Center 2.0) were never added here. The elevated UNINSTALL copy has
         // no manifest, so for them it found no uninstaller, deleted the files and
