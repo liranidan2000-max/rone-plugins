@@ -816,6 +816,7 @@ static bool isEnvironmentalStatus (const juce::String& text)
         || text.startsWith ("Install cancelled")
         || text.contains ("a file was in use")
         || text.contains ("Enter your password when prompted")
+        || text.contains ("did not accept the administrator password")    // #169: macOS -60005, a wrong Mac password
         || text.contains ("installer code 2)")                            // Inno: cancelled by the user before installing
         || text.startsWith ("Could not reach the download server")         // R101, R123: GitHub's assets blocked, not a bug
         || text.startsWith ("Download interrupted")                        // R123: the connection dropped

@@ -1338,7 +1338,7 @@ private:
         // unexpected end of file" (Zanon, a user in Korea; 2.0.2 - 2.0.4).
         script.replaceWithText (sh, false, false, "\n");
 
-        bool declined = false;
+        bool declined = false, wrongPassword = false;
         juce::String failure;
         if (script.getFullPathName().containsAnyOf ("'\"\\$`"))
             failure = "the download folder's path holds a quote or a $";
@@ -1363,7 +1363,12 @@ private:
             if (code != 0 && resultFile.loadFileAsString().trim().isEmpty())
             {
                 declined = err.contains ("-128") || err.containsIgnoreCase ("cancel");
-                if (! declined)
+                // -60005 = macOS refused the password that was typed (or the account has none,
+                // or is not an administrator). Nobody's bug: the customer is told what the Mac
+                // wants instead of osascript's raw text, and it stays out of the crash tracker
+                // (support #169).
+                wrongPassword = ! declined && err.contains ("-60005");
+                if (! declined && ! wrongPassword)
                     failure = err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
                                                : "the installer could not start (code " + juce::String (code) + ")";
             }
@@ -1409,6 +1414,8 @@ private:
                 r.declined = declined;
                 r.code = declined ? "declined" : "failed";
                 r.message = declined ? juce::String ("The administrator password was not given - nothing was installed.")
+                          : wrongPassword ? juce::String ("The Mac did not accept the administrator password - nothing was installed. "
+                                                          "Type the password you log in to this Mac with (an administrator account), then try again.")
                           : failure.isNotEmpty() ? "Install failed - " + failure + ". Nothing was installed."
                                                  : juce::String ("Install cancelled or failed. Enter your password when prompted.");
                 postResult (r);
