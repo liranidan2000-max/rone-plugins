@@ -5,6 +5,21 @@ site 3670b96 / Worker 3913c6f6). Liran (15.11): "תאסוף את כל המשימ
 כי אני רוצה לעשות עוד כמה בדיקות אחרונות ... ורק אז נעשה את הכל". So: his last checks come first, then the
 whole list below in one go.
 
+## WHO GETS IT (RULE, Liran 15.11): a gift for people with 3 products
+
+"שהפלאגין הזה יהיה במתנה רק למי שיש לו 3 פלאגינים ומעלה. 3 פלאגינים שנקנו בכסף, לא חינמים."
+THE message everywhere (site, Center, plug-in, posts, reels, ads, mails): **Free plugin for people with 3 products.**
+- Opens for: accounts with 3+ distinct RONE plugins bought with money (Paddle / Lemon Squeezy), and paying
+  ALL ACCESS subscribers past the 14-day trial (his answer 15.11).
+- Does NOT count / does not open: free plugins (Clipper, Sidechain), gifts, giveaway passes, comp passes,
+  the 14-day trial, refunded or disabled rows, RONE VST MANAGER. Never sold on its own.
+- Where it lives: Worker `worker/_lib/catalog.js` (giftForPaid: 3) + `auth.js` (paidPlugins, paidPass),
+  tests/hook-gift.test.mjs; versions.json `gift_min_paid: 3`; Center 2.1.33 (owned only, never ALL ACCESS
+  alone); HOOK 1.0.1 checks `isProductOwnedApart("RoneHook")` in its signed licence and shows a lock.
+- Whoever installed 1.0.0 free on 15.11 is locked by the 1.0.1 update (his answer).
+- Centers up to 2.1.32 still show the card open to any ALL ACCESS holder (comp/trial too); the plug-in itself
+  stays locked for them.
+
 ## Liran's last checks (write down what he finds here before starting the list)
 
 - [ ] (his notes from the last tests go here)
@@ -80,10 +95,14 @@ Things only he can check, if they are not already covered:
     giveaway, upsell, mac, when, reel hook). Decide them.
 26. Launch on Instagram / YouTube through the social-brand skill (mockup first), a guide video, a reel. RULES:
     HOOK is never sold through Paddle (its AUP bans streaming downloaders), and no ad ever says
-    "download from YouTube".
+    "download from YouTube". Every post, reel, ad and mail carries "Free plugin for people with 3 products."
+    - it is a reason to buy a third plugin (warm audience / owners of 1-2), not a free giveaway to everyone.
+    The launch mockup's "giveaway" decision is settled by this: no giveaway.
 27. Update the Kalifa plugin board.
 
 ## Done
 
 - 15.11: the release itself: private repo, submodule, CI `hook` Windows-only, runtime prerelease RoneHook-runtime-1,
   versions.json, Center 2.1.32 (hides on Mac), product page + homepage card + Worker free entry.
+- 15.11: turned into a gift for people with 3 products: Worker + site (site c5835d4, Worker f3794f17), HOOK 1.0.1
+  lock (RoneHook 3a2376a), Center 2.1.33 + versions.json (monorepo 93cba37, CI #405).
