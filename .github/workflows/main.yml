@@ -344,7 +344,8 @@ jobs:
               '$ARGS.named')
             [ "$SKIP_WIN" != "true" ] && win=$(echo "$win" | jq -c ". + [$e]")
             # win-only (13th column): no Mac leg at all - RONE Hook has no Mac build yet
-            [ "$SKIP_MAC" != "true" ] && [ "$winonly" != "win-only" ] && mac=$(echo "$mac" | jq -c ". + [$e]")
+            # an if, not &&: under bash -e a false test as the last command would end add() with 1
+            if [ "$SKIP_MAC" != "true" ] && [ "$winonly" != "win-only" ]; then mac=$(echo "$mac" | jq -c ". + [$e]"); fi
           }
 
           #        flag  id                folder              cmake             release-tag               installer-name        wv     wv-flag                           flanger  iss                 manual (docs/manuals)                   legacy name (pre-#155)
