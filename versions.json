@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-15T08:29:26Z",
+  "last_updated": "2026-11-15T08:31:57Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-405.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-405.1.dmg",
@@ -80,10 +80,10 @@
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-406.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-394.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-406.1.pkg",
       "sha256": "2d9e7f7295bead95b674400b10ec3c04070055281713981c5184116e9201f896",
       "registry_key": "RoneStutter",
-      "sha256_mac": "c8924e6cd72ea0bdf15878689c8c76f58f1e81e860e4c4b97cf2be9a6a76d873",
+      "sha256_mac": "3fee4621126d3cd20e25e9074c77e9c1d11d3d8078cfe9cafc548e724f8108b7",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
@@ -108,8 +108,8 @@
         }
       },
       "size": 15102183,
-      "size_mac": 21034426,
-      "version_mac": "2.1.1.394"
+      "size_mac": 21023324,
+      "version_mac": "2.1.2.406"
     },
     {
       "id": "RoneStucker",
@@ -179,10 +179,10 @@
       "manual": "RONE Throw - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=htrhBnLIBtQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-406.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-394.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-406.1.pkg",
       "sha256": "b89caedde2374a188c5105650f1252d1211e3676cda1c07b2ab004fc568d055d",
       "registry_key": "RoneThrow",
-      "sha256_mac": "8d10a11f326289ca89093c5111372acbf64f80e55fa0c93e7e306d03a5ad0c8a",
+      "sha256_mac": "532fb99b4bbb2320f5c15c87bee9e48d05c4ab9da8f54cb5fc59edc0597ea083",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 39,
@@ -207,8 +207,8 @@
         }
       },
       "size": 13162677,
-      "size_mac": 14717877,
-      "version_mac": "1.9.1.394"
+      "size_mac": 14718775,
+      "version_mac": "1.9.2.406"
     },
     {
       "id": "RoneClipper",
@@ -328,10 +328,10 @@
       "manual": "RONE Iron - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=tZ-BhB5T5Os",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-406.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-399.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-406.1.pkg",
       "sha256": "098aea79a90b77aab79f7859ed4190e9a6c8ecba61c6e071f85573eee5ad00fc",
       "registry_key": "RoneIron",
-      "sha256_mac": "4e9d79bcd2d643ed7a994cebf885a4e86435f0cf2b716e8a3c8eea56bd58f28a",
+      "sha256_mac": "df11f69fee071cb2e9039bc4a02857ef30c72de2f4d856be7d2cf93085b8a078",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
       "launch_price": 39,
@@ -357,8 +357,8 @@
         }
       },
       "size": 15840214,
-      "size_mac": 22713762,
-      "version_mac": "1.2.0.399"
+      "size_mac": 22712873,
+      "version_mac": "1.2.1.406"
     },
     {
       "id": "RoneFlanger",
