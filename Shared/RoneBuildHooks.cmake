@@ -9,11 +9,20 @@
 #      what /DEBUG would otherwise switch off, so the code stays as it was.
 #   2. RoneDawCrashGuard.cpp in each plugin's VST3 target (not the Standalone), with
 #      the DLL's entry point moved to it. The file's header comment says why.
+#   3. The C++ runtime inside every binary (/MT), not msvcp140.dll from the
+#      customer's System32. A binary built with a newer toolset than the
+#      customer's runtime dies at its first std::mutex lock with no window and no
+#      error: Viki, 2026-11-12, Windows with msvcp140 14.36 - the Center and
+#      VST MANAGER both crashed in MSVCP140.dll+0x12f58 the moment they started,
+#      and every plugin would have done the same inside the DAW.
+#      WebView2LoaderStatic.lib carries no runtime, so it links either way.
 
 if(RONE_BUILD_HOOKS_DONE OR NOT MSVC)
     return()
 endif()
 set(RONE_BUILD_HOOKS_DONE TRUE)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Z7>)
 add_link_options(/DEBUG:FULL /OPT:REF /OPT:ICF /PDBALTPATH:%_PDB%)
