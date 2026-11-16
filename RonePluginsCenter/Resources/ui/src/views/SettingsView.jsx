@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { api, isDevMode, mockOldVersions, mockUserFolderMove } from '../bridge'
+import { api, isDevMode, mockOldVersions, mockOldVersionsKept, mockUserFolderMove } from '../bridge'
 import { Dialog, Seg, Switch, timeAgo } from '../components/ui'
 import BackPanel from '../components/BackPanel'
 import { LANGS } from '../i18n'
@@ -33,42 +33,116 @@ function Box ({ title, children }) {
   )
 }
 
-function OldVersionsDialog ({ t, phase, items, result, onConfirm, onClose }) {
+// The old copies, one group per plugin: "RONE Iron · keeps 1.2.1 · 12 old copies,
+// 24 FL Studio rows". Every row has a tick box, all ticked; the delete button
+// sends only the ticked paths (the native side deletes nothing it did not find
+// itself). Liran, 2026-11-16: FL listed RONE Iron .. RONE Iron_13.
+function groupOld (items, kept) {
+  const groups = new Map()
+  for (const it of items) {
+    const key = it.plugin || it.name
+    if (!groups.has(key)) groups.set(key, { plugin: key, items: [], keep: (kept || []).find(k => k.plugin === key) })
+    groups.get(key).items.push(it)
+  }
+  return [...groups.values()].sort((a, b) => a.plugin.localeCompare(b.plugin))
+}
+
+function Tick ({ checked, mixed, onChange, label, disabled }) {
+  return (
+    <input type="checkbox" aria-label={label} checked={checked} disabled={disabled}
+           ref={el => { if (el) el.indeterminate = !!mixed }}
+           onChange={e => onChange(e.target.checked)}
+           className="accent-[rgb(var(--purple))] w-4 h-4 flex-none cursor-pointer" />
+  )
+}
+
+function OldVersionsDialog ({ t, phase, items, kept, result, picked, setPicked, onConfirm, onClose }) {
   const shown = result?.items || items
   const busy = phase === 'deleting'
-  const open = phase === 'confirm' || phase === 'deleting' || phase === 'done'
+  const done = phase === 'done'
+  const open = phase === 'confirm' || phase === 'deleting' || done
+  const [openGroups, setOpenGroups] = useState({})
+  const groups = groupOld(shown, kept)
+  const nPicked = items.filter(it => picked.has(it.path)).length
+  const setMany = (paths, on) => setPicked(prev => { const n = new Set(prev); for (const p of paths) { if (on) n.add(p); else n.delete(p) } return n })
+  const allPaths = items.map(it => it.path)
+  const counts = (g) => {
+    const files = g.items.filter(it => it.kind !== 'daw-list').length
+    const rows = g.items.length - files
+    return [files && t('old.copies', { n: files }), rows && t('old.flRows', { n: rows })].filter(Boolean).join(' · ')
+  }
+  const statusText = (it) => t('old.status.' + (['deleted', 'in_use', 'kept'].includes(it.status) ? it.status : 'failed')) + (it.hosts ? ' · ' + it.hosts : '')
   return (
-    <Dialog open={open} onClose={() => { if (!busy) onClose() }} label={t('set.deleteOld')} width={540}>
+    <Dialog open={open} onClose={() => { if (!busy) onClose() }} label={t('set.deleteOld')} width={620}>
       <h3 className="m-0 mb-1 text-[15px] font-extrabold text-rone-text-primary">
-        {phase === 'done' ? t('old.titleDone') : t('old.title', { n: items.length })}
+        {done ? t('old.titleDone') : t('old.titleGroups', { n: items.length, p: groups.length })}
       </h3>
       <p className="m-0 mb-3 text-[12.5px] text-rone-text-secondary leading-relaxed">
-        {phase === 'done'
-          ? <>{t('old.deleted', { n: result?.deleted ?? 0 })} {(result?.deleted ?? 0) > 0 && t('old.rescan')}</>
-          : busy ? t('old.deleting') : t('old.body')}
+        {done
+          ? <>{t('old.deleted', { n: result?.deleted ?? 0 })} {(result?.inUse ?? 0) > 0 && t('old.inUseSome', { n: result.inUse })} {(result?.deleted ?? 0) > 0 && t('old.rescan')}
+              {result?.elevationDeclined && <span className="block mt-1 text-rone-error">{t('old.declined')}</span>}</>
+          : busy ? t('old.deleting') : t('old.bodyPick')}
       </p>
-      <div className="max-h-[260px] overflow-y-auto scroll-y rounded-[10px] border border-rone-border divide-y divide-rone-border">
-        {shown.map((it, i) => (
-          <div key={i} className="px-3 py-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-rone-text-dim flex-none">{t('old.kind.' + it.kind)}</span>
-              <span className="text-[12.5px] font-semibold text-rone-text-primary truncate">{it.name}</span>
-              {it.status && (
-                <span className={`ml-auto text-[11px] font-bold flex-none ${it.status === 'deleted' ? 'text-rone-green' : 'text-rone-error'}`}>
-                  {t('old.status.' + (it.status === 'deleted' || it.status === 'in_use' ? it.status : 'failed'))}{it.hosts ? ' · ' + it.hosts : ''}
-                </span>
+      {!done && (
+        <label className="flex items-center gap-2 px-3 pb-2 text-[12px] font-bold text-rone-text-secondary cursor-pointer select-none">
+          <Tick label={t('old.all')} checked={nPicked === items.length} mixed={nPicked > 0 && nPicked < items.length} disabled={busy}
+                onChange={(on) => setMany(allPaths, on)} />
+          {t('old.all')} <span className="text-rone-text-dim font-semibold">· {t('old.picked', { n: nPicked, total: items.length })}</span>
+        </label>
+      )}
+      <div className="max-h-[360px] overflow-y-auto scroll-y rounded-[10px] border border-rone-border divide-y divide-rone-border">
+        {groups.map(g => {
+          const paths = g.items.map(it => it.path)
+          const on = paths.filter(p => picked.has(p)).length
+          const isOpen = !!openGroups[g.plugin]
+          const gDeleted = g.items.filter(it => it.status === 'deleted').length
+          return (
+            <div key={g.plugin}>
+              <div className="flex items-center gap-2.5 px-3 py-2.5">
+                {!done && <Tick label={g.plugin} checked={on === paths.length} mixed={on > 0 && on < paths.length} disabled={busy}
+                                onChange={(v) => setMany(paths, v)} />}
+                <button className="flex-1 min-w-0 flex items-center gap-2 text-left bg-transparent border-0 p-0 cursor-pointer"
+                        onClick={() => setOpenGroups(o => ({ ...o, [g.plugin]: !o[g.plugin] }))} aria-expanded={isOpen}>
+                  <span className="text-[13px] font-bold text-rone-text-primary truncate">{g.plugin}</span>
+                  {g.keep?.version && <span className="text-[11px] font-bold text-rone-green flex-none">{t('old.keeps', { v: g.keep.version })}</span>}
+                  <span className="ml-auto text-[11.5px] text-rone-text-dim flex-none">
+                    {done ? t('old.groupDone', { n: gDeleted, total: g.items.length }) : counts(g)}
+                  </span>
+                  <span className={`text-rone-text-dim text-[13px] leading-none flex-none transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
+                </button>
+              </div>
+              {isOpen && (
+                <div className="pb-2">
+                  {g.items.map(it => (
+                    <div key={it.path} className="flex items-start gap-2.5 pl-9 pr-3 py-1">
+                      {!done && <Tick label={it.name} checked={picked.has(it.path)} disabled={busy} onChange={(v) => setMany([it.path], v)} />}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-rone-text-dim flex-none">{t('old.kind.' + it.kind)}</span>
+                          <span className="text-[12px] font-semibold text-rone-text-primary truncate" title={it.path}>{it.name}</span>
+                          {it.version && <span className="text-[11px] text-rone-text-dim flex-none">{it.version}</span>}
+                          {it.status && (
+                            <span className={`ml-auto text-[11px] font-bold flex-none ${it.status === 'deleted' ? 'text-rone-green' : it.status === 'kept' ? 'text-rone-text-dim' : 'text-rone-error'}`}>
+                              {statusText(it)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="m-0 mt-0.5 text-[11px] text-rone-text-dim truncate" title={it.reason}>{it.reason}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            <p className="m-0 mt-0.5 text-[11.5px] text-rone-text-dim">{it.reason}</p>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <div className="flex justify-end gap-2 mt-4">
-        {phase === 'done'
+        {done
           ? <button className="btn btn-pri" onClick={onClose} data-autofocus>{t('dlg.close')}</button>
           : <>
               <button className="btn btn-out" onClick={onClose} disabled={busy}>{t('dlg.cancel')}</button>
-              <button className="btn btn-danger" onClick={onConfirm} disabled={busy}>{busy ? t('set.looking') : t('old.delete', { n: items.length })}</button>
+              <button className="btn btn-danger" onClick={onConfirm} disabled={busy || nPicked === 0}>{busy ? t('old.deletingShort') : t('old.delete', { n: nPicked })}</button>
             </>}
       </div>
     </Dialog>
@@ -145,22 +219,29 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
   // DELETE OLD VERSIONS: idle -> scanning -> confirm -> deleting -> done
   const [phase, setPhase] = useState('idle')
   const [items, setItems] = useState([])
+  const [kept, setKept] = useState([])
+  const [picked, setPicked] = useState(() => new Set())
   const [result, setResult] = useState(null)
   const [msg, setMsg] = useState('')
   const startClean = async () => {
     setMsg(''); setResult(null); setPhase('scanning')
     try {
-      const r = isDevMode() ? { items: mockOldVersions } : await api.scanOldVersions()
+      const r = isDevMode() ? { items: mockOldVersions, kept: mockOldVersionsKept } : await api.scanOldVersions()
       const found = r?.items || []
-      setItems(found)
+      setItems(found); setKept(r?.kept || [])
+      setPicked(new Set(found.map(it => it.path)))
       if (!found.length) { setPhase('idle'); setMsg(t('set.nothingOld')); return }
       setPhase('confirm')
     } catch (e) { setPhase('idle'); setMsg(e.message || '') }
   }
   const confirmClean = async () => {
+    const paths = items.filter(it => picked.has(it.path)).map(it => it.path)
+    if (!paths.length) return
     setPhase('deleting')
     try {
-      const r = isDevMode() ? { deleted: items.length, items: items.map(it => ({ ...it, status: 'deleted' })) } : await api.deleteOldVersions()
+      const r = isDevMode()
+        ? { deleted: paths.length, items: items.filter(it => picked.has(it.path)).map(it => ({ ...it, status: 'deleted' })) }
+        : await api.deleteOldVersions(paths)
       setResult(r); setPhase('done')
     } catch (e) { setPhase('idle'); setMsg(e.message || '') }
   }
@@ -283,7 +364,7 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
         </Box>
       </div>
 
-      <OldVersionsDialog t={t} phase={phase} items={items} result={result} onConfirm={confirmClean} onClose={() => { setPhase('idle'); setResult(null) }} />
+      <OldVersionsDialog t={t} phase={phase} items={items} kept={kept} result={result} picked={picked} setPicked={setPicked} onConfirm={confirmClean} onClose={() => { setPhase('idle'); setResult(null) }} />
       <MoveDialog t={t} phase={mvPhase} items={mvItems} result={mvResult} onConfirm={confirmMove} onClose={() => { setMvPhase('idle'); setMvResult(null) }} />
       {showBack && <BackPanel version={version} onClose={() => setShowBack(false)} />}
     </div>

@@ -137,9 +137,9 @@ export const api = {
   setOptin:          createNativeFunction('setOptin'),
   // the SUPPORT page: NEED HELP / IMPROVE with screenshots -> roneaudio.com/api/v1/support (may carry pictures: long wait)
   sendSupport:       createNativeFunction('sendSupport', 120000),
-  scanOldVersions:   createNativeFunction('scanOldVersions'),
+  scanOldVersions:   createNativeFunction('scanOldVersions', 60000),
   // may wait for the OS permission prompt (an elevated copy of the Center deletes)
-  deleteOldVersions: createNativeFunction('deleteOldVersions', 150000),
+  deleteOldVersions: createNativeFunction('deleteOldVersions', 400000),
   // answers when done: waits for the permission prompt and the plugin's own uninstaller
   uninstallPlugin:   createNativeFunction('uninstallPlugin', 330000),
   // Mac: Settings > updates without a password (UserFolderMove.h)
@@ -219,12 +219,23 @@ export const mockDaws = [{ id: 'fl', name: 'FL Studio 2026' }, { id: 'ableton', 
 
 export const mockTips = MOCK_TIPS
 
-// Settings > DELETE OLD VERSIONS in dev mode: what Liran's PC held on 2026-09-26.
+// Settings > DELETE OLD VERSIONS in dev mode: a slice of Liran's PC on 2026-11-16 (FL listed RONE Iron .. RONE Iron_13).
+const VST = 'C:\\Program Files\\Common Files\\VST3\\RONE\\'
+const FLDB = 'D:\\FL STUDIO DATA\\FL Studio\\Presets\\Plugin database\\Installed\\Effects\\VST3\\'
 export const mockOldVersions = [
-  { name: 'RONE Reverse Reverb.vst3 / moduleinfo.json', kind: 'manifest',
+  ...['beta1-20261108', 'beta3-20261108', 'prebeta-20261108', 'r6-1759'].map((sfx, i) => ({
+    path: VST + 'RONE Iron.vst3.' + sfx, name: 'RONE Iron.vst3.' + sfx, kind: 'backup', plugin: 'RONE Iron', version: ['1.1.0', '1.1.0', '1.0.9', '1.0.8'][i],
+    reason: 'An older copy of RONE Iron.vst3 (version ' + ['1.1.0', '1.1.0', '1.0.9', '1.0.8'][i] + ') - your DAW lists it as one more RONE Iron' })),
+  ...[2, 5, 9, 13].map(n => ({
+    path: FLDB + 'RONE Iron_' + n + '.fst', name: 'RONE Iron_' + n + '.fst', kind: 'daw-list', plugin: 'RONE Iron',
+    reason: 'FL Studio row "RONE Iron_' + n + '" (Effects) - points at an old copy being deleted' })),
+  { path: VST + 'RONE Throw.vst3.pre-yind-20261115', name: 'RONE Throw.vst3.pre-yind-20261115', kind: 'backup', plugin: 'RONE Throw', version: '1.9.1',
+    reason: 'An older copy of RONE Throw.vst3 (version 1.9.1) - your DAW lists it as one more RONE Throw' },
+  { path: VST + 'RONE Reverse Reverb.vst3\\Contents\\Resources\\moduleinfo.json', name: 'RONE Reverse Reverb.vst3 / moduleinfo.json', kind: 'manifest', plugin: 'RONE Reverse Reverb',
     reason: 'An old description file (version 1.0.2) inside RONE Reverse Reverb.vst3 - your DAW reads it instead of the plugin' },
-  { name: 'RONE Iron.vst3.locked-old01', kind: 'leftover',
-    reason: 'A copy an earlier update set aside because a program was using it' },
+];
+export const mockOldVersionsKept = [
+  { plugin: 'RONE Iron', version: '1.2.1' }, { plugin: 'RONE Throw', version: '1.9.2' }, { plugin: 'RONE Reverse Reverb', version: '1.3.1' },
 ];
 
 // Settings > updates without a password in dev mode: a Mac with three system-wide plugins.

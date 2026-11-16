@@ -2148,22 +2148,40 @@ void MainComponent::handleSendSupport (NativeArgs args, NativeCompletion complet
 
 // ============================================================================
 // Settings > DELETE OLD VERSIONS - see OldVersionCleaner.h for what counts.
-// The scan is a few directory listings (message thread); the delete may wait
-// for an elevated copy of the Center, so it runs off the message thread.
+// Both run off the message thread: the scan also reads FL Studio's plugin list
+// (a few hundred small files), and the delete may wait for an elevated copy of
+// the Center. deleteOldVersions([paths]) deletes only the rows the user left
+// ticked; with no list it deletes everything the scan finds (older UIs).
 // ============================================================================
 void MainComponent::handleScanOldVersions (NativeArgs, NativeCompletion complete)
 {
-    auto* o = new juce::DynamicObject();
-    o->setProperty ("success", true);
-    o->setProperty ("items", OldVersionCleaner::toVar (OldVersionCleaner::scan()));
-    complete (juce::var (o));
-}
-
-void MainComponent::handleDeleteOldVersions (NativeArgs, NativeCompletion complete)
-{
     juce::Thread::launch ([complete = std::move (complete)]() mutable
     {
-        complete (OldVersionCleaner::cleanNow());
+        complete (OldVersionCleaner::scanForList());
+    });
+}
+
+void MainComponent::handleDeleteOldVersions (NativeArgs args, NativeCompletion complete)
+{
+    juce::StringArray only;
+    if (args.size() > 0)
+        if (auto* arr = args[0].getArray())
+            for (const auto& v : *arr)
+                if (v.toString().isNotEmpty()) only.add (v.toString());
+    const bool picked = args.size() > 0 && args[0].isArray();
+
+    juce::Thread::launch ([complete = std::move (complete), only, picked]() mutable
+    {
+        if (picked && only.isEmpty())
+        {
+            auto* o = new juce::DynamicObject();
+            o->setProperty ("success", true);
+            o->setProperty ("items", juce::var (juce::Array<juce::var>()));
+            o->setProperty ("deleted", 0);
+            complete (juce::var (o));
+            return;
+        }
+        complete (OldVersionCleaner::cleanNow (only));
     });
 }
 
