@@ -8,8 +8,9 @@ const NAV = [
   ['library', Icon.library], ['updates', Icon.updates], ['rack', Icon.rack], ['learn', Icon.learn], ['support', Icon.support], ['settings', Icon.settings],
 ]
 
-// RONE VST MANAGER, always at hand under the menu (Liran 29.10: the banner is the
-// promo, the sidebar is the way in). One click opens it, or installs it first.
+// RONE VST MANAGER, always at hand under the menu - its ONLY place in the Center since
+// 16.11.2026 (the library banner was dropped: it cluttered the first look). One click
+// opens it, or installs it first.
 function VstManagerEntry ({ t, app, onInstall, onOpen }) {
   const busy = ['queued', 'downloading', 'ready', 'installing', 'waiting'].includes(app.status)
   const installed = app.status === 'up_to_date' || app.status === 'update_available'

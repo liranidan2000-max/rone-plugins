@@ -1,7 +1,6 @@
 import React from 'react'
 import Hero from '../components/Hero'
 import PluginCard from '../components/PluginCard'
-import GiftAppCard from '../components/GiftAppCard'
 import { Icon } from '../components/ui'
 import { CATEGORY_KEYS, categoriesOf, matchesSearch, shortName, sortPlugins, updatable } from '../catalog'
 
@@ -17,7 +16,7 @@ function Skeleton () {
 
 export default function LibraryView ({ t, plugins, loading, access, account, license, personal, optinAsk, tips, reduced, query, setQuery,
                                        cat, setCat, sort, setSort, catLabel, onNavigate, onUpdateAll, onRefresh, handlers,
-                                       centerUpdate, onCenterUpdate, giftApp, vstmApp }) {
+                                       centerUpdate, onCenterUpdate, vstmApp }) {
   const ups = updatable(plugins, access)
   const filtered = sortPlugins(plugins.filter(p => (cat === 'all' || categoriesOf(p).includes(cat)) && matchesSearch(p, query, catLabel)), access, sort)
   const count = (c) => c === 'all' ? plugins.length : plugins.filter(p => categoriesOf(p).includes(c)).length
@@ -48,10 +47,8 @@ export default function LibraryView ({ t, plugins, loading, access, account, lic
         </div>
       )}
 
-      {/* RONE VST MANAGER: the customers' gift, above the plugins */}
-      {giftApp && !query && (
-        <GiftAppCard t={t} app={giftApp} onInstall={handlers.onInstall} onCancel={handlers.onCancel} onOpen={handlers.onOpen} />
-      )}
+      {/* RONE VST MANAGER no longer gets a banner here (Liran 16.11.2026: it cluttered the
+          first look for new customers). Its way in is the sidebar entry under the menu. */}
 
       <div className="flex items-center gap-2 mt-4 mb-3 flex-wrap">
         <div className="flex items-center gap-1.5 flex-wrap" role="tablist" aria-label="Categories">
