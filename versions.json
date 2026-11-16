@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-16T09:32:09Z",
+  "last_updated": "2026-11-16T10:08:10Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-415.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-415.1.dmg",
@@ -758,22 +758,21 @@
     {
       "id": "RoneHook",
       "name": "RONE Hook",
-      "version": "1.0.2.407",
+      "version": "1.0.3.418",
       "type": "plugin",
       "formats": [
         "VST3",
+        "AU",
         "Standalone"
       ],
-      "platforms": [
-        "windows"
-      ],
       "description": "Free plugin for people with 3 products. Search a word or an idea, find every moment it is said across videos, hear each one at once, get the voice alone with the music out, shape it and drag it into your DAW. Unlocks by itself for accounts with three RONE plugins bought, and for paying ALL ACCESS subscribers.",
-      "whats_new": "1.0.2 - ONE NOTE comes first: every knob - DENOISE, DE-VERB, LOW CUT, COMP, AIR, REVERB and the CHARACTER colours - now works on the voice after it is moved to your note, so a note that pulls the voice down no longer adds lows that LOW CUT cannot reach. The same for FIT TO TRACK and DARK. 1.0.1 - Free plugin for people with 3 products: RONE Hook opens for accounts with three RONE plugins bought (free plugins and gifts do not count), and for paying ALL ACCESS subscribers. 1.0.0 - First release. Search YouTube, a word they say (SAID) or an idea in your words (MEANING), and HOOK lists every moment - the arrows play each one at once, CLEAN shows which stand alone. TAKE IT gives the voice alone (music out), with DENOISE / LOW CUT / COMP / AIR / REVERB, CHARACTER, ONE NOTE and FIT TO TRACK (on the bar, in your key and tempo), WORD CHOPS with MIDI, MARKS and the HOOK BANK. Drag to the DAW. Everything it needs is installed with it. Windows only for now.",
+      "whats_new": "1.0.3 - RONE Hook on the Mac: VST3, AU and Standalone for macOS 13.4 or later, Apple Silicon and Intel. The voice is separated on the Mac's own GPU (a minute of voice in about 4 seconds on an M4), and everything it needs installs with it. 1.0.2 - ONE NOTE comes first: every knob - DENOISE, DE-VERB, LOW CUT, COMP, AIR, REVERB and the CHARACTER colours - now works on the voice after it is moved to your note, so a note that pulls the voice down no longer adds lows that LOW CUT cannot reach. The same for FIT TO TRACK and DARK. 1.0.1 - Free plugin for people with 3 products: RONE Hook opens for accounts with three RONE plugins bought (free plugins and gifts do not count), and for paying ALL ACCESS subscribers. 1.0.0 - First release. Search YouTube, a word they say (SAID) or an idea in your words (MEANING), and HOOK lists every moment - the arrows play each one at once, CLEAN shows which stand alone. TAKE IT gives the voice alone (music out), with DENOISE / LOW CUT / COMP / AIR / REVERB, CHARACTER, ONE NOTE and FIT TO TRACK (on the bar, in your key and tempo), WORD CHOPS with MIDI, MARKS and the HOOK BANK. Drag to the DAW. Everything it needs is installed with it.",
       "standalone_exe": "RONE Hook.exe",
       "vst3_bundle": "RONE Hook.vst3",
+      "au_bundle": "RONE Hook.component",
       "manual": "RONE Hook - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-407.1.exe",
-      "sha256": "b0b157573ee8ccc7aaf6cb50a7ee3b0e621c0aa45bfb7dc464939074343a640e",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-418.1.exe",
+      "sha256": "ae1e04f6a4c05adeeaefbddd4fb0d60720c48b0b7368900aa91fe399c269c99a",
       "registry_key": "RoneHook",
       "store_url": "https://roneaudio.com/products/rone-hook.html",
       "gift_min_paid": 3,
@@ -792,7 +791,11 @@
       "accent": "#FF8A7A",
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
-      "size": 197346410
+      "size": 197548684,
+      "version_mac": "1.0.3.418",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-418.1.pkg",
+      "sha256_mac": "8b75d77c76f7fd318ff8c8d4e2b5434c6048ba851f4a5a63130a726c833f470e",
+      "size_mac": 260763017
     }
   ],
   "apps": [
