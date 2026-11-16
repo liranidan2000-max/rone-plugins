@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   notarize:
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 90
     env:
       APPLE_API_KEY_ID:        ${{ secrets.APPLE_API_KEY_ID }}
