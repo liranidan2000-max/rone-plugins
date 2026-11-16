@@ -52,6 +52,7 @@
     "RoneGrain":      { "name": "RONE DMT",            "slug": "rone-dmt",       "key": "grain",     "screen": "#2EE6C8", "dev_folder": "RoneGrain" },
     "RoneChoir":      { "name": "RONE Choir",          "slug": "rone-choir",     "key": "choir",     "screen": "#F2A93B" },
     "RoneBassline":   { "name": "RONE Bassline",       "slug": "rone-bassline",  "key": "bassline",  "screen": "#5B54E8" },
-    "RoneDelay":      { "name": "RONE Delay",          "slug": "rone-delay",     "key": "delay",     "screen": "#E9D6A6", "dev_folder": "RoneDelay" }
+    "RoneDelay":      { "name": "RONE Delay",          "slug": "rone-delay",     "key": "delay",     "screen": "#E9D6A6", "dev_folder": "RoneDelay" },
+    "RoneReverb":     { "name": "RONE Reverb",         "slug": "rone-reverb",    "key": "verb",      "screen": "#FFAFC8", "dev_folder": "RoneReverb" }
   }
 }

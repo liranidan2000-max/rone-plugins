@@ -47,3 +47,6 @@
 [submodule "RoneHook"]
 	path = RoneHook
 	url = https://github.com/liranidan2000-max/RoneHook.git
+[submodule "RoneReverb"]
+	path = RoneReverb
+	url = https://github.com/liranidan2000-max/RoneReverb.git
