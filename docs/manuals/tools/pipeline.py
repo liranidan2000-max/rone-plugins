@@ -240,6 +240,10 @@ def prepare_ui():
                         "logoUrl": "/logos/" + p["id"] + ".png", "hasStandalone": bool(p["standalone_exe"]),
                         "standaloneInstalled": status == "up_to_date", "hasManual": bool(p.get("manual"))})
     (UI / "_center_mock.js").write_text(
+        # the headless browser is a fresh profile, so the Center thinks it is its first launch and opens the
+        # Welcome dialog (language + "Which DAW") over the whole window: that is how the manuals' tour shot of
+        # the Center shipped dimmed under it until 16.11.2026. A returning user: welcome seen, English.
+        "try { localStorage.setItem('rone_center_prefs_v2', JSON.stringify({ onboarded: true, lang: 'en' })); } catch (e) {}\n"
         "window.__mockNative.getPlugins = function () { return %s; };\n" % json.dumps({"plugins": plugins}) +
         "window.__mockNative.getLicenseStatus = function () { return { licensed: true, customerName: 'RONE User', licenseKey: 'RONE-ALL-ACCESS', message: '' }; };\n"
         "window.__mockNative.getAccountStatus = function () { return { signedIn: true, licensed: true, email: 'you@roneaudio.com', name: 'RONE User', plan: 'all-access', deviceLimit: 2, renewsAt: Date.now() + 21 * 86400000, expiresAt: 0, message: '' }; };\n"

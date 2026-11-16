@@ -572,12 +572,15 @@ def main():
     plain("analyzer_raw", "analyzer/main.png")
     # ------------------------------------------------------------ CENTER (1100x1000 render at DPR 2)
     A = ACCENT["center"]
+    # Re-placed 16.11.2026 on the Center 2.1.3x layout (search top left, Pick your DAW, the account avatar, Grid /
+    # Rack), from work/shots/center_tall.rects.json (CSS px x 2). The order is the caption's in build_manuals.py.
     annotate("center_tall", "center/tour.png", [
-        ([22, 165, 412, 396], "Navigation"), ([506, 27, 330, 72], "Account"), ([1331, 38, 143, 45], "Sync status"),
-        ([1507, 27, 440, 67], "Search"), ([1985, 27, 67, 67], "Refresh"), ([2085, 27, 65, 67], "Settings"),
-        ([508, 163, 1640, 244], "Updates summary"), ([1815, 244, 288, 81], "UPDATE ALL"), ([508, 440, 924, 60], "Filters"),
-        ([1875, 440, 273, 60], "Sort"), ([508, 566, 1640, 402], "Plugin card"), ([2085, 605, 22, 27], "Card menu"),
-        ([1925, 869, 193, 66], "OPEN"), ([1908, 1303, 210, 70], "INSTALL"), ([24, 1738, 410, 242], "Plan")], A, scale=1, badge_scale=0.75)
+        ([20, 164, 406, 472], "Navigation"), ([496, 20, 592, 76], "Search"), ([1682, 24, 258, 72], "Your DAW"),
+        ([1964, 24, 88, 72], "Refresh"), ([2076, 20, 76, 76], "Account"),
+        ([496, 182, 1654, 112], "Updates summary"), ([1946, 208, 188, 60], "UPDATE ALL"), ([496, 320, 1022, 64], "Filters"),
+        ([1610, 322, 254, 60], "Sort"), ([1884, 326, 262, 52], "Grid / Rack"), ([498, 412, 810, 366], "Plugin card"),
+        ([1240, 434, 48, 48], "Card menu"), ([1106, 688, 174, 60], "UPDATE / INSTALL"), ([1972, 688, 150, 60], "OPEN"),
+        ([24, 1778, 398, 196], "Plan")], A, scale=1, badge_scale=0.75)
     plain("center_tall", "center/main.png")
 
 if __name__ == "__main__":
