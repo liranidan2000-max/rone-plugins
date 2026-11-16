@@ -24,6 +24,7 @@ Plugins/Manuals/`) and the Plugins Center opens it from the card menu
 | RONE Delay | `RONE Delay - User Manual.pdf` |
 | RONE DMT | `RONE DMT - User Manual.pdf` |
 | RONE Hook | `RONE Hook - User Manual.pdf` |
+| RONE Reverb | `RONE Reverb - User Manual.pdf` |
 
 Changing a PDF triggers that plugin's CI build (see the path filters in
 `.github/workflows/main.yml`), so a manual update ships on its own.
@@ -108,3 +109,10 @@ frame, the video's words - so every state runs `_mock.js`'s `__scn_hook`, a port
 (`WEBSITE RONE AUDIO/scripts/unit-render/poses/rone-hook.js`): a made-up vocal session, no real artist or
 song. The FIT / CHOPS / MARKS / BANK pictures are plain crops (tables in the text, no badges). Its
 `versions.json` entry (15.11.2026) names the PDF and the CI path filter rebuilds HOOK when it changes.
+
+RONE Reverb (740x454) needs no fake bridge: with no plug-in behind it the page plays its own demo (a hit every few
+seconds, a drawn spectrum) and reads its pose from its own URL when it starts - `freeze=` (hit ages in s), `hl=` (the
+control being explained), `sel=` (the EQ band in the strip), `preset=` (a factory preset by index). A `js:` state runs
+too late for those, so `shoot.QUERY` maps a shot name to that query and `harness.html` forwards it to the page. The
+knob groups, EQ cells and the picture carry no ids; the states give them ids (`pipeline._RV`) for the callouts, and
+the EQ plot's callout is an image-pixel box.

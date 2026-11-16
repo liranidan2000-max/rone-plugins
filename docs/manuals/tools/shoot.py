@@ -24,17 +24,23 @@ from edge_cdp import Edge
 SIZES = {"reversereverb": (700, 650), "stutter": (900, 600), "stucker": (440, 520),
          "flanger": (680, 520), "afterspace": (1150, 780), "choir": (1000, 750), "throw": (440, 560), "clipper": (340, 680), "rise": (860, 580), "gater": (860, 440),
          "c1176": (1080, 626), "c2a": (1080, 626), "sidechain": (960, 560), "delay": (780, 500), "dmt": (900, 610), "hook": (860, 700),
-         "center": (920, 640)}
+         "reverb": (740, 454), "center": (920, 640)}
 DPR = 2
 # a real mouse hover (CDP Input.dispatchMouseEvent, editor px) for states whose look is a :hover rule:
 # shot name -> (x, y). Sidechain: the third SHAPES tile, which shows its delete x on hover.
 HOVER = {"sidechain_hover": (226, 420)}
+# the page's own URL switches (harness.html forwards them as ?...&<query>), for pages that read their pose from
+# location.search when they start - a `js:` state runs too late for that. shot name -> query.
+QUERY = {}
 
 def shoot(name, suffix="", state="", size=None):
     ensure()
     w, h = size or SIZES[name.split("_")[0]]
     out = SHOTS / f"{name}{suffix}.png"
     url = f"http://127.0.0.1:{PORT}/harness.html?p={name}&w={w}&h={h}&state={state}"
+    if f"{name}{suffix}" in QUERY:
+        from urllib.parse import quote
+        url += "&q=" + quote(QUERY[f"{name}{suffix}"], safe="")
     W, H = max(w, 600) + 20, max(h, 400) + 20
     with Edge(EDGE, W, H, DPR) as edge:
         edge.goto(url)

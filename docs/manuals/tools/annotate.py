@@ -29,7 +29,9 @@ ACCENT = {"stutter": "#FFD02B", "stucker": "#9D6BFF", "flanger": "#FF3D6E", "rev
           # DMT Aqua Teal #2EE6C8 is too light on paper; a deeper teal for badges
           "dmt": "#14A58F",
           # Hook Red #FF2E4D prints as it is
-          "hook": "#FF2E4D"}
+          "hook": "#FF2E4D",
+          # Reverb's soft pink #FFAFC8 vanishes on white paper; a deeper rose for badges and headings
+          "reverb": "#E0789C"}
 
 # The analyzer's callouts, by selector. pipeline.capture_native() measures these
 # against the running app and writes the boxes; nothing here is a coordinate, so
@@ -474,6 +476,25 @@ def main():
     annotate("hook_bank", "hook/bank.png", [], A, crops=[("panel", "#bank", 4)])
     annotate("hook_char", "hook/char.png", [("#chars", "CHARACTER"), ("#noteBtn", "ONE NOTE")], A)
     plain("hook", "hook/main.png"); plain("hook_empty", "hook/empty.png"); plain("hook_about", "hook/about.png")
+    # ------------------------------------------------------------ REVERB
+    A = ACCENT["reverb"]
+    # Order here IS the legend order in content_reverb.py - keep the two lists in step.
+    # #kg_* / #eqc_* / #vizBox are given ids by the shot state (pipeline._RV); the EQ plot is an image-pixel box
+    # (the plot, editor 484,116 .. 714,224 at 2x), because its own canvas starts at the same corner as the LOW CUT cell.
+    annotate("reverb", "reverb/tour.png", [
+        ("#pLogo", "Header logo"), ("#prevP+#presetName+#nextP", "PRESET"), ("#spaceSeg", "SPACE"), ("#vizBox", "The picture"),
+        ("#eqc_lc", "LOW CUT"), ("#eqc_bell", "BELL"), ("#eqc_hc", "HIGH CUT"), ([968, 232, 460, 216], "EQ curve"), ("#slopeSeg", "SLOPE"),
+        ("#kg_mix", "MIX"), ("#kg_decay", "DECAY"), ("#kg_pre", "PRE-DELAY"), ("#syncBtn", "SYNC"), ("#kg_tone", "TONE"),
+        ("#kg_duck", "DUCK"), ("#macros", "MACRO 1-4"), ("#resize-handle", "Resize grip")], A, badge_scale=0.85,
+        crops=[("knobs", "#kg_mix+#macros", 8), ("eq", "#eqBox", 4), ("viz", "#vizBox", 4)])
+    # the picture's own shots (Big Cathedral), the EQ bands, SYNC, SPACE and MACRO: crops only
+    for sfx in ("pre", "decay", "mix", "tone", "duck", "space"):
+        annotate(f"reverb_{sfx}", f"reverb/{sfx}.png", [], A, crops=[("viz", "#vizBox", 4)])
+    for sfx in ("lc", "bell", "hc"):
+        annotate(f"reverb_{sfx}", f"reverb/{sfx}.png", [], A, crops=[("eq", "#eqBox", 4)])
+    annotate("reverb_sync", "reverb/sync.png", [], A, crops=[("viz", "#vizBox", 4), ("knobs", "#kg_mix+#macros", 8)])
+    annotate("reverb_macros", "reverb/macros.png", [], A, crops=[("knobs", "#kg_mix+#macros", 8)])
+    plain("reverb", "reverb/main.png"); plain("reverb_presets", "reverb/presets.png"); plain("reverb_about", "reverb/about.png")
     # ------------------------------------------------------------ FLANGER
     A = ACCENT["flanger"]
     annotate("flanger", "flanger/tour.png", [

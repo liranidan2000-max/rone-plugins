@@ -38,6 +38,7 @@ PLUGINS = {  # served name -> (WebUI.h to extract | folder to copy)
     "delay":      ROOT / "RoneDelay" / "Source" / "WebUI.h",
     "dmt":        ROOT / "RoneGrain" / "Source" / "WebUI.h",
     "hook":       ROOT / "RoneHook" / "Source" / "WebUI.h",
+    "reverb":     ROOT / "RoneReverb" / "Source" / "WebUI.h",
     "reversereverb": ROOT / "ReverseReverbVST" / "Resources" / "ui",
     "flanger":       ROOT / "rone-flanger-" / "Resources" / "ui",
 }
@@ -48,6 +49,19 @@ def _cmake_version(folder):
     f = ROOT / folder / "CMakeLists.txt"
     m = re.search(r"project\s*\(\s*\w+\s+VERSION\s+([\d.]+)", f.read_text(encoding="utf-8")) if f.exists() else None
     return m.group(1) if m else "1.0.0"
+
+_RV = ("js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);"
+       "document.querySelectorAll('.kg').forEach(function(g){if(g.dataset.k)g.id='kg_'.concat(g.dataset.k)});"
+       "document.querySelectorAll('.eqc').forEach(function(e){e.id='eqc_'.concat(e.dataset.band)});document.querySelector('.viz').id='vizBox'")
+# RONE Reverb's URL switches (see its STATES): one hit 0.3 s old on the default sound; the picture's own shots on
+# Big Cathedral (preset 23: 60 ms, 7.5 s), where the body is wide enough to read
+shoot.QUERY.update({
+    "reverb": "freeze=0.3", "reverb_pre": "preset=23&freeze=0.6&hl=pre", "reverb_decay": "preset=23&freeze=0.6&hl=decay",
+    "reverb_mix": "preset=23&freeze=0.6&hl=mix", "reverb_tone": "preset=23&freeze=0.6&hl=tone", "reverb_duck": "preset=23&freeze=0.6&hl=duck",
+    "reverb_space": "freeze=0.3&hl=space", "reverb_sync": "preset=1&freeze=0.3&hl=pre",
+    "reverb_lc": "freeze=0.3&hl=lc&sel=lc", "reverb_bell": "freeze=0.3&hl=bell&sel=bell", "reverb_hc": "freeze=0.3&hl=hc&sel=hc",
+    "reverb_presets": "preset=18&freeze=0.3", "reverb_macros": "freeze=0.3",
+})
 
 # every screenshot the manuals use: (served name, suffix, state, size)
 STATES = [
@@ -166,6 +180,20 @@ STATES = [
     ("hook", "_bank", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({bank:true})", None),
     ("hook", "_char", "js:var st=document.createElement('style');st.textContent='*{transition:none!important;animation:none!important}';document.head.appendChild(st);window.__scn_hook({character:1,oneNote:10});noteSel._rone.button.click()", None),
     ("hook", "_about", f"js:window.__mockEmit('uiConfig',{{version:'{_cmake_version('RoneHook')}'}}),click:pLogo", None),
+    # RONE Reverb (740x454): with no plug-in behind it the page plays its own demo (a hit every few seconds, a drawn
+    # spectrum) and reads its pose from the URL when it starts (freeze = hit ages in s, hl = the control being explained,
+    # sel = the EQ band in the strip, preset = a factory preset by index) - shoot.QUERY carries those, below.
+    # _RV: transitions off, and ids on the knob groups, the EQ cells and the picture, which carry none, for the callouts
+    # (no '+' in a state: shoot.py puts it in the URL unencoded, where '+' turns into a space).
+    ("reverb", "", _RV, None),
+    ("reverb", "_pre", _RV, None), ("reverb", "_decay", _RV, None), ("reverb", "_mix", _RV, None),
+    ("reverb", "_tone", _RV, None), ("reverb", "_duck", _RV, None), ("reverb", "_space", _RV, None),
+    ("reverb", "_sync", _RV, None),
+    ("reverb", "_lc", _RV, None), ("reverb", "_bell", _RV, None), ("reverb", "_hc", _RV, None),
+    ("reverb", "_presets", _RV + ",click:presetName", None),
+    # MACRO: 1 and 2 saved by a click on an empty key, 2 the one you are on
+    ("reverb", "_macros", _RV + ";var b=document.querySelectorAll('.slot');b[0].click();b[1].click();b.forEach(function(x){x.classList.remove('saved')})", None),
+    ("reverb", "_about", "click:pLogo", None),
     ("flanger", "", "", None), ("flanger", "_adv", "click:adv-btn", None), ("flanger", "_fx", "click:inf-power,click:gate-power", None), ("flanger", "_about", "click:p-logo", None),
     ("reversereverb_m", "", "", None), ("reversereverb_m", "_loaded", "js:window.__scn_rr()", None),
     ("reversereverb_m", "_trem", "click:tremolo-power,js:setTremMode('free')", None), ("reversereverb_m", "_about", "click:p-logo", None),
@@ -238,7 +266,7 @@ def prepare_ui():
         f.write_text(f.read_text(encoding="utf-8").replace("<head>", '<head>\n<script src="/_mock.js"></script>', 1), encoding="utf-8")
     # RONE Delay asks for its type as fonts/<file>.woff2 (the plugin serves Shared/fonts): serve the same files
     fonts = ROOT / "Shared" / "fonts"
-    for name in ("delay", "dmt", "hook"):  # RONE DMT and RONE Hook the same
+    for name in ("delay", "dmt", "hook", "reverb"):  # RONE DMT, RONE Hook and RONE Reverb the same
         if (UI / name).exists() and fonts.exists():
             (UI / name / "fonts").mkdir(exist_ok=True)
             for f in fonts.glob("*.woff2"): shutil.copy(f, UI / name / "fonts" / f.name)
