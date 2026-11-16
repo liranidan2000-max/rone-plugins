@@ -1521,10 +1521,21 @@ void MainComponent::handleOpenManual (NativeArgs args, NativeCompletion complete
         return;
     }
 
-    juce::URL online ("https://github.com/liranidan2000-max/rone-plugins/raw/main/docs/manuals/"
-                      + juce::URL::addEscapeChars (manualPdf, false));
-    online.launchInDefaultBrowser();
-    complete ("{\"success\":true,\"source\":\"online\"}");
+    // The PDF is for owners only (16.11.2026): it ships with the installer and is no longer anywhere
+    // online. When it is missing here, the free video guide stands in, else the plugin is reinstalled.
+    juce::String video;
+    {
+        juce::ScopedLock sl (pluginDataLock);
+        for (auto& p : pluginData)
+            if (p.id == pluginId) { video = p.videoUrl; break; }
+    }
+    if (video.startsWithIgnoreCase ("https://"))
+    {
+        juce::URL (video).launchInDefaultBrowser();
+        complete ("{\"success\":true,\"source\":\"video\"}");
+        return;
+    }
+    complete ("{\"success\":false,\"error\":\"The manual is installed with the plugin - reinstall it from the card menu (REINSTALL) to get it back.\"}");
 }
 
 // ============================================================================

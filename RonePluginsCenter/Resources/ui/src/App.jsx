@@ -337,7 +337,7 @@ export default function App () {
     try {
       const r = await api.openManual(plugin.id)
       if (r && !r.success && r.error) addToast({ text: r.error, type: 'error' })
-      else if (r?.source === 'online') addToast(t('msg.openingPdfOnline'))
+      else if (r?.source === 'video') addToast(t('msg.openingVideo'))
     } catch (e) { addToast({ text: e.message, type: 'error' }) }
   }
   const manualVideo = (plugin) => { setManualPlugin(null); addToast(t('msg.openingVideo')); openExternal(plugin.videoUrl) }
