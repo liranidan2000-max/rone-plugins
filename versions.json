@@ -733,6 +733,7 @@
       "vst3_bundle": "RONE DMT.vst3",
       "au_bundle": "RONE DMT.component",
       "manual": "RONE DMT - User Manual.pdf",
+      "video": "https://www.youtube.com/watch?v=3ZSkhuyIByA",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-394.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-394.1.pkg",
       "sha256": "9ca546382b924ee918e8154b6c580371d6da05c41eea990701c2cd931473e361",
