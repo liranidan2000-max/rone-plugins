@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-16T09:02:17Z",
+  "last_updated": "2026-11-16T09:29:38Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-413.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-413.1.dmg",
@@ -675,7 +675,7 @@
       "id": "RoneReverb",
       "released": "2026-11-16",
       "name": "RONE Reverb",
-      "version": "1.0.0.0",
+      "version": "1.0.0.415",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -690,9 +690,9 @@
       "vst3_bundle": "RONE Reverb.vst3",
       "au_bundle": "RONE Reverb.component",
       "manual": "RONE Reverb - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-415.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer.pkg",
-      "sha256": "",
+      "sha256": "9b5a0f3e7b07f8de4f360fded84c87c40bce906c126ad2fb7878f810447b38d5",
       "registry_key": "RoneReverb",
       "sha256_mac": "",
       "store_url": "https://roneaudio.com/products/rone-reverb.html",
@@ -711,7 +711,8 @@
       ],
       "accent": "#FFAFC8",
       "inno_app_id": "{F27564D5-966F-4768-8637-2271CBC94272}",
-      "version_mac": "1.0.0.0"
+      "version_mac": "1.0.0.0",
+      "size": 5660067
     },
     {
       "id": "RoneGrain",
