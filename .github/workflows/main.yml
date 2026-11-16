@@ -363,8 +363,9 @@ jobs:
           add "$SC" sidechain      RoneSidechain      RoneSidechain     RoneSidechain-latest       RoneSidechain             true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneSidechain.iss   "RONE Sidechain - User Manual.pdf"      ""
           add "$DL" delay          RoneDelay          RoneDelay         RoneDelay-latest           RoneDelay                 true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneDelay.iss       "RONE Delay - User Manual.pdf"          ""
           add "$DM" dmt            RoneGrain          RoneGrain         RoneGrain-latest           RoneGrain                 true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneGrain.iss       "RONE DMT - User Manual.pdf"            ""
-          # Windows only (15.11.2026): the engine is DirectML + Windows APIs; versions.json says "platforms": ["windows"]
-          add "$HK" hook           RoneHook           RoneHook          RoneHook-latest            RoneHook                  true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneHook.iss        "RONE Hook - User Manual.pdf"           ""                 win-only
+          # both platforms since 16.11.2026 (macOS: CoreML, its runtime from RoneHook/tools/build_mac_runtime.sh); the
+          # 13th column win-only still keeps a product off the Mac matrix when one needs it
+          add "$HK" hook           RoneHook           RoneHook          RoneHook-latest            RoneHook                  true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneHook.iss        "RONE Hook - User Manual.pdf"           ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
@@ -944,6 +945,56 @@ jobs:
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
           exit 1
 
+      # RONE Hook on the Mac (16.11.2026): ONE NOTE from RONE Iron's tree, as on Windows - through the header, not a
+      # token in the URL (the Mac runner answers that with a redirect and drops the credentials, see Init submodule).
+      - name: HOOK - RONE Iron's sources (Mac)
+        if: matrix.plugin_id == 'hook'
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          auth="$(printf 'x-access-token:%s' "$GH_PAT" | base64 | tr -d '\n')"
+          echo "::add-mask::$auth"
+          key="http.https://github.com/.extraheader"
+          trap 'git config --global --unset-all "$key" || true' EXIT
+          git config --global "$key" "AUTHORIZATION: basic $auth"
+          for i in 1 2 3; do
+            if git submodule update --init --depth 1 -- RoneIron; then exit 0; fi
+            echo "::warning::submodule RoneIron could not be fetched (try $i)"
+            sleep $((10 * i))
+          done
+          echo "::error::RoneIron could not be fetched - HOOK not built"
+          exit 1
+
+      # HOOK's Mac runtime: the shared files (models, licences, yt-dlp.pyz) from the same pinned RoneHook-runtime zip
+      # as Windows, then onnxruntime 1.23.2 universal2, Node 24.20.0 (lipo), Python 3.12.16 per architecture and an
+      # LGPL ffmpeg 8.1.3 built here once (cached) - every download pinned by sha256 (RoneHook/tools/build_mac_runtime.sh).
+      # restore + save around the build (not actions/cache's end-of-job save): a leg that fails later still keeps
+      # the ffmpeg it spent ~15 minutes building
+      - name: HOOK - ffmpeg cache (Mac)
+        if: matrix.plugin_id == 'hook'
+        id: hook-ffmpeg
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/hook-ffmpeg
+          key:  hook-ffmpeg-8.1.3-lgpl-universal-v1
+
+      - name: HOOK - the runtime (Mac)
+        if: matrix.plugin_id == 'hook'
+        shell: bash
+        env:
+          FFMPEG_CACHE: ${{ runner.temp }}/hook-ffmpeg
+        run: |
+          python3 RoneHook/tools/fetch_runtime.py
+          bash RoneHook/tools/build_mac_runtime.sh
+
+      - name: HOOK - keep the ffmpeg (Mac)
+        if: matrix.plugin_id == 'hook' && steps.hook-ffmpeg.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/hook-ffmpeg
+          key:  hook-ffmpeg-8.1.3-lgpl-universal-v1
+
       # A pointer that is not on the product's release line is a dev build (reset audit,
       # 2026-11-05): every plugin submodule in the monorepo working tree sits on its rack-dev
       # branch, one careless `git add -A` would ship eleven of them, and the release guard
@@ -1097,6 +1148,16 @@ jobs:
       - name: Sign bundles
         run: bash scripts/ci/sign-macos.sh sign "${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
 
+      # RONE Hook: this build's RoneHookEngine joins payload-mac and is run once here (a separation + a MEANING
+      # embedding); then every loose Mach-O in the runtime is signed - the notary service refuses the whole .pkg if one
+      # executable inside is unsigned.
+      - name: HOOK - stage + sign the runtime (Mac)
+        if: matrix.plugin_id == 'hook'
+        shell: bash
+        run: |
+          bash RoneHook/tools/stage_mac_payload.sh build-ci
+          bash scripts/ci/sign-macos.sh files RoneHook/payload-mac
+
       # --- pluginval (VST3 sanity check) - warns, never fails the build ---
       # Every .vst3 now, not only the first (audit R133); [skip-validate] in the
       # commit subject skips it. Stays warning-only until a log shows it really
@@ -1227,6 +1288,14 @@ jobs:
               echo "::warning::No manual found for ${{ matrix.plugin_id }} (expected $MANUAL)"
             fi
 
+            # --- RONE Hook: its runtime (LinkLoader::sharedFolder), the same tree payload-mac holds ---
+            if [ "${{ matrix.plugin_id }}" = "hook" ]; then
+              H="staging/Library/Application Support/RONE Plugins/Hook"
+              mkdir -p "$H"
+              cp -R RoneHook/payload-mac/. "$H/"
+              echo "Staged HOOK runtime: $(du -sh "$H" | cut -f1)"
+            fi
+
             # --- Fail-safe: refuse to create empty pkg ---
             FILE_COUNT=$(find staging -type f 2>/dev/null | wc -l | tr -d ' ')
             if [ "$FILE_COUNT" -eq 0 ]; then
@@ -1262,6 +1331,11 @@ jobs:
               for b in staging/Library/Audio/Plug-Ins/VST3/*.vst3; do
                 if [ -d "$b" ]; then echo "rm -f \"/Library/Audio/Plug-Ins/VST3/$(basename "$b")/Contents/Resources/moduleinfo.json\""; fi
               done
+              # RONE Hook: a helper left running (a DAW that crashed mid-download) holds its files - end HOOK's own
+              # helpers, found by their path, never another program's python / node / ffmpeg
+              if [ "${{ matrix.plugin_id }}" = "hook" ]; then
+                echo 'pkill -f "/Library/Application Support/RONE Plugins/Hook/" 2>/dev/null || true'
+              fi
               echo 'exit 0'
             } > pkgscripts/preinstall
             chmod +x pkgscripts/preinstall

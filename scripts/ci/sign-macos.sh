@@ -4,6 +4,7 @@
 #
 #   bash scripts/ci/sign-macos.sh import            # .p12 -> temp keychain, exports MAC_APP_ID / MAC_INST_ID
 #   bash scripts/ci/sign-macos.sh sign <folder>     # codesign every .vst3 / .component / .app under <folder>
+#   bash scripts/ci/sign-macos.sh files <folder>    # codesign every loose Mach-O file under <folder> (RONE Hook runtime)
 #   bash scripts/ci/sign-macos.sh pkg  <file.pkg>   # productsign + notarize + staple (in place)
 #   bash scripts/ci/sign-macos.sh dmg  <file.dmg>   # codesign + notarize + staple (in place)
 #   bash scripts/ci/sign-macos.sh cleanup           # delete the temp keychain and the notary key
@@ -145,6 +146,35 @@ case "$cmd" in
         echo "signed: $b"; n=$((n + 1))
     done < <(find "$root" \( -name "*.vst3" -o -name "*.component" -o -name "*.app" \) -type d -prune -print0)
     [ "$n" -gt 0 ] || warn "No bundles found under $root"
+    ;;
+
+  files)
+    # Loose Mach-O files that are not in a bundle - RONE Hook's runtime (16.11.2026): its engine, ffmpeg, Node, Python
+    # and every .so / .dylib under them. Apple's notary service opens the .pkg and refuses it if ANY executable inside
+    # is unsigned, lacks the hardened runtime or a secure timestamp. Node (V8's JIT) and Python (ctypes) get their own
+    # entitlements; every other file none.
+    [ -n "${MAC_APP_ID:-}" ] || { echo "unsigned build - loose binaries left as they are"; exit 0; }
+    root="${1:?folder}"
+    here="$(cd "$(dirname "$0")" && pwd)"
+    n=0
+    while IFS= read -r -d '' f; do
+        file -b "$f" | grep -q 'Mach-O' || continue
+        ent=()
+        case "$(basename "$f")" in
+          node)     ent=(--entitlements "$here/hook-node.entitlements") ;;
+          python3*) ent=(--entitlements "$here/hook-python.entitlements") ;;
+        esac
+        ok=0
+        for i in 1 2 3; do      # the timestamp server is a network call: one failure must not fail the leg
+            if codesign --force --options runtime --timestamp ${ent[@]+"${ent[@]}"} --sign "$MAC_APP_ID" "$f"; then ok=1; break; fi
+            sleep $((5 * i))
+        done
+        [ "$ok" = 1 ] || die "could not sign $f"
+        codesign --verify --strict "$f" || die "the signature of $f does not verify"
+        n=$((n + 1))
+    done < <(find "$root" -type f -print0)
+    echo "signed $n loose Mach-O files under $root"
+    [ "$n" -gt 0 ] || warn "No Mach-O files found under $root"
     ;;
 
   pkg)
