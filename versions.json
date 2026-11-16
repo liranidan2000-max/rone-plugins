@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-15T08:31:57Z",
+  "last_updated": "2026-11-16T07:56:25Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-405.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-405.1.dmg",
@@ -714,7 +714,7 @@
     {
       "id": "RoneHook",
       "name": "RONE Hook",
-      "version": "1.0.1.405",
+      "version": "1.0.2.407",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -728,8 +728,8 @@
       "standalone_exe": "RONE Hook.exe",
       "vst3_bundle": "RONE Hook.vst3",
       "manual": "RONE Hook - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-405.1.exe",
-      "sha256": "5bd90935c14d82c9ae5850e69119ae535b7ad255d17b4016f300c5c22e748fc4",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-407.1.exe",
+      "sha256": "b0b157573ee8ccc7aaf6cb50a7ee3b0e621c0aa45bfb7dc464939074343a640e",
       "registry_key": "RoneHook",
       "store_url": "https://roneaudio.com/products/rone-hook.html",
       "gift_min_paid": 3,
@@ -748,7 +748,7 @@
       "accent": "#FF8A7A",
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
-      "size": 197291270
+      "size": 197346410
     }
   ],
   "apps": [
