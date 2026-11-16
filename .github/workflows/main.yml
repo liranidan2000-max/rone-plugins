@@ -87,7 +87,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/ReverseReverb.iss'
-              - 'docs/manuals/RONE Reverse Reverb - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             stems_fixer:
@@ -105,7 +104,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneStutter.iss'
-              - 'docs/manuals/RONE Stutter - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             stucker:
@@ -115,7 +113,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneStucker.iss'
-              - 'docs/manuals/RONE Stucker - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             throw:
@@ -125,7 +122,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneThrow.iss'
-              - 'docs/manuals/RONE Throw - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             clipper:
@@ -135,7 +131,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneClipper.iss'
-              - 'docs/manuals/RONE Clipper - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             rise:
@@ -145,7 +140,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneRise.iss'
-              - 'docs/manuals/RONE Rise - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             iron:
@@ -155,7 +149,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneIron.iss'
-              - 'docs/manuals/RONE Iron - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             rone1176:
@@ -165,7 +158,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/Rone1176.iss'
-              - 'docs/manuals/RONE 1176 - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             rone2a:
@@ -175,7 +167,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/Rone2A.iss'
-              - 'docs/manuals/RONE 2A - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             sidechain:
@@ -185,7 +176,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneSidechain.iss'
-              - 'docs/manuals/RONE Sidechain - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             delay:
@@ -195,7 +185,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneDelay.iss'
-              - 'docs/manuals/RONE Delay - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             dmt:
@@ -205,7 +194,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneGrain.iss'
-              - 'docs/manuals/RONE DMT - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             reverb:
@@ -215,7 +203,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneReverb.iss'
-              - 'docs/manuals/RONE Reverb - User Manual.pdf'
               - '.github/workflows/main.yml'
             hook:
               - 'RoneHook'
@@ -223,7 +210,6 @@ jobs:
               - 'Shared/!(tests|RoneControlRack)/**/*'
               - 'Shared/tests?*/**/*'
               - 'installer/RoneHook.iss'
-              - 'docs/manuals/RONE Hook - User Manual.pdf'
               - '.github/workflows/main.yml'
             flanger:
               - 'rone-flanger-'
@@ -232,7 +218,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneFlanger.iss'
-              - 'docs/manuals/RONE Flanger - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             sync_verb:
@@ -242,7 +227,6 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneSyncVerb.iss'
-              - 'docs/manuals/RONE Sync Verb - User Manual.pdf'
               - '.github/workflows/main.yml'
             afterspace:
               - 'RONE AFTER SPACE/**'
@@ -251,13 +235,11 @@ jobs:
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneAfterspace.iss'
-              - 'docs/manuals/RONE AFTERSPACE - User Manual.pdf'
               - '.github/workflows/main.yml'
               - 'Shared/RoneControlRack/**'   # the rack (public beta 9.11.2026)
             analyzer:
               - 'RONEAnalyzer'
               - 'installer/RONEAnalyzer.iss'
-              - 'docs/manuals/RONE Analyzer - User Manual.pdf'
               - '.github/workflows/main.yml'
             plugins_center:
               - 'RonePluginsCenter/**'
@@ -465,6 +447,27 @@ jobs:
             sleep $((10 * i))
           done
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
+          exit 1
+
+      # The user manuals (16.11.2026): buyers only, so they live in the PRIVATE repo rone-manuals,
+      # a submodule at docs/manuals - the installer still ships the PDF, the public repo no longer
+      # holds it. A manual change ships with the plugin's next release (no path filter any more).
+      # The PAT reaches only this fetch and is removed on exit (audit R027).
+      - name: Init manuals
+        if: matrix.manual_pdf != ''
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          rule="url.https://${GH_PAT}@github.com/.insteadOf"
+          trap 'git config --global --unset-all "$rule" || true' EXIT
+          git config --global "$rule" "https://github.com/"
+          for i in 1 2 3; do
+            if git submodule update --init --depth 1 -- docs/manuals; then exit 0; fi
+            echo "::warning::the manuals (docs/manuals) could not be fetched (try $i)"
+            sleep $((10 * i))
+          done
+          echo "::error::the manuals (docs/manuals, private repo rone-manuals) could not be fetched"
           exit 1
 
       # RONE Hook (Windows only, 15.11.2026) compiles ONE NOTE from RONE Iron's own tree
@@ -956,6 +959,29 @@ jobs:
           echo "::error::submodule $FOLDER could not be fetched after 3 tries"
           exit 1
 
+      # The user manuals (16.11.2026): buyers only, so they live in the PRIVATE repo rone-manuals,
+      # a submodule at docs/manuals - the installer still ships the PDF, the public repo no longer
+      # holds it. A manual change ships with the plugin's next release (no path filter any more).
+      # The PAT reaches only this fetch and is removed on exit (audit R027).
+      - name: Init manuals (Mac)
+        if: matrix.manual_pdf != ''
+        shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          auth="$(printf 'x-access-token:%s' "$GH_PAT" | base64 | tr -d '\n')"
+          echo "::add-mask::$auth"
+          key="http.https://github.com/.extraheader"
+          trap 'git config --global --unset-all "$key" || true' EXIT
+          git config --global "$key" "AUTHORIZATION: basic $auth"
+          for i in 1 2 3; do
+            if git submodule update --init --depth 1 -- docs/manuals; then exit 0; fi
+            echo "::warning::the manuals (docs/manuals) could not be fetched (try $i)"
+            sleep $((10 * i))
+          done
+          echo "::error::the manuals (docs/manuals, private repo rone-manuals) could not be fetched"
+          exit 1
+
       # RONE Hook on the Mac (16.11.2026): ONE NOTE from RONE Iron's tree, as on Windows - through the header, not a
       # token in the URL (the Mac runner answers that with a redirect and drops the credentials, see Init submodule).
       - name: HOOK - RONE Iron's sources (Mac)
@@ -1289,7 +1315,7 @@ jobs:
               echo "Staged App: $(basename "$f") -> /Applications/"
             done
 
-            # --- User manual (docs/manuals, shipped with every plugin) ---
+            # --- User manual (docs/manuals = private submodule rone-manuals, see Init manuals) ---
             MANUAL="docs/manuals/${{ matrix.manual_pdf }}"
             if [ -n "${{ matrix.manual_pdf }}" ] && [ -f "$MANUAL" ]; then
               mkdir -p "staging/Users/Shared/RONE Plugins/Manuals"

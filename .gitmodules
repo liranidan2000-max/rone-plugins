@@ -50,3 +50,6 @@
 [submodule "RoneReverb"]
 	path = RoneReverb
 	url = https://github.com/liranidan2000-max/RoneReverb.git
+[submodule "docs/manuals"]
+	path = docs/manuals
+	url = https://github.com/liranidan2000-max/rone-manuals.git
