@@ -7,11 +7,11 @@ def manual(G):
         "id": "hook", "product": "RONE Hook", "eyebrow": "THE HOOK CATCHER",
         "title_html": "RONE <i>Hook</i>", "accent": "#FF2E4D", "version": "1.0.0",
         "tagline": "Search YouTube or paste a link, get the voice alone - music and sounds out - with every word on screen, and drag the hook straight into your DAW.",
-        "formats": ["VST3", "Standalone"], "vst3": "RONE Hook.vst3", "exe": "RONE Hook.exe",
+        "formats": ["VST3", "AU", "Standalone"], "vst3": "RONE Hook.vst3", "exe": "RONE Hook.exe",
         "pdf": "RONE Hook - User Manual.pdf", "cover_img": "hook/main.png",
         "channels": "Stereo out (the voice you listen to); exports 44.1 kHz 24-bit WAV",
         "latency": "None added to the host; the voice is made outside the DAW's audio",
-        "engine": "JUCE 8, WebView interface (WebView2) &middot; voice separation in its own process (onnxruntime + DirectML: any graphics card, the processor when there is none)",
+        "engine": "JUCE 8, WebView interface (WebView2) &middot; voice separation in its own process (onnxruntime: DirectML on Windows, CoreML on the Mac - the graphics card, the processor when there is none)",
     }
     S = []
 
@@ -51,16 +51,16 @@ def manual(G):
 {img("center/tour.png", "<b>RONE Plugins Center.</b> 1 Navigation &middot; 2 Your account &middot; 3 Sync status &middot; 4 Search &middot; 5 Refresh &middot; 6 Settings &middot; 7 Updates summary &middot; 8 UPDATE ALL &middot; 9 Filters &middot; 10 Sort &middot; 11 A plugin card &middot; 12 Card menu (Details, Open, Manual) &middot; 13 OPEN the standalone app &middot; 14 INSTALL &middot; 15 Your plan", "w80")}
 <h3>Step by step</h3>
 {steps([
- "Download the Center from <a href='https://roneaudio.com'>roneaudio.com</a> and run <code>RONE_Plugins_Center_Installer.exe</code>. It also adds the Microsoft WebView2 runtime if your PC does not have it yet; the plugin's interface needs it.",
+ "Download the Center from <a href='https://roneaudio.com'>roneaudio.com</a>. Windows: run <code>RONE_Plugins_Center_Installer.exe</code> (it also adds the Microsoft WebView2 runtime if your PC does not have it yet). Mac: open the disk image and drag the Center to Applications.",
  "Open the Center, find <strong>RONE Hook</strong> and press <span class='pill'>INSTALL</span>. The Center downloads the signed installer, checks it and installs it silently.",
  "When the card shows <span class='pill'>INSTALLED</span>, start (or restart) your DAW and rescan plugins if it does not pick up new plugins by itself.",
  "Updates appear on the same card: <span class='pill'>UPDATE</span>, or <span class='pill'>UPDATE ALL</span> at the top. Close the standalone RONE Hook before updating it."])}
 <h3>Everything it needs comes with it</h3>
 <p>Besides the plugin, the installer puts HOOK's own runtime on the computer, so nothing has to be installed before:</p>
 {table(["Part", "What it does"], [
- ("The engine", "Separates the voice, in its own process - a busy graphics card can never take the DAW down. onnxruntime with DirectML: any graphics card, the processor when there is none."),
+ ("The engine", "Separates the voice, in its own process - a busy graphics card can never take the DAW down. onnxruntime with DirectML on Windows (any graphics card) and CoreML on the Mac (the Mac's own GPU); the processor when there is none."),
  ("The vocal model", "The AI model that tells the voice from the music (67 MB). Installed with the plugin: there is nothing to download on the first open."),
- ("yt-dlp + QuickJS", "Opens YouTube links and searches YouTube."),
+ ("yt-dlp + a JavaScript runtime", "Opens YouTube links and searches YouTube (QuickJS on Windows, Node on the Mac, with its own Python)."),
  ("ffmpeg (LGPL build)", "Decodes and cuts the sound."),
 ])}
 <p><strong>yt-dlp keeps itself current.</strong> YouTube changes often, so HOOK updates yt-dlp once a day, and again at once whenever a link fails (then it tries the link again).</p>
@@ -73,10 +73,18 @@ def manual(G):
  ("The HOOK BANK", "<code>Documents\\RONE Plugins\\Hook Bank</code>"),
  ("This manual", "<code>C:\\Program Files\\RONE Plugins\\Manuals\\</code>"),
 ])}
-{note("macOS", "RONE Hook is Windows-only for now (VST3 + Standalone). A Mac version will follow.")}
+<h3>Where the files go (Mac)</h3>
+{table(["File", "Location"], [
+ ("VST3", "<code>/Library/Audio/Plug-Ins/VST3/RONE Hook.vst3</code>"),
+ ("AU", "<code>/Library/Audio/Plug-Ins/Components/RONE Hook.component</code>"),
+ ("Standalone app", "<code>/Applications/RONE Hook.app</code>"),
+ ("Runtime (engine, yt-dlp, ffmpeg, model)", "<code>/Library/Application Support/RONE Plugins/Hook</code>"),
+ ("Your exports and the HOOK BANK", "<code>Documents/RONE Plugins</code>, as on Windows"),
+])}
+{note("macOS", "macOS 13.4 or later, Apple Silicon and Intel. On Apple Silicon the voice is separated on the Mac's own GPU - a minute of voice in about 4 seconds on an M4.")}
 {note("Manual inside the Center", "The plugin's card menu (the three dots) has a <strong>Manual</strong> entry. It opens this PDF from the install folder, or from roneaudio.com if the local copy is missing.")}
 <h3>Uninstalling</h3>
-<p>Settings &rarr; Apps &rarr; <em>RONE Hook (RONE)</em>. The runtime in <code>ProgramData</code> goes with it; your exports and the HOOK BANK in Documents are kept.</p>
+<p>Settings &rarr; Apps &rarr; <em>RONE Hook (RONE)</em>. The runtime in <code>ProgramData</code> goes with it; your exports and the HOOK BANK in Documents are kept. On the Mac, the Center's card menu has <strong>UNINSTALL</strong>.</p>
 """})
 
     S.append({"title": "Quick start", "sub": "your first hook", "html": f"""
@@ -289,13 +297,11 @@ def manual(G):
         ("The DRAG TO DAW tile is grey", "The voice is still being made. It lights up when the voice is done."),
     ])
     h = sup["html"]
-    for a, b in ((" (Windows: VST3 + Standalone; macOS: VST3 + Standalone)", " (Windows; a Mac version will follow)"),
-                 ("Windows 10 / 11 (64-bit) &middot; macOS 11 or newer (Intel and Apple silicon, universal)", "Windows 10 / 11 (64-bit) &middot; a graphics card is used when there is one (DirectML), the processor otherwise &middot; an internet connection to reach YouTube")):
+    for a, b in (("Windows 10 / 11 (64-bit) &middot; macOS 11 or newer (Intel and Apple silicon, universal)", "Windows 10 / 11 (64-bit) &middot; macOS 13.4 or newer (Apple Silicon and Intel) &middot; the graphics card is used when there is one (DirectML on Windows, CoreML on the Mac), the processor otherwise &middot; an internet connection to reach YouTube"),):
         assert a in h, a
         h = h.replace(a, b)
-    # a free plugin: no licence row; the generic Mac rescan advice does not apply yet
+    # a free plugin: no licence row
     h = re.sub(r"<tr><td>A licence screen appears</td>.*?</tr>", "", h, flags=re.S)
-    h = h.replace(" On macOS restart the DAW after installing; Logic and GarageBand may need a full AU rescan.", "")
     sup["html"] = h
     S.append(sup)
 
