@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-16T09:55:19Z",
+  "last_updated": "2026-11-16T10:03:38Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-415.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-415.1.dmg",
@@ -758,7 +758,7 @@
     {
       "id": "RoneHook",
       "name": "RONE Hook",
-      "version": "1.0.3.417",
+      "version": "1.0.3.418",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -771,8 +771,8 @@
       "vst3_bundle": "RONE Hook.vst3",
       "au_bundle": "RONE Hook.component",
       "manual": "RONE Hook - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-417.1.exe",
-      "sha256": "14474c1401b5610714b1b04a0fed68dcd72a235bb6d432c0787563b23836f364",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-418.1.exe",
+      "sha256": "ae1e04f6a4c05adeeaefbddd4fb0d60720c48b0b7368900aa91fe399c269c99a",
       "registry_key": "RoneHook",
       "store_url": "https://roneaudio.com/products/rone-hook.html",
       "gift_min_paid": 3,
@@ -791,7 +791,7 @@
       "accent": "#FF8A7A",
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
-      "size": 197517274,
+      "size": 197548684,
       "version_mac": "1.0.3.417",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-417.1.pkg",
       "sha256_mac": "5458c6552a5a91decd6fa72d526f2fb8c255a5b452c8f97363f4c2cb0734b6c2",
