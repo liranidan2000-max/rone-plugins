@@ -13,6 +13,12 @@ namespace
                 .withUserDataFolder (juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
                     .getChildFile ("RonePlugins").getChildFile (pluginId + "_Rack_WebView2")))
             .withNativeIntegrationEnabled()
+            // The page stays loaded while the rack is hidden. Without this, macOS showed a white rack forever
+            // (support #173, Ableton Live 12 on macOS 14): the rack is built inside a hidden component, JUCE's
+            // WKWebView swaps to about:blank the moment it is parented while hidden, and showing the rack later
+            // only changes the PARENT's visibility, which JUCE's Mac browser never hears about - nothing loads
+            // the page back. On Windows the WebView2 is created only once it is showing, so it never happened.
+            .withKeepPageLoadedWhenBrowserIsHidden()
             .withResourceProvider (std::move (res));
         // page -> C++: everything but rackReady / collapse goes to the engine as it is
         for (auto* name : { "slotConfig", "slotOn", "slotParam", "addSlot", "removeSlot", "reset", "setLive", "arm",

@@ -504,7 +504,11 @@ private:
     int overlayLookup = 0;
    #endif
 
-    juce::WebBrowserComponent* browser = nullptr;
+    // A SafePointer, not a plain pointer: the guard is declared before the WebView it
+    // watches, so the WebView dies first, and detach() at the guard's own end must not
+    // call setVisible (true) on it when the window was hidden at that moment (a
+    // minimised or background window whose plug-in is removed or whose project closes).
+    juce::Component::SafePointer<juce::WebBrowserComponent> browser;
     bool hiding = false;
 
     JUCE_DECLARE_NON_COPYABLE (RoneWebViewGuard)

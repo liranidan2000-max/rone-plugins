@@ -4,7 +4,8 @@ const q = new URLSearchParams(location.search);
 const p = q.get('p'), w = +q.get('w'), h = +q.get('h'), state = q.get('state') || '';
 const f = document.createElement('iframe');
 f.width = w; f.height = h; f.style.width = w + 'px'; f.style.height = h + 'px';
-f.src = '/' + p + '/index.html?state=' + encodeURIComponent(state);
+// q: extra query switches for the page itself (shoot.QUERY), e.g. RONE Reverb's freeze=0.6&hl=decay
+f.src = '/' + p + '/index.html?state=' + encodeURIComponent(state) + (q.get('q') ? '&' + q.get('q') : '');
 document.body.appendChild(f);
 window.addEventListener('message', e => {
   if (!e.data || e.data.type !== 'rects') return;

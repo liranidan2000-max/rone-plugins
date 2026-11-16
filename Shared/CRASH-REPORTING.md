@@ -127,6 +127,18 @@ Two routes, because neither alone is enough:
 The Support Center groups both by module+offset, so one crash that arrives by both
 routes is one issue.
 
+## RONE VST MANAGER's own crashes
+
+The VST MANAGER is an app we own, but its child processes (`--scan`, `--shoot`...)
+host other makers' plugins, so it does not use `installCrashHandler`. Its own
+`Source/CrashWatch.cpp` (in the RoneVstManager repo, since 3955ace, support #168)
+writes `APP_CRASH` reports: an uncaught C++ exception's type, what() text and
+throw-site stack; abort() / terminate() / pure virtual calls; hardware faults. A
+child reports only a fault inside the exe. Each Windows build has a PDB, and
+`tools/upload_symbols.ps1` stores a release's PDB in the `symbols` release by hand
+(the app is not built by this repo's CI). The Support Center resolves `APP_CRASH`
+like `DAW_CRASH` and folds the event log's `OS_CRASH` twin into the same issue.
+
 ## From an offset to a line
 
 `RoneBuildHooks.cmake` also gives every Windows binary a PDB (`/Z7`, `/DEBUG:FULL`,
