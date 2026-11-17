@@ -803,22 +803,22 @@
     {
       "id": "RoneVstManager",
       "name": "RONE VST MANAGER",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "type": "standalone",
       "formats": [
         "App"
       ],
       "description": "Every plug-in on your computer, from every maker, in one library with pictures. Find one in a second and load it onto the selected track in REAPER, Ableton Live, Bitwig, FL Studio, Cubase, and on a Mac in Logic Pro and Pro Tools - from THE RING, a wheel of your plugins that opens under your mouse, or from the side strip right next to your DAW (Ctrl+Alt+V, or any key you choose in Setup). Free for good with any RONE plugin; 14 days free for every producer.",
-      "whats_new": "1.0.0 - THE RING: hold a mouse button inside your DAW and a wheel of your plugins opens right under the mouse, with their real pictures. Point at one and let go: it loads onto the selected track. Eight slices per ring, folders open an outer ring, the wheel turns to your next ring, and typing searches all your plugins. Open it with Mouse 4 or 5, the wheel button, a long press of the right button (a quick right click still opens its menu), Ctrl+Alt + right click, or a key - set it up in Map > Mouse. Windows and Mac. FL Studio: a plugin from the ring or a card goes on the track you selected, also when another window lies over the Mixer. Your settings are safe on every update: a copy is kept every day, a damaged file comes back by itself, and an older copy of the app never writes over newer settings. 0.9.29 - Studio One / Studio Pro: instrument cards now drop straight onto the arrangement and make a new instrument track with the instrument loaded (on the empty area or on a track), and so do VST3 presets of instruments. Effects drop onto tracks as before. 0.9.28 - Mac: the strip key puts you in the search every time, also after you load a plugin and go back to your DAW (it used to work once, then needed a click). \"Closes by itself after a plugin loads\" closes the strip again instead of bringing it back. 0.9.27 - Mac keyboard: shortcuts can use Cmd, and every key shows as ⌘ ⌥ ⌃ ⇧ (Setup and the Map keyboard). 0.9.26 - The strip key now goes straight into the search on Mac too: press it and type, no click needed (also when the strip was left open behind your DAW). Bitwig: plugins, MIDI files and actions now really load onto the selected track - Bitwig used to drop them silently. Add the controller once in Bitwig: Settings > Controllers > Add controller > RONE > RONE VST Manager.",
+      "whats_new": "1.0.1 - The Ring: the line that confirms a load stays on one line when the plugin has a picture. 1.0.0 - THE RING: hold a mouse button inside your DAW and a wheel of your plugins opens right under the mouse, with their real pictures. Point at one and let go: it loads onto the selected track. Eight slices per ring, folders open an outer ring, the wheel turns to your next ring, and typing searches all your plugins. Open it with Mouse 4 or 5, the wheel button, a long press of the right button (a quick right click still opens its menu), Ctrl+Alt + right click, or a key - set it up in Map > Mouse. Windows and Mac. FL Studio: a plugin from the ring or a card goes on the track you selected, also when another window lies over the Mixer. Your settings are safe on every update: a copy is kept every day, a damaged file comes back by itself, and an older copy of the app never writes over newer settings. 0.9.29 - Studio One / Studio Pro: instrument cards now drop straight onto the arrangement and make a new instrument track with the instrument loaded (on the empty area or on a track), and so do VST3 presets of instruments. Effects drop onto tracks as before. 0.9.28 - Mac: the strip key puts you in the search every time, also after you load a plugin and go back to your DAW (it used to work once, then needed a click). \"Closes by itself after a plugin loads\" closes the strip again instead of bringing it back. 0.9.27 - Mac keyboard: shortcuts can use Cmd, and every key shows as ⌘ ⌥ ⌃ ⇧ (Setup and the Map keyboard). 0.9.26 - The strip key now goes straight into the search on Mac too: press it and type, no click needed (also when the strip was left open behind your DAW). Bitwig: plugins, MIDI files and actions now really load onto the selected track - Bitwig used to drop them silently. Add the controller once in Bitwig: Settings > Controllers > Add controller > RONE > RONE VST Manager.",
       "standalone_exe": "RONE VST MANAGER\\RONE VST MANAGER.exe",
       "registry_key": "RoneVstManager",
       "video": "https://www.youtube.com/watch?v=5O7U35jwAzI",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-1.0.0.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-1.0.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-1.0.0.37.pkg",
-      "sha256": "4e29ad6c81b616797df83c1bc275bce3bf9df8270096b52b393cdb8c0f0cccea",
+      "sha256": "d1ce0c0c36b5dbedf94b792ac13d8344ca466e5a8ad0fc02cbae7453db1c6a60",
       "sha256_mac": "0b0bf62b42a5c924fed4b4e1cd7145209bae22794462a54209842023f17abcae",
-      "size": 5483295,
+      "size": 5485665,
       "size_mac": 10093729,
       "version_mac": "1.0.0.37",
       "released": "2026-11-17"
