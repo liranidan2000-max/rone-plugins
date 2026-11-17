@@ -391,8 +391,11 @@ MainComponent::MainComponent()
     startTimer (60 * 1000);
 }
 
+static void centerUpdateNoteQuit();
+
 MainComponent::~MainComponent()
 {
+    centerUpdateNoteQuit();
     stopTimer();
     networkManager.removeListener (this);
 }
@@ -2490,6 +2493,31 @@ static void centerUpdateStep (const juce::String& step, const juce::String& deta
     }
 }
 
+// Support #107 (17.11): on a Mac the update runs on a thread while the Center is
+// still up and says "Restarting...". Two reports stopped at "attach" with nothing
+// after it - and hdiutil's own failure or its 2-minute limit would have written
+// attach_failed - so the Center itself was gone mid-update. A quit and a crash read
+// the same in the marker. A clean quit (the menu-bar Quit, a logout) now says so
+// here; a crash writes nothing. "relaunch" is the update's own quit.
+static void centerUpdateNoteQuit()
+{
+   #if JUCE_MAC
+    const auto marker = centerUpdateMarker();
+    if (! marker.existsAsFile())
+        return;
+    auto m = juce::JSON::parse (marker.loadFileAsString());
+    if (auto* o = m.getDynamicObject())
+    {
+        const auto step = o->getProperty ("step").toString();
+        if (step == "relaunch")
+            return;
+        o->setProperty ("quitDuring", step);
+        o->setProperty ("quitAt", juce::Time::getCurrentTime().toISO8601 (true));
+        marker.replaceWithText (juce::JSON::toString (m, true));
+    }
+   #endif
+}
+
 // The marker's step line for a report ("step: setup_started at ..."), empty when there is none.
 static juce::String centerUpdateStepLine()
 {
@@ -2850,9 +2878,13 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
 
         // Each stage into the marker (2.1.26): the Mac path writes no log, and nine
         // of the thirteen "did not finish" reports of issue #4 came from here.
+        // -noverify (support #107): the image's SHA-256 was already checked when it
+        // downloaded, and hdiutil's own checksum pass is the slow part of attach on
+        // an older Mac - time the Center spends saying "Restarting..." while
+        // nothing seems to happen, which is when people quit it.
         centerUpdateStep ("attach");
         juce::String attachOut;
-        if (! run (juce::StringArray { "/usr/bin/hdiutil", "attach", "-nobrowse", "-noautoopen", "-quiet",
+        if (! run (juce::StringArray { "/usr/bin/hdiutil", "attach", "-nobrowse", "-noautoopen", "-noverify", "-quiet",
                                        "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() }, 120000, &attachOut))
         {
             centerUpdateStep ("attach_failed", attachOut.trim());
