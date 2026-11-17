@@ -35,6 +35,8 @@ EXCEPTIONS = {
     'RONEAnalyzer': [APP + 'RONE Analyzer.app',
                      VST3 + 'RONE Analyzer Bridge.vst3', AU + 'RONE Analyzer Bridge.component',
                      VST3 + 'RONE Analyzer Channel.vst3', AU + 'RONE Analyzer Channel.component'],
+    # A plug-in for a DAW's master and nothing else: no standalone (17.11.2026)
+    'RoneListen': [VST3 + 'RONE Listen.vst3', AU + 'RONE Listen.component'],
 }
 
 
