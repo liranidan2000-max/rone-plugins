@@ -3104,7 +3104,22 @@ void MainComponent::refreshDevChannel()
         for (int i = 0; same && i < fresh.size(); ++i)
             same = fresh[i].id == safe->devPlugins[i].id && fresh[i].remoteVersion == safe->devPlugins[i].remoteVersion
                 && fresh[i].installedVersion == safe->devPlugins[i].installedVersion;
-        if (same) return;
+        if (same)
+        {
+            // Same versions, but every answer signs NEW download links (they expire after 6 hours) and may carry a
+            // file added to the same build (a Mac pkg next to the Windows exe). Keeping the old ones made a Center
+            // left open overnight answer "HTTP 404" on its DEV cards' UPDATE (RONE Listen, 17.11.2026).
+            safe->devPlugins = fresh;
+            juce::ScopedLock sl (safe->pluginDataLock);
+            for (auto& p : safe->pluginData)
+                for (const auto& f : fresh)
+                    if (p.dev && p.id == f.id && p.remoteVersion == f.remoteVersion)
+                    {
+                        p.downloadUrl = f.downloadUrl;       p.sha256    = f.sha256;
+                        p.downloadUrlMac = f.downloadUrlMac; p.sha256Mac = f.sha256Mac;
+                    }
+            return;
+        }
         safe->devPlugins = fresh;
         if (safe->manifestEverLoaded)
             safe->applyCatalog (safe->withDevChannel (safe->lastPublicPlugins), safe->lastPublicFromCache);
