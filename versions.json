@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-16T11:14:22Z",
+  "last_updated": "2026-11-17T12:32:53Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-419.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-419.1.dmg",
@@ -802,7 +802,7 @@
       "id": "RoneListen",
       "released": "2026-11-17",
       "name": "RONE Listen",
-      "version": "1.1.0.0",
+      "version": "1.1.0.423",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -815,9 +815,9 @@
       "vst3_bundle": "RONE Listen.vst3",
       "au_bundle": "RONE Listen.component",
       "manual": "RONE Listen - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneListen-latest/RoneListen_Installer.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneListen-latest/RoneListen_Installer-423.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneListen-latest/RoneListen_Installer.pkg",
-      "sha256": "",
+      "sha256": "a83607305a44b48556a3f72bed21e0e1c5040ea7014ed8bdbc0c74d35c56ca2e",
       "registry_key": "RoneListen",
       "sha256_mac": "",
       "store_url": "https://roneaudio.com/products/rone-listen.html",
@@ -833,7 +833,8 @@
         "monitoring"
       ],
       "accent": "#FF4FA3",
-      "inno_app_id": "{32349622-2EEB-4C4C-836C-4134BF9E8AD2}"
+      "inno_app_id": "{32349622-2EEB-4C4C-836C-4134BF9E8AD2}",
+      "size": 5123058
     }
   ],
   "apps": [
