@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-18T13:26:35Z",
+  "last_updated": "2026-11-18T13:44:49Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-423.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-423.1.dmg",
@@ -650,10 +650,10 @@
       "manual": "RONE Delay - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=hk-LnCfmupM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-424.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-420.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-424.2.pkg",
       "sha256": "967d659c28eeb795cd97c0a72ddeb08821e848ac844ca8ba5a3dada19a7a6f30",
       "registry_key": "RoneDelay",
-      "sha256_mac": "1e0df18301be0dae079f89ecf96b9fc1a5fef94e57c2577878538ec6cddae4b3",
+      "sha256_mac": "ecdc8e614837cbece2ef0a1a9554e582a09048cac305f2e6077b23daadf6da87",
       "store_url": "https://roneaudio.com/products/rone-delay.html",
       "category": [
         "space"
@@ -668,8 +668,8 @@
       "accent": "#E9D6A6",
       "inno_app_id": "{04213AF9-9AD6-4447-B6AE-7F544C41994C}",
       "size": 14124884,
-      "version_mac": "1.3.0.420",
-      "size_mac": 15191904
+      "version_mac": "1.4.0.424",
+      "size_mac": 15394871
     },
     {
       "id": "RoneReverb",
