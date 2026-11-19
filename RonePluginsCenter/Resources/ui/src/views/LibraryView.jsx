@@ -16,8 +16,8 @@ function Skeleton () {
 
 export default function LibraryView ({ t, plugins, loading, access, account, license, personal, optinAsk, tips, reduced, query, setQuery,
                                        cat, setCat, sort, setSort, catLabel, onNavigate, onUpdateAll, onRefresh, handlers,
-                                       centerUpdate, onCenterUpdate, vstmApp }) {
-  const ups = updatable(plugins, access)
+                                       centerUpdate, onCenterUpdate, vstmApp, ups: allUps }) {
+  const ups = allUps || updatable(plugins, access)   // App's list carries RONE VST MANAGER's update too
   const filtered = sortPlugins(plugins.filter(p => (cat === 'all' || categoriesOf(p).includes(cat)) && matchesSearch(p, query, catLabel)), access, sort)
   const count = (c) => c === 'all' ? plugins.length : plugins.filter(p => categoriesOf(p).includes(c)).length
 

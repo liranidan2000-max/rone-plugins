@@ -649,11 +649,12 @@ juce::var MainComponent::pluginInfoToVar (const PluginInfo& info)
     if (info.giftMinPaid > 0) obj->setProperty ("gift", info.giftMinPaid);
 
     // A RONE app (RONE VST MANAGER): the page gives it its own gift card, never a
-    // library card, and shows it only when this account is a customer.
+    // library card, and shows it only when this account is a customer - or when it
+    // is already installed here, so its update is offered (mayUse).
     if (info.app)
     {
         obj->setProperty ("kind", "app");
-        obj->setProperty ("unlocked", isRoneCustomer());
+        obj->setProperty ("unlocked", mayUse (info));
         // Only where this platform has an installer: RONE VST MANAGER went out on Windows first.
        #if JUCE_MAC
         obj->setProperty ("installable", info.downloadUrlMac.isNotEmpty());
@@ -781,8 +782,11 @@ bool MainComponent::isRoneCustomer()
 
 bool MainComponent::mayUse (const PluginInfo& p)
 {
+    // A copy already on this computer is always kept up to date (19.11.2026): one
+    // installed from the website in its 14-day trial stayed on its first version
+    // for good. The app checks its own licence, so an update gives nothing away.
     if (p.app)
-        return isRoneCustomer();
+        return isRoneCustomer() || p.installedVersion.isNotEmpty();
 
     // A gift (RONE Hook) is never opened by ALL ACCESS alone - a comp pass or a
     // trial would ride in. Only the server's owned list decides it, the same

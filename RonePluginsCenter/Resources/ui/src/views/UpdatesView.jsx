@@ -33,7 +33,8 @@ export default function UpdatesView ({ t, plugins, access, onInstall, onUpdateAl
             <img src={p.logoUrl} alt="" className="w-14 h-14 rounded-[14px]" />
             <div className="min-w-0">
               <h2 className="m-0 font-display text-[16px] font-bold text-rone-text-primary">
-                <button className="hover:underline" onClick={() => onDetail(p.id)}>RONE {shortName(p)}</button>
+                {p.kind === 'app' ? <span>RONE {shortName(p)}</span>   /* RONE VST MANAGER has no detail page */
+                                  : <button className="hover:underline" onClick={() => onDetail(p.id)}>RONE {shortName(p)}</button>}
                 <span className="ml-2 font-mono text-[12px] font-medium text-rone-text-dim">
                   v{(p.installedVersion || '?').split('.').slice(0, 3).join('.')} <b className="text-rone-amber font-semibold">→ {(p.remoteVersion || '').split('.').slice(0, 3).join('.')}</b>
                 </span>

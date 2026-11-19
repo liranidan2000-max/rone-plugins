@@ -10,19 +10,22 @@ const NAV = [
 
 // RONE VST MANAGER, always at hand under the menu - its ONLY place in the Center since
 // 16.11.2026 (the library banner was dropped: it cluttered the first look). One click
-// opens it, or installs it first.
+// opens it, or installs it first. A newer version (19.11.2026) shows UPDATE here, and
+// a click updates it - before, an installed copy only opened and stayed on its version.
 function VstManagerEntry ({ t, app, onInstall, onOpen }) {
   const busy = ['queued', 'downloading', 'ready', 'installing', 'waiting'].includes(app.status)
-  const installed = app.status === 'up_to_date' || app.status === 'update_available'
+  const update = app.status === 'update_available'
+  const installed = app.status === 'up_to_date' || update
   const state = busy ? (app.status === 'downloading' && app.downloadProgress > 0 ? Math.round(app.downloadProgress * 100) + '%' : t('card.installing'))
-              : installed ? null : t('card.install')
+              : update ? t('card.update') : installed ? null : t('card.install')
+  const version = (app.remoteVersion || '').split('.').slice(0, 3).join('.')
   return (
-    <button onClick={() => (busy ? null : installed ? onOpen(app.id) : onInstall(app.id))} disabled={busy}
-            title={installed ? t('card.open') + ' ' + app.name : app.name}
+    <button onClick={() => (busy ? null : update || !installed ? onInstall(app.id) : onOpen(app.id))} disabled={busy}
+            title={update ? t('card.update') + ' ' + app.name + (version ? ' → ' + version : '') : installed ? t('card.open') + ' ' + app.name : app.name}
             className="mx-2.5 mt-4 flex items-center gap-3 px-3 py-[9px] rounded-[10px] text-[12.5px] font-bold text-rone-text-secondary hover:text-rone-text-primary hover:bg-white/[0.04] disabled:cursor-default">
       <img src={app.logoUrl} alt="" width={22} height={22} className="w-[22px] h-[22px] rounded-[6px] flex-none" />
       <span className="flex-1 text-left leading-tight">VST MANAGER</span>
-      {state ? <span className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-rone-text-faint">{state}</span>
+      {state ? <span className={`text-[10px] font-extrabold uppercase tracking-[0.08em] ${update ? 'text-rone-amber' : 'text-rone-text-faint'}`}>{state}</span>
              : <Icon.open className="w-3 h-3 text-rone-text-faint" />}
     </button>
   )

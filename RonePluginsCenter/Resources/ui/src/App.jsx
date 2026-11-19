@@ -106,7 +106,10 @@ export default function App () {
   const localTips = useMemo(() => tips.map(x => ({ ...x, text: (typeof x.i18n?.[prefs.lang] === 'string' && x.i18n[prefs.lang]) || x.text })), [tips, prefs.lang])
   const ownedPlugins = useMemo(() => tagged.filter(p => p.owned), [tagged])
   const access = useMemo(() => ({ licensed: !!license.licensed, signedIn: !!account.signedIn }), [license.licensed, account.signedIn])
-  const ups = updatable(tagged, access)
+  // RONE VST MANAGER's update rides with the plugins' (19.11.2026): counted, listed under Updates and in
+  // Update all. The backend already decided it may be updated (`unlocked`), so here it counts as owned.
+  const updatesPool = useMemo(() => giftApp ? [...tagged, { ...giftApp, owned: true }] : tagged, [tagged, giftApp])
+  const ups = updatable(updatesPool, access)
   const dawId = prefs.daw || daws[0]?.id || null
   const dawName = (daws.find(d => d.id === dawId) || {}).name || t('daw.generic')
 
@@ -186,6 +189,8 @@ export default function App () {
   pluginsRef.current = tagged
   const giftRef = useRef(giftApp)
   giftRef.current = giftApp
+  const updatesRef = useRef(updatesPool)
+  updatesRef.current = updatesPool
 
   // The rules live in messages.js (tested there); an install that finished gets
   // its own toast with the DAW steps.
@@ -298,7 +303,7 @@ export default function App () {
     } catch (e) { addToast({ text: e.message || 'Install failed', type: 'error' }) }
   }
   const updateAll = async () => {
-    const ids = updatable(pluginsRef.current, access).map(p => p.id)
+    const ids = updatable(updatesRef.current, access).map(p => p.id)
     if (!ids.length) return
     if (DEV) { devInstall(ids); return }
     for (const id of ids) await install(id)
@@ -548,10 +553,10 @@ export default function App () {
               <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk}
                            centerUpdate={centerUpdate} onCenterUpdate={() => api.applyCenterUpdate().catch(() => {})}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
-                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} vstmApp={vstmApp} />
+                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} vstmApp={vstmApp} ups={ups} />
             )}
             {view === 'updates' && (
-              <UpdatesView t={t} plugins={tagged} access={access} onInstall={install} onUpdateAll={updateAll} onCancel={cancel} onRefresh={refresh} onDetail={openDetail} />
+              <UpdatesView t={t} plugins={updatesPool} access={access} onInstall={install} onUpdateAll={updateAll} onCancel={cancel} onRefresh={refresh} onDetail={openDetail} />
             )}
             {view === 'detail' && detailPlugin && (
               <DetailView t={t} plugin={detailPlugin} access={access} reduced={reduced} daws={daws} dawId={dawId}
