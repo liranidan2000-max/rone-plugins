@@ -185,6 +185,74 @@ namespace PluginInUse
         else
             result.hosts.addIfNotAlreadyThere (productName (mainModule));
     }
+
+    // Support #160 (one Windows 11 PC, Center 2.1.31 on 13.11 and 2.1.38 on 19.11.2026): the VST MANAGER
+    // update failed twice on "DeleteFile failed; code 5" for RONE VST MANAGER.exe while find() saw no
+    // program holding it, so the Center neither closed it nor named it. find() reads each process's
+    // modules, which Windows refuses for a program running as administrator or for another Windows user:
+    // those never show up there. The process list still has every program's file name, and
+    // PROCESS_QUERY_LIMITED_INFORMATION reads its full path across elevation. Says how `exe` is still
+    // running where find() cannot see it ("running as administrator", "open for another Windows user");
+    // empty when it is not running at all.
+    inline juce::String hiddenRunOf (const juce::File& exe)
+    {
+        if (exe == juce::File())
+            return {};
+
+        HANDLE processes = CreateToolhelp32Snapshot (TH32CS_SNAPPROCESS, 0);
+        if (processes == INVALID_HANDLE_VALUE)
+            return {};
+
+        DWORD mySession = 0;
+        ProcessIdToSessionId (GetCurrentProcessId(), &mySession);
+        const auto wanted = exe.getFileName();
+        juce::String how;
+
+        PROCESSENTRY32W pe {};
+        pe.dwSize = sizeof (pe);
+        for (BOOL ok = Process32FirstW (processes, &pe); ok && how.isEmpty(); ok = Process32NextW (processes, &pe))
+        {
+            if (pe.th32ProcessID == 0 || ! juce::String (pe.szExeFile).equalsIgnoreCase (wanted))
+                continue;
+
+            DWORD session = 0;
+            if (ProcessIdToSessionId (pe.th32ProcessID, &session) && session != mySession)
+            {
+                how = "open for another Windows user";
+                continue;
+            }
+
+            HANDLE process = OpenProcess (PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe.th32ProcessID);
+            if (process == nullptr)
+            {
+                how = "running as administrator";   // same name, and Windows will not even say where it runs from
+                continue;
+            }
+
+            wchar_t path[MAX_PATH] = {};
+            DWORD length = MAX_PATH;
+            const bool same = QueryFullProcessImageNameW (process, 0, path, &length)
+                              && juce::File (juce::String (path)) == exe;
+
+            bool elevated = true;   // a token we may not read belongs to an elevated program
+            HANDLE token = nullptr;
+            if (OpenProcessToken (process, TOKEN_QUERY, &token))
+            {
+                TOKEN_ELEVATION te {};
+                DWORD size = 0;
+                if (GetTokenInformation (token, TokenElevation, &te, sizeof (te), &size))
+                    elevated = te.TokenIsElevated != 0;
+                CloseHandle (token);
+            }
+            CloseHandle (process);
+
+            if (same)
+                how = elevated ? "running as administrator" : "still running";
+        }
+
+        CloseHandle (processes);
+        return how;
+    }
    #endif
 
     // Every process when `onlyThese` is null, else just those processes (the cheap re-check).

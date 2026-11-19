@@ -90,6 +90,10 @@ public:
         logged only), handed out once; empty when there is nothing to say. */
     juce::String takeStartupNote();
 
+    /** A licence or owned plugin with no signed copy from the server (audit R285): true right after
+        an update from a Center older than the signed copy, until the first answer brings one. */
+    bool claimsLicenceWithoutSignedCopy() const;
+
     /** The DEV CHANNEL (/api/v1/app/dev): plug-ins in development, answered for Liran's accounts only.
         `done` runs on the message thread with the raw JSON body, or an empty string for everyone else,
         when signed out, offline, or on any error - the channel simply is not there. */

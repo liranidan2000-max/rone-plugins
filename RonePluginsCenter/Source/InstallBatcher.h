@@ -367,6 +367,10 @@ public:
                             const auto heldAfter = PluginInUse::find (holderBundles, holderExe);
                             if (! heldAfter.isEmpty())
                                 r->setProperty ("heldBy", holderNames (heldAfter, name));
+                            // #160: our own app, open where find() cannot see it (as administrator,
+                            // or for another Windows user) - the Center could not close it either.
+                            else if (const auto how = PluginInUse::hiddenRunOf (holderExe); how.isNotEmpty())
+                                r->setProperty ("heldBy", name + " (" + how + ")");
                         }
                         if (exitCode != 0)
                             r->setProperty ("diag", installDiagnostics (copy, stagedSize));
@@ -752,6 +756,13 @@ private:
                                   { r.code = "in_use_own";
                                     r.message = "Install cancelled - a file was in use. " + item.name
                                                 + " itself is still open. Close it, then update again."; }
+        // #160: our own app still open where the Center cannot close it (PluginInUse::hiddenRunOf).
+        else if (exitCode == 5 && heldBy.startsWith (item.name + " ("))
+                                  { r.code = "in_use_own_hidden";
+                                    r.message = "Install cancelled - a file was in use. " + item.name + " is still open ("
+                                                + heldBy.fromFirstOccurrenceOf (" (", false, false).upToLastOccurrenceOf (")", false, false)
+                                                + "), where the Center cannot close it. Quit it (its icon by the clock: Quit,"
+                                                  " or sign in as that user and quit it there), then update again."; }
         else if (exitCode == 5 && heldBy.isNotEmpty())
                                   { r.code = "in_use_host";
                                     r.message = "Install cancelled - a file was in use. Close " + heldBy + " (it has "

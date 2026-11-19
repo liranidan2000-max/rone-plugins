@@ -598,6 +598,13 @@ juce::String AccountClient::takeStartupNote()
     return note;
 }
 
+bool AccountClient::claimsLicenceWithoutSignedCopy() const
+{
+    const juce::ScopedLock sl (lock);
+    return (state.licensed || ! state.ownedProducts.isEmpty())
+        && (signedEntitlement.isEmpty() || signedEntitlementSig.isEmpty());
+}
+
 // ============================================================================
 // State from a server response
 // ============================================================================

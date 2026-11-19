@@ -375,7 +375,22 @@ MainComponent::MainComponent()
     // server's signed copy is reported (and, in this release, still trusted).
     // Audit R125 stage 1: so is a sealed sign-in this Windows account cannot open.
     if (const auto note = accountClient.takeStartupNote(); note.isNotEmpty())
-        RoneCrashReporter::reportError ("RONE Plugins Center", JUCE_APPLICATION_VERSION_STRING, "Center", "CENTER_NOTE", note);
+    {
+        // Support #2 (19.11.2026): the R285 note came from 2.1.37 too, though the site signs every
+        // answer (no unsigned answer counted since stage 0e, signing unbroken since 25.10). It fires
+        // on the first start after an update from a Center older than the signed copy, a moment
+        // before the background confirmation brings one. So it is filed only when, two minutes on,
+        // this computer still has none - the case the cut-over (stage 2) would lock.
+        if (note.startsWith ("Account.xml claims a licence"))
+            juce::Timer::callAfterDelay (120 * 1000, [safe = juce::Component::SafePointer<MainComponent> (this), note]
+            {
+                if (safe != nullptr && safe->accountClient.claimsLicenceWithoutSignedCopy())
+                    RoneCrashReporter::reportError ("RONE Plugins Center", JUCE_APPLICATION_VERSION_STRING, "Center", "CENTER_NOTE",
+                                                    note + " - still none 2 minutes after start-up");
+            });
+        else
+            RoneCrashReporter::reportError ("RONE Plugins Center", JUCE_APPLICATION_VERSION_STRING, "Center", "CENTER_NOTE", note);
+    }
 
     // Fetch manifest after a short delay to let the WebView initialize
     juce::Timer::callAfterDelay (500, [safe = juce::Component::SafePointer<MainComponent> (this)]
@@ -2704,11 +2719,25 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
 
     if (! ShellExecuteExW (&sei) || sei.hProcess == nullptr)
     {
+        const auto err = (int) GetLastError();
+
+        // ERROR_CANCELLED: a prompt Windows showed before the installer could run was
+        // refused - the permission prompt (the installer is PrivilegesRequired=admin) or
+        // the security warning a downloaded file can get. Measured in the field (support
+        // #14, Center 2.1.36, 17.11.2026: "ShellExecuteEx error 1223" right after
+        // "downloaded, hash ok"), so a refusal does NOT only come back as the installer's
+        // exit code below. It is the user's answer, not a failure: said the same way,
+        // as info, and not filed as an error.
+        if (err == ERROR_CANCELLED)
+        {
+            failed ("Windows did not give permission - the Center was not updated.", "center_update_declined",
+                    "ShellExecuteEx error 1223 (the prompt was declined)");
+            return;
+        }
+
         // The stub itself could not start (antivirus, SmartScreen, the file gone).
-        // Not a refused prompt: the installer is asInvoker and asks for permission
-        // only once it runs, so a refusal comes back as its exit code below.
         failed ("Could not start the Center update.", "center_update_failed",
-                "ShellExecuteEx error " + juce::String ((int) GetLastError()));
+                "ShellExecuteEx error " + juce::String (err));
         return;
     }
 
@@ -3017,6 +3046,17 @@ void MainComponent::reportCenterUpdateOutcome()
         emitStatusMessage ("RONE Plugins Center updated to v" + target + ".", "success", "center_updated", juce::var (params));
         return;
     }
+
+    // Not this Center's attempt (support #4, gh:448, Windows 11, 19.11.2026): the first "did not
+    // finish" from a fixed Center (2.1.37) carried a marker "from 2.1.22, to 2.1.38.428" - an older
+    // copy of the Center on the same computer started that update (every copy shares this marker), or
+    // it landed on an older build than it asked for. Either way THIS Center runs a newer version than
+    // the one that tried, so it did not fail here: the marker is settled quietly, and the newest version
+    // is offered the usual way. A Center that tried and still runs the version it tried from (from ==
+    // running) is a real failure and is still reported below.
+    const auto from = m.getProperty ("from", "").toString();
+    if (from.isNotEmpty() && VersionChecker::isNewerVersion (from, running))
+        return;
 
     // Not landed. The page gets the short sentence (plus the step, so the next
     // report of issue #4 names its branch); the report's details get everything
