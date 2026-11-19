@@ -98,6 +98,7 @@ public:
         startTimer (10);
 
         noJuceUia (b);   // support #162, below: again whenever the browser moves to a new window
+        safeTabOut (b);  // support #186, below: again whenever the browser moves to a new window
        #else
         juce::ignoreUnused (pagePainted);
        #endif
@@ -143,6 +144,7 @@ private:
             setOpaque (true);
             setWantsKeyboardFocus (false);
             setAccessible (false);
+            setEnabled (false);   // never a focus target: see safeTabOut (support #186)
         }
         void paint (juce::Graphics& g) override { g.fillAll (juce::Colour (0xff0d0d12)); }
     };
@@ -155,9 +157,47 @@ private:
             if (wasResized)
                 coverRef.setBounds (b.getLocalBounds());
         }
-        void componentParentHierarchyChanged (juce::Component& b) override { noJuceUia (b); }
+        void componentParentHierarchyChanged (juce::Component& b) override { noJuceUia (b); safeTabOut (b); }
         juce::Component& coverRef;
     };
+
+    // Support #186 (Ableton Live 12, Clipper 1.1.2, Windows 10, 19.11.2026): Tab inside the page
+    // crashed the DAW (reproduced: the first Tab after a click into the page, same addresses).
+    // When Tab or Shift+Tab leaves the page, WebView2 raises MoveFocusRequested and JUCE's handler
+    // (juce_WebBrowserComponent_windows.cpp, 8.0.4 and still 8.0.12) asks a focus traverser for the
+    // Component after JUCE's WebView2 child (Tab) or before the browser (Shift+Tab), then calls
+    // comp->getAccessibilityHandler()->grabFocus() with no null check. That handler is null for every
+    // Component that is not accessible: the DarkCover above (it sits right after the WebView2 child)
+    // and, since #162, every Component of a plug-in window. So the traverser must find nothing on
+    // either side; JUCE then only gives the keyboard focus away:
+    //   Tab:       each browser is a focus container and the cover is disabled (out of every focus
+    //              list), so JUCE's WebView2 child is alone in it - nothing comes after it;
+    //   Shift+Tab: each browser's parent is a focus container and the browser comes first in it
+    //              (explicit focus order 1) - nothing comes before it.
+    // Every WebBrowserComponent of the window gets it (the RONE Control rack has its own).
+    // Only the accessibility focus order changes; keyboard focus containers are left as they are.
+    static void safeTabOut (juce::Component& c)
+    {
+        auto* top = c.getTopLevelComponent();
+        if (top == nullptr)
+            return;
+
+        std::function<void (juce::Component&)> walk = [&] (juce::Component& comp)
+        {
+            if (dynamic_cast<juce::WebBrowserComponent*> (&comp) != nullptr)
+            {
+                if (! comp.isFocusContainer())
+                    comp.setFocusContainerType (juce::Component::FocusContainerType::focusContainer);
+                if (comp.getExplicitFocusOrder() != 1)
+                    comp.setExplicitFocusOrder (1);
+                if (auto* p = comp.getParentComponent(); p != nullptr && ! p->isFocusContainer())
+                    p->setFocusContainerType (juce::Component::FocusContainerType::focusContainer);
+            }
+            for (auto* child : comp.getChildren())
+                walk (*child);
+        };
+        walk (*top);
+    }
 
     // Support #162 (FL Studio, Sidechain 1.2.3, 14.11.2026): FL crashed inside uiautomationcore.dll while
     // the last RONE Sidechain instance unloaded. JUCE 8.0.4 answers Windows UI Automation for a plug-in's
@@ -238,6 +278,7 @@ private:
     HWND nativeCover = nullptr;
     bool nativeCoverDone = true;
     juce::uint32 coverStartMs = 0;
+    juce::uint32 tabOutTicks = 0;
    #endif
     bool pagePainted = false;
 
@@ -256,6 +297,9 @@ private:
             return;
 
         const auto hwnd = (HWND) peer->getNativeHandle();
+        if (++tabOutTicks % 30 == 1)   // a browser added to the window later (the rack's) is covered too (#186)
+            safeTabOut (peer->getComponent());
+
         if (! nativeCoverDone)
         {
             noJuceUia (peer->getComponent());   // the window's own component, whatever the wrapper (#162)
