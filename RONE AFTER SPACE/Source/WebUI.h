@@ -123,6 +123,12 @@ inline const std::string& getIndexHTML()
 .rone-btn.arrow { padding:9px 10px; color:var(--dim); }
 .rone-btn:disabled { color:var(--faint); cursor:default; transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
 .rone-btn:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+/* (press-hold) a pressed key sinks 1px but never leaves the mouse (the click goes where the button is let go): while it
+   is held an empty ghost of its box stays where it was, so a press on its top row or a corner is not lost. A .dd key's
+   ::after is its chevron, so its ghost is ::before. It sits behind the key's content (z-index -1; the pressed key's transform
+   makes it a stacking context): WebKit lets go of :active when the element under the mouse changes. Iron 1.2.3 / Shared/ui. */
+.rone-btn:not(.dd):active::after { content:''; position:absolute; left:0; right:0; top:-1px; bottom:1px; z-index:-1; }
+.rone-btn.dd:not(.act):active::before { content:''; position:absolute; left:0; right:0; top:-1px; bottom:1px; z-index:-1; }
 
 /* ---- preset bar: ◀ name ▶ (the name opens the preset popover) ---- */
 .rone-preset { display:inline-flex; align-items:center; gap:2px; background:var(--card); border-radius:8px; padding:3px; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
@@ -282,6 +288,14 @@ body {
 }
 #p-logo:hover  { transform: scale(1.06); }
 #p-logo:active { transform: scale(0.99); }
+/* (press-hold) pressed after a hover the logo shrinks from 1.06 to .99 about its left edge and the right end of the name
+   left the mouse (About did not open): a ghost the size of the hover box stays under the mouse while it is held, behind the
+   name. Its glyph and name take no mouse, so the logo itself stays the element under the mouse from the hover to the
+   release: WebKit lets go of :active when that element changes (from the name to the ghost as the name shrinks away,
+   or onto a ghost drawn over the name - hence z-index -1) */
+#p-logo { position:relative; }
+#p-logo > * { pointer-events:none; }
+#p-logo:active::after { content:''; position:absolute; left:0; top:-4%; width:107.1%; height:108%; z-index:-1; }
 #p-logo:hover #glyph { filter: drop-shadow(0 0 11px var(--neon)); }
 #p-logo:hover h1 i { text-shadow: 0 0 18px var(--neon); }
 #glyph {
