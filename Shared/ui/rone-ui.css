@@ -89,6 +89,19 @@
 .rone-btn.arrow { padding:9px 10px; color:var(--dim); }
 .rone-btn:disabled { color:var(--faint); cursor:default; transform:none; box-shadow:0 0 0 1px rgba(0,0,0,.25); }
 .rone-btn:focus-visible { outline:2px solid var(--neon); outline-offset:2px; }
+/* A key never moves out from under the mouse (RONE Iron 1.2.3, 20.11.2026). The click goes where the button is let go, so:
+   - a pressed key sinks 1px, and a press on its top pixel row (or a corner) was let go outside it and lost. The sink stays,
+     and while it is held an empty ghost of its box stays where it was (top -1px; square on purpose: Chromium hits a key at
+     rest by its square box). A .dd key draws its chevron with ::after, so its ghost is ::before (not on .act: the LED).
+     A key whose ::after is something else, or that clips (overflow:hidden), gets no ghost: give it :active{transform:none}.
+     The ghost sits BEHIND the key's content (z-index -1; the pressed key's transform makes it a stacking context): over
+     an icon or a label it would become the element under the mouse, and WebKit then lets go of :active - the key popped
+     back up 150 ms into the hold.
+   - never give a key a transform of its own (centred with translateX(-50%), a scale): :active REPLACES it while the key is
+     held and the key jumps under the mouse (Iron's LFO key jumped 24 px, its left half never clicked). Place keys with
+     left / right / margin instead. */
+.rone-btn:not(.dd):active::after { content:''; position:absolute; left:0; right:0; top:-1px; bottom:1px; z-index:-1; }
+.rone-btn.dd:not(.act):active::before { content:''; position:absolute; left:0; right:0; top:-1px; bottom:1px; z-index:-1; }
 
 /* ---- preset bar: ◀ name ▶ (the name opens the preset popover) ---- */
 .rone-preset { display:inline-flex; align-items:center; gap:2px; background:var(--card); border-radius:8px; padding:3px; box-shadow:inset 0 1px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.04); }
