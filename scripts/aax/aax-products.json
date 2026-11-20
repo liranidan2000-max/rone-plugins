@@ -10,20 +10,22 @@
     "formats_line = 'bridge' only for the Analyzer, whose formats come from a variable."
   ],
   "products": [
-    { "id": "ReverseReverb",  "folder": "ReverseReverbVST", "target": "ReverseReverb",  "bundle": "RONE Reverse Reverb", "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "" },
-    { "id": "RoneStutter",    "folder": "RoneStutter",      "target": "RoneStutter",    "bundle": "RONE Stutter",        "category": "AAX_ePlugInCategory_Effect",     "wcguid": "" },
-    { "id": "RoneStucker",    "folder": "RoneStucker",      "target": "RoneStucker",    "bundle": "RONE Stucker",        "category": "AAX_ePlugInCategory_Effect",     "wcguid": "" },
-    { "id": "RoneThrow",      "folder": "RoneThrow",        "target": "RoneThrow",      "bundle": "RONE Throw",          "category": "AAX_ePlugInCategory_Delay",      "wcguid": "" },
-    { "id": "RoneClipper",    "folder": "RoneClipper",      "target": "RoneClipper",    "bundle": "RONE Clipper",        "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "" },
-    { "id": "RoneRise",       "folder": "RoneRise",         "target": "RoneRise",       "bundle": "RONE Rise",           "category": "AAX_ePlugInCategory_Effect",     "wcguid": "" },
-    { "id": "RoneIron",       "folder": "RoneIron",         "target": "RoneIron",       "bundle": "RONE Iron",           "category": "AAX_ePlugInCategory_Effect",     "wcguid": "" },
-    { "id": "RoneFlanger",    "folder": "rone-flanger-",    "target": "ManualFlanger",  "bundle": "RONE Flanger",        "category": "AAX_ePlugInCategory_Modulation", "wcguid": "" },
-    { "id": "RoneAfterspace", "folder": "RONE AFTER SPACE", "target": "RoneAfterspace", "bundle": "RONE AFTERSPACE",     "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "" },
-    { "id": "Rone1176",       "folder": "Rone1176",         "target": "Rone1176",       "bundle": "RONE 1176",           "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "" },
-    { "id": "Rone2A",         "folder": "Rone2A",           "target": "Rone2A",         "bundle": "RONE 2A",             "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "" },
-    { "id": "RoneSidechain",  "folder": "RoneSidechain",    "target": "RoneSidechain",  "bundle": "RONE Sidechain",      "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "" },
-    { "id": "RoneDelay",      "folder": "RoneDelay",        "target": "RoneDelay",      "bundle": "RONE Delay",          "category": "AAX_ePlugInCategory_Delay",      "wcguid": "" },
-    { "id": "RoneGrain",      "folder": "RoneGrain",        "target": "RoneGrain",      "bundle": "RONE DMT",            "category": "AAX_ePlugInCategory_Effect",     "wcguid": "" },
-    { "id": "RONEAnalyzer",   "folder": "RONEAnalyzer",     "target": "RONEBridge",     "bundle": "RONE Analyzer Bridge", "category": "AAX_ePlugInCategory_Effect",    "wcguid": "", "formats_line": "bridge" }
+    { "id": "ReverseReverb",  "folder": "ReverseReverbVST", "target": "ReverseReverb",  "bundle": "RONE Reverse Reverb", "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneStutter",    "folder": "RoneStutter",      "target": "RoneStutter",    "bundle": "RONE Stutter",        "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneStucker",    "folder": "RoneStucker",      "target": "RoneStucker",    "bundle": "RONE Stucker",        "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneThrow",      "folder": "RoneThrow",        "target": "RoneThrow",      "bundle": "RONE Throw",          "category": "AAX_ePlugInCategory_Delay",      "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneClipper",    "folder": "RoneClipper",      "target": "RoneClipper",    "bundle": "RONE Clipper",        "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneRise",       "folder": "RoneRise",         "target": "RoneRise",       "bundle": "RONE Rise",           "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneIron",       "folder": "RoneIron",         "target": "RoneIron",       "bundle": "RONE Iron",           "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneFlanger",    "folder": "rone-flanger-",    "target": "ManualFlanger",  "bundle": "RONE Flanger",        "category": "AAX_ePlugInCategory_Modulation", "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneAfterspace", "folder": "RONE AFTER SPACE", "target": "RoneAfterspace", "bundle": "RONE AFTERSPACE",     "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "Rone1176",       "folder": "Rone1176",         "target": "Rone1176",       "bundle": "RONE 1176",           "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "Rone2A",         "folder": "Rone2A",           "target": "Rone2A",         "bundle": "RONE 2A",             "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneSidechain",  "folder": "RoneSidechain",    "target": "RoneSidechain",  "bundle": "RONE Sidechain",      "category": "AAX_ePlugInCategory_Dynamics",   "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneDelay",      "folder": "RoneDelay",        "target": "RoneDelay",      "bundle": "RONE Delay",          "category": "AAX_ePlugInCategory_Delay",      "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneGrain",      "folder": "RoneGrain",        "target": "RoneGrain",      "bundle": "RONE DMT",            "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneReverb",     "folder": "RoneReverb",       "target": "RoneReverb",     "bundle": "RONE Reverb",         "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneListen",     "folder": "RoneListen",       "target": "RoneListen",     "bundle": "RONE Listen",         "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RONEAnalyzer",   "folder": "RONEAnalyzer",     "target": "RONEBridge",     "bundle": "RONE Analyzer Bridge", "category": "AAX_ePlugInCategory_Effect",    "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B", "formats_line": "bridge" }
   ]
 }
