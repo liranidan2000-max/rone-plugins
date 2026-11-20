@@ -613,6 +613,9 @@
       "registry_key": "RoneSidechain",
       "sha256_mac": "469de70071a59f4b9145706d69bf7715db65232675b75cbd35e9de851a519867",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
+      "price": 0,
+      "launch_price": 0,
+      "free": true,
       "category": [
         "mix"
       ],
