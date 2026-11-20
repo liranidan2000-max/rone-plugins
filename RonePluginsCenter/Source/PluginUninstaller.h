@@ -152,6 +152,9 @@ namespace PluginUninstaller
         {
             const juce::File f (path);
             if (! f.exists() || ! isRemovable (f)) continue;
+            // 2.1.42: Pro Tools marks every AAX binary it scans read-only, and a
+            // read-only file is not deleted - the AAX stayed behind after UNINSTALL.
+            f.setReadOnly (false, true);
             if (f.isDirectory()) f.deleteRecursively (false);
             else                 f.deleteFile();
         }

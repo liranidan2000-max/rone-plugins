@@ -54,7 +54,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; installer (skipifsourcedoesntexist), never a stale or unsigned one.
 Source: "..\aax\RONE AFTERSPACE.aaxplugin\*"; \
   DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE AFTERSPACE.aaxplugin"; \
-  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
 ; VST3 plugin bundle
 Source: "..\RONE AFTER SPACE\build-ci\RoneAfterspace_artefacts\Release\VST3\RONE AFTERSPACE.vst3\*"; \
   DestDir: "{commoncf}\VST3\RONE\RONE AFTERSPACE.vst3"; \

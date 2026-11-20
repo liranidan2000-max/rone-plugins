@@ -54,7 +54,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; installer (skipifsourcedoesntexist), never a stale or unsigned one.
 Source: "..\aax\RONE Reverb.aaxplugin\*"; \
   DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE Reverb.aaxplugin"; \
-  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
 ; VST3 plugin bundle
 Source: "..\RoneReverb\build-ci\RoneReverb_artefacts\Release\VST3\RONE Reverb.vst3\*"; \
   DestDir: "{commoncf}\VST3\RONE\RONE Reverb.vst3"; \

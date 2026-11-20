@@ -55,7 +55,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; installer (skipifsourcedoesntexist), never a stale or unsigned one.
 Source: "..\aax\RONE Sidechain.aaxplugin\*"; \
   DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE Sidechain.aaxplugin"; \
-  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
 ; VST3 plugin bundle
 Source: "..\RoneSidechain\build-ci\RoneSidechain_artefacts\Release\VST3\RONE Sidechain.vst3\*"; \
   DestDir: "{commoncf}\VST3\RONE\RONE Sidechain.vst3"; \

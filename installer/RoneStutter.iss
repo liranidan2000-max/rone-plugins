@@ -56,7 +56,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; installer (skipifsourcedoesntexist), never a stale or unsigned one.
 Source: "..\aax\RONE Stutter.aaxplugin\*"; \
   DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE Stutter.aaxplugin"; \
-  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
 ; VST3 plugin bundle
 Source: "..\RoneStutter\build-ci\RoneStutter_artefacts\Release\VST3\RONE Stutter.vst3\*"; \
   DestDir: "{commoncf}\VST3\RONE\RONE Stutter.vst3"; \

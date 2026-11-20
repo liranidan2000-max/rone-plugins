@@ -54,7 +54,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; installer (skipifsourcedoesntexist), never a stale or unsigned one.
 Source: "..\aax\RONE 1176.aaxplugin\*"; \
   DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE 1176.aaxplugin"; \
-  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
 ; VST3 plugin bundle
 Source: "..\Rone1176\build-ci\Rone1176_artefacts\Release\VST3\RONE 1176.vst3\*"; \
   DestDir: "{commoncf}\VST3\RONE\RONE 1176.vst3"; \
