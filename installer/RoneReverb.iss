@@ -48,6 +48,13 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; Files — VST3 + Standalone
 ; ============================================================================
 [Files]
+; AAX for Pro Tools (Windows). Built and signed with PACE on the iLok PC (scripts/aax), then
+; uploaded to the "AAX-signed" release; CI unpacks it into ..\aax\ before this compile and checks
+; that its FileVersion matches CMakeLists. No signed bundle for this version = no AAX in this
+; installer (skipifsourcedoesntexist), never a stale or unsigned one.
+Source: "..\aax\RONE Reverb.aaxplugin\*"; \
+  DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE Reverb.aaxplugin"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 ; VST3 plugin bundle
 Source: "..\RoneReverb\build-ci\RoneReverb_artefacts\Release\VST3\RONE Reverb.vst3\*"; \
   DestDir: "{commoncf}\VST3\RONE\RONE Reverb.vst3"; \

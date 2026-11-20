@@ -132,7 +132,7 @@ export default function DetailView ({ t, plugin, access, reduced, daws, dawId, o
 }
 
 export function stepsFor (t, dawId, name) {
-  const id = ['fl', 'ableton', 'cubase', 'studioone', 'reaper', 'bitwig', 'logic'].includes(dawId) ? dawId : 'generic'
+  const id = ['fl', 'ableton', 'cubase', 'studioone', 'reaper', 'bitwig', 'logic', 'protools'].includes(dawId) ? dawId : 'generic'
   const steps = t('steps.' + id, { name: 'RONE ' + name })
   return Array.isArray(steps) ? steps : [steps]
 }

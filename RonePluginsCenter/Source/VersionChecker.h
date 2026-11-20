@@ -144,6 +144,14 @@ public:
     // Get the install directories.
     static juce::File getStandaloneInstallDir();
     static juce::File getVst3InstallDir();
+    // Windows: C:\Program Files\Common Files\Avid\Audio\Plug-Ins\RONE, where each plugin's
+    // installer puts its AAX (Pro Tools) since 20.11.2026. Elsewhere: an empty File.
+    static juce::File getAaxInstallDir();
+    // "RONE Clipper.vst3" -> "RONE Clipper.aaxplugin" (the AAX bundle has the PRODUCT_NAME too).
+    static juce::String aaxBundleFor (const juce::String& vst3Bundle)
+    {
+        return vst3Bundle.endsWithIgnoreCase (".vst3") ? vst3Bundle.dropLastCharacters (5) + ".aaxplugin" : juce::String();
+    }
     static juce::File getAUInstallDir();
 
    #if JUCE_MAC

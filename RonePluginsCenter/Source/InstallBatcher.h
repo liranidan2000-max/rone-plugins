@@ -529,6 +529,11 @@ private:
         bundles.clear();
         if (item.vst3Bundle.isNotEmpty())
             bundles.add (VersionChecker::getVst3InstallDir().getChildFile (item.vst3Bundle));
+       #if JUCE_WINDOWS
+        // 2.1.41: the installer also replaces the AAX that Pro Tools keeps loaded.
+        if (item.vst3Bundle.isNotEmpty() && item.id != "RONEAnalyzer")
+            bundles.add (VersionChecker::getAaxInstallDir().getChildFile (VersionChecker::aaxBundleFor (item.vst3Bundle)));
+       #endif
         // The Analyzer is an app, but its installer also replaces the VST3s a DAW
         // keeps loaded - the Bridge on the master bus and (1.3.32) the Channel on
         // any track - outside the RONE folder. 2.1.26: the Channel was unknown here,

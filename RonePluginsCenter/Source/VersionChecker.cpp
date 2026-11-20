@@ -545,6 +545,17 @@ juce::File VersionChecker::getStandaloneInstallDir()
 #endif
 }
 
+juce::File VersionChecker::getAaxInstallDir()
+{
+#if JUCE_WINDOWS
+    return juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
+        .getChildFile ("Common Files").getChildFile ("Avid").getChildFile ("Audio")
+        .getChildFile ("Plug-Ins").getChildFile (RONE_VST3_SUBDIR);
+#else
+    return {};
+#endif
+}
+
 juce::File VersionChecker::getVst3InstallDir()
 {
 #if JUCE_WINDOWS

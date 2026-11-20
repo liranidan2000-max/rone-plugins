@@ -173,6 +173,11 @@ foreach ($p in $products) {
             "-Wno-dev")
         "cmake $($flags -join ' ')" | Out-File $log -Append -Encoding utf8
         if ((Invoke-Native cmake $flags $log) -ne 0) { throw "configure failed (see $log)" }
+        # JUCE writes <target>_resources.rc (the binary's FileVersion) once per build dir and never
+        # rewrites it, so a reused dir ships the OLD version number (20.11: Clipper 1.1.4 said 1.1.0).
+        # CI's installer step checks that number against CMakeLists, so drop it every time.
+        Get-ChildItem (Join-Path $b "$($p.target)_artefacts") -Recurse -Filter "*_resources.rc" -ErrorAction SilentlyContinue |
+            Remove-Item -Force -ErrorAction SilentlyContinue
         if ((Invoke-Native cmake @("--build", $b, "--config", "Release", "--target", "$($p.target)_AAX", "--parallel") $log) -ne 0) {
             throw "build failed (see $log)" }
 

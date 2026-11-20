@@ -109,6 +109,9 @@ namespace PluginUninstaller
                 add (VersionChecker::getUserAUDir().getChildFile (name + ".component"));
             }
        #else
+        // 2.1.41: the plugin's AAX (Pro Tools), which its installer puts under Avid.
+        if (p.vst3Bundle.isNotEmpty() && p.id != "RONEAnalyzer")
+            add (VersionChecker::getAaxInstallDir().getChildFile (VersionChecker::aaxBundleFor (p.vst3Bundle)));
         const auto appDir = VersionChecker::getStandaloneInstallDir();
         if (p.standaloneExe.isNotEmpty())
             add (appDir.getChildFile (p.standaloneExe));
@@ -127,7 +130,8 @@ namespace PluginUninstaller
 
        #if JUCE_WINDOWS
         const juce::File roots[] { VersionChecker::getVst3InstallDir().getParentDirectory(),   // ...\Common Files\VST3
-                                   VersionChecker::getStandaloneInstallDir() };                 // ...\RONE Plugins
+                                   VersionChecker::getStandaloneInstallDir(),                   // ...\RONE Plugins
+                                   VersionChecker::getAaxInstallDir() };                        // ...\Avid\Audio\Plug-Ins\RONE
        #elif JUCE_MAC
         const juce::File roots[] { VersionChecker::getVst3InstallDir(), VersionChecker::getAUInstallDir(),
                                    VersionChecker::getUserVst3Dir(), VersionChecker::getUserAUDir(),
