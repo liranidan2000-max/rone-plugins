@@ -92,6 +92,13 @@ input, textarea { user-select: text; -webkit-user-select: text; }
   transition: filter .15s ease, transform .1s ease, border-color .2s, color .2s, background .2s;
 }
 .btn:active:not(:disabled) { transform: scale(0.97); }
+/* A pressed button shrinks to .97 about its centre, so a press on its edge or a corner was let go outside it and the click
+   was lost (the click goes where the mouse comes up - RONE Iron 1.2.3, 20.11.2026). While it is held, an empty ghost the
+   size of the button at rest (1 / .97, and over its 1 px border: the offsets count from inside the border) stays under the
+   mouse. The press transform makes the button its containing block and a
+   stacking context, so the ghost sits behind the label (z-index -1): WebKit lets go of :active when the element under the mouse changes. */
+.btn:active:not(:disabled)::after { content: ''; position: absolute; left: calc(-2% - 1px); top: calc(-2% - 1px);
+  width: calc(104% + 2px); height: calc(104% + 2px); z-index: -1; }
 .btn:disabled { opacity: .5; cursor: default; }
 /* Each color-mix() below has a plain line before it: a WebKit older than Safari 16.2 (old Macs) drops color-mix and keeps that. */
 .btn-pri { background: var(--acc, #FFFFFF); color: #101216; box-shadow: 0 0 14px rgba(0, 0, 0, .35); box-shadow: 0 0 16px color-mix(in srgb, var(--acc, #FFFFFF) 30%, transparent); }
