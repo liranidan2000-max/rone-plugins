@@ -132,13 +132,16 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
         </div>
       )}
       {unit && (
-        <div className="hero-stage absolute right-[3%] top-0 bottom-0 w-[44%] flex items-center justify-center pointer-events-none" aria-hidden="true">
-          <div key={s.key + unit} className={reduced ? 'relative' : 'hero-unit-wrap'} style={{ '--unit-mask': `url("${unit}")` }}>
-            <img src={unit} alt="" className={reduced ? 'block max-h-[190px] w-auto' : 'hero-unit max-h-[190px] w-auto'}
-                 style={reduced ? { filter: 'drop-shadow(0 22px 34px rgba(0,0,0,.65))' } : undefined}
-                 onError={() => setBroken(b => ({ ...b, [unit]: true }))} />
-            {!reduced && <span className="hero-sheen" />}
-            <span className="hero-reflect" style={{ backgroundImage: `url("${unit}")` }} />
+        <div className="absolute right-[3%] top-0 bottom-0 w-[44%] flex items-center justify-center pointer-events-none" aria-hidden="true">
+          {/* Entrance, turn and picture are three elements on purpose (index.css .hero-*): the old one-element
+              stack drew nothing on macOS 15's WebKit. */}
+          <div key={s.key + unit} className={reduced ? '' : 'hero-unit-in'}>
+            <div className={reduced ? 'relative' : 'hero-unit-wrap'} style={{ '--unit-mask': `url("${unit}")` }}>
+              <img src={unit} alt="" className="hero-unit max-h-[190px] w-auto"
+                   onError={() => setBroken(b => ({ ...b, [unit]: true }))} />
+              {!reduced && <span className="hero-sheen" />}
+              <span className="hero-reflect" style={{ backgroundImage: `url("${unit}")` }} />
+            </div>
           </div>
         </div>
       )}
