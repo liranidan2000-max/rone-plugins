@@ -101,7 +101,7 @@ else
     open "https://www.ilok.com/#!license-manager"
     todo "install iLok License Manager from the page that just opened (ilok.com), then run the script again"; fi
 fi
-if system_profiler SPUSBDataType 2>/dev/null | grep -qi "ilok"; then
+if system_profiler SPUSBDataType SPUSBHostDataType 2>/dev/null | grep -qi "ilok"; then
   ok "an iLok is plugged in"
 else
   todo "no iLok seen on USB - plug in the iLok 3 (the one from the PC)"
