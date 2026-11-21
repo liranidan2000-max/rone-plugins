@@ -1003,15 +1003,7 @@ juce::Array<PluginInfo> NetworkManager::parseManifest (const juce::String& jsonB
         auto* fmts = entry.getProperty ("formats", {}).getArray();
         if (fmts != nullptr)
             for (auto& f : *fmts)
-            {
-               #if ! JUCE_WINDOWS
-                // 2.1.43: the AAX (Pro Tools) ships in the Windows installers only, so far.
-                // A Mac card must not promise it. Remove this when the Mac pkgs carry AAX.
-                if (f.toString().equalsIgnoreCase ("AAX"))
-                    continue;
-               #endif
-                info.formats.add (f.toString());
-            }
+                info.formats.add (f.toString());   // 2.1.45: the Mac pkgs carry the AAX too (Pro Tools only)
 
         // Determine installed status
         VersionChecker::refreshInstallState (info);

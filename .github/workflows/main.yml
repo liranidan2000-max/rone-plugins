@@ -1306,6 +1306,38 @@ jobs:
           done < <(find "$A" -name "*.component" -type d -prune 2>/dev/null)
           if [ "$n" -eq 0 ]; then echo "no .component for ${{ matrix.plugin_id }} - nothing to validate"; fi
 
+      # Pro Tools (AAX) on the Mac: built and PACE-signed on the Mac with the iLok
+      # (scripts/aax/mac: build -> sign -> publish), uploaded to the "AAX-signed" release as
+      # <Id>.mac.aaxplugin.zip. Packed into the .pkg only when its version equals this build's
+      # CMake version. It is NOT codesigned again here - re-signing would break the PACE
+      # signature; the pkg's productsign + notarization cover it as it is.
+      - name: Fetch signed AAX (Pro Tools, Mac)
+        if: matrix.plugin_id != 'plugins_center'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf aax-mac aax-mac-dl; mkdir -p aax-mac aax-mac-dl
+          row=$(jq -c --arg f "${{ matrix.folder }}" '[.products[] | select(.folder == $f)][0] // empty' scripts/aax/aax-products.json)
+          id=$(jq -r '.id // empty' <<<"$row")
+          if [ -z "$id" ] || [ "$id" = "RONEAnalyzer" ]; then echo "No AAX for ${{ matrix.plugin_id }}"; exit 0; fi
+          bundle=$(jq -r .bundle <<<"$row")
+          base=$(grep -oE 'VERSION +[0-9]+\.[0-9]+\.[0-9]+' "${{ matrix.folder }}/CMakeLists.txt" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          if ! gh release download AAX-signed --repo "$GITHUB_REPOSITORY" --pattern "$id.mac.aaxplugin.zip" --dir aax-mac-dl --clobber \
+             || [ ! -f "aax-mac-dl/$id.mac.aaxplugin.zip" ]; then
+            echo "::warning::No signed Mac AAX for $id in the AAX-signed release - this pkg ships without AAX"; exit 0
+          fi
+          ditto -x -k "aax-mac-dl/$id.mac.aaxplugin.zip" aax-mac
+          b="aax-mac/$bundle.aaxplugin"
+          have=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$b/Contents/Info.plist" 2>/dev/null || true)
+          if [ "$have" != "$base" ]; then
+            echo "::warning::Signed Mac AAX for $id is '$have' but this build is '$base' - left out (re-sign on the Mac: scripts/aax/mac)"
+            rm -rf aax-mac/*; exit 0
+          fi
+          if ! codesign --verify --deep --strict "$b"; then
+            echo "::warning::Mac AAX for $id does not verify - left out"; rm -rf aax-mac/*; exit 0
+          fi
+          echo "Mac AAX packed: $bundle $have"
+
       # --- Package ---
       - name: Create macOS installer
         run: |
@@ -1423,6 +1455,33 @@ jobs:
               echo 'exit 0'
             } > pkgscripts/preinstall
             chmod +x pkgscripts/preinstall
+
+            # AAX (Pro Tools), PACE-signed on the Mac - see "Fetch signed AAX (Pro Tools, Mac)".
+            # NOT in the payload: a Center before 2.1.45 unpacks the payload itself and fails on a
+            # file it does not know. It rides in the scripts and a postinstall puts it in Avid's
+            # folder ONLY on a Mac with Pro Tools (Liran 21.11: nobody else meets a password or a
+            # change). Center 2.1.45+ takes it from Scripts/aax on its own, also only with Pro Tools.
+            for f in aax-mac/*.aaxplugin; do
+              [ -d "$f" ] || continue
+              mkdir -p pkgscripts/aax
+              ditto "$f" "pkgscripts/aax/$(basename "$f")"
+              echo "Staged AAX (scripts): $(basename "$f")"
+            done
+            if [ -d pkgscripts/aax ]; then
+              {
+                echo '#!/bin/sh'
+                echo 'ls -d "/Applications/Pro Tools"*.app >/dev/null 2>&1 || exit 0'
+                echo 'D="/Library/Application Support/Avid/Audio/Plug-Ins"'
+                echo '/bin/mkdir -p "$D" || exit 0'
+                echo 'for b in "$(/usr/bin/dirname "$0")"/aax/*.aaxplugin; do'
+                echo '  [ -d "$b" ] || continue'
+                echo '  n=$(/usr/bin/basename "$b")'
+                echo '  /bin/rm -rf "$D/$n" && /usr/bin/ditto "$b" "$D/$n"'
+                echo 'done'
+                echo 'exit 0'
+              } > pkgscripts/postinstall
+              chmod +x pkgscripts/postinstall
+            fi
 
             pkgbuild --root staging \
               --component-plist /tmp/comp.plist \

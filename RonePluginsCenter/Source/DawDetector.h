@@ -76,8 +76,7 @@ namespace DawDetector
         if (pf.getChildFile ("Bitwig Studio").isDirectory())
             add ("bitwig", "Bitwig Studio");
 
-        // 2.1.41: RONE plugins ship as AAX on Windows (Pro Tools). Not on the Mac side yet:
-        // there is no Mac AAX, and "Restart Pro Tools" steps would point at nothing.
+        // 2.1.41: RONE plugins ship as AAX (Pro Tools); on the Mac too since 2.1.45.
         if (pf.getChildFile ("Avid").getChildFile ("Pro Tools").getChildFile ("ProTools.exe").existsAsFile())
             add ("protools", "Pro Tools");
 
@@ -98,6 +97,9 @@ namespace DawDetector
         add ("studioone", detail::newest (appsNamed ("Studio One")));
         add ("reaper",    detail::newest (appsNamed ("REAPER")));
         add ("bitwig",    detail::newest (appsNamed ("Bitwig Studio")));
+        // 2.1.45: the Mac pkgs carry the AAX too.
+        if (! appsNamed ("Pro Tools").isEmpty())
+            add ("protools", "Pro Tools");
        #endif
 
         return found;

@@ -1156,6 +1156,12 @@ private:
         juce::Array<Move> moves;
         juce::Array<juce::File> aax;
         const bool planned = expanded && payload.isDirectory() && planUserMoves (payload, moves, aax);
+        // The plugin .pkgs carry the AAX in their scripts (Scripts/aax), not the payload, so a
+        // Center before 2.1.45 - which fails on a payload file it does not know - is not affected.
+        if (planned)
+            for (const auto& f : payload.getSiblingFile ("Scripts").getChildFile ("aax")
+                                        .findChildFiles (juce::File::findDirectories, false, "*.aaxplugin"))
+                aax.add (f);
 
         // 2.1.45: the AAX only for a Mac with Pro Tools (see proToolsOnMac).
         juce::Array<Move> aaxAdmin;
