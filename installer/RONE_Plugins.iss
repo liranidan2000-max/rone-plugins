@@ -58,6 +58,14 @@ PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
 UninstallDisplayName={#MyAppName}
+; Support #193 (fix round 12, 21.11.2026): no Restart Manager, as in every
+; plugin installer. Under /VERYSILENT it found the old Center still alive a
+; moment after it let go of its mutex (or McAfee Framework Host scanning the
+; exe), could not close it and aborted the self-update: customers were stuck
+; on 2.1.31-2.1.39 with "Stopped after: go_seen". PrepareToInstall below
+; waits for the old Center's process itself instead.
+CloseApplications=no
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -165,6 +173,115 @@ begin
       Sleep(200);
       Waited := Waited + 1;
     end;
+  end;
+end;
+
+// ---- The old Center's process, not only its mutex (support #193) ----
+// The Center closes "RonePluginsCenterRunning" at the end of shutdown(), but its
+// process lives on for a moment after that (JUCE and WebView2 teardown) and still
+// holds the exe. Measured in the field: Restart Manager found "RONE Plugins Center"
+// using our files right after InitializeSetup's wait ended. So before any file is
+// replaced, wait for the process that runs from THIS install folder to be gone.
+// Returns how many such processes run; Pids gets the ids of those whose path is
+// known to be ours (only these are ever closed by force). A process whose path
+// Windows does not report is waited for, never killed.
+const
+  CenterExe = 'RONE Plugins Center.exe';
+  CenterExitWaitMs = 60000;
+
+var
+  WmiService: Variant;   // connected once: a WMI connect costs ~1 s
+
+function GetTickCount: DWord; external 'GetTickCount@kernel32.dll stdcall';
+
+function RunningCenters(var Pids: TArrayOfString): Integer;
+var
+  Locator, Procs, P: Variant;
+  I, N: Integer;
+  Want, Path: String;
+begin
+  Result := 0;
+  N := 0;
+  SetArrayLength(Pids, 0);
+  Want := Lowercase(AddBackslash(ExpandConstant('{app}')) + CenterExe);
+  try
+    if VarIsEmpty(WmiService) then
+    begin
+      Locator := CreateOleObject('WbemScripting.SWbemLocator');
+      WmiService := Locator.ConnectServer('.', 'root\CIMV2');
+    end;
+    Procs := WmiService.ExecQuery('SELECT ProcessId, ExecutablePath FROM Win32_Process WHERE Name = ''' + CenterExe + '''');
+    for I := 0 to Procs.Count - 1 do
+    begin
+      P := Procs.ItemIndex(I);
+      Path := '';
+      if not VarIsNull(P.ExecutablePath) then
+      begin
+        Path := P.ExecutablePath;
+        Path := Lowercase(Path);
+      end;
+      if Path = Want then
+      begin
+        SetArrayLength(Pids, N + 1);
+        Pids[N] := IntToStr(P.ProcessId);
+        N := N + 1;
+        Result := Result + 1;
+      end
+      else if Path = '' then
+        Result := Result + 1;
+    end;
+  except
+    // No WMI (a stripped Windows, a broken repository): no wait, as before.
+    Log('Center process check failed: ' + GetExceptionMessage);
+    Result := 0;
+  end;
+end;
+
+procedure CloseCenters(const Pids: TArrayOfString);
+var
+  I, Code: Integer;
+begin
+  for I := 0 to GetArrayLength(Pids) - 1 do
+  begin
+    Log('Closing RONE Plugins Center, process ' + Pids[I]);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /PID ' + Pids[I], '', SW_HIDE, ewWaitUntilTerminated, Code);
+  end;
+  if GetArrayLength(Pids) > 0 then
+    Sleep(1000);   // the exe's handle goes a moment after the process
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Pids: TArrayOfString;
+  Start, Waited: DWord;
+begin
+  Result := '';
+  if WantRelaunch then
+  begin
+    // Self-update: the Center already said yes and is on its way out. Give its
+    // teardown up to 60 s (by the clock), then close what is left of it.
+    Start := GetTickCount;
+    Waited := 0;
+    while (RunningCenters(Pids) > 0) and (Waited < CenterExitWaitMs) do
+    begin
+      Sleep(250);
+      Waited := GetTickCount - Start;
+    end;
+    if Waited > 0 then
+      Log('Waited ' + IntToStr(Waited) + ' ms for the old Center to exit');
+    if RunningCenters(Pids) > 0 then
+      CloseCenters(Pids);
+  end
+  else if RunningCenters(Pids) > 0 then
+  begin
+    // Run by hand while the Center is open (Restart Manager used to offer this).
+    if SuppressibleMsgBox('RONE Plugins Center is open. Setup will close it now to update it.',
+        mbConfirmation, MB_OKCANCEL, IDOK) <> IDOK then
+    begin
+      Result := 'RONE Plugins Center is still open. Close it and run this installer again.';
+      exit;
+    end;
+    CloseCenters(Pids);
   end;
 end;
 
