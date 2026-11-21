@@ -134,3 +134,6 @@ same way Windows works.
 
 ## Log
 - 21.11 (PC): brief + `bootstrap-mac.sh` written. Mac work not started.
+- 21.11 (Mac): `build-aax-mac.sh` written (Ninja + Command Line Tools, no Xcode needed).
+  RoneClipper 1.1.4 (9fc500e) built universal x86_64+arm64 -> `~/RONE/_build/aax/unsigned`.
+  Waiting on Liran: iLok on USB, LM sign-in, wraptool, Developer ID p12, Pro Tools Intro.
