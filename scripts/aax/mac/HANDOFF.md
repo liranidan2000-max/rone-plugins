@@ -137,3 +137,17 @@ same way Windows works.
 - 21.11 (Mac): `build-aax-mac.sh` written (Ninja + Command Line Tools, no Xcode needed).
   RoneClipper 1.1.4 (9fc500e) built universal x86_64+arm64 -> `~/RONE/_build/aax/unsigned`.
   Waiting on Liran: iLok on USB, LM sign-in, wraptool, Developer ID p12, Pro Tools Intro.
+- 21.11 (PC session, driving the Mac over SSH via Tailscale `100.125.44.59`, key `~/.ssh/rone_mac_ed25519`):
+  16 products built universal + PACE-signed + Developer ID (hardened runtime, timestamp) on the
+  MacBook; all verify (codesign + wraptool). Zips `<Id>.mac.aaxplugin.zip` uploaded to the
+  `AAX-signed` release (from the PC: gh on the Mac has no token over SSH). RONEAnalyzer: configure
+  fails (not needed yet).
+  TRAPS: wraptool on the Mac never prompts -> `store-pace-password-mac.sh` once; signing works only
+  in Liran's own Terminal (over SSH the keychain is locked: errSecInternalComponent); SSH cannot
+  read ~/Downloads (macOS privacy); Apple's Developer ID G2 intermediate had to be added to the
+  login keychain; iLok shows in `system_profiler SPUSBHostDataType` on macOS 26.
+  Center (6420d22, unreleased): a .pkg carrying an AAX installs the AAX only on a Mac with Pro
+  Tools; no Pro Tools = no password. CI step "Fetch signed AAX (Pro Tools, Mac)" written in
+  main.yml, NOT pushed (waits for: Pro Tools test on the Mac, a notarization dry run, Liran's yes,
+  and the Center release first). Left on release day: NetworkManager.cpp's Mac AAX filter,
+  DawDetector "protools" on Mac, site line "AAX for macOS is on the way".
