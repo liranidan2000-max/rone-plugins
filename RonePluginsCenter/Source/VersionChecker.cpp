@@ -551,6 +551,9 @@ juce::File VersionChecker::getAaxInstallDir()
     return juce::File::getSpecialLocation (juce::File::globalApplicationsDirectory)
         .getChildFile ("Common Files").getChildFile ("Avid").getChildFile ("Audio")
         .getChildFile ("Plug-Ins").getChildFile (RONE_VST3_SUBDIR);
+#elif JUCE_MAC
+    // Where the .pkg puts the AAX and the only folder Pro Tools on a Mac scans.
+    return juce::File ("/Library/Application Support/Avid/Audio/Plug-Ins");
 #else
     return {};
 #endif

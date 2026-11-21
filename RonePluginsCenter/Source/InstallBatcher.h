@@ -888,10 +888,32 @@ private:
         return (int) p.getExitCode();
     }
 
-    // Where each bundle of an unpacked .pkg goes in the user's folders. False
-    // when the payload holds anything else.
-    static bool planUserMoves (const juce::File& payload, juce::Array<Move>& moves)
+    // ---- 2.1.45: the AAX (Pro Tools) in a plugin's .pkg -------------------------
+    // Pro Tools on a Mac scans only /Library/Application Support/Avid/Audio/Plug-Ins,
+    // never a user folder. Liran, 21.11.2026: the AAX goes in ONLY for someone who
+    // has Pro Tools, and nobody else may meet a password because of it. So:
+    //   no Pro Tools                       -> the AAX is left out, the rest goes in as before
+    //   Pro Tools, its folder writable     -> the AAX goes in with the rest, no password
+    //   Pro Tools, folder needs admin      -> the rest goes in now; the AAX alone waits
+    //                                         for the one password of this batch
+    static juce::String macAaxPayloadDir() { return "Library/Application Support/Avid/Audio/Plug-Ins"; }
+
+    static bool proToolsOnMac()
     {
+        return ! juce::File ("/Applications").findChildFiles (juce::File::findDirectories, false, "Pro Tools*.app").isEmpty();
+    }
+
+    // AAX bundles staged for the password batch: { staged copy, final place }.
+    juce::Array<Move> aaxForAdmin;
+
+    // Where each bundle of an unpacked .pkg goes in the user's folders. False
+    // when the payload holds anything else. An AAX is known (it never sends the
+    // plugin to the password batch) and goes to `aax`, not into `moves`.
+    static bool planUserMoves (const juce::File& payload, juce::Array<Move>& moves, juce::Array<juce::File>& aax)
+    {
+        for (const auto& f : payload.getChildFile (macAaxPayloadDir()).findChildFiles (juce::File::findDirectories, false, "*.aaxplugin"))
+            aax.add (f);
+
         struct Place { const char* in; const char* pattern; juce::File userDir; };
         const Place places[] {
             { "Library/Audio/Plug-Ins/VST3",       "*.vst3",      VersionChecker::getUserVst3Dir() },
@@ -909,6 +931,8 @@ private:
             bool known = false;
             for (const auto& m : moves)
                 if (e.getFile() == m.from || e.getFile().isAChildOf (m.from)) { known = true; break; }
+            for (const auto& a : aax)
+                if (! known && e.getFile().isAChildOf (a)) { known = true; break; }
             if (! known)
                 return false;
         }
@@ -1130,7 +1154,32 @@ private:
                     payload = sub.getChildFile ("Payload");
 
         juce::Array<Move> moves;
-        const bool planned = expanded && payload.isDirectory() && planUserMoves (payload, moves);
+        juce::Array<juce::File> aax;
+        const bool planned = expanded && payload.isDirectory() && planUserMoves (payload, moves, aax);
+
+        // 2.1.45: the AAX only for a Mac with Pro Tools (see proToolsOnMac).
+        juce::Array<Move> aaxAdmin;
+        if (planned && ! aax.isEmpty() && proToolsOnMac())
+        {
+            const auto aaxDir = VersionChecker::getAaxInstallDir();
+            const bool writable = aaxDir.isDirectory() ? aaxDir.hasWriteAccess()
+                                                       : aaxDir.getParentDirectory().isDirectory() && aaxDir.getParentDirectory().hasWriteAccess();
+            for (const auto& a : aax)
+            {
+                const auto to = aaxDir.getChildFile (a.getFileName());
+                if (writable)
+                    moves.add ({ a, to });
+                else
+                {
+                    // Kept out of `work`, which is deleted after this plugin: the password batch copies it later.
+                    const auto staged = work.getSiblingFile ("aax-" + tag).getChildFile (a.getFileName());
+                    staged.getParentDirectory().createDirectory();
+                    staged.deleteRecursively();
+                    if (runTool (juce::StringArray { "/usr/bin/ditto", a.getFullPathName(), staged.getFullPathName() }, 300000) == 0)
+                        aaxAdmin.add ({ staged, to });
+                }
+            }
+        }
 
         if (planned && hasSystemCopy (moves))
             return Route::system;
@@ -1162,6 +1211,8 @@ private:
         }
         if (error.isNotEmpty())
             return fail (error);
+
+        aaxForAdmin.addArray (aaxAdmin);   // 2.1.45: the AAX alone, with this batch's one password
 
         Result r;
         r.id = i.id;
@@ -1311,6 +1362,8 @@ private:
         // Center 2.1: what can go in without a password goes in first; the rest
         // waits for the one password below.
         juce::Array<Item> adminBatch;
+        aaxForAdmin.clearQuick();
+        const auto aaxStage = dir.getChildFile ("aax-" + tag);
         {
             const auto work = dir.getChildFile ("unpack-" + tag);
             for (auto& i : batch)
@@ -1318,8 +1371,11 @@ private:
                     adminBatch.add (i);
             work.deleteRecursively();
         }
-        if (adminBatch.isEmpty())
+        if (adminBatch.isEmpty() && aaxForAdmin.isEmpty())
+        {
+            aaxStage.deleteRecursively();
             return;
+        }
 
         // Record what was already on disk, to tell a fresh install from leftovers.
         const auto resultFile = dir.getChildFile ("batch-" + tag + ".result.txt");
@@ -1347,6 +1403,17 @@ private:
                << "/usr/sbin/installer -pkg \"$W/" << i.id << ".pkg\" -target / >\"$W/" << i.id << ".err\" 2>&1; "
                << "C=$?; echo \"" << i.id << " $C $(/usr/bin/tail -n 2 \"$W/" << i.id << ".err\" | /usr/bin/tr '\\n\\r' '  ')\" >> \"$R\"; "
                << "else echo \"" << i.id << " -2\" >> \"$R\"; fi\n";
+        }
+        // 2.1.45: the AAX of plugins that went into the user's folders, for Pro Tools
+        // (its folder is the system's). A failure here never fails the plugin itself.
+        for (const auto& m : aaxForAdmin)
+        {
+            const auto from = m.from.getFullPathName(), to = m.to.getFullPathName();
+            if (from.containsAnyOf ("'\"\\$`") || to.containsAnyOf ("'\"\\$`"))
+                continue;
+            sh << "/bin/mkdir -p " << q (m.to.getParentDirectory().getFullPathName())
+               << " && /bin/rm -rf " << q (to) << " && /usr/bin/ditto " << q (from) << " " << q (to)
+               << "; echo \"aax $? " << m.to.getFileName().replace ("\"", "") << "\" >> \"$R\"\n";
         }
         sh << "/bin/rm -rf \"$W\"\n";
         // "\n", not JUCE's default "\r\n": the Mac's sh read "fi\r" as a word, the
@@ -1439,6 +1506,7 @@ private:
 
         script.deleteFile();
         resultFile.deleteFile();
+        aaxStage.deleteRecursively();
        #else
         for (auto& i : batch)
         {

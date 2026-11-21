@@ -97,6 +97,9 @@ namespace PluginUninstaller
             add (juce::File ("/Users/Shared/RONE Plugins/Manuals").getChildFile (p.manualPdf));
             add (VersionChecker::getUserManualsDir().getChildFile (p.manualPdf));
         }
+        // 2.1.45: the AAX (Pro Tools), which the .pkg / the Center puts in Avid's system folder.
+        if (p.vst3Bundle.isNotEmpty() && p.id != "RONEAnalyzer")
+            add (VersionChecker::getAaxInstallDir().getChildFile (VersionChecker::aaxBundleFor (p.vst3Bundle)));
 
         // Center 2.1 installs what was not system-wide into the user's folders.
         if (p.vst3Bundle.isNotEmpty())
@@ -136,7 +139,8 @@ namespace PluginUninstaller
         const juce::File roots[] { VersionChecker::getVst3InstallDir(), VersionChecker::getAUInstallDir(),
                                    VersionChecker::getUserVst3Dir(), VersionChecker::getUserAUDir(),
                                    juce::File ("/Applications"), VersionChecker::getUserAppsDir(),
-                                   juce::File ("/Users/Shared/RONE Plugins/Manuals"), VersionChecker::getUserManualsDir() };
+                                   juce::File ("/Users/Shared/RONE Plugins/Manuals"), VersionChecker::getUserManualsDir(),
+                                   VersionChecker::getAaxInstallDir() };   // 2.1.45: /Library/Application Support/Avid/Audio/Plug-Ins
        #else
         const juce::File roots[] { VersionChecker::getVst3InstallDir() };
        #endif
