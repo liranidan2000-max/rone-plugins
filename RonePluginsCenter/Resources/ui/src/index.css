@@ -224,17 +224,21 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .hero-film { position: absolute; top: 0; right: 0; bottom: 0; width: 66%; z-index: 1; pointer-events: none;
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 34%); mask-image: linear-gradient(90deg, transparent 0%, #000 34%); }
 .hero-film video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-scrim { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(90deg, rgba(13, 15, 18, .94) 0%, rgba(13, 15, 18, .84) 36%, rgba(13, 15, 18, .4) 56%, rgba(13, 15, 18, 0) 70%); }
 /* SEE IT WORK / TIP: the plugin working, in a glass screen turned a little toward the words */
-.hero-screen { position: absolute; right: 34px; top: 50%; margin-top: -88px; height: 176px; aspect-ratio: 870 / 530; z-index: 2; pointer-events: none; }
+/* 160 px high from 24 px down: clear of "Next" under it and of the arrow beside it; the width is the clip's own
+   shape (Hero.jsx), and the whole plugin is in the picture (contain, never cover). */
+.hero-screen { position: absolute; right: 50px; top: 24px; height: 160px; z-index: 2; pointer-events: none; }
 .hero-glass { width: 100%; height: 100%; border-radius: 11px; overflow: hidden; background: #000; border: 1px solid rgba(255, 255, 255, .14);
   transform: perspective(1200px) rotateY(-9deg) rotateX(2deg); transform-origin: 70% 50%;
   box-shadow: 0 28px 56px rgba(0, 0, 0, .6), 0 0 56px -10px var(--c); }
-.hero-glass video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.hero-tag { position: absolute; left: -12px; bottom: 12px; font-size: 9.5px; font-weight: 800; letter-spacing: .18em; color: #0D0F12;
+.hero-glass video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.hero-tag { position: absolute; left: -12px; top: -9px; font-size: 9.5px; font-weight: 800; letter-spacing: .18em; color: #0D0F12;
   background: var(--c); padding: 4px 8px; border-radius: 6px; box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
 /* DEAL: a fan of units behind the price and the clock */
 .hero-fan { position: absolute; right: 16px; top: 0; bottom: 0; width: 44%; z-index: 1; pointer-events: none; }
-.hero-fan img { position: absolute; height: 104px; width: auto; filter: drop-shadow(0 16px 22px rgba(0, 0, 0, .75)); transform: rotate(var(--r)); animation: heroFanBob 5s ease-in-out infinite; }
+.hero-fan img { position: absolute; height: 104px; width: auto; max-width: var(--mw, 36%); object-fit: contain; filter: drop-shadow(0 16px 22px rgba(0, 0, 0, .75)); transform: rotate(var(--r)); animation: heroFanBob 5s ease-in-out infinite; }
 .hero-fan.still img { animation: none; }
 @keyframes heroFanBob { 0%, 100% { transform: rotate(var(--r)) translateY(0); } 50% { transform: rotate(var(--r)) translateY(-8px); } }
 .hero-clock-box { min-width: 44px; height: 42px; border-radius: 9px; background: rgba(0, 0, 0, .45); border: 1px solid #3A3F47; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 4px; }
@@ -261,13 +265,14 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 .hero-dot-fill.past { opacity: .5; }
 .hero.held .hero-dot-fill { animation-play-state: paused; }
 @keyframes heroFill { from { width: 0; } to { width: 100%; } }
-.hero-arrow { position: absolute; top: 50%; margin-top: -16px; z-index: 6; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #3A3F47;
-  background: rgba(13, 15, 18, .72); color: #fff; font-size: 18px; line-height: 1; display: grid; place-items: center; opacity: 0; transition: opacity .2s; cursor: pointer; }
+.hero-arrows { position: absolute; right: 12px; bottom: 7px; z-index: 6; display: flex; gap: 6px; }
+.hero-arrow { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #3A3F47; padding: 0;
+  background: rgba(13, 15, 18, .8); color: #fff; font-size: 16px; line-height: 1; display: grid; place-items: center; opacity: 0; transition: opacity .2s; cursor: pointer; }
 .hero-hide { position: absolute; top: 11px; right: 14px; z-index: 6; font-size: 11px; font-weight: 700; color: #8B919B; background: rgba(13, 15, 18, .72);
   border: 1px solid #2E3239; border-radius: 8px; padding: 3px 9px; opacity: 0; transition: opacity .2s; cursor: pointer; }
 .hero:hover .hero-arrow, .hero:hover .hero-hide, .hero-arrow:focus-visible, .hero-hide:focus-visible { opacity: 1; }
 .hero-hide:hover { color: #E8EAED; }
-.hero-next { position: absolute; right: 18px; bottom: 11px; z-index: 5; max-width: 40%; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: #6D737D;
+.hero-next { position: absolute; right: 78px; bottom: 11px; z-index: 5; max-width: 40%; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: #6D737D;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
 .hero-next b { color: #A3A9B3; }
 @media (prefers-reduced-motion: reduce) { .hero-fan img, .hero-media-in, .hero-copy-in > * { animation: none; } }

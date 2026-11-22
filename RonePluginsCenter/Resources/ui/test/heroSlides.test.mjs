@@ -109,3 +109,12 @@ test('clock: "opens in" before the open, "ends in" after, nothing once over', ()
   assert.equal(clockOf(s, NOW + 7200000).before, false)
   assert.equal(clockOf(s, NOW + 6 * 86400000), null)
 })
+
+test('a tip whose plugin has no guide video: the manual button left becomes the main one, never a lone grey link', () => {
+  const tip = mockBanners.find(b => b.id === 'tip:1176-scope')
+  const s = serverSlide(tip, { ...ctxFor('buyer'), audience: 'buyer' })
+  assert.equal(s.acts.length, 1)
+  assert.equal(s.acts[0].act.type, 'manual')
+  assert.equal(s.acts[0].primary, true)
+  assert.ok(!s.acts[0].ghost)
+})

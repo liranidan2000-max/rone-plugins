@@ -106,6 +106,9 @@ export function serverSlide (b, ctx) {
     return null
   }
   const acts = [action(b.cta, b.cta_label, true), action(b.cta2, b.cta2_label, false)].filter(a => a && a.label)
+  // The main button may not exist here (a plugin with no guide video): then the one left is the main one,
+  // never a lone grey link (22.11.2026).
+  if (acts.length && !acts.some(a => a.primary) && !acts[0].done) acts[0] = { ...acts[0], primary: true, ghost: false }
   return {
     key: 'b:' + b.id, bannerId: b.id, server: true, kind: b.kind, priority: Number(b.priority) || 50,
     color: HEX.test(b.accent || '') ? b.accent : (p ? accentOf(p) : '#E8EAED'),
