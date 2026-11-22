@@ -33,8 +33,11 @@ export default function DetailView ({ t, plugin, access, reduced, daws, dawId, o
         <div className="relative h-[560px] rounded-[16px] border border-rone-border grid place-items-center overflow-hidden"
              style={{ background: `radial-gradient(70% 55% at 50% 60%, ${tint(acc, 0.22)}, transparent 70%), linear-gradient(180deg,#16181C,#0F1114)` }}>
           <div className="absolute left-[12%] right-[12%] bottom-5 h-3.5 rounded-full blur-[14px]" style={{ background: `${tint(acc, 0.4)}` }} />
-          <img src={plugin.unitUrl || plugin.logoUrl} alt={'RONE ' + name}
-               className={plugin.unitUrl ? 'max-w-[88%] max-h-[92%]' : 'w-[140px] h-[140px] rounded-[30px]'}
+          {/* Absolute inside the fixed 560px box: a % max-height on a grid item resolves against an auto row and is
+              ignored, so a tall unit (Listen 1:2, Clipper 1:2.17) grew past the box and was cut (22.11.2026).
+              test/unit-fit.test.mjs + tools/unit-fit-check.mjs guard it. */}
+          <img src={plugin.unitUrl || plugin.logoUrl} alt={'RONE ' + name} data-unit-frame
+               className={plugin.unitUrl ? 'absolute inset-0 m-auto max-w-[88%] max-h-[90%] object-contain' : 'w-[140px] h-[140px] rounded-[30px]'}
                style={{ filter: 'drop-shadow(0 26px 40px rgba(0,0,0,.65))' }} />
         </div>
 

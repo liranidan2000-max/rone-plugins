@@ -42,7 +42,7 @@ export default function RackView ({ t, plugins, access, onDetail }) {
                     className={`relative h-[240px] rounded-[12px] border border-[#1E2126] flex flex-col items-center justify-end px-2 pb-2.5 overflow-hidden text-center ${on ? '' : 'slot-off'}`}
                     style={{ background: 'linear-gradient(180deg,#15171B,#0E1013)' }} aria-label={'RONE ' + shortName(p) + ' · ' + status}>
               {on && <span className="absolute left-[20%] right-[20%] top-[150px] h-[22px] rounded-full blur-[16px] opacity-45" style={{ background: acc }} />}
-              <img src={p.unitUrl || p.logoUrl} alt="" loading="lazy"
+              <img src={p.unitUrl || p.logoUrl} alt="" loading="lazy" data-unit-frame
                    className={`absolute left-1/2 -translate-x-1/2 top-3 max-w-[86%] max-h-[165px] ${p.unitUrl ? '' : 'w-[96px] h-[96px] top-10 rounded-[22px]'}`}
                    style={{ filter: on ? 'drop-shadow(0 14px 20px rgba(0,0,0,.6))' : undefined, transition: 'filter .4s, opacity .4s' }} />
               <span className="relative flex items-center gap-1.5 font-display font-bold text-[13px] text-rone-text-primary">
