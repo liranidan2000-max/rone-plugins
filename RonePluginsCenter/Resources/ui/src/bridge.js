@@ -129,6 +129,8 @@ export const api = {
   setCenterSetting:  createNativeFunction('setCenterSetting'),
   getDaws:           createNativeFunction('getDaws'),
   applyCenterUpdate: createNativeFunction('applyCenterUpdate'),
+  // the RONE sound (sounds.js playSwell): played by the system, true when it started
+  playSound:         createNativeFunction('playSound'),
   getAnnouncements:  createNativeFunction('getAnnouncements'),
   // roneaudio.com/api/v1/upsell with the device token: the 24-hour $19 offer, owner prices, signed /owner links
   getUpsell:         createNativeFunction('getUpsell'),

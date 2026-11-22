@@ -31,7 +31,17 @@ export function translateStatus (m, t) {
   if (m.code === 'declined' || m.code === 'center_update_declined') {
     return { text: t(key, p), type: 'info', sticky: false }
   }
-  const text = t(key, p) + (reason ? ' ' + reason : '')
+  // #160: our own app open where the Center cannot close it - the backend sends
+  // "RONE VST MANAGER (running as administrator)"; the page says where in its language.
+  if (m.code === 'in_use_own_hidden') {
+    const how = String(params.host || '').replace(/^.*\(([^)]*)\)\s*$/, '$1')
+    p.where = t(/administrator/i.test(how) ? 'msg.where_admin' : /another windows user/i.test(how) ? 'msg.where_other_user' : 'msg.where_unknown')
+  }
+  const line = t(key, p)
+  // A line whose detail did not come (no {host}, no {file}) is never shown with a
+  // hole in it: the backend's own sentence says it whole.
+  if (/\{\w+\}/.test(line)) return { text: m.text, type: m.type || 'info', sticky: isSticky(m.text) }
+  const text = line + (reason ? ' ' + reason : '')
   return { text, type: m.type || 'info', sticky: isSticky(m.text) }
 }
 

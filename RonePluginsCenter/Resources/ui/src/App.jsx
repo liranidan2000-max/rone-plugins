@@ -8,6 +8,7 @@ import Onboarding from './components/Onboarding'
 import ManualDialog from './components/ManualDialog'
 import AnnouncementModal from './components/AnnouncementModal'
 import UpsellModal from './components/UpsellModal'
+import CenterApplying from './components/CenterApplying'
 import { Dialog } from './components/ui'
 import LibraryView from './views/LibraryView'
 import UpdatesView from './views/UpdatesView'
@@ -19,7 +20,7 @@ import AccountView from './views/AccountView'
 import SupportView from './views/SupportView'
 import { makeT, LOCALES } from './i18n'
 import { usePrefs, prefersReducedMotion } from './prefs'
-import { playPowerOn } from './sounds'
+import { playDone, playSwell } from './sounds'
 import { productKey, ownedProductIds } from './ownership'
 import { pickAnnouncement, rememberAnnouncement } from './announcements'
 import { isBusy, isInstalled, shortName, updatable, accentOf } from './catalog'
@@ -43,6 +44,10 @@ export default function App () {
   const [platform, setPlatform] = useState('windows')
   const [appVersion, setAppVersion] = useState('')
   const [centerUpdate, setCenterUpdate] = useState(null)
+  // When the Mac's Center began installing its own update (0 = not now): CenterApplying shows the clock.
+  const [centerApplying, setCenterApplying] = useState(0)
+  const platformRef = useRef(platform)
+  platformRef.current = platform
 
   const [view, setView] = useState('library')
   const [detailId, setDetailId] = useState(null)
@@ -130,7 +135,7 @@ export default function App () {
 
   // ---- what an install that just finished says ----
   const announceInstalled = useCallback((plugin, version) => {
-    if (prefs.sounds) playPowerOn()
+    if (prefs.sounds) playDone()
     addToast({
       type: 'success', accent: plugin ? accentOf(plugin) : undefined,
       title: t('msg.installedTitle', { name: 'RONE ' + (plugin ? shortName(plugin) : '') + (version ? ' ' + version : '') }),
@@ -152,6 +157,7 @@ export default function App () {
         setTips(mockTips); setDaws(mockDaws)
         if (new URLSearchParams(location.search).has('centerupdate')) setCenterUpdate('2.0.1.250')
         if (new URLSearchParams(location.search).has('mac')) setPlatform('mac')   // the Mac-only rows
+        if (new URLSearchParams(location.search).has('applying')) setCenterApplying(Date.now() - 42000)   // the Mac update clock
         setLoading(false)
         return
       }
@@ -199,7 +205,7 @@ export default function App () {
       const params = m.params || {}
       const gift = giftRef.current
       if (gift && gift.id === params.id) {
-        if (prefs.sounds) playPowerOn()
+        if (prefs.sounds) playDone()
         return { type: 'success', title: t('msg.installedTitle', { name: gift.name }), text: t('gift.installedText') }
       }
       const plugin = pluginsRef.current.find(x => x.id === params.id)
@@ -230,6 +236,10 @@ export default function App () {
     onEvent('licenseDeactivationResult', (d) => { if (d?.success) setLicense({ licensed: false, customerName: '', licenseKey: '', message: d.message || '' }) })
     onEvent('statusMessage', (d) => {
       if (!d?.text) return
+      // A Mac Center installing its own update says so with a running clock instead of a toast
+      // that is gone in five seconds (support #107); any word on how it ended takes the clock away.
+      if (d.code === 'center_update_restarting' && platformRef.current === 'mac') { setCenterApplying(Date.now()); return }
+      if (/^center_update_(manual|failed|from_dmg|declined|unfinished)$/.test(d.code || '')) setCenterApplying(0)
       const x = translateRef.current(d)
       if (x) addToast(x)
     })
@@ -251,6 +261,22 @@ export default function App () {
     try { localStorage.setItem(key, '1') } catch {}
     setTimeout(() => api.applyCenterUpdate().catch(() => {}), 2200)
   }, [centerUpdate])
+
+  // ---- the RONE sound (finish line, 22.11.2026): once per Center version, as the window comes up ----
+  // The first launch and the first open after an update. The page lives only while the window is
+  // on screen (Main.cpp syncPage), so a Center that starts or updates in the tray stays silent
+  // until it is opened. A Center about to update itself waits for the new version's open.
+  // Settings > Startup sound turns it off.
+  const swellDone = useRef(false)
+  useEffect(() => {
+    if (DEV || loading || !appVersion || centerUpdate || swellDone.current || prefs.startupSound === false) return
+    swellDone.current = true
+    const key = 'rone_center_sound_for'
+    let heard = ''
+    try { heard = localStorage.getItem(key) || '' } catch {}
+    if (heard === appVersion) return
+    playSwell().then((ok) => { if (ok) { try { localStorage.setItem(key, appVersion) } catch {} } })
+  }, [loading, appVersion, centerUpdate, prefs.startupSound])
 
   // ---- keyboard: Ctrl+R / F5 check for updates (the page itself never reloads) ----
   useEffect(() => {
@@ -545,7 +571,8 @@ export default function App () {
 
   return (
     <div className="h-screen flex flex-col bg-rone-bg overflow-hidden">
-      {centerUpdate && !(view === 'library' && !query && ups.length > 0) && (
+      {centerApplying > 0 && <CenterApplying t={t} since={centerApplying} />}
+      {centerUpdate && !centerApplying && !(view === 'library' && !query && ups.length > 0) && (
         <div className="flex-shrink-0 flex items-center gap-3 px-6 py-2 bg-white/[0.04] border-b border-white/10">
           <span className="led led-upd" />
           <span className="text-[12px] font-bold text-rone-text-secondary">{t('cu.ready', { version: centerUpdate.split('.').slice(0, 3).join('.') })}</span>
@@ -575,7 +602,7 @@ export default function App () {
           <div ref={scroller} className="flex-1 min-h-0 overflow-y-auto scroll-y px-6 pt-5 pb-24">
             {view === 'library' && (
               <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk}
-                           centerUpdate={centerUpdate} onCenterUpdate={() => api.applyCenterUpdate().catch(() => {})}
+                           centerUpdate={centerApplying ? null : centerUpdate} onCenterUpdate={() => api.applyCenterUpdate().catch(() => {})}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
                            catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} vstmApp={vstmApp} ups={ups}
                            banners={banners} optinOn={!!optin?.on} onOptin={account.signedIn ? changeOptin : () => navigate('account')} />

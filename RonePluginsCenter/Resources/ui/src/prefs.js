@@ -14,6 +14,7 @@ export const DEFAULT_PREFS = {
   contrast: false,
   reduceMotion: false,
   sounds: false,       // off by default: producers hate surprise sounds
+  startupSound: true,  // the RONE sound once per Center version as the window comes up (sounds.js)
   daw: null,           // the DAW whose steps are shown; null = the first one found
   onboarded: false,
 }

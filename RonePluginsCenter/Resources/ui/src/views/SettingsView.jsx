@@ -298,6 +298,9 @@ export default function SettingsView ({ t, prefs, setPrefs, daws, platform, mani
           <Row title={t('set.motion')} desc={t('set.motionSub')}>
             <Switch label={t('set.motion')} checked={prefs.reduceMotion} onChange={(v) => setPrefs({ reduceMotion: v })} />
           </Row>
+          <Row title={t('set.startupSound')} desc={t('set.startupSoundSub')}>
+            <Switch label={t('set.startupSound')} checked={prefs.startupSound !== false} onChange={(v) => setPrefs({ startupSound: v })} />
+          </Row>
           <Row title={t('set.sounds')} desc={t('set.soundsSub')}>
             <Switch label={t('set.sounds')} checked={prefs.sounds} onChange={(v) => setPrefs({ sounds: v })} />
           </Row>

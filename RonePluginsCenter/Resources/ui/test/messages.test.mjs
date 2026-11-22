@@ -67,3 +67,37 @@ test('installPlugin errors: licence vs sign in', () => {
   assert.equal(installErrorText('Sign in required', 'RONE Throw', en), 'Sign in to install RONE Throw.')
   assert.equal(installErrorText('Already on its way', 'RONE Throw', en), 'Already on its way')
 })
+
+// Finish line (22.11.2026, Liran: "errors in human words"): the outcomes that reached the page as the
+// backend's raw English now speak the user's language - what happened, that nothing broke, the one thing
+// to do. The backend's English text stays as it is: the crash tracker and the report throttle read it.
+test('a file in use names the program and says nothing was changed, in the user language', () => {
+  const host = { text: 'Install cancelled - a file was in use. Close FL Studio (it has RONE Iron open), then update again.',
+                 type: 'error', code: 'in_use_host', params: { name: 'RONE Iron', host: 'FL Studio', exitCode: 5 } }
+  assert.equal(translateStatus(host, en).text, 'Nothing was changed: RONE Iron is open in FL Studio. Close FL Studio, then update again.')
+  assert.match(translateStatus(host, pt).text, /^Nada foi alterado: o RONE Iron está aberto no FL Studio/)
+  const own = { text: 'x', type: 'error', code: 'in_use_own', params: { name: 'RONE VST MANAGER', host: 'RONE VST MANAGER', exitCode: 5 } }
+  assert.equal(translateStatus(own, en).text, 'Nothing was changed: RONE VST MANAGER is still open. Close it, then update again.')
+  const hidden = { text: 'x', type: 'error', code: 'in_use_own_hidden',
+                   params: { name: 'RONE VST MANAGER', host: 'RONE VST MANAGER (running as administrator)', exitCode: 5 } }
+  assert.match(translateStatus(hidden, en).text, /is still open as administrator, where the Center cannot close it/)
+  const other = { ...hidden, params: { ...hidden.params, host: 'RONE VST MANAGER (open for another Windows user)' } }
+  assert.match(translateStatus(other, makeT('es')).text, /sigue abierto para otro usuario de Windows/)
+})
+
+test('a locked file is named; a line whose detail did not come falls back to the whole English sentence', () => {
+  const locked = { text: 'RONE Iron: Windows would not let the installer replace RoneIron.vst3.', type: 'error', code: 'install_locked',
+                   params: { name: 'RONE Iron', file: 'RoneIron.vst3', exitCode: 5 } }
+  assert.match(translateStatus(locked, en).text, /^Nothing was changed: Windows would not let the installer replace RoneIron\.vst3\./)
+  const noFile = { ...locked, params: { name: 'RONE Iron', exitCode: 5 } }
+  assert.equal(translateStatus(noFile, en).text, locked.text)
+})
+
+test('the installer that could not start, a newer build, a busy server: all translated', () => {
+  assert.match(translateStatus({ text: 'x', type: 'error', code: 'installer_init_failed', params: { name: 'RONE Rise', exitCode: 1 } }, pt).text,
+               /^RONE Rise: o instalador não conseguiu iniciar/)
+  assert.equal(translateStatus({ text: 'x', type: 'info', code: 'newer_build_pending', params: { name: 'RONE Rise' } }, en).text,
+               'A newer build of RONE Rise is on its way. Check again in a minute.')
+  assert.match(translateStatus({ text: 'x', type: 'info', code: 'download_retry_later', params: { name: 'RONE Rise' } }, makeT('es')).text,
+               /vuelve a intentar RONE Rise solo en dos minutos/)
+})

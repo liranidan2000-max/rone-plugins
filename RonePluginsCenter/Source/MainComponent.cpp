@@ -69,12 +69,38 @@ static bool isEffectivelyLicensed (const LicenseHandler& handler,
   #define WIN32_LEAN_AND_MEAN
  #endif
  #include <windows.h>
+ #include <mmsystem.h>
+ #pragma comment (lib, "winmm.lib")
 #endif
 
 #if JUCE_MAC
  #include <unistd.h>
  #include <sys/mount.h>
 #endif
+
+// The RONE sound (finish line, 22.11.2026 - Liran picked SWELL; Resources/sounds/rone-swell.wav, rendered
+// from docs/mockups/finish-line/sonic.js at the mockup's -25 LUFS). The page decides when - once per
+// Center version as the window comes up, unless Settings > Startup sound is off - and asks for it here.
+// The system plays it, not the page: WebView2 holds WebAudio back until the first click, and the browser
+// flag that lifts that makes a WebView2 opened with other flags than one still running on the same data
+// folder fail (0x8007139F, measured 22.11) - a blank Center right after an update. Fire and forget.
+static bool playRoneSound()
+{
+   #if JUCE_WINDOWS
+    return PlaySoundW (reinterpret_cast<LPCWSTR> (BinaryData::roneswell_wav), nullptr,
+                       SND_MEMORY | SND_ASYNC | SND_NODEFAULT) != FALSE;
+   #elif JUCE_MAC
+    const auto file = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("rone-swell.wav");
+    if (file.getSize() != (juce::int64) BinaryData::roneswell_wavSize
+        && ! file.replaceWithData (BinaryData::roneswell_wav, (size_t) BinaryData::roneswell_wavSize))
+        return false;
+    static std::unique_ptr<juce::ChildProcess> player;   // afplay ends by itself; replacing it does not stop it
+    player = std::make_unique<juce::ChildProcess>();
+    return player->start (juce::StringArray { "/usr/bin/afplay", file.getFullPathName() }, 0);
+   #else
+    return false;
+   #endif
+}
 
 // The home folder as "~" in what goes into an error report.
 static juce::String withoutHome (const juce::String& text)
@@ -295,6 +321,9 @@ juce::WebBrowserComponent::Options MainComponent::makeWebOptions()
                     juce::URL (roneUrl).launchInDefaultBrowser();
             }
             complete (juce::var ("ok"));
+        })
+        .withNativeFunction ("playSound", [] (NativeArgs, NativeCompletion complete) {
+            complete (juce::var (playRoneSound()));
         })
 
         // ---- Resource provider ----

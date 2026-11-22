@@ -142,6 +142,7 @@ juce_add_binary_data(PluginsCenterUI SOURCES
     ${_icon_files}
     ${_unit_files}
     Resources/AppIcon.png
+    Resources/sounds/rone-swell.wav
 )
 
 target_link_libraries(RonePluginsCenter PRIVATE
