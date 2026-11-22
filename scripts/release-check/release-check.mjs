@@ -36,6 +36,8 @@ const STATE_DIR = path.join(process.env.LOCALAPPDATA || os.tmpdir(), 'RONE', 're
 const NO_RACK = {
   RONEAnalyzer: 'Analyzer הוא כלי מדידה, בלי Control בכוונה',
   RoneListen: 'ל-Listen אין אף פרמטר (בלי APVTS): אין ל-Control מה להזיז',   // 22.11.2026
+  // Liran 22.11.2026: RONE Control goes only into EFFECTS, whose knobs are ridden by hand for automation (1.1.1 took it out)
+  RoneHook: 'HOOK תופס קול, הוא לא אפקט: את הכפתורים שלו לא מזיזים ביד לאוטומציה',
 };
 const FOLDER = { ReverseReverb: 'ReverseReverbVST', RoneFlanger: 'rone-flanger-', RoneAfterspace: 'RONE AFTER SPACE' };
 
