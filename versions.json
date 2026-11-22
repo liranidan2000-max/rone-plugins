@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-22T08:48:04Z",
+  "last_updated": "2026-11-22T08:53:30Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-437.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-437.1.dmg",
@@ -778,7 +778,7 @@
     {
       "id": "RoneHook",
       "name": "RONE Hook",
-      "version": "1.1.0.436",
+      "version": "1.1.1.439",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -791,8 +791,8 @@
       "vst3_bundle": "RONE Hook.vst3",
       "au_bundle": "RONE Hook.component",
       "manual": "RONE Hook - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-436.1.exe",
-      "sha256": "dbb7d5b00ca6c783063f130df9af2816ebc98c6d41bfcfed13c1bf76b4963a6c",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-439.1.exe",
+      "sha256": "2261bf75aff505479d5f938aa15615e72892f24219008d36a591e0e737b7ca7b",
       "registry_key": "RoneHook",
       "store_url": "https://roneaudio.com/products/rone-hook.html",
       "gift_min_paid": 3,
@@ -811,7 +811,7 @@
       "accent": "#FF8A7A",
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
-      "size": 205909423,
+      "size": 197847535,
       "version_mac": "1.1.0.436",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-436.1.pkg",
       "sha256_mac": "25064c6bbd8d44cdf3822d489943cc5398821e345a29c6334f45dd5fee18fa39",
