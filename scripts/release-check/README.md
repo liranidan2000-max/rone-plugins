@@ -43,3 +43,8 @@ What no tool can see (YouTube, Instagram, TikTok, presets). Update the product's
 Windows task **RONE Release Check**, 07:40 (`install-nightly.ps1`, `nightly.vbs`): Telegram to Liran through the
 Kalifa bot (same path as the Test Bench) ONLY when a station turns red that was not red the run before. State in
 `%LOCALAPPDATA%\RONE\release-check\` (`last.json`, `last-report.txt`, `notify-errors.log`).
+
+## release-board.mjs (22.11.2026)
+The same check drawn as one Hebrew page for Liran: a dot per station (green done, red missing - Claude completes it,
+amber waits for him, grey not relevant). `node scripts/release-check/release-board.mjs [--plugin <Id>] [--out file.html]`.
+Every release publishes it as an Artifact at the start and at the end (skill rone-release).
