@@ -50,6 +50,17 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; and renders band solo / mono inside the DAW's own signal path.
 ; ============================================================================
 [Files]
+; AAX for Pro Tools (Windows): the Bridge and the Channel. Built and signed with PACE on the
+; iLok PC (scripts/aax), uploaded to the "AAX-signed" release; CI unpacks them into ..\aax\
+; before this compile and checks that their FileVersion matches CMakeLists. No signed bundle
+; for this version = no AAX in this installer (skipifsourcedoesntexist). Pro Tools marks every
+; AAX it scanned read-only, hence overwritereadonly / uninsremovereadonly.
+Source: "..\aax\RONE Analyzer Bridge.aaxplugin\*"; \
+  DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE Analyzer Bridge.aaxplugin"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
+Source: "..\aax\RONE Analyzer Channel.aaxplugin\*"; \
+  DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE Analyzer Channel.aaxplugin"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
 Source: "..\RONEAnalyzer\build-ci\RONEAnalyzer_artefacts\Release\RONE Analyzer.exe"; \
   DestDir: "{app}"; \
   Flags: ignoreversion
