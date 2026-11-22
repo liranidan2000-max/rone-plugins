@@ -1,4 +1,4 @@
-; 2026-10-26: rebuilt for the macOS .pkg - run #323 lost it to Apple notarization timeouts (fixed in b9db578)
+; 2026-11-22: rebuilt for the new icon (RoneIron 17a7a69) - same 1.2.3, so the iLok-signed AAX still packs
 ; ============================================================================
 ; RONE Iron — Silent Plugin Installer
 ; Designed to be invoked by RONE Plugins Center with /VERYSILENT flag
