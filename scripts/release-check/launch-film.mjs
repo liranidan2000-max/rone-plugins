@@ -29,6 +29,7 @@ const HERE = import.meta.dirname;
 const MONO = path.resolve(HERE, '..', '..');
 const SITE = 'D:/RONE PLUGINS/WEBSITE RONE AUDIO';
 const PPU_WORKSPACE = '29423c29-4069-499e-8f4a-5263cf043e02';   // ULTRA = PPU's account. Never spend it on RONE PLUGINS.
+const PLUS_WORKSPACE = 'b4e4388c-1b10-4d31-8c36-97c0638b19aa';  // Liran's PLUS (ronemusics Gmail), seen 22.11.2026 = the only one allowed
 const MAX_TRIES = 2;
 const SETTINGS = { model: 'seedance_2_5', mode: 'omni_reference', duration: 15, resolution: '1080p', generate_audio: true };
 const CREDITS_EACH = 240;   // estimate_video_cost 22.11.2026: seedance_2_5, 15 s, 1080p, audio = 240 (720p = 105)
@@ -144,7 +145,7 @@ function prepare() {
   console.log(`${u.name}: מוכן לסרטון ההשקה (${u.color}${u.screen ? '' : ', מסך כללי'}) ב-${u.dir}`);
   console.log(`  תמונה 1 = הרינדור האמיתי: ${ref}`);
   console.log(`  עלות: ${CREDITS_EACH} קרדיטים לכל פורמט, ${CREDITS_EACH * 2} לשניהם. עד ${MAX_TRIES} ניסיונות לפורמט בלי לשאול את לירן.`);
-  console.log(`  רק מחשבון ה-PLUS (ronemusics). סביבת העבודה ${PPU_WORKSPACE} (ULTRA של PPU) אסורה.`);
+  console.log(`  רק מחשבון ה-PLUS (ronemusics, סביבת עבודה ${PLUS_WORKSPACE}). ${PPU_WORKSPACE} (ULTRA של PPU) אסורה.`);
   console.log(JSON.stringify({ upload: ref, generate_video: { '16x9': call('16x9'), '9x16': call('9x16') } }, null, 2));
 }
 
@@ -156,6 +157,7 @@ function record() {
   const jobId = opt('--job') || die('צריך --job <job id מ-generate_video>');
   const ws = opt('--workspace') || die('צריך --workspace <id> (מ-list_workspaces): כך מוודאים שזה חשבון ה-PLUS');
   if (ws === PPU_WORKSPACE) die('זו סביבת ה-ULTRA של PPU. סרטוני RONE PLUGINS נוצרים רק מחשבון ה-PLUS. לא נרשם.');
+  if (ws !== PLUS_WORKSPACE && !flag('--force')) die(`סביבת עבודה לא מוכרת (${ws}). חשבון ה-PLUS הוא ${PLUS_WORKSPACE}. אחרת רק באישור של לירן (--force).`);
   const f = job.films[k];
   if (f.tries.length >= MAX_TRIES && !flag('--force')) die(`כבר ${f.tries.length} ניסיונות ל-${k}. ניסיון נוסף רק אחרי אישור של לירן (--force).`);
   f.tries.push({ job: jobId, workspace: ws, media: opt('--media') || null, credits: Number(opt('--credits') || CREDITS_EACH), at: new Date().toISOString() });
