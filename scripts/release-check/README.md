@@ -22,7 +22,16 @@ site: manual PDF · Control chapter in the PDF · 3D unit (units.json + 4 graphi
 Paddle price incl. `_REGULAR` · homepage card + fx.js showcase · living demo · internal lists (sitemap, llms.txt,
 account.js, pricing + every list `site-counts.mjs --check` covers) · global: every count on the site.
 media (ledger.json): YouTube tutorial (versions.json `video`) · preset video · Shorts · TikTok · launch reel ·
-update carousel · studio trial reel.
+update carousel · studio trial reel · 3D launch film 16:9 + 9:16 (read from its job.json, see below).
+
+## launch-film.mjs (22.11.2026)
+The Higgsfield film where the unit builds itself from its parts (Seedance 2.5, 15 s, 1080p, sound, real render as
+image 1), in 16:9 and 9:16, on every release. Generation goes through the Higgsfield MCP connector of Liran's PLUS
+account (no API key on a consumer plan), so Claude runs it inside the `rone-release` skill; the script does the rest:
+`prepare` (folder `WEBSITE RONE AUDIO\videos\ai-launch-films\<slug>\`, both prompts, job.json) · `record` (writes the
+paid job down; refuses PPU's ULTRA workspace and a 3rd try without `--force`) · `finish` (download, size/length/sound
+check, `check-<aspect>.jpg` with a frame per shot) · `approve` / `reject` · `status`. Per-unit colour + screen words:
+`launch-film.json`. Run it with node directly; the `.cmd` breaks on quoted paths under Git Bash.
 
 Exempt: RONEAnalyzer has no Control by design (`NO_RACK`). Free / subscription-only products need no lifetime price.
 

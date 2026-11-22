@@ -63,6 +63,7 @@ const STATIONS = [
   ['pvid', 'סרטון פריסטים', 'media', 'וידאו'],
   ['shorts', 'Shorts מהמדריך', 'media', 'וידאו'],
   ['tiktok', 'TikTok', 'media', 'וידאו'],
+  ['film', 'סרטון השקה 3D (16:9 + 9:16)', 'media', 'השקה'],
   ['reel', 'ריל השקה', 'media', 'השקה'],
   ['carousel', 'קרוסלת עדכון', 'media', 'השקה'],
   ['trial', 'ריל ניסיון (סטודיו)', 'media', 'השקה'],
@@ -96,6 +97,8 @@ const warn = (why, where = '') => ({ s: 'warn', why, where });
 const bad = (why, where = '') => ({ s: 'missing', why, where });
 const na = (why = '') => ({ s: 'na', why });
 const unknown = (why) => ({ s: 'unknown', why });
+const readJsonSafe = (p) => { try { return JSON.parse((read(p) || '').replace(/^﻿/, '')); } catch { return null; } };
+const FILM_STATUS = { prepared: 'הוכן, עוד לא נוצר', generating: 'בהיגספילד', check: 'מחכה לבדיקה בעיניים', rejected: 'נפסל', ok: 'מוכן' };
 
 const SUBMODULES = new Set((read(path.join(MONO, '.gitmodules')) || '').split('\n')
   .map((l) => l.match(/^\s*path\s*=\s*(.+?)\s*$/)?.[1]).filter(Boolean));
@@ -337,6 +340,15 @@ async function main() {
     st.tutorial = !v.video ? bad('אין מדריך: בסנטר כתוב Coming soon', 'versions.json "video"') : led.tutorial ? fromLedger('tutorial') : ok(v.video);
     st.presets = fromLedger('presets');
     for (const k of ['pvid', 'shorts', 'tiktok', 'reel', 'carousel', 'trial']) st[k] = fromLedger(k);
+    // The Higgsfield 3D launch film (launch-film.mjs, 22.11.2026): its job.json is the truth once it exists.
+    const filmJob = slug ? readJsonSafe(path.join(SITE, 'videos/ai-launch-films', slug, 'job.json')) : null;
+    if (filmJob?.films) {
+      const fs_ = Object.entries(filmJob.films);
+      const okN = fs_.filter(([, f]) => f.status === 'ok').length;
+      st.film = okN === fs_.length ? ok(fs_.map(([k]) => k.replace('x', ':')).join(' + '))
+        : okN ? warn(fs_.map(([k, f]) => `${k.replace('x', ':')} ${FILM_STATUS[f.status] || f.status}`).join(', '), 'launch-film.cmd status')
+        : bad(fs_.map(([k, f]) => `${k.replace('x', ':')} ${FILM_STATUS[f.status] || f.status}`).join(', '), `launch-film.cmd status --plugin ${id}`);
+    } else st.film = fromLedger('film', bad('אין סרטון השקה 3D', `launch-film.cmd prepare --plugin ${id}`));
 
     results.push({ id, name: v.name || id, folder: prod.folder, slug, dev: !!prod.dev, code: code.label, stations: st });
   }

@@ -4,7 +4,8 @@
 // (release-machine proposals "media" and "week"): "the only thing asked of you is a 30-second studio clip".
 //
 //   release-media.cmd --plugin RoneListen [--t0 2026-11-25] [--dry-run] [--only tutorial,short1,week]
-//   keys: reel studio carousel tutorial hero short1 tiktok presets short2 week
+//   keys: reel studio film carousel tutorial hero short1 tiktok presets short2 week
+//   (film = the Higgsfield 3D launch film, launch-film.mjs; its approve step puts the 9:16 on this card)
 //
 // What it does (nothing here publishes anything; every card is a PLAN that waits for its maker):
 //   1. reads the board for T0..T0+8 (schedule.mjs read --json) and picks FREE Instagram prime hours for the
@@ -43,6 +44,7 @@ const day = (n) => { const d = new Date(`${t0}T12:00:00Z`); d.setUTCDate(d.getUT
 const CARDS = [
   ['reel', 0, ['20:00', '21:00', '18:00'], 'instagram', 'reel', 'ריל השקה', 'נוסחת ריל ההצעה (offer-reel-formula). תמונת השער מהיחידה.', true],
   ['studio', 0, ['13:00'], 'instagram', 'trial', 'ריל ניסיון מקליפ סטודיו', 'הבקשה היחידה מלירן: קליפ סטודיו של 30 שניות. מכונת הטריאלים בונה ממנו.', false],
+  ['film', 1, ['18:00', '21:00', '20:00'], 'instagram', 'reel', 'סרטון השקה 3D (9:16)', 'launch-film.cmd: היחידה מתרכבת מהחלקים (Seedance 2.5 מחשבון ה-PLUS). ה-16:9 ליוטיוב ולעמוד המוצר. עולה רק באישור של לירן.', true],
   ['carousel', 1, ['20:00', '21:00', '18:00', '13:00'], 'instagram', 'carousel', 'קרוסלת NEW UPDATE', 'update-carousels.mjs (צריך שורה למוצר).', true],
   ['tutorial', 2, ['18:00'], 'youtube', 'reel', 'YouTube: מדריך', 'ערכת המדריכים: קריינות Kokoro + מארח הצילום. אחרי שעולה: השדה video ב-versions.json ובעמוד המוצר, ושורת ledger.', false],
   ['hero', 2, ['12:00'], 'site', 'release', 'קליפ גיבור לעמוד המוצר', 'קליפ קצר מהמדריך לראש עמוד המוצר באתר.', false],
