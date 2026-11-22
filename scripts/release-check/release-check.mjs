@@ -345,7 +345,8 @@ async function main() {
       const [s, note = ''] = e;
       return s === 'ok' ? ok(note) : s === 'na' ? na(note) : s === 'warn' ? warn(note || 'חלקי', 'ledger.json') : bad(note || 'לא קיים', 'ledger.json');
     };
-    st.tutorial = !v.video ? bad('אין מדריך: בסנטר כתוב Coming soon', 'versions.json "video"') : led.tutorial ? fromLedger('tutorial') : ok(v.video);
+    // a ledger row wins even with no "video" yet: a guide that is up UNLISTED waits for his word (amber), not red (22.11.2026)
+    st.tutorial = led.tutorial ? fromLedger('tutorial') : !v.video ? bad('אין מדריך: בסנטר כתוב Coming soon', 'versions.json "video"') : ok(v.video);
     st.presets = fromLedger('presets');
     for (const k of ['pvid', 'shorts', 'tiktok', 'reel', 'carousel', 'trial']) st[k] = fromLedger(k);
     // The Higgsfield 3D launch film (launch-film.mjs, 22.11.2026): its job.json is the truth once it exists.
