@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-21T19:32:40Z",
+  "last_updated": "2026-11-22T07:50:15Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-435.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-435.1.dmg",
@@ -691,7 +691,7 @@
       "id": "RoneReverb",
       "released": "2026-11-16",
       "name": "RONE Reverb",
-      "version": "1.0.2.435",
+      "version": "1.1.0.436",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -707,9 +707,9 @@
       "vst3_bundle": "RONE Reverb.vst3",
       "au_bundle": "RONE Reverb.component",
       "manual": "RONE Reverb - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-435.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-436.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-435.1.pkg",
-      "sha256": "ae5099bb32428a0910a9b81ca79a9f0b4e2f124e1288662699a8a19f81e86ddc",
+      "sha256": "88f27e68ca804461eee7dde7c1074be207728e812e996c8e626c079e5ed845f6",
       "registry_key": "RoneReverb",
       "sha256_mac": "75b851e69d5017c203b1ca43b4be10e08c4d491fec46a231398076b14944a0df",
       "store_url": "https://roneaudio.com/products/rone-reverb.html",
@@ -729,7 +729,7 @@
       "accent": "#FFAFC8",
       "inno_app_id": "{F27564D5-966F-4768-8637-2271CBC94272}",
       "version_mac": "1.0.2.435",
-      "size": 7570821,
+      "size": 13959592,
       "size_mac": 18616376
     },
     {
@@ -777,7 +777,7 @@
     {
       "id": "RoneHook",
       "name": "RONE Hook",
-      "version": "1.0.6.435",
+      "version": "1.1.0.436",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -790,8 +790,8 @@
       "vst3_bundle": "RONE Hook.vst3",
       "au_bundle": "RONE Hook.component",
       "manual": "RONE Hook - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-435.1.exe",
-      "sha256": "2459b64d8760f741e4b496ca96b5548de12c4160683370073d9668c281aef418",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-436.1.exe",
+      "sha256": "dbb7d5b00ca6c783063f130df9af2816ebc98c6d41bfcfed13c1bf76b4963a6c",
       "registry_key": "RoneHook",
       "store_url": "https://roneaudio.com/products/rone-hook.html",
       "gift_min_paid": 3,
@@ -810,7 +810,7 @@
       "accent": "#FF8A7A",
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
-      "size": 197800819,
+      "size": 205909423,
       "version_mac": "1.0.6.435",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-435.1.pkg",
       "sha256_mac": "221fedd0493e32a2cb0285054987dd1207ee9967e539eb19b29ba95171a632c7",
