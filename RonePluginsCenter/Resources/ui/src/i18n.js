@@ -84,7 +84,7 @@ const en = {
 
   // categories
   'cat.all': 'All', 'cat.transitions': 'Transitions', 'cat.space': 'Space', 'cat.rhythm': 'Rhythm',
-  'cat.vocal': 'Vocal', 'cat.mix': 'Mix tools',
+  'cat.vocal': 'Vocal', 'cat.mix': 'Mix tools', 'cat.creative': 'Creative', 'cat.utility': 'Utility',
 
   // library bar
   'lib.sort': 'Sort', 'lib.sortYours': 'Yours first', 'lib.sortName': 'A–Z', 'lib.sortNew': 'Newest',
@@ -368,7 +368,7 @@ const pt = {
   'top.refresh': 'Procurar atualizações', 'top.signIn': 'Entrar', 'top.pickDaw': 'Escolha sua DAW',
   'ago.now': 'agora', 'ago.m': 'há {n} min', 'ago.h': 'há {n} h', 'ago.d': 'há {n} d',
   'cat.all': 'Todos', 'cat.transitions': 'Transições', 'cat.space': 'Espaço', 'cat.rhythm': 'Ritmo',
-  'cat.vocal': 'Voz', 'cat.mix': 'Mixagem',
+  'cat.vocal': 'Voz', 'cat.mix': 'Mixagem', 'cat.creative': 'Criativo', 'cat.utility': 'Utilitários',
   'lib.sort': 'Ordem', 'lib.sortYours': 'Seus primeiro', 'lib.sortName': 'A–Z', 'lib.sortNew': 'Mais novos',
   'lib.grid': 'Grade', 'lib.rack': 'Rack', 'lib.noResults': 'Nada encontrado para “{q}”.', 'lib.clear': 'Limpar busca',
   'lib.loading': 'Carregando os plugins…', 'lib.empty': 'Nenhum plugin ainda. Confira sua conexão.', 'lib.retry': 'Tentar de novo',
@@ -602,7 +602,7 @@ const es = {
   'top.refresh': 'Buscar actualizaciones', 'top.signIn': 'Entrar', 'top.pickDaw': 'Elige tu DAW',
   'ago.now': 'ahora', 'ago.m': 'hace {n} min', 'ago.h': 'hace {n} h', 'ago.d': 'hace {n} d',
   'cat.all': 'Todos', 'cat.transitions': 'Transiciones', 'cat.space': 'Espacio', 'cat.rhythm': 'Ritmo',
-  'cat.vocal': 'Voz', 'cat.mix': 'Mezcla',
+  'cat.vocal': 'Voz', 'cat.mix': 'Mezcla', 'cat.creative': 'Creativo', 'cat.utility': 'Utilidades',
   'lib.sort': 'Orden', 'lib.sortYours': 'Los tuyos primero', 'lib.sortName': 'A–Z', 'lib.sortNew': 'Más nuevos',
   'lib.grid': 'Cuadrícula', 'lib.rack': 'Rack', 'lib.noResults': 'Nada coincide con “{q}”.', 'lib.clear': 'Borrar búsqueda',
   'lib.loading': 'Cargando los plugins…', 'lib.empty': 'Aún no hay plugins. Revisa tu conexión.', 'lib.retry': 'Reintentar',

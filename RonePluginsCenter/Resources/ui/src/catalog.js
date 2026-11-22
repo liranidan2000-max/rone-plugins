@@ -46,11 +46,13 @@ export function mixHex (hex, weight, base) {
 
 // What a producer reaches for it for. Same idea as the accent: the manifest's
 // `category` wins, this is the fallback.
-export const CATEGORY_KEYS = ['transitions', 'space', 'rhythm', 'vocal', 'mix']
+export const CATEGORY_KEYS = ['transitions', 'space', 'rhythm', 'vocal', 'mix', 'creative', 'utility']
 const FALLBACK_CATEGORIES = {
   ReverseReverb: ['transitions', 'space'], RoneStutter: ['rhythm'], RoneStucker: ['rhythm', 'transitions'],
   RoneThrow: ['space'], RoneClipper: ['mix'], RoneRise: ['transitions'], RoneIron: ['vocal'],
   RoneFlanger: ['transitions'], RoneAfterspace: ['space'], RONEAnalyzer: ['mix'],
+  RoneGrain: ['creative'], RoneHook: ['creative'], RoneListen: ['utility'], RoneReverb: ['space'], RoneDelay: ['space'],
+  Rone1176: ['mix'], Rone2A: ['mix'], RoneSidechain: ['mix'],
 }
 const FALLBACK_TAGS = {
   ReverseReverb: ['riser', 'reverse', 'swell', 'reverb'], RoneStutter: ['stutter', 'gate', 'glitch', 'fill'],
