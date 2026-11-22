@@ -2,7 +2,7 @@
   "_about": "Per-unit words for launch-film.mjs (the Higgsfield 3D launch film, 22.11.2026). color = the accent in plain words (the studio glow + the LEDs). screen = what the glass screen shows when it powers on in shot 4; leave it out and a safe generic line is used (the photo rules anyway). A NEW plugin needs no row: its colour is read from units.json, but a screen line makes a better film.",
   "units": {
     "rone-dmt":        { "color": "teal", "screen": "the teal waveform draws itself from left to right" },
-    "rone-reverb":     { "color": "soft pink", "screen": "the pink reverb cone and the five drawn knobs light up one after another" },
+    "rone-reverb":     { "color": "pale pink", "screen": "the pink reverb cone and the five drawn knobs light up one after another" },
     "rone-stutter":    { "color": "golden yellow", "screen": "the gold stutter bars light up one after another" },
     "rone-iron":       { "color": "purple", "screen": "the purple piano keys light up one after another" },
     "rone-clipper":    { "color": "electric blue", "screen": "the blue waveform draws itself with the clipped peaks marked" },
