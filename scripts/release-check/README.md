@@ -16,7 +16,7 @@ ends only when this is green for the plugin.
 
 ## Stations
 build: versions.json entry · RONE Control (rack.json + CMake at the SHIPPED pointer) · 2+ factory maps · crash
-reporter · installer + AppId · hands block · CI paths-filter incl. `Shared/RoneControlRack/**` · Center icon +
+reporter · lock-screen words ("14-day free trial", like the site - 22.11.2026) · installer + AppId · hands block · CI paths-filter incl. `Shared/RoneControlRack/**` · Center icon +
 VersionChecker row · test-bench row · factory presets (ledger).
 site: manual PDF · Control chapter in the PDF · 3D unit (units.json + 4 graphics) · product page + buy button ·
 Paddle price incl. `_REGULAR` · homepage card + fx.js showcase · living demo · internal lists (sitemap, llms.txt,

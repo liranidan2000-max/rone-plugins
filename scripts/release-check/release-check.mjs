@@ -47,6 +47,7 @@ const STATIONS = [
   ['rack', 'RONE Control בתוך הפלאגין', 'build', 'הפלאגין'],
   ['maps', 'מפות Control מוכנות (2 לפחות)', 'build', 'הפלאגין'],
   ['crash', 'דיווח קריסות', 'build', 'הפלאגין'],
+  ['words', 'מסך הנעילה: ניסיון 14 יום כמו באתר', 'build', 'הפלאגין'],
   ['installer', 'קובץ התקנה ו-AppId', 'build', 'הפלאגין'],
   ['hands', 'מודל הידיים בהתקנה', 'build', 'הפלאגין'],
   ['ci', 'מסנן CI כולל Control', 'build', 'הפלאגין'],
@@ -257,6 +258,11 @@ async function main() {
         : bad(`${maps.length} מפות (צריך 2 לפחות)`, `${prod.folder}/Source/rack.json "maps"`);
     }
     if (!code.missing) st.crash = code.grep('RoneCrashReporter') ? ok() : bad('אין RoneCrashReporter בקוד ששוחרר', `${prod.folder}/CMakeLists.txt`);
+    // Finish line 22.11.2026: twelve lock screens said "7-day free trial" while the site, the Center and Paddle give 14.
+    // Fixed in the plugin's own UI (ui/index.html + WebUI.h, or Resources/ui) on its next release.
+    if (!code.missing) st.words = code.grep('[0-9]+-day free trial') && !code.grep('14-day free trial')
+      ? bad('מסך הנעילה כותב ניסיון של מספר ימים אחר מ-14 (באתר, בסנטר וב-Paddle: 14). לתקן ל-"14-day free trial"', `${prod.folder}: "No account yet? 7-day free trial"`)
+      : ok();
 
     const iss = read(path.join(MONO, 'installer', `${id}.iss`));
     if (!iss) st.installer = bad('אין קובץ התקנה', `installer/${id}.iss`);
