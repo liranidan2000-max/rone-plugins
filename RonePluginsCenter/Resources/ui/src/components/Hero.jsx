@@ -110,6 +110,31 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
   }, [reduced, slides.length])
 
   const [broken, setBroken] = useState({})
+
+  // A window that was away for a long time (overnight, minimised, behind the DAW) can come back with the unit
+  // never painted again: 22.11.2026 the Listen unit was loaded and laid out (text column at 58 %, opacity 1)
+  // yet blank, and only reopening the Center brought it back. So after a minute away the unit and the rack
+  // are mounted afresh - a new element is painted from scratch, its entrance plays again - and a picture
+  // that failed while the window was away gets another try.
+  const [wake, setWake] = useState(0)
+  useEffect(() => {
+    let away = document.hidden ? Date.now() : 0
+    const leave = () => { if (!away) away = Date.now() }
+    const back = () => {
+      if (away && Date.now() - away > 60000) { setWake(w => w + 1); setBroken({}) }
+      away = 0
+    }
+    const onVisibility = () => (document.hidden ? leave() : back())
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('blur', leave)
+    window.addEventListener('focus', back)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('blur', leave)
+      window.removeEventListener('focus', back)
+    }
+  }, [])
+
   if (!slides.length) return null
   const s = slides[Math.min(i, slides.length - 1)]
   const unit = s.unit && !broken[s.unit] ? s.unit : null
@@ -120,7 +145,7 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
       <div className="hero-glow absolute inset-0" style={{ background: `radial-gradient(55% 110% at 78% 50%, ${s.color} 0%, transparent 62%)` }} />
       <div className="absolute inset-0" style={{ background: 'radial-gradient(90% 160% at 85% 50%, rgba(255,255,255,.06) 0%, transparent 55%)' }} />
       {s.rack && (
-        <div key={s.key} className="absolute right-0 top-0 bottom-0 w-[42%] pointer-events-none overflow-hidden" aria-hidden="true">
+        <div key={s.key + wake} className="absolute right-0 top-0 bottom-0 w-[42%] pointer-events-none overflow-hidden" aria-hidden="true">
           <div className={reduced ? 'hero-rack still' : 'hero-rack'}>
             {[...s.rack, ...(reduced ? [] : s.rack)].map((u, k) => (
               <div key={u.id + k} className="hero-rack-cell" style={{ '--d': `${(k % s.rack.length) * -0.55}s`, '--c': u.color }}>
@@ -135,7 +160,7 @@ export default function Hero ({ t, plugins, app, access, account, license, perso
         <div className="absolute right-[3%] top-0 bottom-0 w-[44%] flex items-center justify-center pointer-events-none" aria-hidden="true">
           {/* Entrance, turn and picture are three elements on purpose (index.css .hero-*): the old one-element
               stack drew nothing on macOS 15's WebKit. */}
-          <div key={s.key + unit} className={reduced ? '' : 'hero-unit-in'}>
+          <div key={s.key + unit + wake} className={reduced ? '' : 'hero-unit-in'}>
             <div className={reduced ? 'relative' : 'hero-unit-wrap'} style={{ '--unit-mask': `url("${unit}")` }}>
               <img src={unit} alt="" className="hero-unit max-h-[190px] w-auto"
                    onError={() => setBroken(b => ({ ...b, [unit]: true }))} />
