@@ -100,6 +100,10 @@ namespace PluginUninstaller
         // 2.1.45: the AAX (Pro Tools), which the .pkg / the Center puts in Avid's system folder.
         if (p.vst3Bundle.isNotEmpty() && p.id != "RONEAnalyzer")
             add (VersionChecker::getAaxInstallDir().getChildFile (VersionChecker::aaxBundleFor (p.vst3Bundle)));
+        // 2.1.46: the Analyzer's two AAX (Bridge + Channel).
+        if (p.id == "RONEAnalyzer")
+            for (const auto& name : VersionChecker::analyzerBundleNames())
+                add (VersionChecker::getAaxInstallDir().getChildFile (name + ".aaxplugin"));
 
         // Center 2.1 installs what was not system-wide into the user's folders.
         if (p.vst3Bundle.isNotEmpty())
@@ -115,6 +119,10 @@ namespace PluginUninstaller
         // 2.1.41: the plugin's AAX (Pro Tools), which its installer puts under Avid.
         if (p.vst3Bundle.isNotEmpty() && p.id != "RONEAnalyzer")
             add (VersionChecker::getAaxInstallDir().getChildFile (VersionChecker::aaxBundleFor (p.vst3Bundle)));
+        // 2.1.46: the Analyzer's two AAX (Bridge + Channel).
+        if (p.id == "RONEAnalyzer")
+            for (const auto& name : VersionChecker::analyzerBundleNames())
+                add (VersionChecker::getAaxInstallDir().getChildFile (name + ".aaxplugin"));
         const auto appDir = VersionChecker::getStandaloneInstallDir();
         if (p.standaloneExe.isNotEmpty())
             add (appDir.getChildFile (p.standaloneExe));
@@ -250,7 +258,10 @@ namespace PluginUninstaller
                 bundles.add (VersionChecker::getVst3InstallDir().getChildFile (p.vst3Bundle));
             if (p.id == "RONEAnalyzer")
                 for (const auto& name : VersionChecker::analyzerBundleNames())
+                {
                     bundles.add (VersionChecker::getVst3InstallDir().getParentDirectory().getChildFile (name + ".vst3"));
+                    bundles.add (VersionChecker::getAaxInstallDir().getChildFile (name + ".aaxplugin"));   // 2.1.46
+                }
             const auto exe = p.standaloneExe.isNotEmpty() ? VersionChecker::getStandaloneInstallDir().getChildFile (p.standaloneExe)
                                                           : juce::File();
             const auto holders = PluginInUse::find (bundles, exe);

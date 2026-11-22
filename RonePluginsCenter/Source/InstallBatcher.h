@@ -533,6 +533,10 @@ private:
         // 2.1.41: the installer also replaces the AAX that Pro Tools keeps loaded.
         if (item.vst3Bundle.isNotEmpty() && item.id != "RONEAnalyzer")
             bundles.add (VersionChecker::getAaxInstallDir().getChildFile (VersionChecker::aaxBundleFor (item.vst3Bundle)));
+        // 2.1.46: the Analyzer's two AAX (Bridge + Channel), which Pro Tools keeps loaded too.
+        if (item.id == "RONEAnalyzer")
+            for (const auto& name : VersionChecker::analyzerBundleNames())
+                bundles.add (VersionChecker::getAaxInstallDir().getChildFile (name + ".aaxplugin"));
        #endif
         // The Analyzer is an app, but its installer also replaces the VST3s a DAW
         // keeps loaded - the Bridge on the master bus and (1.3.32) the Channel on
