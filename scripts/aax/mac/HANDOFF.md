@@ -33,7 +33,7 @@ under "Log" at the bottom, then commit and push it (see "Repo rules"), so the PC
   `.github/workflows/main.yml` (Windows job). Read all of them first.
 
 ## The goal
-Every product in `aax-products.json` (except RONEAnalyzer for now) built as a **universal
+Every product in `aax-products.json` (the Analyzer since 22.11: its Bridge and Channel rows) built as a **universal
 (arm64 + x86_64) macOS .aaxplugin**, PACE-signed with the Developer ID Application identity,
 loaded in Pro Tools on this Mac, and then delivered inside each plugin's Mac .pkg by CI, the
 same way Windows works.
@@ -151,3 +151,8 @@ same way Windows works.
   main.yml, NOT pushed (waits for: Pro Tools test on the Mac, a notarization dry run, Liran's yes,
   and the Center release first). Left on release day: NetworkManager.cpp's Mac AAX filter,
   DawDetector "protools" on Mac, site line "AAX for macOS is on the way".
+- 22.11 (PC session): RONE Analyzer AAX - two rows (RONEAnalyzer = Bridge, RONEAnalyzerChannel = Channel), category
+  SoundField. Mac build needed `-DJUCE_PATH` (the Analyzer prefers a local ~/JUCE, an old one here that the macOS 15
+  SDK refuses) and its Mac formats line is `set(RONE_BRIDGE_FORMATS VST3 AU)`. Signed by Liran in his Terminal
+  (`sign-aax-mac.sh "RONE Analyzer Bridge" "RONE Analyzer Channel"`), zipped with `DRY_RUN=1 publish-aax-mac.sh`,
+  uploaded from the PC. CI packs every row of a folder.

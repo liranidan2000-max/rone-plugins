@@ -27,7 +27,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $cfg = Get-Content (Join-Path $PSScriptRoot "aax-products.json") -Raw | ConvertFrom-Json
-$products = $cfg.products | Where-Object { $_.id -ne 'RONEAnalyzer' }   # Analyzer: separate release track
+$products = $cfg.products
 if ($Only) { $products = $products | Where-Object { $Only -contains $_.id } }
 $signed = Join-Path $Out "signed"
 $src    = Join-Path $Out "src"

@@ -869,28 +869,32 @@ jobs:
           # packs ..\aax\<bundle>.aaxplugin when it is there (skipifsourcedoesntexist).
           # Packed only when the bundle's FileVersion equals this build's CMake version: an AAX
           # built from other code never ships. Missing or stale = this installer has no AAX.
-          $row = (Get-Content scripts\aax\aax-products.json -Raw | ConvertFrom-Json).products |
-                 Where-Object { $_.folder -eq '${{ matrix.folder }}' } | Select-Object -First 1
-          if (-not $row -or $row.id -eq 'RONEAnalyzer') { Write-Host "No AAX for ${{ matrix.plugin_id }}"; exit 0 }
+          # Every row of this folder: the Analyzer is two plugins (Bridge + Channel), each its own zip.
+          $rows = @((Get-Content scripts\aax\aax-products.json -Raw | ConvertFrom-Json).products |
+                    Where-Object { $_.folder -eq '${{ matrix.folder }}' })
+          if (-not $rows) { Write-Host "No AAX for ${{ matrix.plugin_id }}"; exit 0 }
           $m = Select-String -Path "${{ matrix.folder }}\CMakeLists.txt" -Pattern 'VERSION\s+(\d+\.\d+\.\d+)' | Select-Object -First 1
           $base = if ($m) { $m.Matches[0].Groups[1].Value } else { "" }
           New-Item -ItemType Directory -Force -Path aax-dl, aax | Out-Null
-          $zip = "aax-dl\$($row.id).aaxplugin.zip"
-          gh release download AAX-signed --repo "$env:GITHUB_REPOSITORY" --pattern "$($row.id).aaxplugin.zip" --dir aax-dl --clobber
-          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $zip)) {
-            Write-Host "::warning::No signed AAX for $($row.id) in the AAX-signed release - this installer ships without AAX"
-            exit 0
+          foreach ($row in $rows) {
+            $zip = "aax-dl\$($row.id).aaxplugin.zip"
+            gh release download AAX-signed --repo "$env:GITHUB_REPOSITORY" --pattern "$($row.id).aaxplugin.zip" --dir aax-dl --clobber
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $zip)) {
+              Write-Host "::warning::No signed AAX for $($row.id) in the AAX-signed release - this installer ships without it"
+              continue
+            }
+            Expand-Archive -Path $zip -DestinationPath aax -Force
+            $bundle = "aax\$($row.bundle).aaxplugin"
+            $bin = "$bundle\Contents\x64\$($row.bundle).aaxplugin"
+            $fv = if (Test-Path $bin) { (Get-Item $bin).VersionInfo.FileVersion } else { "" }
+            if ($fv -ne $base) {
+              Write-Host "::warning::Signed AAX for $($row.id) is '$fv' but this build is '$base' - left out (sign the new one: scripts/aax)"
+              if (Test-Path $bundle) { Remove-Item -Recurse -Force $bundle }
+              continue
+            }
+            Write-Host "AAX packed: $($row.bundle) $fv"
           }
-          Expand-Archive -Path $zip -DestinationPath aax -Force
-          $bundle = "aax\$($row.bundle).aaxplugin"
-          $bin = "$bundle\Contents\x64\$($row.bundle).aaxplugin"
-          $fv = if (Test-Path $bin) { (Get-Item $bin).VersionInfo.FileVersion } else { "" }
-          if ($fv -ne $base) {
-            Write-Host "::warning::Signed AAX for $($row.id) is '$fv' but this build is '$base' - left out (sign the new one: scripts/aax)"
-            if (Test-Path $bundle) { Remove-Item -Recurse -Force $bundle }
-            exit 0
-          }
-          Write-Host "AAX packed: $($row.bundle) $fv"
+          exit 0
 
       - name: Compile installer
         shell: pwsh
@@ -1318,26 +1322,28 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           rm -rf aax-mac aax-mac-dl; mkdir -p aax-mac aax-mac-dl
-          row=$(jq -c --arg f "${{ matrix.folder }}" '[.products[] | select(.folder == $f)][0] // empty' scripts/aax/aax-products.json)
-          id=$(jq -r '.id // empty' <<<"$row")
-          if [ -z "$id" ] || [ "$id" = "RONEAnalyzer" ]; then echo "No AAX for ${{ matrix.plugin_id }}"; exit 0; fi
-          bundle=$(jq -r .bundle <<<"$row")
+          # Every row of this folder: the Analyzer is two plugins (Bridge + Channel), each its own zip.
+          rows=$(jq -c --arg f "${{ matrix.folder }}" '.products[] | select(.folder == $f)' scripts/aax/aax-products.json)
+          if [ -z "$rows" ]; then echo "No AAX for ${{ matrix.plugin_id }}"; exit 0; fi
           base=$(grep -oE 'VERSION +[0-9]+\.[0-9]+\.[0-9]+' "${{ matrix.folder }}/CMakeLists.txt" | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
-          if ! gh release download AAX-signed --repo "$GITHUB_REPOSITORY" --pattern "$id.mac.aaxplugin.zip" --dir aax-mac-dl --clobber \
-             || [ ! -f "aax-mac-dl/$id.mac.aaxplugin.zip" ]; then
-            echo "::warning::No signed Mac AAX for $id in the AAX-signed release - this pkg ships without AAX"; exit 0
-          fi
-          ditto -x -k "aax-mac-dl/$id.mac.aaxplugin.zip" aax-mac
-          b="aax-mac/$bundle.aaxplugin"
-          have=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$b/Contents/Info.plist" 2>/dev/null || true)
-          if [ "$have" != "$base" ]; then
-            echo "::warning::Signed Mac AAX for $id is '$have' but this build is '$base' - left out (re-sign on the Mac: scripts/aax/mac)"
-            rm -rf aax-mac/*; exit 0
-          fi
-          if ! codesign --verify --deep --strict "$b"; then
-            echo "::warning::Mac AAX for $id does not verify - left out"; rm -rf aax-mac/*; exit 0
-          fi
-          echo "Mac AAX packed: $bundle $have"
+          while IFS= read -r row; do
+            id=$(jq -r .id <<<"$row"); bundle=$(jq -r .bundle <<<"$row")
+            if ! gh release download AAX-signed --repo "$GITHUB_REPOSITORY" --pattern "$id.mac.aaxplugin.zip" --dir aax-mac-dl --clobber \
+               || [ ! -f "aax-mac-dl/$id.mac.aaxplugin.zip" ]; then
+              echo "::warning::No signed Mac AAX for $id in the AAX-signed release - this pkg ships without it"; continue
+            fi
+            ditto -x -k "aax-mac-dl/$id.mac.aaxplugin.zip" aax-mac
+            b="aax-mac/$bundle.aaxplugin"
+            have=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$b/Contents/Info.plist" 2>/dev/null || true)
+            if [ "$have" != "$base" ]; then
+              echo "::warning::Signed Mac AAX for $id is '$have' but this build is '$base' - left out (re-sign on the Mac: scripts/aax/mac)"
+              rm -rf "$b"; continue
+            fi
+            if ! codesign --verify --deep --strict "$b"; then
+              echo "::warning::Mac AAX for $id does not verify - left out"; rm -rf "$b"; continue
+            fi
+            echo "Mac AAX packed: $bundle $have"
+          done <<<"$rows"
 
       # --- Package ---
       - name: Create macOS installer

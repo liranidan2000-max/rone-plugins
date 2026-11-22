@@ -5,7 +5,7 @@
 #     exports the commit the monorepo points at (git ls-tree <ref> <folder>) with git archive,
 #     plus the monorepo's Shared/ from the same commit, into a staging folder;
 #   - in the staging CMakeLists only: AAX appended to the juce_add_plugin FORMATS line and
-#     AAX_CATEGORY inserted (RONEAnalyzer: set(RONE_BRIDGE_FORMATS VST3 AAX));
+#     AAX_CATEGORY inserted (RONEAnalyzer: set(RONE_BRIDGE_FORMATS VST3 AU AAX));
 #   - builds only <target>_AAX, universal (x86_64 + arm64), deployment target 10.15, like CI.
 # Output: ~/RONE/_build/aax/unsigned/<bundle>.aaxplugin + build-info.json, logs per product.
 #
@@ -103,7 +103,8 @@ build_one() {  # $1 = id ; writes one line to $RESULTS
   tag=$(perl -0ne 'print $1 if /FetchContent_Declare\(\s*JUCE.*?GIT_TAG\s+(\S+)/s' "$cm"); tag=${tag:-8.0.4}
   cp "$cm" "$cm.orig"
   if [ "$fline" = bridge ]; then
-    perl -0pi -e 's/set\(RONE_BRIDGE_FORMATS VST3\)/set(RONE_BRIDGE_FORMATS VST3 AAX)/' "$cm"
+    # On a Mac the line that counts is the APPLE one, set(RONE_BRIDGE_FORMATS VST3 AU).
+    perl -0pi -e 's/set\(RONE_BRIDGE_FORMATS VST3 AU\)/set(RONE_BRIDGE_FORMATS VST3 AU AAX)/' "$cm"
   else
     T="$target" perl -0pi -e '
       my $t = quotemeta $ENV{T};
@@ -127,6 +128,9 @@ build_one() {  # $1 = id ; writes one line to $RESULTS
     "-DFETCHCONTENT_SOURCE_DIR_JUCE=$juce"
     "-DCMAKE_PROJECT_INCLUDE=$SRC/Shared/RoneBuildHooks.cmake"
     -Wno-dev)
+  # The Analyzer takes a local ~/JUCE before FetchContent (an old one on this Mac that the
+  # macOS 15 SDK refuses: CGWindowListCreateImage); point it at the same JUCE as CI.
+  [ "$folder" = RONEAnalyzer ] && flags+=("-DJUCE_PATH=$juce")
   echo "cmake ${flags[*]}" >> "$log"
   cmake "${flags[@]}" >>"$log" 2>&1 || { fail "configure failed"; return; }
   echo "  building ${target}_AAX (JUCE $tag, v$version)..."

@@ -7,7 +7,9 @@
     "category = JUCE AAX_CATEGORY (Pro Tools' plug-in menu).",
     "wcguid  = PACE wrap configuration GUID for this product, created in PACE Central",
     "          (DEVELOPER > Products). Empty until then; sign-aax.ps1 refuses to sign a row without one.",
-    "formats_line = 'bridge' only for the Analyzer, whose formats come from a variable."
+    "formats_line = 'bridge' only for the Analyzer, whose formats come from a variable.",
+    "The Analyzer is two plugins in one product (the Bridge on the master, the Channel on a track):",
+    "          two rows with the same folder. CI packs every row of a folder into that installer."
   ],
   "products": [
     { "id": "ReverseReverb",  "folder": "ReverseReverbVST", "target": "ReverseReverb",  "bundle": "RONE Reverse Reverb", "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
@@ -26,6 +28,7 @@
     { "id": "RoneGrain",      "folder": "RoneGrain",        "target": "RoneGrain",      "bundle": "RONE DMT",            "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
     { "id": "RoneReverb",     "folder": "RoneReverb",       "target": "RoneReverb",     "bundle": "RONE Reverb",         "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
     { "id": "RoneListen",     "folder": "RoneListen",       "target": "RoneListen",     "bundle": "RONE Listen",         "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
-    { "id": "RONEAnalyzer",   "folder": "RONEAnalyzer",     "target": "RONEBridge",     "bundle": "RONE Analyzer Bridge", "category": "AAX_ePlugInCategory_Effect",    "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B", "formats_line": "bridge" }
+    { "id": "RONEAnalyzer",   "folder": "RONEAnalyzer",     "target": "RONEBridge",     "bundle": "RONE Analyzer Bridge", "category": "AAX_ePlugInCategory_SoundField", "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B", "formats_line": "bridge" },
+    { "id": "RONEAnalyzerChannel", "folder": "RONEAnalyzer", "target": "RONEChannel",   "bundle": "RONE Analyzer Channel", "category": "AAX_ePlugInCategory_SoundField", "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B", "formats_line": "bridge" }
   ]
 }
