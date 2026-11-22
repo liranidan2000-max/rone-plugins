@@ -188,7 +188,22 @@ export function mockPlugins(scenario = devScenario()) {
       status, downloadProgress: 0, waitingFor: '',
       standaloneInstalled: !!v, unitUrl: `/units/${p.id}.webp`,
     }
-  }).concat(mockGiftApp(scenario))
+  }).concat(new URLSearchParams(location.search).has('more') ? mockNewer(scenario) : []).concat(mockGiftApp(scenario))
+}
+
+// ?more=1: the plugins released after this mock was written (Reverb, Hook, Sidechain, 1176), so the banner's
+// console slides for them can be seen in the dev preview (22.11.2026).
+function mockNewer(scenario) {
+  const all = scenario === 'all'
+  const base = { type: 'plugin', formats: ['VST3', 'App'], downloadProgress: 0, waitingFor: '', installedVersion: '', status: 'not_installed', categories: [], tags: [] }
+  return [
+    { ...base, id: 'RoneReverb', name: 'RONE Reverb', remoteVersion: '1.1.0', price: 29, launch_price: 29, accent: '#FFAFC8', released: '2026-11-16',
+      description: 'A light, clean reverb with a picture of what it does.', videoUrl: 'https://youtu.be/5O7U35jwAzI' },
+    { ...base, id: 'RoneHook', name: 'RONE Hook', remoteVersion: '1.1.0', gift: true, owned: all, accent: '#FF8A7A', released: '2026-11-15',
+      description: 'Search a word, hear every moment it is said.', videoUrl: 'https://youtu.be/5O7U35jwAzI' },
+    { ...base, id: 'RoneSidechain', name: 'RONE Sidechain', remoteVersion: '1.2.3', free: true, price: 0, accent: '#7B8CFF', description: 'Draw your own duck curve.', videoUrl: 'https://youtu.be/5O7U35jwAzI' },
+    { ...base, id: 'Rone1176', name: 'RONE 1176', remoteVersion: '1.0.0', accent: '#FF8C2E', description: 'Rev E, fitted to the hardware.', installedVersion: all ? '1.0.0' : '', status: all ? 'up_to_date' : 'not_installed' },
+  ].map(p => ({ ...p, unitUrl: `/units/${p.id}.webp`, logoUrl: `/logos/${p.id}.png` }))
 }
 
 // The manifest's "apps" entry as the backend hands it over: RONE VST MANAGER,
@@ -257,6 +272,8 @@ export const mockAnnouncements = {
     },
   ],
 };
+
+export { mockBanners } from './mockBanners.js'
 
 // ?upsell=1 in dev mode (with ?as=lifetime): a Stutter bought 2 hours ago - the $19 Stucker day and the owner prices.
 // With ?as=free: the first-plugin offer (RONE Stucker $15 for 48 hours) a Clipper-only account gets.

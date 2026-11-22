@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, callNative, onEvent, openExternal, isDevMode, devScenario, mockPlugins, mockAccount, mockDaws, mockTips, mockAnnouncements, mockUpsell } from './bridge'
+import { api, callNative, onEvent, openExternal, isDevMode, devScenario, mockPlugins, mockAccount, mockDaws, mockTips, mockAnnouncements, mockBanners, mockUpsell } from './bridge'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import InstallDock from './components/InstallDock'
@@ -485,6 +485,30 @@ export default function App () {
   }
   const optinAsk = optin && !optin.on && !optinAsked && account.passSource !== 'comp' ? answerOptin : null
 
+  // ---- the site's feed: popups and the banner's console slides in ONE answer (/api/v1/popup?surface=center) ----
+  const feedP = useRef(null)
+  const loadFeed = (fresh) => {
+    if (fresh || !feedP.current) feedP.current = api.getAnnouncements().catch(() => null)
+    return feedP.current
+  }
+  // The banner's console slides (roneaudio.com/admin#banners, 22.11.2026), for everyone - signed in or not. A Center
+  // left open for days asks again when its window comes back after 3 hours, so a banner that ended goes away.
+  const [banners, setBanners] = useState([])
+  useEffect(() => {
+    if (loading) return
+    if (DEV) { setBanners(new URLSearchParams(location.search).has('nobanners') ? [] : mockBanners); return }
+    let alive = true
+    let last = 0
+    const pull = (fresh) => {
+      last = Date.now()
+      loadFeed(fresh).then(f => { if (alive && f && f.ok !== false) setBanners(Array.isArray(f.banners) ? f.banners : []) })
+    }
+    pull(false)
+    const onFocus = () => { if (Date.now() - last > 3 * 3600000) pull(true) }
+    window.addEventListener('focus', onFocus)
+    return () => { alive = false; window.removeEventListener('focus', onFocus) }
+  }, [loading])
+
   // ---- announcements (the website's popups), once per page after the catalog is in ----
   const announceAsked = useRef(false)
   const latest = useRef({})
@@ -496,7 +520,7 @@ export default function App () {
     setTimeout(async () => {
       let feed = null
       if (DEV) feed = new URLSearchParams(location.search).has('announce') ? mockAnnouncements : null
-      else { try { feed = await api.getAnnouncements() } catch {} }
+      else { try { feed = await loadFeed(false) } catch {} }
       if (!feed?.popups?.length) return
       const item = pickAnnouncement(feed.popups, { ...latest.current, ignoreMemory: DEV, t })
       if (!item) return
@@ -553,7 +577,8 @@ export default function App () {
               <LibraryView t={t} plugins={tagged} loading={loading} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk}
                            centerUpdate={centerUpdate} onCenterUpdate={() => api.applyCenterUpdate().catch(() => {})}
                            tips={localTips} reduced={reduced} query={query} setQuery={setQuery} cat={cat} setCat={setCat} sort={sort} setSort={setSort}
-                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} vstmApp={vstmApp} ups={ups} />
+                           catLabel={catLabel} onNavigate={navigate} onUpdateAll={updateAll} onRefresh={refresh} handlers={handlers} vstmApp={vstmApp} ups={ups}
+                           banners={banners} optinOn={!!optin?.on} onOptin={account.signedIn ? changeOptin : () => navigate('account')} />
             )}
             {view === 'updates' && (
               <UpdatesView t={t} plugins={updatesPool} access={access} onInstall={install} onUpdateAll={updateAll} onCancel={cancel} onRefresh={refresh} onDetail={openDetail} />

@@ -16,7 +16,7 @@ function Skeleton () {
 
 export default function LibraryView ({ t, plugins, loading, access, account, license, personal, optinAsk, tips, reduced, query, setQuery,
                                        cat, setCat, sort, setSort, catLabel, onNavigate, onUpdateAll, onRefresh, handlers,
-                                       centerUpdate, onCenterUpdate, vstmApp, ups: allUps }) {
+                                       centerUpdate, onCenterUpdate, vstmApp, ups: allUps, banners, optinOn, onOptin }) {
   const ups = allUps || updatable(plugins, access)   // App's list carries RONE VST MANAGER's update too
   const filtered = sortPlugins(plugins.filter(p => (cat === 'all' || categoriesOf(p).includes(cat)) && matchesSearch(p, query, catLabel)), access, sort)
   const count = (c) => c === 'all' ? plugins.length : plugins.filter(p => categoriesOf(p).includes(c)).length
@@ -25,7 +25,8 @@ export default function LibraryView ({ t, plugins, loading, access, account, lic
     <div className="flex flex-col">
       {!query && (
         <Hero t={t} plugins={plugins} app={vstmApp} access={access} account={account} license={license} personal={personal} optinAsk={optinAsk} onBuy={handlers.onBuy} onTryAll={handlers.onTryAll} tips={tips} reduced={reduced}
-              onInstall={handlers.onInstall} onDetail={handlers.onDetail} onAccount={() => onNavigate('account')} />
+              onInstall={handlers.onInstall} onDetail={handlers.onDetail} onAccount={() => onNavigate('account')}
+              banners={banners} ups={ups} onUpdateAll={onUpdateAll} onNavigate={onNavigate} onManual={handlers.onManual} onOptin={onOptin} optinOn={optinOn} />
       )}
 
       {/* One bar for every update: the plugins' and, when there is one, the Center's own (App hides its top strip then) */}

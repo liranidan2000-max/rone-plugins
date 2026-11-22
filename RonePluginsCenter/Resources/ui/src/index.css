@@ -213,6 +213,65 @@ input, textarea { user-select: text; -webkit-user-select: text; }
 }
 @keyframes heroGlow { 0%, 100% { opacity: .30; } 50% { opacity: .46; } }
 
+/* ---- The banner's other looks (22.11.2026, heroSlides.js / Hero.jsx). Same WebKit care as the unit above:
+   entrances without a fill mode, perspective() inside a flat transform, no preserve-3d, no blend modes. ---- */
+.hero-media-in { animation: heroIn 1s cubic-bezier(.2, .7, .2, 1); }
+.hero-copy-in > * { animation: heroRise .7s cubic-bezier(.2, .7, .2, 1); }
+.hero-copy-in > :nth-child(2) { animation-duration: .8s; }
+.hero-copy-in > :nth-child(3) { animation-duration: .9s; }
+@keyframes heroRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+/* FILM: a launch film on the right two thirds, fading into the words */
+.hero-film { position: absolute; top: 0; right: 0; bottom: 0; width: 66%; z-index: 1; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 34%); mask-image: linear-gradient(90deg, transparent 0%, #000 34%); }
+.hero-film video { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* SEE IT WORK / TIP: the plugin working, in a glass screen turned a little toward the words */
+.hero-screen { position: absolute; right: 34px; top: 50%; margin-top: -88px; height: 176px; aspect-ratio: 870 / 530; z-index: 2; pointer-events: none; }
+.hero-glass { width: 100%; height: 100%; border-radius: 11px; overflow: hidden; background: #000; border: 1px solid rgba(255, 255, 255, .14);
+  transform: perspective(1200px) rotateY(-9deg) rotateX(2deg); transform-origin: 70% 50%;
+  box-shadow: 0 28px 56px rgba(0, 0, 0, .6), 0 0 56px -10px var(--c); }
+.hero-glass video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-tag { position: absolute; left: -12px; bottom: 12px; font-size: 9.5px; font-weight: 800; letter-spacing: .18em; color: #0D0F12;
+  background: var(--c); padding: 4px 8px; border-radius: 6px; box-shadow: 0 6px 18px rgba(0, 0, 0, .5); }
+/* DEAL: a fan of units behind the price and the clock */
+.hero-fan { position: absolute; right: 16px; top: 0; bottom: 0; width: 44%; z-index: 1; pointer-events: none; }
+.hero-fan img { position: absolute; height: 104px; width: auto; filter: drop-shadow(0 16px 22px rgba(0, 0, 0, .75)); transform: rotate(var(--r)); animation: heroFanBob 5s ease-in-out infinite; }
+.hero-fan.still img { animation: none; }
+@keyframes heroFanBob { 0%, 100% { transform: rotate(var(--r)) translateY(0); } 50% { transform: rotate(var(--r)) translateY(-8px); } }
+.hero-clock-box { min-width: 44px; height: 42px; border-radius: 9px; background: rgba(0, 0, 0, .45); border: 1px solid #3A3F47; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 4px; }
+.hero-clock-box b { font: 600 17px/1 'IBM Plex Mono', Consolas, monospace; color: #fff; font-variant-numeric: tabular-nums; }
+.hero-clock-box i { font-style: normal; font-size: 8px; font-weight: 800; letter-spacing: .12em; color: #8B919B; margin-top: 3px; text-transform: uppercase; }
+/* YOUR RACK: what this person owns lights up */
+.hero-coll { position: absolute; right: 30px; top: 50%; margin-top: -62px; width: 44%; z-index: 2; display: flex; flex-direction: column; gap: 9px; pointer-events: none; }
+.hero-coll-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px 8px; }
+.hero-coll-grid img { width: 100%; height: 46px; object-fit: contain; filter: grayscale(1) brightness(.5); opacity: .55; }
+.hero-coll-grid img.lit { filter: drop-shadow(0 0 10px var(--g)); opacity: 1; }
+.hero-coll-bar { height: 5px; border-radius: 3px; background: #23262C; overflow: hidden; }
+.hero-coll-bar i { display: block; height: 100%; background: linear-gradient(90deg, #fff, var(--c)); box-shadow: 0 0 10px var(--c); }
+.hero-coll-count { display: flex; justify-content: space-between; font: 600 12px 'IBM Plex Mono', Consolas, monospace; color: #A3A9B3; }
+/* ON THE BENCH: words only, a hollow word behind them */
+.hero-word { position: absolute; right: -8px; top: 50%; transform: translateY(-50%); z-index: 1; pointer-events: none; white-space: nowrap;
+  font-family: Sora, 'Segoe UI', sans-serif; font-weight: 800; font-size: 132px; line-height: 1; letter-spacing: -.04em;
+  color: transparent; -webkit-text-stroke: 1.5px rgba(255, 255, 255, .16); }
+.hero-badge { position: absolute; right: 14%; top: 26px; font: 800 12px 'IBM Plex Mono', Consolas, monospace; color: #0D0F12; background: var(--c); border-radius: 8px; padding: 3px 9px; box-shadow: 0 0 22px var(--c); }
+/* The chrome: a dot fills with the slide's time (its end moves the banner), the mouse holds it, arrows and
+   "Hide for 14 days" only while the mouse is there. */
+.hero-dot { position: relative; height: 4px; border-radius: 2px; border: 0; padding: 0; background: #383D45; overflow: hidden; cursor: pointer; transition: width .3s; }
+.hero-dot-fill { position: absolute; inset: 0; width: 0; background: var(--c); box-shadow: 0 0 8px var(--c); animation: heroFill linear forwards; }
+.hero-dot-fill.done, .hero-dot-fill.past { width: 100%; animation: none; }
+.hero-dot-fill.past { opacity: .5; }
+.hero.held .hero-dot-fill { animation-play-state: paused; }
+@keyframes heroFill { from { width: 0; } to { width: 100%; } }
+.hero-arrow { position: absolute; top: 50%; margin-top: -16px; z-index: 6; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #3A3F47;
+  background: rgba(13, 15, 18, .72); color: #fff; font-size: 18px; line-height: 1; display: grid; place-items: center; opacity: 0; transition: opacity .2s; cursor: pointer; }
+.hero-hide { position: absolute; top: 11px; right: 14px; z-index: 6; font-size: 11px; font-weight: 700; color: #8B919B; background: rgba(13, 15, 18, .72);
+  border: 1px solid #2E3239; border-radius: 8px; padding: 3px 9px; opacity: 0; transition: opacity .2s; cursor: pointer; }
+.hero:hover .hero-arrow, .hero:hover .hero-hide, .hero-arrow:focus-visible, .hero-hide:focus-visible { opacity: 1; }
+.hero-hide:hover { color: #E8EAED; }
+.hero-next { position: absolute; right: 18px; bottom: 11px; z-index: 5; max-width: 40%; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: #6D737D;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.hero-next b { color: #A3A9B3; }
+@media (prefers-reduced-motion: reduce) { .hero-fan img, .hero-media-in, .hero-copy-in > * { animation: none; } }
+
 /* The moment an install finishes: the icon flickers on like a neon tube */
 .power-on .card-icon { animation: powerOn 1.5s ease-out; }
 .power-on { animation: powerRing 1.5s ease-out; }
