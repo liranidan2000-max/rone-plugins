@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-22T08:53:30Z",
+  "last_updated": "2026-11-22T08:53:42Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-437.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-437.1.dmg",
@@ -812,10 +812,10 @@
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
       "size": 197847535,
-      "version_mac": "1.1.0.436",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-436.1.pkg",
-      "sha256_mac": "25064c6bbd8d44cdf3822d489943cc5398821e345a29c6334f45dd5fee18fa39",
-      "size_mac": 262219707
+      "version_mac": "1.1.1.439",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-439.1.pkg",
+      "sha256_mac": "da555520964dc179a2f6ef9a668238d652ae376b00e1338724d42e9b0baf3b2d",
+      "size_mac": 261129390
     },
     {
       "id": "RoneListen",
