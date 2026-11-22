@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-22T08:41:37Z",
+  "last_updated": "2026-11-22T08:44:33Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-437.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-437.1.dmg",
@@ -335,10 +335,10 @@
       "manual": "RONE Iron - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=tZ-BhB5T5Os",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-438.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-435.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-438.1.pkg",
       "sha256": "51ec8e4ff8d367d89edd96f74fc574a8cb69964ba37e6127552c7fb23ea09d8a",
       "registry_key": "RoneIron",
-      "sha256_mac": "9f5465e33c7d1ceaa3f9714a958c3d85064283b7ef9c38f19d1b40bab2666d91",
+      "sha256_mac": "e1cafb6c86994527ca209666ff25c80b5c1cba638a158f6c9e0153b4232cbf7e",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
       "launch_price": 39,
@@ -364,8 +364,8 @@
         }
       },
       "size": 18500110,
-      "size_mac": 29091904,
-      "version_mac": "1.2.3.435"
+      "size_mac": 29198692,
+      "version_mac": "1.2.3.438"
     },
     {
       "id": "RoneFlanger",
