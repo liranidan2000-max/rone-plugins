@@ -202,6 +202,7 @@ jobs:
               - 'Shared/!(tests|RoneControlRack)/**/*'
               - 'Shared/tests?*/**/*'
               - 'Shared/RoneControlRack?*/**/*'
+              - 'Shared/RoneControlRack/**'   # the rack (Reverb 1.1.0, 22.11.2026)
               - 'installer/RoneReverb.iss'
               - '.github/workflows/main.yml'
             listen:
@@ -217,6 +218,8 @@ jobs:
               - 'Shared/!(tests|check-vendored-copies.sh)'
               - 'Shared/!(tests|RoneControlRack)/**/*'
               - 'Shared/tests?*/**/*'
+              - 'Shared/RoneControlRack?*/**/*'
+              - 'Shared/RoneControlRack/**'   # the rack (Hook 1.1.0, 22.11.2026)
               - 'installer/RoneHook.iss'
               - '.github/workflows/main.yml'
             flanger:
