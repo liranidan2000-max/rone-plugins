@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-23T21:13:11Z",
+  "last_updated": "2026-11-23T21:28:16Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-444.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-444.1.dmg",
@@ -621,10 +621,10 @@
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=VcKBwZMMd7w",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-445.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-435.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-445.1.pkg",
       "sha256": "bb77fb78dc455a721bda1c13246b668eb8a9d90f1fd1a17d9d4e6be4196bb1d5",
       "registry_key": "RoneSidechain",
-      "sha256_mac": "0bf8772b7d1a16e08c10600f68ee13c4fcee46ed5421705ffa44a510cd4cfbc1",
+      "sha256_mac": "fb263af57a8c69e2bd4d5cfb6a54ff8dae5cc4ef75b87d9d5c08d3aa6733475f",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
       "price": 0,
       "launch_price": 0,
@@ -642,8 +642,8 @@
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
       "size": 16881171,
-      "size_mac": 24842705,
-      "version_mac": "1.2.5.435"
+      "size_mac": 24913816,
+      "version_mac": "1.2.5.445"
     },
     {
       "id": "RoneDelay",
@@ -814,10 +814,10 @@
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
       "size": 197756893,
-      "version_mac": "1.1.1.439",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-439.1.pkg",
-      "sha256_mac": "da555520964dc179a2f6ef9a668238d652ae376b00e1338724d42e9b0baf3b2d",
-      "size_mac": 261129390
+      "version_mac": "1.1.2.445",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-445.1.pkg",
+      "sha256_mac": "82b0194c7b7986dd6d2c55ed866b50a2b761abeab4007750cb96c095bd197932",
+      "size_mac": 261131180
     },
     {
       "id": "RoneListen",
