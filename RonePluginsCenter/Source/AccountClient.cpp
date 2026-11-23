@@ -261,9 +261,21 @@ bool AccountClient::loadAccountFile()
     // how often it happens before anything stricter is decided. The files are
     // left alone; a fresh sign-in (or DEACTIVATE, then sign in) overwrites them.
    #if JUCE_WINDOWS
-    if (token.isEmpty() && xml->getStringAttribute ("tokenSealed").isNotEmpty())
-        startupNote = "Account.xml holds a sealed sign-in this Windows account cannot open - the cached licence"
-                      " is still used (start-up, audit R125 stage 1, observe only)";
+    //
+    // Support #73 (4.11 - 23.11.2026): one computer said it three times for the same file, each time as a
+    // new report. One sealed sign-in is told once (its hash in a small file beside Account.xml); a new one
+    // that cannot be opened either is told again.
+    if (const auto sealed = xml->getStringAttribute ("tokenSealed"); token.isEmpty() && sealed.isNotEmpty())
+    {
+        const auto told = file.getSiblingFile ("Account.sealed-note.txt");
+        const auto mark = juce::String::toHexString (sealed.hashCode64());
+        if (told.loadFileAsString().trim() != mark)
+        {
+            told.replaceWithText (mark);
+            startupNote = "Account.xml holds a sealed sign-in this Windows account cannot open - the cached licence"
+                          " is still used (start-up, audit R125 stage 1, observe only)";
+        }
+    }
    #endif
 
     state.email        = xml->getStringAttribute ("email");

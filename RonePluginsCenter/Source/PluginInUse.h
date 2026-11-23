@@ -253,6 +253,63 @@ namespace PluginInUse
         CloseHandle (processes);
         return how;
     }
+
+    // Support #198 / #199 (22.11.2026, one Windows 10 PC, two plugins five minutes apart): Inno could not
+    // delete a VST3 ("DeleteFile failed; code 5") and find() named nobody, though the elevated copy asked.
+    // find() reads each process's module list, which Windows refuses for a protected program (an antivirus,
+    // audiodg). The Restart Manager answers the same question from the file's side, without opening the
+    // program: what holds `file` right now. Read-only (RmShutdown is never called). The first four names;
+    // empty = nothing holds it, so the file was refused, not in use (an antivirus's folder guard).
+    inline juce::StringArray namesHolding (const juce::File& file)
+    {
+        juce::StringArray names;
+        if (! file.existsAsFile())
+            return names;
+
+        HMODULE rm = LoadLibraryExW (L"rstrtmgr.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+        if (rm == nullptr)
+            return names;
+
+        // restartmanager.h's own layouts, declared here so no import library is needed.
+        struct UniqueProcess { DWORD pid; FILETIME start; };
+        struct ProcessInfo   { UniqueProcess process; WCHAR appName[256]; WCHAR service[64]; int type; ULONG status; DWORD session; BOOL restartable; };
+        using Start    = DWORD (WINAPI*) (DWORD*, DWORD, WCHAR*);
+        using Register = DWORD (WINAPI*) (DWORD, UINT, LPCWSTR*, UINT, UniqueProcess*, UINT, LPCWSTR*);
+        using GetList  = DWORD (WINAPI*) (DWORD, UINT*, UINT*, ProcessInfo*, DWORD*);
+        using End      = DWORD (WINAPI*) (DWORD);
+        const auto start = (Start)    (void*) GetProcAddress (rm, "RmStartSession");
+        const auto reg   = (Register) (void*) GetProcAddress (rm, "RmRegisterResources");
+        const auto list  = (GetList)  (void*) GetProcAddress (rm, "RmGetList");
+        const auto end   = (End)      (void*) GetProcAddress (rm, "RmEndSession");
+
+        DWORD session = 0;
+        WCHAR key[33] = {};
+        if (start != nullptr && reg != nullptr && list != nullptr && end != nullptr
+            && start (&session, 0, key) == ERROR_SUCCESS)
+        {
+            const auto path = file.getFullPathName();
+            LPCWSTR paths[] = { path.toWideCharPointer() };
+            if (reg (session, 1, paths, 0, nullptr, 0, nullptr) == ERROR_SUCCESS)
+            {
+                ProcessInfo found[16] {};
+                UINT needed = 0, count = 16;
+                DWORD reasons = 0;
+                const auto answer = list (session, &needed, &count, found, &reasons);
+                if (answer == ERROR_SUCCESS)
+                    for (UINT i = 0; i < count && names.size() < 4; ++i)
+                        if (found[i].process.pid != GetCurrentProcessId())
+                        {
+                            const auto app = juce::String (found[i].appName).trim();
+                            names.addIfNotAlreadyThere (app.isNotEmpty() ? app : "process " + juce::String ((int) found[i].process.pid));
+                        }
+                if (answer == ERROR_MORE_DATA)   // more than sixteen: counted only
+                    names.add (juce::String ((int) needed) + " programs");
+            }
+            end (session);
+        }
+        FreeLibrary (rm);
+        return names;
+    }
    #endif
 
     // Every process when `onlyThese` is null, else just those processes (the cheap re-check).

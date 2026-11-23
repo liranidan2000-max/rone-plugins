@@ -2896,11 +2896,19 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
         {
             juce::ChildProcess p;
             if (! p.start (args, juce::ChildProcess::wantStdOut | juce::ChildProcess::wantStdErr))
+            {
+                if (output != nullptr)
+                    *output = "could not start";
                 return false;
+            }
             // Wait first (with its limit), then read: these tools say a line or two.
             const bool finished = p.waitForProcessToFinish (timeoutMs);
             if (! finished)
+            {
                 p.kill();
+                if (output != nullptr)
+                    *output = "no answer in " + juce::String (timeoutMs / 1000) + " s";
+            }
             else if (output != nullptr)
                 *output = p.readAllProcessOutput();
             return finished && p.getExitCode() == 0;
@@ -2944,10 +2952,14 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
         // downloaded, and hdiutil's own checksum pass is the slow part of attach on
         // an older Mac - time the Center spends saying "Restarting..." while
         // nothing seems to happen, which is when people quit it.
+        // 60 s, not 120 (2.1.51, support #107): without the checksum pass an attach takes a few
+        // seconds, yet Center 2.1.42 on macOS 14.2.1 - which already had -noverify - still hung in
+        // it, and its user quit at 115 s, five seconds before the limit would have opened the image
+        // in Finder for the one drag. A stuck attach gets there while people are still waiting.
         centerUpdateStep ("attach");
         juce::String attachOut;
         if (! run (juce::StringArray { "/usr/bin/hdiutil", "attach", "-nobrowse", "-noautoopen", "-noverify", "-quiet",
-                                       "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() }, 120000, &attachOut))
+                                       "-mountpoint", mount.getFullPathName(), dmg.getFullPathName() }, 60000, &attachOut))
         {
             centerUpdateStep ("attach_failed", attachOut.trim());
             mount.deleteRecursively();

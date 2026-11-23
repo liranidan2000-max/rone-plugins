@@ -333,14 +333,17 @@ public:
                     if (log.create().wasOk())
                         args.add ("/LOG=" + log.getFullPathName());
 
-                    juce::ChildProcess setup;
-                    if (setup.start (args, 0))
+                    int exitCode = 0;
+                    auto runSetup = [&]
                     {
+                        juce::ChildProcess setup;
+                        if (! setup.start (args, 0))
+                            return false;
+
                         // No time limit while setup runs; an hour is a hung installer, not a slow one.
                         for (int waited = 0; setup.isRunning() && waited < kInstallerHangMs; waited += 250)
                             juce::Thread::sleep (250);
 
-                        int exitCode = 0;
                         if (setup.isRunning())
                         {
                             // R280: end it, and install nothing more in this batch. (This ends
@@ -351,7 +354,35 @@ public:
                         }
                         else
                             exitCode = (int) setup.getExitCode();
+                        return true;
+                    };
+
+                    if (runSetup())
+                    {
+                        // Support #179 (17.11 + 23.11.2026, two PCs, three plugins): exit 1 = Inno never
+                        // initialized, so nothing was touched and a second try costs nothing. Inno unpacks
+                        // its real setup into %TEMP% and runs it from there; an antivirus that holds or bars
+                        // programs in %TEMP%, or a TEMP that cannot be used, ends it right there. So once
+                        // more, a few seconds later, with a TEMP of our own: beside the installer, where
+                        // only an administrator can write.
+                        juce::String firstTry;
+                        if (exitCode == 1)
+                        {
+                            firstTry = "first try exit 1, " + installerLogState (log);
+                            juce::Thread::sleep (3000);
+                            const auto ownTemp = stageDir.getChildFile ("T" + juce::Uuid().toString().substring (0, 8));
+                            if (ownTemp.createDirectory().wasOk())
+                            {
+                                const ScopedTemp temp (ownTemp.getFullPathName());
+                                if (! runSetup())
+                                    exitCode = 1;
+                            }
+                            ownTemp.deleteRecursively();
+                            firstTry << "; second try with its own TEMP: exit " << exitCode
+                                     << (exitCode != 0 ? ", " + installerLogState (log) : juce::String());
+                        }
                         r->setProperty ("exitCode", exitCode);
+                        juce::String lockedNote;
 
                         juce::String lockedFile;
                         const auto detail = installerLogDetail (log, lockedFile);
@@ -371,9 +402,18 @@ public:
                             // or for another Windows user) - the Center could not close it either.
                             else if (const auto how = PluginInUse::hiddenRunOf (holderExe); how.isNotEmpty())
                                 r->setProperty ("heldBy", name + " (" + how + ")");
+                            // #198 / #199: nobody seen - ask Windows who holds the very file Inno named.
+                            else if (lockedFile.isNotEmpty())
+                            {
+                                const auto names = PluginInUse::namesHolding (juce::File (lockedFile));
+                                if (! names.isEmpty())
+                                    r->setProperty ("heldBy", names.joinIntoString (", "));
+                                lockedNote = "; locked file: " + lockedFileState (juce::File (lockedFile), names);
+                            }
                         }
                         if (exitCode != 0)
-                            r->setProperty ("diag", installDiagnostics (copy, stagedSize));
+                            r->setProperty ("diag", installDiagnostics (copy, stagedSize) + lockedNote
+                                                    + (firstTry.isNotEmpty() ? "; " + firstTry : juce::String()));
                     }
                     else
                     {
@@ -474,6 +514,76 @@ private:
         return ((lockedFile.isNotEmpty() ? "File: " + lockedFile + " | " : juce::String())
                 + why.joinIntoString (" | ")).substring (0, 600);
     }
+
+    // Support #179: what Inno's log held when it stopped, for the report only. Empty = the outer Setup.exe
+    // never got its real setup running (it was barred in %TEMP%); lines say where the real setup stopped.
+    // Lines that carry a profile path or the user's name are left out.
+    static juce::String installerLogState (const juce::File& log)
+    {
+        juce::StringArray lines;
+        for (auto line : juce::StringArray::fromLines (log.loadFileAsString()))
+        {
+            line = line.trim();
+            if (line.length() > 24 && juce::CharacterFunctions::isDigit (line[0]) && line[4] == '-' && line[10] == ' ')
+                line = line.substring (23).trim();
+            if (line.isNotEmpty() && ! line.containsIgnoreCase ("\\Users\\") && ! line.containsIgnoreCase ("user"))
+                lines.add (line.substring (0, 160));
+        }
+        if (lines.isEmpty())
+            return "its log empty";
+        while (lines.size() > 4)
+            lines.remove (0);
+        return "its log ended: " + lines.joinIntoString (" | ");
+    }
+
+    // Support #198 / #199: why Windows may have refused the file, for the report only - who holds it, the
+    // read-only mark, and whether this administrator may delete it at all (a lock and a refusal are both
+    // "code 5" to Inno). Opened and closed again; nothing is deleted here.
+    static juce::String lockedFileState (const juce::File& file, const juce::StringArray& holders)
+    {
+        const auto path = file.getFullPathName();
+        const auto attributes = GetFileAttributesW (path.toWideCharPointer());
+        if (attributes == INVALID_FILE_ATTRIBUTES)
+            return "gone now";
+
+        juce::String s = holders.isEmpty() ? juce::String ("no program holds it") : "held by " + holders.joinIntoString (", ");
+        if ((attributes & FILE_ATTRIBUTE_READONLY) != 0)
+            s << ", read-only";
+        HANDLE h = CreateFileW (path.toWideCharPointer(), DELETE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                nullptr, OPEN_EXISTING, 0, nullptr);
+        if (h == INVALID_HANDLE_VALUE)
+            s << ", opening it to delete says " << (int) GetLastError();
+        else
+        {
+            CloseHandle (h);
+            s << ", may be opened to delete";
+        }
+        return s;
+    }
+
+    // TEMP and TMP for the programs started while it lives; put back after.
+    struct ScopedTemp
+    {
+        explicit ScopedTemp (const juce::String& dir)
+            : temp (juce::SystemStats::getEnvironmentVariable ("TEMP", {})), tmp (juce::SystemStats::getEnvironmentVariable ("TMP", {}))
+        {
+            set (L"TEMP", dir);
+            set (L"TMP", dir);
+        }
+        ~ScopedTemp()
+        {
+            set (L"TEMP", temp);
+            set (L"TMP", tmp);
+        }
+
+    private:
+        static void set (const wchar_t* name, const juce::String& value)
+        {
+            SetEnvironmentVariableW (name, value.isNotEmpty() ? value.toWideCharPointer() : nullptr);
+        }
+        const juce::String temp, tmp;
+        JUCE_DECLARE_NON_COPYABLE (ScopedTemp)
+    };
 
     // The programs a holder scan found, by product name; our own app by the plugin's name.
     static juce::String holderNames (const PluginInUse::Holders& h, const juce::String& ownName)
@@ -1411,7 +1521,16 @@ private:
                // ("<id> <code> <reason>"): before 2.1.4 a failed .pkg said only its number.
                // Both streams: it says why on either, depending on the macOS version.
                << "/usr/sbin/installer -pkg \"$W/" << i.id << ".pkg\" -target / >\"$W/" << i.id << ".err\" 2>&1; "
-               << "C=$?; echo \"" << i.id << " $C $(/usr/bin/tail -n 2 \"$W/" << i.id << ".err\" | /usr/bin/tr '\\n\\r' '  ')\" >> \"$R\"; "
+               // Support #200 (Hook 1.1.1, macOS 15.1.1): "The install failed" is all installer itself says.
+               // Why is in /var/log/install.log (this script runs as root, so it can read it). Its last
+               // lines that name an error - without the time, the computer's name and the user's folder -
+               // and the space left follow " ;; ": for the report's details, not for the page.
+               << "C=$?; M=$(/usr/bin/tail -n 2 \"$W/" << i.id << ".err\" | /usr/bin/tr '\\n\\r' '  '); "
+               << "if [ $C -ne 0 ]; then "
+               << "M=\"$M ;; $(/bin/df -k / | /usr/bin/awk 'NR==2{print int($4/1048576)}') GB free; install.log: $("
+               << "/usr/bin/tail -n 300 /var/log/install.log 2>/dev/null | /usr/bin/grep -E 'installer|installd|package_script' | /usr/bin/grep -iE 'error|fail|denied|no space'"
+               << " | /usr/bin/tail -n 3 | /usr/bin/sed -E 's/^[^ ]+ [^ ]+ [^ ]+ //; s|/Users/[^/ ]+|~|g' | /usr/bin/cut -c1-220 | /usr/bin/tr '\\n\\r' '  ')\"; fi; "
+               << "echo \"" << i.id << " $C $M\" >> \"$R\"; "
                << "else echo \"" << i.id << " -2\" >> \"$R\"; fi\n";
         }
         // 2.1.45: the AAX of plugins that went into the user's folders, for Pro Tools
@@ -1488,7 +1607,11 @@ private:
                               : code == 0 ? juce::String ("Install verification failed - components not found.")
                                           : i.name + ": install failed (installer code " + juce::String (code) + ").";
                     if (! r.ok && code != -2)
-                        r.reason = rest.fromFirstOccurrenceOf (" ", false, false).trim().replace (home, "~");
+                    {
+                        const auto said = rest.fromFirstOccurrenceOf (" ", false, false).trim().replace (home, "~");
+                        r.reason = said.upToFirstOccurrenceOf (" ;; ", false, false).trim();
+                        r.diag   = said.fromFirstOccurrenceOf (" ;; ", false, false).trim();   // #200
+                    }
 
                     // Audit R196: the .pkg put the new version in /Library; a copy an
                     // earlier Center placed in the user's folders is the old one now.
