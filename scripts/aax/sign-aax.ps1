@@ -10,17 +10,17 @@
        installed; wraptool.exe comes with it. Pass -WrapTool if it is not found.
     3. A wrap configuration GUID per product, created in PACE Central, written into
        aax-products.json ("wcguid"). A product without one is skipped, not failed.
-    4. A code-signing certificate in Windows' certificate store (CurrentUser\My), given as
-       -CertThumbprint. Without one, -SelfSigned makes a "RONE AUDIO AAX" code-signing
-       certificate in CurrentUser\My and uses it (community reports say Pro Tools accepts a
-       self-signed one on Windows; the real one, once bought, is the safer choice).
+    4. `az login`: the Windows signature is the real one (SSL.com certificate, key in Azure Key
+       Vault), the same one every RONE installer carries. wraptool only knows keys that sit on
+       this PC, so it is given signtool-akv.cs as its signtool. -SelfSigned keeps the old
+       self-made certificate (Windows calls it untrusted) for a test without Azure.
 
   The first signing asks for the iLok account password (wraptool prompts for it; it is
   never stored by this script). Signed bundles go to <Out>\signed, then each one is checked
   with "wraptool verify".
 
 .EXAMPLE
-  & "D:\RONE PLUGINS\rone-plugins\scripts\aax\sign-aax.ps1" -SelfSigned
+  & "D:\RONE PLUGINS\rone-plugins\scripts\aax\sign-aax.ps1"
   & "D:\RONE PLUGINS\rone-plugins\scripts\aax\sign-aax.ps1" -CertThumbprint 0123ABCD... -Only RoneClipper
 #>
 param(
@@ -63,6 +63,29 @@ if (-not $env:PACE_FUSION_HOME) {
 }
 
 # ---- certificate --------------------------------------------------------------------------
+$signArgs = @()
+if (-not $CertThumbprint -and -not $SelfSigned) {
+    # The public certificate, so wraptool finds the thumbprint. The key stays in the vault:
+    # signtool-akv (compiled here) does the signing through scripts\ci\sign-windows.ps1.
+    $tools = Join-Path $Out "_cache\tools"
+    New-Item -ItemType Directory -Force $tools, (Join-Path $Out "logs") | Out-Null
+    $cer = Join-Path $tools "rone-codesign.cer"
+    if (Test-Path $cer) { Remove-Item -Force $cer }
+    & az keyvault certificate download --vault-name rone-codesign-kv --name rone-codesign-2026 --encoding DER --file $cer
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $cer)) { throw "Azure gave no certificate - run: az login" }
+    $CertThumbprint = (Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\My).Thumbprint
+    $fake = Join-Path $tools "signtool.exe"
+    & "$env:SystemRoot\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo "/out:$fake" (Join-Path $PSScriptRoot "signtool-akv.cs")
+    if ($LASTEXITCODE -ne 0) { throw "signtool-akv.cs did not compile" }
+    $env:RONE_REAL_SIGNTOOL = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+        Where-Object { $_.Directory.Name -eq 'x64' -and $_.Directory.Parent.Name -match '^10\.' } |
+        Sort-Object { [version]$_.Directory.Parent.Name } -Descending | Select-Object -First 1 -ExpandProperty FullName
+    if (-not $env:RONE_REAL_SIGNTOOL) { throw "signtool.exe not found (Windows SDK)" }
+    $env:RONE_SIGN_SCRIPT = (Resolve-Path (Join-Path $PSScriptRoot "..\ci\sign-windows.ps1")).Path
+    $env:RONE_SIGNTOOL_LOG = Join-Path $Out "logs\signtool-akv.log"
+    $env:AKV_USE_AZ_CLI = '1'
+    $signArgs = @('--signtool', $fake)
+}
 if (-not $CertThumbprint) {
     $subject = "CN=RONE AUDIO AAX"
     $cert = Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert | Where-Object Subject -eq $subject |
@@ -105,7 +128,7 @@ foreach ($p in $products) {
     # wraptool writes progress to stderr; under 'Stop' PowerShell 5.1 would turn that into a
     # terminating error, so native calls run with 'Continue' and are judged by exit code.
     $ErrorActionPreference = 'Continue'
-    & $WrapTool sign --verbose --account $Account --wcguid $p.wcguid --signid $CertThumbprint `
+    & $WrapTool sign --verbose --account $Account --wcguid $p.wcguid --signid $CertThumbprint @signArgs `
         --in $work --out $work 2>&1 | ForEach-Object { "$_" }
     $signExit = $LASTEXITCODE
     $verifyExit = -1
@@ -117,6 +140,12 @@ foreach ($p in $products) {
     $ErrorActionPreference = 'Stop'
     if ($signExit -ne 0)   { $row.result = "FAILED"; $row.note = "wraptool sign exit $signExit";     $results += [pscustomobject]$row; continue }
     if ($verifyExit -ne 0) { $row.result = "FAILED"; $row.note = "wraptool verify exit $verifyExit"; $results += [pscustomobject]$row; continue }
+    if ($signArgs) {
+        $ws = Get-AuthenticodeSignature (Join-Path $work "Contents\x64\$($p.bundle).aaxplugin")
+        if ($ws.Status -ne 'Valid' -or -not $ws.TimeStamperCertificate) {
+            $row.result = "FAILED"; $row.note = "Windows signature is $($ws.Status)"; $results += [pscustomobject]$row; continue
+        }
+    }
     Move-Item $work $outB
     Remove-Item -Recurse -Force $tmp
     $row.result = "SIGNED"

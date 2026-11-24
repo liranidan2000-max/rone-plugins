@@ -36,13 +36,14 @@ carry the AAX SDK, so no SDK download is needed. Logs: `_build\aax\logs\<id>.log
    Downloads, or pass `-WrapTool`.
 3. PACE Central: create one product (wrap configuration) per plugin and paste each
    **wcguid** into `aax-products.json`.
-4. Certificate: the SSL.com code-signing certificate once it arrives
-   (`-CertThumbprint <thumbprint>`), or `-SelfSigned` now.
+4. Certificate: the real one (SSL.com, key in Azure Key Vault) with the `az login` session of
+   this PC. wraptool runs `signtool-akv.cs` as its signtool, which hands the file to
+   `scripts/ci/sign-windows.ps1`. `-SelfSigned` is only for a test without Azure.
 
 ## Sign and pack
 
 ```
-& "D:\RONE PLUGINS\rone-plugins\scripts\aax\sign-aax.ps1" -SelfSigned
+& "D:\RONE PLUGINS\rone-plugins\scripts\aax\sign-aax.ps1"
 & "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" "D:\RONE PLUGINS\rone-plugins\installer\RONE_AAX.iss"
 ```
 

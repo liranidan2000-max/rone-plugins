@@ -28,6 +28,7 @@
     { "id": "RoneGrain",      "folder": "RoneGrain",        "target": "RoneGrain",      "bundle": "RONE DMT",            "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
     { "id": "RoneReverb",     "folder": "RoneReverb",       "target": "RoneReverb",     "bundle": "RONE Reverb",         "category": "AAX_ePlugInCategory_Reverb",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
     { "id": "RoneListen",     "folder": "RoneListen",       "target": "RoneListen",     "bundle": "RONE Listen",         "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B" },
+    { "id": "RoneHook",       "folder": "RoneHook",         "target": "RoneHook",       "bundle": "RONE Hook",           "category": "AAX_ePlugInCategory_Effect",     "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B", "needs": ["RoneIron"] },
     { "id": "RONEAnalyzer",   "folder": "RONEAnalyzer",     "target": "RONEBridge",     "bundle": "RONE Analyzer Bridge", "category": "AAX_ePlugInCategory_SoundField", "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B", "formats_line": "bridge" },
     { "id": "RONEAnalyzerChannel", "folder": "RONEAnalyzer", "target": "RONEChannel",   "bundle": "RONE Analyzer Channel", "category": "AAX_ePlugInCategory_SoundField", "wcguid": "D7FE9D20-E4D9-11F1-BA7B-005056928F3B", "formats_line": "bridge" }
   ]

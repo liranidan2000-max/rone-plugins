@@ -89,6 +89,22 @@ build_one() {  # $1 = id ; writes one line to $RESULTS
   fi
   [ -f "$dst/CMakeLists.txt" ] || { fail "export of $folder has no CMakeLists.txt"; return; }
 
+  # Another product's sources it compiles (HOOK builds RONE IRON's flatten): the released commit too.
+  local need nsha ngit nurl
+  for need in $(echo "$row" | jq -r '.needs[]?'); do
+    nsha=$(git -C "$REPO" ls-tree "$REF" -- "$need" | awk '$2 == "commit" {print $3}')
+    [ -n "$nsha" ] || { fail "$need is not a submodule in $REF"; return; }
+    ngit="$REPO/$need"
+    if [ ! -e "$ngit/.git" ]; then
+      nurl=$(git -C "$REPO" config -f .gitmodules --get "submodule.$need.url")
+      ngit="$CACHE/repos/$need.git"
+      [ -d "$ngit" ] || git clone --quiet --bare "$nurl" "$ngit" >>"$log" 2>&1 || { fail "clone of $nurl failed"; return; }
+    fi
+    git -C "$ngit" cat-file -e "$nsha^{commit}" 2>/dev/null || git -C "$ngit" fetch --quiet origin "$nsha" >>"$log" 2>&1 || { fail "fetch $nsha failed"; return; }
+    rm -rf "$SRC/$need"
+    git -C "$ngit" archive --format=tar --prefix="$need/" "$nsha" | tar -xf - -C "$SRC" || { fail "archive of $need failed"; return; }
+  done
+
   # Flanger vendors JUCE without extras/Build (its .gitignore drops Build/); CI adds it from JUCE.
   if [ -f "$dst/JUCE/CMakeLists.txt" ] && [ ! -d "$dst/JUCE/extras/Build" ]; then
     local vt; vt=$(perl -0ne 'print $1 if /project\(JUCE VERSION ([0-9.]+)/' "$dst/JUCE/CMakeLists.txt")

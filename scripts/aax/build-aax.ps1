@@ -129,6 +129,17 @@ foreach ($p in $products) {
         Expand-Tar $tar $src
         if (-not (Test-Path (Join-Path $dst "CMakeLists.txt"))) { throw "export of $folder has no CMakeLists.txt" }
 
+        # Another product's sources it compiles (HOOK builds RONE IRON's flatten): the released commit too.
+        foreach ($need in @($p.needs | Where-Object { $_ })) {
+            $ne = (& git -C $repo ls-tree $Ref -- $need) -split "\s+", 4
+            if ($ne[1] -ne 'commit') { throw "$need is not a submodule in $Ref" }
+            $nd = Join-Path $src $need
+            if (Test-Path $nd) { Remove-Item -Recurse -Force $nd }
+            $nt = Join-Path $cache "$id-needs.tar"
+            Invoke-Git @("-C", (Join-Path $repo $need), "archive", "--format=tar", "--prefix=$need/", "-o", $nt, $ne[2])
+            Expand-Tar $nt $src
+        }
+
         # A plugin that vendors JUCE in its own repo (Flanger) has no extras/Build in git
         # (the repo's .gitignore drops Build/); CI adds it from JUCE, so do the same.
         $vj = Join-Path $dst "JUCE\CMakeLists.txt"

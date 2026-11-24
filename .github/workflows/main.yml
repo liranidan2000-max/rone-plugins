@@ -768,6 +768,9 @@ jobs:
             $dirs = @(Get-ChildItem "${{ matrix.folder }}/build-ci" -Directory -Filter '*_artefacts' |
                       ForEach-Object { Join-Path $_.FullName 'Release' } | Where-Object { Test-Path $_ })
             if ($dirs.Count -eq 0) { Write-Host "::error::no *_artefacts/Release to sign"; exit 1 }
+            # HOOK's own engine, already staged into the payload the installer takes. The others there
+            # (ffmpeg, yt-dlp, node, Python) are other people's programs and keep what their makers gave them.
+            if ('${{ matrix.plugin_id }}' -eq 'hook') { $dirs += (Resolve-Path 'RoneHook/payload/win/bin/RoneHookEngine.exe').Path }
             & scripts/ci/sign-windows.ps1 -Require -Paths $dirs
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
