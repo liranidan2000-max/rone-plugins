@@ -1,4 +1,5 @@
 ; 2026-11-22: rebuilt for the new icon (RoneIron 17a7a69) - same 1.2.3, so the iLok-signed AAX still packs
+; Signed with Authenticode by CI since 24.11.2026 (docs/CODE-SIGNING.md).
 ; ============================================================================
 ; RONE Iron — Silent Plugin Installer
 ; Designed to be invoked by RONE Plugins Center with /VERYSILENT flag

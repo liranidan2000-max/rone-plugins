@@ -1,4 +1,5 @@
 ; ============================================================================
+; Signed with Authenticode by CI since 24.11.2026 (docs/CODE-SIGNING.md).
 ; First public release 1.0.0 (2026-11-16). AppId = the dev builds' (RoneReverb/dev-channel.json), so a public install takes a dev one over.
 ; RONE Reverb — Silent Plugin Installer
 ; Designed to be invoked by RONE Plugins Center with /VERYSILENT flag

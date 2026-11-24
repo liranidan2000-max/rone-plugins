@@ -1,4 +1,5 @@
 ; ============================================================================
+; Signed with Authenticode by CI since 24.11.2026 (docs/CODE-SIGNING.md).
 ; Rone Flanger — Silent Plugin Installer
 ; Designed to be invoked by RONE Plugins Center with /VERYSILENT flag
 ; ============================================================================
