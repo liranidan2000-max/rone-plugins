@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-24T10:03:58Z",
+  "last_updated": "2026-11-24T10:25:16Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-448.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-448.1.dmg",
@@ -31,10 +31,10 @@
       "manual": "RONE Reverse Reverb - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=gNoltmk77DM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/ReverseReverb-latest/ReverseReverb_Installer-451.1.pkg",
       "sha256": "04a7acf3b5d8eaa01f296fc860ef81f969c34137b7b7530c96044ba53e9b507b",
       "registry_key": "ReverseReverb",
-      "sha256_mac": "96d085266982c91e3937cb5e9ac80a2779347206bdb0c6963ebc242a73888d5a",
+      "sha256_mac": "69bd7b323f25b162509ae32f6a41e8bddc2e4925206a4e22c0db7a14628234db",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/reverse-reverb.html",
@@ -60,8 +60,8 @@
         }
       },
       "size": 16099808,
-      "size_mac": 25491382,
-      "version_mac": "1.3.3.449"
+      "size_mac": 25491420,
+      "version_mac": "1.3.3.451"
     },
     {
       "id": "RoneStutter",
@@ -82,10 +82,10 @@
       "manual": "RONE Stutter - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=YLpAnCYxmxQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStutter-latest/RoneStutter_Installer-451.1.pkg",
       "sha256": "0227a0fd9a7841800d7fa70f348e4a369ac3eaddc06bfbe363cc4e9dc9f38bf9",
       "registry_key": "RoneStutter",
-      "sha256_mac": "e16145805969a0c46dfee8410d14fa5e57b89bf59e87a534aec703316bd8127f",
+      "sha256_mac": "a47a1cc4850a706f11b09737f49d582e5c2e4f587e8633e7fef168050db4b110",
       "price": 49,
       "launch_price": 49,
       "store_url": "https://roneaudio.com/products/rone-stutter.html",
@@ -110,8 +110,8 @@
         }
       },
       "size": 17440456,
-      "size_mac": 27210293,
-      "version_mac": "2.1.4.449"
+      "size_mac": 27210322,
+      "version_mac": "2.1.4.451"
     },
     {
       "id": "RoneStucker",
@@ -132,10 +132,10 @@
       "manual": "RONE Stucker - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=l6_cvuOajI4",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneStucker-latest/RoneStucker_Installer-451.1.pkg",
       "sha256": "3c4ec987f0a818dea6e0f5fa49669b6a0bb6f3a9b537c08d859c52e42593b07e",
       "registry_key": "RoneStucker",
-      "sha256_mac": "2edaaa478e702c85268507667e47d58f2d63cc55d0f1851bf8fec37d74ee39e6",
+      "sha256_mac": "b8fe8cbd33198131484cc7b3b22ed4d32cb65b5a057e36e90df0d5e3334607ff",
       "price": 29,
       "launch_price": 29,
       "store_url": "https://roneaudio.com/products/rone-stucker.html",
@@ -161,8 +161,8 @@
         }
       },
       "size": 15365288,
-      "size_mac": 19981752,
-      "version_mac": "1.5.3.449"
+      "size_mac": 19981744,
+      "version_mac": "1.5.3.451"
     },
     {
       "id": "RoneThrow",
@@ -183,10 +183,10 @@
       "manual": "RONE Throw - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=htrhBnLIBtQ",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneThrow-latest/RoneThrow_Installer-451.1.pkg",
       "sha256": "448730197ff83d0f892b2bc74a7a1f2f63b8f68dc6ea4115b59b5f8cd4c02cb8",
       "registry_key": "RoneThrow",
-      "sha256_mac": "7827584193c0c2826d0ac43bc7de26fe1369d3595e4c66448e02a8e550309644",
+      "sha256_mac": "6b0490a560eb84495e78342161308c0bf63ac2c8cc1a18a27882759db51ba1ca",
       "store_url": "https://roneaudio.com/products/rone-throw.html",
       "price": 39,
       "launch_price": 39,
@@ -211,8 +211,8 @@
         }
       },
       "size": 15448256,
-      "size_mac": 19385128,
-      "version_mac": "1.9.4.449"
+      "size_mac": 19385151,
+      "version_mac": "1.9.4.451"
     },
     {
       "id": "RoneClipper",
@@ -233,10 +233,10 @@
       "manual": "RONE Clipper - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=yQeD4NVlZKI",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-448.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneClipper-latest/RoneClipper_Installer-451.1.pkg",
       "sha256": "2cf20c5bc6553c684e7db60a2fd1d99142ec0ba28694e2275c370a561b359d1f",
       "registry_key": "RoneClipper",
-      "sha256_mac": "a2b0e4fbb2190430cb0565b7b76f6c34653153120a34ccc28246fd0de4345eba",
+      "sha256_mac": "16f94664ba6a2bb7a7e58dc11603ad8d8511a50d02c4b8a0e4a0e11d239436f6",
       "store_url": "https://roneaudio.com/products/rone-clipper.html",
       "price": 0,
       "launch_price": 0,
@@ -262,8 +262,8 @@
         }
       },
       "size": 15446880,
-      "size_mac": 19233177,
-      "version_mac": "1.1.4.448"
+      "size_mac": 19233195,
+      "version_mac": "1.1.4.451"
     },
     {
       "id": "RoneRise",
@@ -284,10 +284,10 @@
       "manual": "RONE Rise - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=WscHq4OLH1s",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneRise-latest/RoneRise_Installer-451.1.pkg",
       "sha256": "99a65b1d6c1e831f0c5b2b9c3c4fa0b5e24133bedb6c900df1a48ba4d94385a4",
       "registry_key": "RoneRise",
-      "sha256_mac": "3823559aec24f4365a8f4e254b27c9f03892931b2aba29b838c819585fd08914",
+      "sha256_mac": "d59a23d19ebe120ff18b3200d8c5ed8a6d02ce334d2d41a1587266b15f03297a",
       "store_url": "https://roneaudio.com/products/rone-rise.html",
       "price": 39,
       "launch_price": 39,
@@ -313,8 +313,8 @@
         }
       },
       "size": 16272528,
-      "size_mac": 20660779,
-      "version_mac": "1.2.2.449"
+      "size_mac": 20660767,
+      "version_mac": "1.2.2.451"
     },
     {
       "id": "RoneIron",
@@ -335,10 +335,10 @@
       "manual": "RONE Iron - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=tZ-BhB5T5Os",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneIron-latest/RoneIron_Installer-451.1.pkg",
       "sha256": "db7af47b8a21ec0a9f242f2d4afa4a1dd8e89de004e730708dd09bf8088fc0bb",
       "registry_key": "RoneIron",
-      "sha256_mac": "2b0cc56a39efa610753657f9104912f80a8ed3ad361abe735209915f21cc2bee",
+      "sha256_mac": "eec5b1297de04cd4995c15f02f13514d17dff1cc6b9e169659d4146dde6b01b7",
       "store_url": "https://roneaudio.com/products/rone-iron.html",
       "price": 39,
       "launch_price": 39,
@@ -364,8 +364,8 @@
         }
       },
       "size": 18519984,
-      "size_mac": 29198673,
-      "version_mac": "1.2.3.449"
+      "size_mac": 29198651,
+      "version_mac": "1.2.3.451"
     },
     {
       "id": "RoneFlanger",
@@ -386,10 +386,10 @@
       "manual": "RONE Flanger - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=-r0vWiVWTL4",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFlanger-latest/RoneFlanger_Installer-451.1.pkg",
       "sha256": "f72ce188c9fe580b5503cec4a504f2b014e168655ae376128c8efcb448334a25",
       "registry_key": "RoneFlanger",
-      "sha256_mac": "43c795c178f7ecba5493eb40e1c019c6414759be4539ce619ddfeba56b2c3ab5",
+      "sha256_mac": "cc7602a1d70e0d5d22a30f8612d1205a4bed27a59ee99c87e95087878f07f41b",
       "price": 39,
       "launch_price": 39,
       "store_url": "https://roneaudio.com/products/rone-flanger.html",
@@ -414,8 +414,8 @@
         }
       },
       "size": 15843016,
-      "size_mac": 20942485,
-      "version_mac": "2.3.3.449"
+      "size_mac": 20942453,
+      "version_mac": "2.3.3.451"
     },
     {
       "id": "RoneAfterspace",
@@ -436,10 +436,10 @@
       "manual": "RONE AFTERSPACE - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=lbKXq6iuctM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneAfterspace-latest/RoneAfterspace_Installer-451.1.pkg",
       "sha256": "e1dc59a8297fd0a59b28312896bfcbb67c12d38f964925cd0add370f85d505dd",
       "registry_key": "RoneAfterspace",
-      "sha256_mac": "c59cdae7b416094f8abf92258de3715516ce639f0121504e768cd641e4afed5b",
+      "sha256_mac": "872faa49f2bd064f974fa29dbbf70ff4173d0fb618898508ba842a49a829985c",
       "price": 59,
       "launch_price": 59,
       "store_url": "https://roneaudio.com/products/afterspace.html",
@@ -464,8 +464,8 @@
         }
       },
       "size": 15894816,
-      "size_mac": 21661972,
-      "version_mac": "1.1.3.449"
+      "size_mac": 21661997,
+      "version_mac": "1.1.3.451"
     },
     {
       "id": "RONEAnalyzer",
@@ -485,10 +485,10 @@
       "au_bundle": "",
       "manual": "RONE Analyzer - User Manual.pdf",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-450.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RONEAnalyzer-latest/RONEAnalyzer_Installer-451.1.pkg",
       "sha256": "0522e58c581ce7807a11c9e467488c0afdb1fbba002d3953d77ccb7068355f67",
       "registry_key": "RONEAnalyzer",
-      "sha256_mac": "a754ed2454477d7758155b84a639409f995b5fa757ad7c0024069acfa9dfc2f3",
+      "sha256_mac": "6096fc77cab214c644cf882b37df6622721a5edaf5b1c3bab396f6278b0241ac",
       "price": 80,
       "video": "https://www.youtube.com/watch?v=P-_F4gYPY9E",
       "launch_price": 80,
@@ -514,8 +514,8 @@
         }
       },
       "size": 14463080,
-      "size_mac": 70558562,
-      "version_mac": "1.3.55.450"
+      "size_mac": 70558482,
+      "version_mac": "1.3.55.451"
     },
     {
       "id": "Rone1176",
@@ -537,10 +537,10 @@
       "manual": "RONE 1176 - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=pGcZIoCLcx4",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone1176-latest/Rone1176_Installer-451.1.pkg",
       "sha256": "bc637d94d53080df544974e2a4ed46b033a9793604afd839a2b712ba157afe70",
       "registry_key": "Rone1176",
-      "sha256_mac": "404bfcf39afa9d54f7a115d64237abce8576f2acd6b6aaa7e5a54c594c1ea82c",
+      "sha256_mac": "991ca1fd82b779a8524ebe2ae68731b1a8db2a3d66f3e4c4d4e6a1427411ca28",
       "store_url": "https://roneaudio.com/products/rone-1176.html",
       "subscription_only": true,
       "category": [
@@ -556,8 +556,8 @@
       "accent": "#FF8C2E",
       "inno_app_id": "{3C6B2F8A-9D41-4E7B-A0C5-7E1176C0DE01}",
       "size": 15307344,
-      "size_mac": 20545101,
-      "version_mac": "0.10.3.449"
+      "size_mac": 20545111,
+      "version_mac": "0.10.3.451"
     },
     {
       "id": "Rone2A",
@@ -579,10 +579,10 @@
       "manual": "RONE 2A - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=V0PGKcu66VM",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/Rone2A-latest/Rone2A_Installer-451.1.pkg",
       "sha256": "52a9e41f58218423d224422cdc9224537f1bfe73260d4ea1c35d3cefec0a87a3",
       "registry_key": "Rone2A",
-      "sha256_mac": "00b6658cc356112b2bc418d6eba8030eb4fb9e20492c58e8643f1dee35d8bfc4",
+      "sha256_mac": "36eb568df7741ad05e0e8d4022e876bfb044d4e835e7589e4465b6b7ecfc6475",
       "store_url": "https://roneaudio.com/products/rone-2a.html",
       "subscription_only": true,
       "category": [
@@ -598,8 +598,8 @@
       "accent": "#FF6F59",
       "inno_app_id": "{E71FD2E1-4A7E-44C2-9B69-E701A3CE2F8E}",
       "size": 15387816,
-      "size_mac": 21304646,
-      "version_mac": "0.10.3.449"
+      "size_mac": 21304619,
+      "version_mac": "0.10.3.451"
     },
     {
       "id": "RoneSidechain",
@@ -621,10 +621,10 @@
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=VcKBwZMMd7w",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-451.1.pkg",
       "sha256": "f93001bbf15cf8f3337b4520cc2fb67f690d7329e1c1527710d6c24f173e338d",
       "registry_key": "RoneSidechain",
-      "sha256_mac": "a4dd4081a264effb6dc99993e2a37182ebdcf444afb8b61cc67d5e1d5c1361a9",
+      "sha256_mac": "4ee408f646308b4f11267752f95b40b5b20984a39106b25d474d2988f6df5427",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
       "price": 0,
       "launch_price": 0,
@@ -642,8 +642,8 @@
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
       "size": 16903496,
-      "size_mac": 24913833,
-      "version_mac": "1.2.5.449"
+      "size_mac": 24913855,
+      "version_mac": "1.2.5.451"
     },
     {
       "id": "RoneDelay",
@@ -667,10 +667,10 @@
       "manual": "RONE Delay - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=EYcK_2b7cEo",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneDelay-latest/RoneDelay_Installer-451.1.pkg",
       "sha256": "55f7c2b37f3b493ba1b2183701d1fd25f0ce4806183f90d66df7926d7b4e985f",
       "registry_key": "RoneDelay",
-      "sha256_mac": "4672fb028688bd5afd82c53745711f20f4bfac136a02690ecb95c878fe69fa9b",
+      "sha256_mac": "2e0006269303412e9641b7abcb4cae7b92aadd4bf750ab7f9372235008d42bf8",
       "store_url": "https://roneaudio.com/products/rone-delay.html",
       "category": [
         "space"
@@ -685,8 +685,8 @@
       "accent": "#E9D6A6",
       "inno_app_id": "{04213AF9-9AD6-4447-B6AE-7F544C41994C}",
       "size": 15789112,
-      "version_mac": "1.4.3.449",
-      "size_mac": 19819989
+      "version_mac": "1.4.3.451",
+      "size_mac": 19819983
     },
     {
       "id": "RoneReverb",
@@ -710,10 +710,10 @@
       "manual": "RONE Reverb - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=E7nxFSY3UCY",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-451.1.pkg",
       "sha256": "f3eb5b2e634e95db216d5ddfae8411a303faf19e1e9a33d2eff03d3d1ca65c51",
       "registry_key": "RoneReverb",
-      "sha256_mac": "e740d3e710c7f58d511f66799df1a447ecaf84c5dfba9f60805742a18adfd665",
+      "sha256_mac": "d92719509cd44234f7b83c84af526ba7798d74fdf4c9cc3bd0a7e9a6457c5bda",
       "store_url": "https://roneaudio.com/products/rone-reverb.html",
       "category": [
         "space"
@@ -730,9 +730,9 @@
       ],
       "accent": "#FFAFC8",
       "inno_app_id": "{F27564D5-966F-4768-8637-2271CBC94272}",
-      "version_mac": "1.1.0.449",
+      "version_mac": "1.1.0.451",
       "size": 15833064,
-      "size_mac": 15565803
+      "size_mac": 15565810
     },
     {
       "id": "RoneGrain",
@@ -755,10 +755,10 @@
       "manual": "RONE DMT - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=3ZSkhuyIByA",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneGrain-latest/RoneGrain_Installer-451.1.pkg",
       "sha256": "a95602fdbe668eaf004ef7c7f2df30db5c60416bedc55b4187fa7e366e4f8dca",
       "registry_key": "RoneGrain",
-      "sha256_mac": "d61782c12ba0d0e04ba6e12c7319b1b8c7d782a5b4419966ccc4e74119ea8316",
+      "sha256_mac": "6617e1dfc32161ecbd784a40aa1cc0ecc9d345a9166b41aeb92e9e03a6447560",
       "store_url": "https://roneaudio.com/products/rone-dmt.html",
       "category": [
         "creative"
@@ -773,8 +773,8 @@
       "accent": "#2EE6C8",
       "inno_app_id": "{6025BEC5-E441-415F-9CA3-825DBEC49685}",
       "size": 16527608,
-      "version_mac": "1.1.3.449",
-      "size_mac": 24311233
+      "version_mac": "1.1.3.451",
+      "size_mac": 24311222
     },
     {
       "id": "RoneHook",
@@ -814,10 +814,10 @@
       "inno_app_id": "{B812F406-735A-4DA6-8E7B-69E0051B8AA9}",
       "released": "2026-11-15",
       "size": 199830224,
-      "version_mac": "1.1.2.449",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-449.1.pkg",
-      "sha256_mac": "40276bddc7685d5cc9e3099fba19e7cc52300d80e0d6942f5c1eab7edf148136",
-      "size_mac": 261129844
+      "version_mac": "1.1.2.451",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneHook-latest/RoneHook_Installer-451.1.pkg",
+      "sha256_mac": "7ad1669f583b09ed369de66c6b4ac330a76e5d7c8706c5359553612673237f49",
+      "size_mac": 261130461
     },
     {
       "id": "RoneListen",
@@ -839,10 +839,10 @@
       "manual": "RONE Listen - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=_xQWtgcAV6I",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneListen-latest/RoneListen_Installer-451.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneListen-latest/RoneListen_Installer-449.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneListen-latest/RoneListen_Installer-451.1.pkg",
       "sha256": "72148364529927d35c12cd0dd571e0d8d382b48c32f26050cbcf26aa7771fa48",
       "registry_key": "RoneListen",
-      "sha256_mac": "3734205356ce04d6230b4baa9fc049f05abac509c3bd13250039ac7ce39c0a63",
+      "sha256_mac": "7e191d3e2e6ee39ca561555d29d381c59512fd945cfc956bb2a4e4ef39a6aac3",
       "store_url": "https://roneaudio.com/products/rone-listen.html",
       "category": [
         "utility"
@@ -858,8 +858,8 @@
       "accent": "#FF4FA3",
       "inno_app_id": "{32349622-2EEB-4C4C-836C-4134BF9E8AD2}",
       "size": 6794048,
-      "version_mac": "1.1.2.449",
-      "size_mac": 15847929
+      "version_mac": "1.1.2.451",
+      "size_mac": 15847949
     }
   ],
   "apps": [
