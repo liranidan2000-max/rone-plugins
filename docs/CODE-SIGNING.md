@@ -118,8 +118,8 @@ xcrun stapler validate "RoneStucker_Installer.pkg"
 
 Since 2023 code-signing keys must live in certified hardware, so a certificate
 cannot simply be exported and used on a GitHub runner: use a cloud signing
-service. Three backends are wired in; the script picks whichever secrets exist. Liran is an
-individual (no company), so **Option B** is the one to set up.
+service. Four backends are wired in; the script picks whichever secrets exist. Liran is an
+individual (no company): **Option D is the one in use** (since 2026-11-24).
 
 ### Option A — Azure Artifact Signing (formerly Trusted Signing)
 
@@ -145,7 +145,7 @@ accepted only from the US and Canada.
 | `ACS_ACCOUNT` | the Artifact Signing account name |
 | `ACS_PROFILE` | the certificate profile name |
 
-### Option B — SSL.com IV certificate with eSigner  ← **the RONE path (individual, no company)**
+### Option B — SSL.com IV certificate with eSigner (not used)
 
 An *Individual Validation* (IV) certificate is issued to a person; SSL.com
 verifies your identity with a government ID. The private key lives in their
@@ -204,6 +204,39 @@ self-signed one for testing the pipeline):
 |---|---|
 | `WIN_SIGN_PFX_BASE64` | `[Convert]::ToBase64String([IO.File]::ReadAllBytes("cert.pfx"))` |
 | `WIN_SIGN_PFX_PASSWORD` | its password |
+
+### Option D — SSL.com IV certificate, key in Azure Key Vault  ← **the RONE path**
+
+The certificate (SSL.com order co-671lf2sld5e, `CN=liran rone kalifa`, 2026-11-24 to 2027-11-24) was issued
+from a CSR whose key was made inside our own vault: `rone-codesign-kv` (Key Vault **Premium**, North Europe),
+certificate `rone-codesign-2026`, RSA-HSM 3072, not exportable. There is no key file anywhere. On the SSL.com
+order page never use "create OTP and issue certificate": that is eSigner.
+
+How a file is signed (`Sign-Akv`): `signtool /dg` writes the digest, Key Vault signs it in its HSM (REST, RS256),
+`signtool /di` puts the signature in, then an RFC3161 timestamp (DigiCert, falling back to SSL.com). Only
+Microsoft's signtool and two REST calls: no third-party signing tool holds our token. The public certificate is
+read from the vault on every run; the SSL.com intermediate is `scripts/ci/win-cert/`. The script fails unless every
+file ends up `Valid` **and** timestamped.
+
+| Secret | Value |
+|---|---|
+| `AZURE_TENANT_ID` | Entra tenant ID |
+| `AZURE_CLIENT_ID` | app registration (client) ID |
+| `AZURE_CLIENT_SECRET` | its client secret (note its expiry date) |
+
+Leave the `ACS_*` secrets unset, they select Option A. The app registration needs only **Key Vault Crypto User** on
+the key and **Key Vault Certificate User** on the certificate. `main.yml` already passes these three, so turning
+signing on or off = adding or removing the secrets; no workflow edit.
+
+On Liran's PC (signs with the `az login` session, no secrets):
+
+```powershell
+$env:AKV_USE_AZ_CLI = '1'; & "D:\RONE PLUGINSone-plugins\scripts\ci\sign-windows.ps1" -Require "C:\path	oile.exe"
+```
+
+The vault must stay alive: the Azure free credit ends 2026-12-09, so the subscription has to be Pay-As-You-Go
+before that. Renewal: new CSR in the vault, new certificate name, `az keyvault certificate pending merge`, then
+change the default of `$akvCert` in the script (and the intermediate, if SSL.com changed it).
 
 ### What happens in CI
 

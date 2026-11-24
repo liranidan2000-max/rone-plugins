@@ -14,7 +14,12 @@
         ACS_ACCOUNT    the Artifact Signing account name
         ACS_PROFILE    the certificate profile name
 
-      SSL.com eSigner - individuals, IV/OV certificate in their cloud (the chosen path)
+      Azure Key Vault - the RONE path since 24.11.2026: SSL.com IV certificate, key in our vault's HSM
+        AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET   (service principal), and no ACS_* set
+        AKV_VAULT, AKV_CERT   optional, default to the RONE vault and certificate below
+        AKV_USE_AZ_CLI=1      on Liran's PC only: sign with the `az login` session, no secrets needed
+
+      SSL.com eSigner - individuals, IV/OV certificate in their cloud (not used: ours is in Key Vault)
         ESIGNER_USERNAME, ESIGNER_PASSWORD, ESIGNER_CREDENTIAL_ID, ESIGNER_TOTP_SECRET
         ESIGNER_SANDBOX=1 (optional) rehearses against SSL.com's sandbox with their demo account
 
@@ -26,7 +31,7 @@
     See docs/CODE-SIGNING.md.
 
 .PARAMETER Status
-    Print the backend that would be used (acs | esigner | pfx | none) and exit.
+    Print the backend that would be used (acs | akv | esigner | pfx | none) and exit.
 .PARAMETER Require
     Fail instead of skipping when no backend is configured (used once signing
     is expected, e.g. by Inno Setup).
@@ -47,6 +52,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Names, not secrets: the RONE vault and the certificate in it (docs/CODE-SIGNING.md).
+$akvVault = $(if ($env:AKV_VAULT) { $env:AKV_VAULT } else { 'rone-codesign-kv' })
+$akvCert  = $(if ($env:AKV_CERT)  { $env:AKV_CERT }  else { 'rone-codesign-2026' })
+
 function Has([string[]] $names) {
     foreach ($n in $names) { if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($n))) { return $false } }
     return $true
@@ -54,6 +63,8 @@ function Has([string[]] $names) {
 
 function Detect-Backend {
     if (Has @('AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET', 'ACS_ENDPOINT', 'ACS_ACCOUNT', 'ACS_PROFILE')) { return 'acs' }
+    if ((Has @('AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET')) -and -not (Has @('ACS_ACCOUNT'))) { return 'akv' }
+    if ($env:AKV_USE_AZ_CLI -eq '1') { return 'akv' }
     if (Has @('ESIGNER_USERNAME', 'ESIGNER_PASSWORD', 'ESIGNER_CREDENTIAL_ID', 'ESIGNER_TOTP_SECRET')) { return 'esigner' }
     if (Has @('WIN_SIGN_PFX_BASE64', 'WIN_SIGN_PFX_PASSWORD')) { return 'pfx' }
     foreach ($partial in @(@('AZURE_TENANT_ID', 'ACS_ACCOUNT'), @('ESIGNER_USERNAME'), @('WIN_SIGN_PFX_BASE64'))) {
@@ -149,6 +160,94 @@ function Sign-Acs([string[]] $targets) {
     }
 }
 
+function Invoke-Akv([string] $method, [string] $uri, $headers, $body, [string] $contentType) {
+    # Azure answers 429 / 5xx now and then: a whole release must not fail on one of those.
+    # 400 / 401 / 403 / 404 are ours (wrong secret, missing role) - no point in repeating them.
+    for ($try = 1; ; $try++) {
+        try {
+            $a = @{ Method = $method; Uri = $uri; TimeoutSec = 60; UseBasicParsing = $true }
+            if ($headers) { $a.Headers = $headers }
+            if ($null -ne $body) { $a.Body = $body; $a.ContentType = $contentType }
+            return Invoke-RestMethod @a
+        } catch {
+            $code = 0
+            if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
+            if ($try -ge 5 -or ($code -ge 400 -and $code -lt 500 -and $code -ne 429 -and $code -ne 408)) {
+                throw "Azure call failed (HTTP $code) on $(([uri]$uri).Host)$(([uri]$uri).AbsolutePath): $($_.Exception.Message)"
+            }
+            Start-Sleep -Seconds (3 * $try)
+        }
+    }
+}
+
+function Get-AkvToken {
+    if ($env:AKV_USE_AZ_CLI -eq '1') {
+        $t = (& az account get-access-token --resource https://vault.azure.net --query accessToken -o tsv)
+        if ($LASTEXITCODE -ne 0 -or -not $t) { throw 'az has no session - run: az login' }
+        return "$t".Trim()
+    }
+    $r = Invoke-Akv 'Post' "https://login.microsoftonline.com/$env:AZURE_TENANT_ID/oauth2/v2.0/token" $null @{
+        grant_type = 'client_credentials'; client_id = $env:AZURE_CLIENT_ID
+        client_secret = $env:AZURE_CLIENT_SECRET; scope = 'https://vault.azure.net/.default'
+    } 'application/x-www-form-urlencoded'
+    return $r.access_token
+}
+
+function Sign-Akv([string[]] $targets) {
+    # signtool's own three-step "digest signing": it writes the digest (/dg), Key Vault signs that
+    # digest inside its HSM, signtool puts the result back (/di). The key never leaves the vault
+    # and no third-party signing tool ever holds our token.
+    $auth = @{ Authorization = "Bearer $(Get-AkvToken)" }
+    $cert = Invoke-Akv 'Get' "https://$akvVault.vault.azure.net/certificates/${akvCert}?api-version=7.4" $auth $null $null
+    $run = Join-Path $work ('akv-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $run | Out-Null
+    try {
+        $cer = Join-Path $run 'signer.cer'
+        [IO.File]::WriteAllBytes($cer, [Convert]::FromBase64String($cert.cer))
+        $x = New-Object Security.Cryptography.X509Certificates.X509Certificate2 (,[IO.File]::ReadAllBytes($cer))
+        if ($x.NotAfter -lt (Get-Date)) { throw "The code-signing certificate expired on $($x.NotAfter) - renew it (docs/CODE-SIGNING.md)." }
+        if ($x.NotAfter -lt (Get-Date).AddDays(45)) { Write-Host "::warning::The code-signing certificate expires on $($x.NotAfter) - renew it now." }
+        Write-Host "Key Vault $akvVault, certificate $akvCert [$($x.Subject)], valid to $($x.NotAfter.ToString('yyyy-MM-dd'))"
+        $chain = Join-Path $PSScriptRoot 'win-cert\sslcom-codesigning-intermediate-rsa-r1.crt'
+        if (-not (Test-Path $chain)) { throw "Missing $chain" }
+
+        $n = 0
+        foreach ($t in $targets) {
+            $n++
+            $dir = Join-Path $run "$n"
+            New-Item -ItemType Directory -Force -Path $dir | Out-Null
+            & $signtool sign /q /dg $dir /fd SHA256 /f $cer /ac $chain $t
+            if ($LASTEXITCODE -ne 0) { throw "signtool digest failed for $t" }
+            $dig = @(Get-ChildItem -LiteralPath $dir -Filter *.dig)
+            if ($dig.Count -ne 1) { throw "signtool wrote $($dig.Count) digests for $t" }
+            $b64 = ([IO.File]::ReadAllText($dig[0].FullName)).Trim()
+            if ([Convert]::FromBase64String($b64).Length -ne 32) { throw "Unexpected digest length for $t" }
+            $json = @{ alg = 'RS256'; value = $b64.TrimEnd('=').Replace('+', '-').Replace('/', '_') } | ConvertTo-Json -Compress
+            # kid carries the key VERSION, so the signature always belongs to the certificate above
+            $sig = Invoke-Akv 'Post' "$($cert.kid)/sign?api-version=7.4" $auth $json 'application/json'
+            $v = $sig.value.Replace('-', '+').Replace('_', '/')
+            while ($v.Length % 4) { $v += '=' }
+            [IO.File]::WriteAllText($dig[0].FullName + '.signed', $v)
+            & $signtool sign /q /di $dir $t
+            if ($LASTEXITCODE -ne 0) { throw "signtool ingest failed for $t" }
+
+            # Without a timestamp the signature dies with the certificate (a year): two servers, then fail.
+            $stamped = $false
+            foreach ($try in 1..3) {
+                foreach ($tsa in 'http://timestamp.digicert.com', 'http://ts.ssl.com') {
+                    & $signtool timestamp /q /tr $tsa /td SHA256 $t
+                    if ($LASTEXITCODE -eq 0) { $stamped = $true; break }
+                }
+                if ($stamped) { break }
+                Start-Sleep -Seconds (5 * $try)
+            }
+            if (-not $stamped) { throw "No timestamp server answered for $t" }
+        }
+    } finally {
+        Remove-Item -LiteralPath $run -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Sign-Pfx([string[]] $targets) {
     $pfx = Join-Path $work 'cert.pfx'
     [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WIN_SIGN_PFX_BASE64))
@@ -216,6 +315,7 @@ function Sign-ESigner([string[]] $targets) {
 
 switch ($backend) {
     'acs'     { Sign-Acs $pe }
+    'akv'     { Sign-Akv $pe }
     'esigner' { Sign-ESigner $pe }
     'pfx'     { Sign-Pfx $pe }
 }
@@ -225,6 +325,11 @@ $bad = 0
 foreach ($t in $pe) {
     $sig = Get-AuthenticodeSignature -FilePath $t
     if (-not $sig.SignerCertificate) { Write-Host "::error::Not signed: $t"; $bad++; continue }
+    if ($backend -eq 'akv') {
+        # ours is a public certificate: anything but a valid, timestamped signature must not ship
+        if ($sig.Status -ne 'Valid') { Write-Host "::error::Signature is $($sig.Status): $t - $($sig.StatusMessage)"; $bad++; continue }
+        if (-not $sig.TimeStamperCertificate) { Write-Host "::error::No timestamp: $t"; $bad++; continue }
+    }
     Write-Host ("  signed  {0}  [{1}]  {2}" -f $sig.Status, $sig.SignerCertificate.Subject, (Split-Path $t -Leaf))
 }
 if ($bad -gt 0) { exit 1 }
