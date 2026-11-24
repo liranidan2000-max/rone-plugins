@@ -78,7 +78,8 @@ float DuckProcessor::processSample (float dryL, float dryR)
     env_ += envCoeff * (det - env_);
 
     // --- Instantaneous duck target from envelope vs threshold ---
-    float envDb = juce::Decibels::gainToDecibels (env_, -80.0f);
+    // under 9e-5 (-80.9 dB) the answer is the -80 floor itself: no log10 for a quiet detector (perf audit 24.11.2026)
+    float envDb = env_ < 9.0e-5f ? -80.0f : juce::Decibels::gainToDecibels (env_, -80.0f);
     float over  = (envDb - thresholdDb_) / 18.0f;      // 18dB knee
     float target = juce::jlimit (0.0f, 1.0f, over);
     target = target * target * (3.0f - 2.0f * target); // smoothstep
@@ -101,6 +102,7 @@ float DuckProcessor::processSample (float dryL, float dryR)
     float attenDb = kMaxAttenDb * amount_ * control_;
     currentGrDb_ = -attenDb;
 
-    smGain_.setTargetValue (juce::Decibels::decibelsToGain (attenDb));
+    if (attenDb != gainOfDb_) { gainOfDb_ = attenDb; gainLin_ = juce::Decibels::decibelsToGain (attenDb); }   // the same dB = the same gain
+    smGain_.setTargetValue (gainLin_);
     return smGain_.getNextValue();
 }

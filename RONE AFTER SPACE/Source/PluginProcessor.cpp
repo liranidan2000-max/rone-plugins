@@ -381,8 +381,15 @@ void RoneAfterspaceAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         // 13. equal-power wet/dry mix (+ SOLO WET audition crossfade)
         const float mix  = smMix.getNextValue();
         const float solo = smSoloWet.getNextValue();
-        const float dryGain = std::cos (mix * juce::MathConstants<float>::halfPi) * (1.0f - solo);
-        const float wetGain = std::sin (mix * juce::MathConstants<float>::halfPi) * (1.0f - solo) + solo;
+        // the equal-power pair is a pure function of mix: asked again only when mix moved (perf audit 24.11.2026)
+        if (mix != mixKey)
+        {
+            mixKey = mix;
+            mixCos = std::cos (mix * juce::MathConstants<float>::halfPi);
+            mixSin = std::sin (mix * juce::MathConstants<float>::halfPi);
+        }
+        const float dryGain = mixCos * (1.0f - solo);
+        const float wetGain = mixSin * (1.0f - solo) + solo;
 
         float outL = dryL * dryGain + wetL * wetGain;
         float outR = dryR * dryGain + wetR * wetGain;

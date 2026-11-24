@@ -142,6 +142,7 @@ private:
 
     // Smoothers
     juce::SmoothedValue<float> smMix;         // 0..1, equal-power applied per sample
+    float mixKey = std::numeric_limits<float>::quiet_NaN(), mixCos = 1.0f, mixSin = 0.0f;   // cos / sin of the last mix
     juce::SmoothedValue<float> smEchoSend;
     juce::SmoothedValue<float> smWidth;
     juce::SmoothedValue<float> smBypass;      // 0 = active, 1 = bypassed

@@ -62,11 +62,13 @@ public:
         float det = juce::jmax (std::abs (highL), std::abs (highR));
         env_ += (det > env_ ? envAttackCoeff_ : envReleaseCoeff_) * (det - env_);
 
-        float envDb = juce::Decibels::gainToDecibels (env_, -80.0f);
+        // under 9e-5 (-80.9 dB) the answer is the -80 floor itself: no log10 for a quiet tail (perf audit 24.11.2026)
+        float envDb = env_ < 9.0e-5f ? -80.0f : juce::Decibels::gainToDecibels (env_, -80.0f);
         float grDb  = juce::jlimit (0.0f, maxGrDb_, (envDb - threshDb_) * 1.4f);
         currentGrDb_ = grDb;
 
-        smGain_.setTargetValue (juce::Decibels::decibelsToGain (-grDb));
+        if (grDb != gainOfDb_) { gainOfDb_ = grDb; gainLin_ = juce::Decibels::decibelsToGain (-grDb); }   // the same dB = the same gain
+        smGain_.setTargetValue (gainLin_);
         float g = smGain_.getNextValue();
 
         wetL = lowL + highL * g;
@@ -87,6 +89,7 @@ private:
     float threshDb_ = -30.2f;
 
     juce::SmoothedValue<float> smGain_;
+    float gainOfDb_ = std::numeric_limits<float>::quiet_NaN(), gainLin_ = 1.0f;   // the last dB asked and its gain
     float currentGrDb_ = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SilkProcessor)

@@ -58,6 +58,7 @@ private:
     float thresholdDb_ = -33.0f;
 
     juce::SmoothedValue<float> smGain_;
+    float gainOfDb_ = std::numeric_limits<float>::quiet_NaN(), gainLin_ = 1.0f;   // the last dB asked and its gain
     float currentGrDb_ = 0.0f;
 
     static constexpr float kMaxAttenDb = -24.0f;

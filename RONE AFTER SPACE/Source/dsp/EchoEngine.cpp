@@ -97,8 +97,10 @@ void EchoEngine::processSample (float inL, float inR, float& outL, float& outR)
     float writeInR = inR * (1.0f - pp);
 
     // Soft clip inside the loop — feedback can never run away
-    float wL = std::tanh (writeInL + fb * wetFbL);
-    float wR = std::tanh (writeInR + fb * wetFbR);
+    // tanh (0) is 0, sign and all: an empty line is not sent through it (perf audit 24.11.2026)
+    const float aL = writeInL + fb * wetFbL, aR = writeInR + fb * wetFbR;
+    float wL = aL == 0.0f ? aL : std::tanh (aL);
+    float wR = aR == 0.0f ? aR : std::tanh (aR);
 
     bufL_[(size_t) writePos_] = wL;
     bufR_[(size_t) writePos_] = wR;
