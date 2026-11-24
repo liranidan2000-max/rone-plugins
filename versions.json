@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-24T17:34:22Z",
+  "last_updated": "2026-11-24T18:30:08Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-448.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-448.1.dmg",
@@ -621,10 +621,10 @@
       "manual": "RONE Sidechain - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=VcKBwZMMd7w",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-452.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-452.1.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneSidechain-latest/RoneSidechain_Installer-453.1.pkg",
       "sha256": "0e82f6b83c3a27304898d29decd7d6a170bcf76321544aee082a80da29d6359f",
       "registry_key": "RoneSidechain",
-      "sha256_mac": "d94a78e36c019ab0561becdbcf4d968d715632b512c3131b8f073cc254ce37fc",
+      "sha256_mac": "9cb1cfd5382e2f3da00419affb27e5112034ef5271163b23007e856a9f75b18f",
       "store_url": "https://roneaudio.com/products/rone-sidechain.html",
       "price": 0,
       "launch_price": 0,
@@ -642,8 +642,8 @@
       "accent": "#7B8CFF",
       "inno_app_id": "{1697BE9A-F028-4267-87B6-0DB1CA940FF4}",
       "size": 16902240,
-      "size_mac": 24915249,
-      "version_mac": "1.2.5.452"
+      "size_mac": 24917403,
+      "version_mac": "1.2.5.453"
     },
     {
       "id": "RoneDelay",
@@ -710,10 +710,10 @@
       "manual": "RONE Reverb - User Manual.pdf",
       "video": "https://www.youtube.com/watch?v=E7nxFSY3UCY",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-452.1.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-452.2.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneReverb-latest/RoneReverb_Installer-453.1.pkg",
       "sha256": "bdf89fc6e72d3661c6a9ebe71355b483d8f492c817788cbac140db83c5952523",
       "registry_key": "RoneReverb",
-      "sha256_mac": "881c2cac0f1a37fc759c26c895a40c0daa5c0d3a85e4e30dfd1f56a5c101bec6",
+      "sha256_mac": "72aa078f38b4a081517671dec3b22504f8daf4c5684982e8e4fdc048f905345a",
       "store_url": "https://roneaudio.com/products/rone-reverb.html",
       "category": [
         "space"
@@ -730,9 +730,9 @@
       ],
       "accent": "#FFAFC8",
       "inno_app_id": "{F27564D5-966F-4768-8637-2271CBC94272}",
-      "version_mac": "1.1.0.452",
+      "version_mac": "1.1.0.453",
       "size": 15830824,
-      "size_mac": 15567428
+      "size_mac": 15587327
     },
     {
       "id": "RoneGrain",
