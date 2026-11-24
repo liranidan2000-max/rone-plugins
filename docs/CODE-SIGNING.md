@@ -218,16 +218,13 @@ Microsoft's signtool and two REST calls: no third-party signing tool holds our t
 read from the vault on every run; the SSL.com intermediate is `scripts/ci/win-cert/`. The script fails unless every
 file ends up `Valid` **and** timestamped.
 
-| Secret | Value |
-|---|---|
-| `AZURE_TENANT_ID` | Entra tenant ID |
-| `AZURE_CLIENT_ID` | app registration (client) ID |
-| `AZURE_CLIENT_SECRET` | its client secret (note its expiry date) |
+**No secret exists.** The Windows job has `id-token: write`; GitHub issues it a short-lived statement "repo
+rone-plugins, branch main", and Entra exchanges exactly that subject for a vault token (federated credential
+`github-main` on the app registration `rone-ci-codesign`). The tenant and client ids sit in `main.yml` as plain
+values. Off switch: empty `AZURE_CLIENT_ID` there. A run from another branch cannot sign (it fails).
 
-Leave the `ACS_*` secrets unset, they select Option A. The app registration is `rone-ci-codesign`; its
-only rights are the custom role **RONE Code Signer** (read + sign the key, read the certificate) on that one key and
-that one certificate - a renewal under a new name needs the two assignments again. `main.yml` already passes these three, so turning
-signing on or off = adding or removing the secrets; no workflow edit.
+The app's only rights are the custom role **RONE Code Signer** (read + sign the key, read the certificate) on that one
+key and that one certificate - a renewal under a new name needs the two assignments again.
 
 On Liran's PC (signs with the `az login` session, no secrets):
 

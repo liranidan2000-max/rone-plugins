@@ -15,7 +15,8 @@
         ACS_PROFILE    the certificate profile name
 
       Azure Key Vault - the RONE path since 24.11.2026: SSL.com IV certificate, key in our vault's HSM
-        AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET   (service principal), and no ACS_* set
+        AZURE_TENANT_ID, AZURE_CLIENT_ID and a GitHub job with `id-token: write`: the job proves who it
+        is to Azure by itself (OIDC federation), there is no client secret anywhere. No ACS_* set.
         AKV_VAULT, AKV_CERT   optional, default to the RONE vault and certificate below
         AKV_USE_AZ_CLI=1      on Liran's PC only: sign with the `az login` session, no secrets needed
 
@@ -63,7 +64,7 @@ function Has([string[]] $names) {
 
 function Detect-Backend {
     if (Has @('AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET', 'ACS_ENDPOINT', 'ACS_ACCOUNT', 'ACS_PROFILE')) { return 'acs' }
-    if ((Has @('AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET')) -and -not (Has @('ACS_ACCOUNT'))) { return 'akv' }
+    if ((Has @('AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN')) -and -not (Has @('ACS_ACCOUNT'))) { return 'akv' }
     if ($env:AKV_USE_AZ_CLI -eq '1') { return 'akv' }
     if (Has @('ESIGNER_USERNAME', 'ESIGNER_PASSWORD', 'ESIGNER_CREDENTIAL_ID', 'ESIGNER_TOTP_SECRET')) { return 'esigner' }
     if (Has @('WIN_SIGN_PFX_BASE64', 'WIN_SIGN_PFX_PASSWORD')) { return 'pfx' }
@@ -186,9 +187,14 @@ function Get-AkvToken {
         if ($LASTEXITCODE -ne 0 -or -not $t) { throw 'az has no session - run: az login' }
         return "$t".Trim()
     }
+    # GitHub signs a short-lived statement "I am this repo, branch main"; Entra trusts exactly that
+    # subject (the federated credential on rone-ci-codesign) and gives back a vault token.
+    $id = Invoke-Akv 'Get' "$env:ACTIONS_ID_TOKEN_REQUEST_URL&audience=api%3A%2F%2FAzureADTokenExchange" @{
+        Authorization = "Bearer $env:ACTIONS_ID_TOKEN_REQUEST_TOKEN" } $null $null
     $r = Invoke-Akv 'Post' "https://login.microsoftonline.com/$env:AZURE_TENANT_ID/oauth2/v2.0/token" $null @{
         grant_type = 'client_credentials'; client_id = $env:AZURE_CLIENT_ID
-        client_secret = $env:AZURE_CLIENT_SECRET; scope = 'https://vault.azure.net/.default'
+        client_assertion_type = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+        client_assertion = $id.value; scope = 'https://vault.azure.net/.default'
     } 'application/x-www-form-urlencoded'
     return $r.access_token
 }
@@ -213,6 +219,12 @@ function Sign-Akv([string[]] $targets) {
 
         $n = 0
         foreach ($t in $targets) {
+            # a vendor's own valid signature (a Microsoft runtime DLL) stays theirs
+            $had = Get-AuthenticodeSignature -FilePath $t
+            if ($had.Status -eq 'Valid' -and $had.SignerCertificate.Subject -ne $x.Subject) {
+                Write-Host "  already signed by [$($had.SignerCertificate.Subject)], left as is: $(Split-Path $t -Leaf)"
+                continue
+            }
             $n++
             $dir = Join-Path $run "$n"
             New-Item -ItemType Directory -Force -Path $dir | Out-Null

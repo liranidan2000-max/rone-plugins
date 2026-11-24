@@ -401,21 +401,15 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.has_windows == 'true'
     runs-on: windows-latest
+    # id-token: the job proves itself to Azure (OIDC), so no signing secret exists.
+    permissions:
+      contents: read
+      id-token: write
     env:
-      # Code signing (docs/CODE-SIGNING.md). All optional: without them the
-      # build is produced unsigned. First complete set wins, see scripts/ci/sign-windows.ps1.
-      AZURE_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
-      ACS_ENDPOINT:          ${{ secrets.ACS_ENDPOINT }}
-      ACS_ACCOUNT:           ${{ secrets.ACS_ACCOUNT }}
-      ACS_PROFILE:           ${{ secrets.ACS_PROFILE }}
-      ESIGNER_USERNAME:      ${{ secrets.ESIGNER_USERNAME }}
-      ESIGNER_PASSWORD:      ${{ secrets.ESIGNER_PASSWORD }}
-      ESIGNER_CREDENTIAL_ID: ${{ secrets.ESIGNER_CREDENTIAL_ID }}
-      ESIGNER_TOTP_SECRET:   ${{ secrets.ESIGNER_TOTP_SECRET }}
-      WIN_SIGN_PFX_BASE64:   ${{ secrets.WIN_SIGN_PFX_BASE64 }}
-      WIN_SIGN_PFX_PASSWORD: ${{ secrets.WIN_SIGN_PFX_PASSWORD }}
+      # Code signing (docs/CODE-SIGNING.md): Azure Key Vault since 24.11.2026. These two are
+      # names, not secrets. Emptying AZURE_CLIENT_ID turns signing off.
+      AZURE_TENANT_ID: 55011b42-e13b-4592-928a-469e43ed32d8
+      AZURE_CLIENT_ID: 7cbd7bde-d2ab-4e3a-91c2-ebe9db9cca3e
       # No GITHUB_TOKEN here (audit R051): only the two steps that run
       # sign-windows.ps1 get it (it reads the CodeSignTool release with it).
     strategy:
@@ -759,7 +753,7 @@ jobs:
           foreach ($f in $stale) { Write-Host "::warning::stale binary, older than this job (build cache?): $($f.FullName) $($f.LastWriteTimeUtc.ToString('u'))" }
           Write-Host "$($stale.Count) binaries older than this job in $dir"
 
-      # --- Code signing (Authenticode) - a no-op until the secrets exist ---
+      # --- Code signing (Authenticode), Azure Key Vault ---
       - name: Sign binaries
         shell: pwsh
         env:
