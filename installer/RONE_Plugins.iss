@@ -1,4 +1,5 @@
 ; ============================================================================
+; Signed with Authenticode by CI since 24.11.2026 (docs/CODE-SIGNING.md).
 ; RONE Plugins Center — Lightweight Hub Installer
 ; Inno Setup Script
 ;
