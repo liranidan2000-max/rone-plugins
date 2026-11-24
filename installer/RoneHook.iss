@@ -1,5 +1,5 @@
 ; ============================================================================
-; Signed with Authenticode by CI since 24.11.2026 (docs/CODE-SIGNING.md).
+; Signed with Authenticode by CI since 24.11.2026, the Pro Tools plug-in with the same certificate (docs/CODE-SIGNING.md).
 ; RONE Hook — Silent Plugin Installer
 ; Designed to be invoked by RONE Plugins Center with /VERYSILENT flag
 ;
@@ -61,6 +61,12 @@ Source: "..\RoneHook\build-ci\RoneHook_artefacts\Release\VST3\RONE Hook.vst3\*";
 Source: "..\RoneHook\build-ci\RoneHook_artefacts\Release\Standalone\RONE Hook.exe"; \
   DestDir: "{app}"; \
   Flags: ignoreversion
+
+; AAX for Pro Tools (Windows), built and signed on the iLok PC (scripts/aax); no signed bundle for
+; this version = no AAX in this installer (skipifsourcedoesntexist).
+Source: "..\aax\RONE Hook.aaxplugin\*"; \
+  DestDir: "{commoncf64}\Avid\Audio\Plug-Ins\RONE\RONE Hook.aaxplugin"; \
+  Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist overwritereadonly uninsremovereadonly
 
 ; The WebView2 loader beside the standalone (JUCE loads it at runtime)
 Source: "..\webview2\Microsoft.Web.WebView2.1.0.1901.177\build\native\x64\WebView2Loader.dll"; \
