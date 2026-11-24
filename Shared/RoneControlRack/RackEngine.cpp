@@ -195,6 +195,7 @@ juce::StringArray Engine::mapNames() const
 
 void Engine::refreshMapCache()
 {
+    mapCacheStale = false;
     mapNamesCache = mapNames();
     mapDefCache = defaultMapName();
     mapReadyCache.clear();
@@ -434,8 +435,19 @@ void Engine::releaseAll()
 void Engine::timerCallback()
 {
     const double t = nowSeconds();
-    if (++ticks % 10 == 0) checkArmed();
-    if (ticks % 120 == 0) { refreshLite(); refreshMapCache(); }   // another instance may have saved a map
+    // A rack that is closed and not armed has nothing to learn from the file: its id reaches the file only through
+    // arm(), which sets `armed`, so the file cannot name it, and taking over a free file needs `open`. checkArmed()
+    // would read the file and change nothing - skip the read (it was ~20 file calls, 6 times a second, per instance).
+    // The tick count keeps running, so a rack that opens is checked on the same tick as before.
+    if (++ticks % 10 == 0 && (open || armed)) checkArmed();
+    if (ticks % 120 == 0)
+    {
+        refreshLite();
+        // another instance may have saved a map: the page that shows the lists gets them re-read on the same ticks
+        // as before; an instance whose page nobody looks at does not scan the maps folder (see uiState)
+        if (ticks - mapCacheSeenTick <= 120) refreshMapCache();
+        else mapCacheStale = true;
+    }
     if (stateSwapped.exchange (false))                         // the host loaded a project into this instance
         if (! readProjectMap()) writeProjectMap();             // a project from before the maps keeps the current one
     if (! open) { lastT = t; return; }
@@ -515,6 +527,10 @@ juce::var Engine::paramList() const
 
 juce::var Engine::uiState (bool withHands)
 {
+    // The only reader of the map lists. A re-read the timer skipped while nobody looked is made up here, before the
+    // lists are used, so the page never gets lists older than it did when every instance re-read them every 2 s.
+    if (mapCacheStale) refreshMapCache();
+    mapCacheSeenTick = ticks;
     auto* o = new juce::DynamicObject();
     o->setProperty ("open", open);
     o->setProperty ("armed", armed);

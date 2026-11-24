@@ -117,6 +117,10 @@ private:
     juce::StringArray mapReadyCache;                        // the plugin's ready maps with no user copy (can't be deleted)                        // read from disk every 2 s / after a map event, not 30 times a second
     juce::String mapDefCache;
     void refreshMapCache();
+    // The lists above are read by the rack page only (uiState). While it looks, the timer re-reads the disk every
+    // 2 s as it always did; while nobody looks the re-read is skipped and made up on the page's next look.
+    int mapCacheSeenTick = -100000;                         // the tick of the page's last look
+    bool mapCacheStale = false;                             // a 2 s re-read was skipped: read the disk before the next look
 
     juce::AudioProcessorValueTreeState& apvts;
     juce::String id, name, accent;
