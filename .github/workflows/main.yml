@@ -763,7 +763,12 @@ jobs:
           "RONE_SIGN_BACKEND=$backend" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "Windows signing backend: $backend"
           if ($backend -ne 'none') {
-            & scripts/ci/sign-windows.ps1 -Require "${{ matrix.folder }}/build-ci/${{ matrix.cmake_project }}_artefacts/Release"
+            # every target of the product, not only the main one: the Analyzer's installer also
+            # packs RONEBridge_artefacts and RONEChannel_artefacts (found unsigned in run #449)
+            $dirs = @(Get-ChildItem "${{ matrix.folder }}/build-ci" -Directory -Filter '*_artefacts' |
+                      ForEach-Object { Join-Path $_.FullName 'Release' } | Where-Object { Test-Path $_ })
+            if ($dirs.Count -eq 0) { Write-Host "::error::no *_artefacts/Release to sign"; exit 1 }
+            & scripts/ci/sign-windows.ps1 -Require -Paths $dirs
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
