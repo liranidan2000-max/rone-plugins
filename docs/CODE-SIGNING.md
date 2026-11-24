@@ -224,8 +224,9 @@ file ends up `Valid` **and** timestamped.
 | `AZURE_CLIENT_ID` | app registration (client) ID |
 | `AZURE_CLIENT_SECRET` | its client secret (note its expiry date) |
 
-Leave the `ACS_*` secrets unset, they select Option A. The app registration needs only **Key Vault Crypto User** on
-the key and **Key Vault Certificate User** on the certificate. `main.yml` already passes these three, so turning
+Leave the `ACS_*` secrets unset, they select Option A. The app registration is `rone-ci-codesign`; its
+only rights are the custom role **RONE Code Signer** (read + sign the key, read the certificate) on that one key and
+that one certificate - a renewal under a new name needs the two assignments again. `main.yml` already passes these three, so turning
 signing on or off = adding or removing the secrets; no workflow edit.
 
 On Liran's PC (signs with the `az login` session, no secrets):
