@@ -5,6 +5,7 @@
 #include "PluginInUse.h"
 #include "NetworkManager.h"
 #include "OldVersionCleaner.h"
+#include "MacAdmin.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -1550,7 +1551,7 @@ private:
         // unexpected end of file" (Zanon, a user in Korea; 2.0.2 - 2.0.4).
         script.replaceWithText (sh, false, false, "\n");
 
-        bool declined = false, wrongPassword = false;
+        bool declined = false, wrongPassword = false, noScripting = false;
         juce::String failure;
         if (script.getFullPathName().containsAnyOf ("'\"\\$`"))
             failure = "the download folder's path holds a quote or a $";
@@ -1565,12 +1566,10 @@ private:
             // quoted inside the AppleScript string now, as 1.6 quoted the .pkg, and
             // osascript's own error is kept: -128 alone means the user cancelled.
             const auto errFile = dir.getChildFile ("batch-" + tag + ".err.txt");
-            const auto cmd = "osascript -e 'do shell script \"/bin/sh \\\"" + script.getFullPathName()
-                           + "\\\"\" with administrator privileges' 2>'" + errFile.getFullPathName() + "'";
-            const int status = std::system (cmd.toRawUTF8());
-            const int code = WIFEXITED (status) ? WEXITSTATUS (status) : -1;
-            const auto err = errFile.loadFileAsString().trim();
-            errFile.deleteFile();
+            const auto ran = MacAdmin::run ("-e 'do shell script \"/bin/sh \\\"" + script.getFullPathName()
+                                            + "\\\"\" with administrator privileges'", errFile);
+            const int code = ran.code;
+            const auto err = ran.err;
 
             if (code != 0 && resultFile.loadFileAsString().trim().isEmpty())
             {
@@ -1580,7 +1579,8 @@ private:
                 // wants instead of osascript's raw text, and it stays out of the crash tracker
                 // (support #169).
                 wrongPassword = ! declined && err.contains ("-60005");
-                if (! declined && ! wrongPassword)
+                noScripting = ! declined && ! wrongPassword && MacAdmin::scriptingUnavailable (err);   // #206
+                if (! declined && ! wrongPassword && ! noScripting)
                     failure = err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
                                                : "the installer could not start (code " + juce::String (code) + ")";
             }
@@ -1632,6 +1632,7 @@ private:
                 r.message = declined ? juce::String ("The administrator password was not given - nothing was installed.")
                           : wrongPassword ? juce::String ("The Mac did not accept the administrator password - nothing was installed. "
                                                           "Type the password you log in to this Mac with (an administrator account), then try again.")
+                          : noScripting ? MacAdmin::scriptingUnavailableText() + " - nothing was installed. " + MacAdmin::scriptingUnavailableHelp()
                           : failure.isNotEmpty() ? "Install failed - " + failure + ". Nothing was installed."
                                                  : juce::String ("Install cancelled or failed. Enter your password when prompted.");
                 postResult (r);

@@ -868,6 +868,7 @@ static bool isEnvironmentalStatus (const juce::String& text)
         || text.contains ("a file was in use")
         || text.contains ("Enter your password when prompted")
         || text.contains ("did not accept the administrator password")    // #169: macOS -60005, a wrong Mac password
+        || text.contains ("could not open its password window")           // #206: the Mac's own scripting does not start
         || text.contains ("installer code 2)")                            // Inno: cancelled by the user before installing
         || text.startsWith ("Could not reach the download server")         // R101, R123: GitHub's assets blocked, not a bug
         || text.startsWith ("Download interrupted")                        // R123: the connection dropped
@@ -3008,9 +3009,10 @@ void MainComponent::applyCenterUpdate (const juce::File& installerFile)
                                       + " || { /bin/mv " + q (backup) + " " + q (target) + "; false; }; }"
                                       + " && /bin/rm -rf " + q (backup) + "; R=$?; /bin/rm -rf " + q (staged) + "; exit $R";
                 centerUpdateStep ("swap_admin");
-                const auto cmd = "osascript -e 'do shell script \"" + sh + "\" with administrator privileges'";
-                const int status = std::system (cmd.toRawUTF8());
-                ok = WIFEXITED (status) && WEXITSTATUS (status) == 0 && target.isDirectory();
+                const auto ran = MacAdmin::run ("-e 'do shell script \"" + sh + "\" with administrator privileges'",
+                                                juce::File::createTempFile (".err.txt"));
+                const int status = ran.status;
+                ok = ran.code == 0 && target.isDirectory();
                 centerUpdateStep (ok ? "swap_admin_ok" : "swap_admin_failed", "status " + juce::String (status));
             }
 

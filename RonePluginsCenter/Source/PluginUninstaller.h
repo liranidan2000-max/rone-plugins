@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "VersionChecker.h"
 #include "PluginInUse.h"
+#include "MacAdmin.h"
 
 #if JUCE_WINDOWS
  #ifndef NOMINMAX
@@ -335,12 +336,10 @@ namespace PluginUninstaller
                                      .getChildFile ("rone-uninstall-" + juce::Uuid().toString().substring (0, 8) + ".err.txt");
             errFile.getParentDirectory().createDirectory();
             const bool canCapture = ! errFile.getFullPathName().containsAnyOf ("'\"\\$`");
-            const auto cmd = juce::String ("osascript -e 'do shell script \"/bin/rm -rf")
-                           + quoted + "\" with administrator privileges'"
-                           + (canCapture ? " 2>'" + errFile.getFullPathName() + "'" : juce::String());
-            const int status = std::system (cmd.toRawUTF8());
-            const auto err = errFile.loadFileAsString().trim();
-            errFile.deleteFile();
+            const auto ran = MacAdmin::run ("-e 'do shell script \"/bin/rm -rf" + quoted + "\" with administrator privileges'",
+                                            canCapture ? errFile : juce::File());
+            const int status = ran.status;
+            const auto err = ran.err;
 
             if (status != 0)
             {
@@ -350,7 +349,9 @@ namespace PluginUninstaller
                     r.error = "The administrator password was not given - nothing was removed.";
                     return r;
                 }
-                rmFailure = err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
+                rmFailure = MacAdmin::scriptingUnavailable (err)
+                                ? MacAdmin::scriptingUnavailableText() + ". " + MacAdmin::scriptingUnavailableHelp()
+                          : err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
                                              : "the removal could not start (code " + juce::String (status) + ")";
                 if (rmFailure.containsIgnoreCase ("not permitted"))
                     rmFailure << " - allow RONE Plugins Center in System Settings > Privacy & Security > App Management,"
