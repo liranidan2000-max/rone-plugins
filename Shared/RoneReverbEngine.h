@@ -2,8 +2,10 @@
 
 #include <JuceHeader.h>
 #include <array>
+#include <atomic>
 #include <vector>
 #include <cmath>
+#include <cstring>
 
 // =============================================================================
 // RoneReverbEngine — AFTERSPACE late-field reverb
@@ -110,6 +112,29 @@ private:
     // Cached params for feedback-gain recompute
     float decaySeconds_ = 2.2f;
     float size_ = 0.55f;
+
+    // --- Rest on silence (perf audit 24.11.2026; the -600 dB gate approved by Liran 25.11.2026) ---
+    // The loop never reaches exact zero by itself: with denormals flushed its damping states stall near 1e-37
+    // and the engine went on doing its full work, for ever, on a tail of about -740 dB. So: after about a second
+    // of +0 in and less than 1e-30 (-600 dB) out, the whole audio state is READ; if every float of it is under
+    // 1e-30 it is let go (set to +0) and the engine rests. A resting sample of +0 in gives +0 out and leaves an
+    // all-zero state as it is (each step of processSample is a finite number times +0, added to +0); it only
+    // steps the LFO phases, with the same two lines as the full path, and the buffer positions it owes are made
+    // up before the next full sample. A ramp of any smoother keeps the full path running, and the full path
+    // always voids the proof. A tail above -600 dB is never touched.
+    bool restSample (float inL, float inR, float& outL, float& outR) noexcept;   // true = this sample rested
+    void quietSample() noexcept;                                                 // a full sample that gave silence
+    bool stateIsSilent (bool& exactlyZero) const noexcept;
+    bool smoothersSettled() noexcept;
+    void catchUpPositions() noexcept;
+    static int nextInstanceSlot() noexcept;
+
+    bool resting_ = false;            // proved by stateIsSilent(); void as soon as the full path runs
+    bool settersTouched_ = true;      // a setter ran since the smoothers were last seen settled
+    int  quietRun_ = 0;               // full-path samples of +0 in and silence out in a row
+    int  scanAfter_ = 1 << 30;        // such samples before the state is read (set in prepare)
+    juce::int64 skipped_ = 0;         // resting samples whose buffer positions are still owed
+    const int instanceSlot_ = nextInstanceSlot();   // spreads the copies' reads in time
 
     // Read helper: linear interpolated read from a circular buffer
     static float readInterp (const std::vector<float>& buf, int bufSize,

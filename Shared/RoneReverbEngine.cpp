@@ -36,6 +36,53 @@ namespace
         return y * (0.775f + 0.225f * std::abs (y)); // refine
     }
 
+    // What counts as silence: under 1e-30 = -600 dB re full scale (24-bit audio ends at -144 dB). A test build
+    // may set it to 0, and then only exact +0 counts and the engine is bit for bit the one without the rest.
+   #ifndef RONE_REVERB_ENGINE_SILENCE_BELOW
+    #define RONE_REVERB_ENGINE_SILENCE_BELOW 1.0e-30f
+   #endif
+    constexpr float kSilenceBelow = RONE_REVERB_ENGINE_SILENCE_BELOW;
+
+    // The rest's own code is kept out of line, so a playing sample runs the code it always ran
+   #if defined (_MSC_VER)
+    #define RONE_REVERB_OUT_OF_LINE __declspec (noinline)
+   #else
+    #define RONE_REVERB_OUT_OF_LINE __attribute__ ((noinline))
+   #endif
+
+    // The bits of a float: 0 only for +0 (-0 has its sign bit set)
+    inline juce::uint32 bitsOf (float v) noexcept { juce::uint32 u; std::memcpy (&u, &v, sizeof (u)); return u; }
+
+    // When to count a sample as quiet, on the bits of |outL| and |outR| OR-ed together: under 2^-100 (7.9e-31,
+    // 0x0D800000 as a float's bits) both are under the gate; with the gate at 0, only when both are zero.
+    constexpr juce::uint32 kQuietBits = kSilenceBelow > 0.0f ? 0x0D800000u : 1u;
+
+    // One value is silence (a NaN never is)
+    inline bool isSilence (float v) noexcept { return kSilenceBelow > 0.0f ? std::abs (v) < kSilenceBelow : bitsOf (v) == 0; }
+
+    // Every float of the buffer is silence; anyBits collects whether any of them is not +0.
+    // Read in runs, so a buffer that still rings answers after its first run.
+    inline bool allSilence (const std::vector<float>& b, juce::uint32& anyBits) noexcept
+    {
+        const float* p = b.data();
+        const size_t n = b.size();
+        for (size_t i = 0; i < n;)
+        {
+            const size_t end = juce::jmin (n, i + (size_t) 1024);
+            juce::uint32 bits = 0;
+            int loud = 0;
+            for (; i < end; ++i)
+            {
+                juce::uint32 u; std::memcpy (&u, p + i, sizeof (u));
+                bits |= u;
+                loud |= std::abs (p[i]) < kSilenceBelow ? 0 : 1;
+            }
+            anyBits |= bits;
+            if (kSilenceBelow > 0.0f ? loud != 0 : bits != 0) return false;
+        }
+        return true;
+    }
+
     // Max size scale used for buffer allocation headroom
     constexpr float kMaxSizeScale = 1.15f;
     constexpr float kModMarginSamples48k = 24.0f;
@@ -52,6 +99,11 @@ void RoneReverbEngine::prepare (double sampleRate, int /*maxBlockSize*/)
     preBufL_.assign ((size_t) preBufSize_, 0.0f);
     preBufR_.assign ((size_t) preBufSize_, 0.0f);
     preWritePos_ = 0;
+
+    // rest on silence: the positions start again, nothing is owed, nothing is proved; each copy reads its state
+    // at its own moment (64 slots across one second) so many silent copies never read in the same block
+    skipped_ = 0; resting_ = false; quietRun_ = 0; settersTouched_ = true;
+    scanAfter_ = preBufSize_ + (instanceSlot_ % 64) * juce::jmax (1, (int) (sampleRate / 64.0));
 
     smPreDelaySamples_.reset (sampleRate, 0.05);
     smPreDelaySamples_.setCurrentAndTargetValue (0.020f * (float) sampleRate);
@@ -158,6 +210,7 @@ void RoneReverbEngine::setSize (float size01)
         baseLenScaled_[(size_t) i] = (float) kBaseDelays48k[i] * srRatio_ * sizeScale;
         smLineLen_[(size_t) i].setTargetValue (baseLenScaled_[(size_t) i]);
     }
+    settersTouched_ = true;
 
     float erScale = (0.45f + 0.75f * size_) * (float) sampleRate_ / 1000.0f;
     for (int t = 0; t < kNumErTaps; ++t)
@@ -184,22 +237,26 @@ void RoneReverbEngine::updateFeedbackGains()
         float g = std::pow (10.0f, -3.0f * baseLenScaled_[(size_t) i] / t60Samples);
         smFeedback_[(size_t) i].setTargetValue (juce::jlimit (0.0f, 0.9995f, g));
     }
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setPreDelayMs (float ms)
 {
     float samples = juce::jlimit (0.0f, 250.0f, ms) * (float) sampleRate_ / 1000.0f;
     smPreDelaySamples_.setTargetValue (samples);
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setDiffusion (float amount01)
 {
     smDiffCoeff_.setTargetValue (0.25f + 0.5f * juce::jlimit (0.0f, 1.0f, amount01));
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setDensity (float amount01)
 {
     smDensCoeff_.setTargetValue (0.20f + 0.45f * juce::jlimit (0.0f, 1.0f, amount01));
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setModRate (float hz)
@@ -217,6 +274,7 @@ void RoneReverbEngine::setModDepth (float amount01)
 {
     // Max ~9 samples @48k: audible resonance smoothing without obvious chorus
     smModDepthSamples_.setTargetValue (juce::jlimit (0.0f, 1.5f, amount01) * 9.0f * srRatio_);
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setHighDamp (float amount01)
@@ -226,6 +284,7 @@ void RoneReverbEngine::setHighDamp (float amount01)
     float cutoff = 20000.0f * std::pow (1200.0f / 20000.0f, amt);
     float c = 1.0f - std::exp (-juce::MathConstants<float>::twoPi * cutoff / (float) sampleRate_);
     smHiDampCoeff_.setTargetValue (juce::jlimit (0.0f, 1.0f, c));
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setLowDamp (float amount01)
@@ -235,6 +294,7 @@ void RoneReverbEngine::setLowDamp (float amount01)
     float cutoff = 15.0f * std::pow (350.0f / 15.0f, amt);
     float c = 1.0f - std::exp (-juce::MathConstants<float>::twoPi * cutoff / (float) sampleRate_);
     smLoDampCoeff_.setTargetValue (juce::jlimit (0.0f, 1.0f, c));
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setEarlyLateBalance (float balance)
@@ -243,12 +303,14 @@ void RoneReverbEngine::setEarlyLateBalance (float balance)
     float x = (juce::jlimit (-1.0f, 1.0f, balance) + 1.0f) * 0.5f; // 0..1
     smErGain_.setTargetValue (std::cos (x * juce::MathConstants<float>::halfPi));
     smLateGain_.setTargetValue (std::sin (x * juce::MathConstants<float>::halfPi));
+    settersTouched_ = true;
 }
 
 void RoneReverbEngine::setFreeze (bool shouldFreeze)
 {
     freezeTarget_ = shouldFreeze;
     smFreeze_.setTargetValue (shouldFreeze ? 1.0f : 0.0f);
+    settersTouched_ = true;
 }
 
 // =============================================================================
@@ -266,8 +328,119 @@ float RoneReverbEngine::readInterp (const std::vector<float>& buf, int bufSize,
     return s0 + frac * (s1 - s0);
 }
 
+// =============================================================================
+// Rest on silence
+// =============================================================================
+int RoneReverbEngine::nextInstanceSlot() noexcept
+{
+    static std::atomic<int> next { 0 };
+    return next.fetch_add (1, std::memory_order_relaxed) & 0x7fffffff;
+}
+
+bool RoneReverbEngine::stateIsSilent (bool& exactlyZero) const noexcept
+{
+    juce::uint32 anyBits = 0;
+    bool silent = true;
+
+    // the lines first: they are what is still ringing when the answer is no
+    for (int i = 0; i < kNumLines && silent; ++i)
+    {
+        anyBits |= bitsOf (hiDampState_[(size_t) i]) | bitsOf (loDampState_[(size_t) i]);
+        silent = isSilence (hiDampState_[(size_t) i]) && isSilence (loDampState_[(size_t) i])
+              && allSilence (fdnBuf_[(size_t) i], anyBits) && allSilence (densBuf_[(size_t) i], anyBits);
+    }
+    for (int i = 0; i < kNumDiff && silent; ++i)
+        silent = allSilence (diffBufL_[(size_t) i], anyBits) && allSilence (diffBufR_[(size_t) i], anyBits);
+
+    if (silent)
+    {
+        anyBits |= bitsOf (erLpStateL_) | bitsOf (erLpStateR_);
+        silent = isSilence (erLpStateL_) && isSilence (erLpStateR_)
+              && allSilence (preBufL_, anyBits) && allSilence (preBufR_, anyBits);
+    }
+    exactlyZero = silent && anyBits == 0;
+    return silent;
+}
+
+bool RoneReverbEngine::smoothersSettled() noexcept
+{
+    if (settersTouched_)
+    {
+        bool moving = smPreDelaySamples_.isSmoothing() || smDiffCoeff_.isSmoothing()
+                   || smHiDampCoeff_.isSmoothing()     || smLoDampCoeff_.isSmoothing()
+                   || smDensCoeff_.isSmoothing()       || smModDepthSamples_.isSmoothing()
+                   || smFreeze_.isSmoothing()          || smErGain_.isSmoothing() || smLateGain_.isSmoothing();
+        for (int i = 0; i < kNumLines && ! moving; ++i)
+            moving = smLineLen_[(size_t) i].isSmoothing() || smFeedback_[(size_t) i].isSmoothing();
+        if (moving) return false;
+        settersTouched_ = false;       // a smoother starts a ramp only inside a setter
+    }
+    return true;
+}
+
+void RoneReverbEngine::catchUpPositions() noexcept
+{
+    // what the resting samples would have done to the positions, one step each
+    const juce::int64 s = skipped_;
+    skipped_ = 0;
+    preWritePos_ = (int) (((juce::int64) preWritePos_ + s) & (juce::int64) (preBufSize_ - 1));
+    for (int i = 0; i < kNumDiff; ++i)
+    {
+        diffPosL_[(size_t) i] = (int) (((juce::int64) diffPosL_[(size_t) i] + s) % (juce::int64) diffBufL_[(size_t) i].size());
+        diffPosR_[(size_t) i] = (int) (((juce::int64) diffPosR_[(size_t) i] + s) % (juce::int64) diffBufR_[(size_t) i].size());
+    }
+    for (int i = 0; i < kNumLines; ++i)
+    {
+        densPos_[(size_t) i]     = (int) (((juce::int64) densPos_[(size_t) i] + s) % (juce::int64) densBuf_[(size_t) i].size());
+        fdnWritePos_[(size_t) i] = (int) (((juce::int64) fdnWritePos_[(size_t) i] + s) & (juce::int64) (fdnBufSize_[(size_t) i] - 1));
+    }
+}
+
+// Called only while resting_: this sample rests (true), or the rest ends here and the full path takes it (false)
+RONE_REVERB_OUT_OF_LINE bool RoneReverbEngine::restSample (float inL, float inR, float& outL, float& outR) noexcept
+{
+    if ((bitsOf (inL) | bitsOf (inR)) == 0 && smoothersSettled())
+    {
+        for (int i = 0; i < kNumLines; ++i)
+        {
+            lfoPhase_[(size_t) i] += lfoInc_[(size_t) i];
+            if (lfoPhase_[(size_t) i] >= 1.0f) lfoPhase_[(size_t) i] -= 1.0f;
+        }
+        ++skipped_;
+        outL = 0.0f;
+        outR = 0.0f;
+        return true;
+    }
+    resting_ = false;
+    catchUpPositions();            // positions are owed only by resting samples
+    return false;
+}
+
+// Called after a full sample whose output was silence. If what it took in (the sample just written to the
+// pre-delay) was +0 too, it counts; after enough of them in a row the whole state is read once, and if all of it
+// is silence, what is left of it is let go and the engine rests. (This only decides WHEN to look: whether the
+// engine may rest is decided by stateIsSilent() and, sample by sample, by restSample().)
+RONE_REVERB_OUT_OF_LINE void RoneReverbEngine::quietSample() noexcept
+{
+    const size_t last = (size_t) ((preWritePos_ - 1) & (preBufSize_ - 1));
+    if ((bitsOf (preBufL_[last]) | bitsOf (preBufR_[last])) != 0) { quietRun_ = 0; return; }
+    if (++quietRun_ >= scanAfter_)
+    {
+        quietRun_ = 0;
+        bool exactlyZero = false;
+        if (stateIsSilent (exactlyZero))
+        {
+            if (! exactlyZero) reset();        // the buffers and the filter states to +0; positions and LFOs stay
+            resting_ = true;
+        }
+    }
+}
+
 void RoneReverbEngine::processSample (float inL, float inR, float& outL, float& outR)
 {
+    if (resting_ && restSample (inL, inR, outL, outR))
+        return;
+
     int preMask = preBufSize_ - 1;
     float freeze = smFreeze_.getNextValue();
 
@@ -403,4 +576,8 @@ void RoneReverbEngine::processSample (float inL, float inR, float& outL, float& 
 
     outL = erL * erGain + lateL * lateGain;
     outR = erR * erGain + lateR * lateGain;
+
+    // the one thing a playing sample pays for the rest: is what went out silence? (both magnitudes, as bits)
+    if (((bitsOf (outL) | bitsOf (outR)) & 0x7fffffffu) < kQuietBits) quietSample();
+    else                                                               quietRun_ = 0;
 }
