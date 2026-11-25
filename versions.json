@@ -255,10 +255,10 @@
       "released": "2026-09-22",
       "i18n": {
         "pt": {
-          "description": "Um hard clipper que mostra exatamente o que cortou: a forma de onda depois do clip com os picos removidos em azul, um knob CLIP, LOW CUT que mantém kick e baixo fora do clipper, e oversampling que zera contra a entrada a -100 dB"
+          "description": "Um hard clipper que mostra exatamente o que cortou: a forma de onda depois do clip com os picos removidos em azul, um knob CLIP, LOW CUT que tira os graves criados pelo próprio clip e mantém o teto, e oversampling que zera contra a entrada a -100 dB"
         },
         "es": {
-          "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que deja el kick y el bajo fuera del clipper, y oversampling que se anula contra la entrada a -100 dB"
+          "description": "Un hard clipper que te muestra exactamente lo que cortó: la forma de onda tras el clip con los picos eliminados en azul, un knob CLIP, LOW CUT que quita los graves que crea el propio clip y mantiene el techo, y oversampling que se anula contra la entrada a -100 dB"
         }
       },
       "size": 15446576,
