@@ -119,6 +119,7 @@ for id in $(echo "$changed" | jq -r '.[]'); do
     hook)           tag=RoneHook-latest;          title="RONE Hook (Latest)";           folder=RoneHook;           jid=RoneHook ;;
     reverb)         tag=RoneReverb-latest;        title="RONE Reverb (Latest)";         folder=RoneReverb;         jid=RoneReverb ;;
     listen)         tag=RoneListen-latest;        title="RONE Listen (Latest)";         folder=RoneListen;         jid=RoneListen ;;
+    fuzz)           tag=RoneFuzz-latest;          title="RONE Fuzz (Latest)";           folder=RoneFuzz;           jid=RoneFuzz ;;
     flanger)        tag=RoneFlanger-latest;       title="RONE Flanger (Latest)";        folder=rone-flanger-;      jid=RoneFlanger ;;
     sync_verb)      tag=RoneSyncVerb-latest;      title="RONE Sync Verb (Latest)";      folder="rone sync verb";   jid=RoneSyncVerb ;;
     afterspace)     tag=RoneAfterspace-latest;    title="RONE AFTERSPACE (Latest)";     folder="RONE AFTER SPACE"; jid=RoneAfterspace ;;

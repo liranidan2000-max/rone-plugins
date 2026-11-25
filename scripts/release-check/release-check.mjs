@@ -38,6 +38,7 @@ const NO_RACK = {
   RoneListen: 'ל-Listen אין אף פרמטר (בלי APVTS): אין ל-Control מה להזיז',   // 22.11.2026
   // Liran 22.11.2026: RONE Control goes only into EFFECTS, whose knobs are ridden by hand for automation (1.1.1 took it out)
   RoneHook: 'HOOK תופס קול, הוא לא אפקט: את הכפתורים שלו לא מזיזים ביד לאוטומציה',
+  RoneFuzz: 'לירן 24.11.2026: בלי RONE Control ב-Fuzz',
 };
 const FOLDER = { ReverseReverb: 'ReverseReverbVST', RoneFlanger: 'rone-flanger-', RoneAfterspace: 'RONE AFTER SPACE' };
 

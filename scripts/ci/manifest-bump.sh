@@ -63,6 +63,7 @@ for id in $(echo "$published" | jq -r '.[]'); do
     hook)           folder=RoneHook;           jid=RoneHook;        tag=RoneHook-latest;        inst=RoneHook ;;
     reverb)         folder=RoneReverb;         jid=RoneReverb;      tag=RoneReverb-latest;      inst=RoneReverb ;;
     listen)         folder=RoneListen;         jid=RoneListen;      tag=RoneListen-latest;      inst=RoneListen ;;
+    fuzz)           folder=RoneFuzz;           jid=RoneFuzz;        tag=RoneFuzz-latest;        inst=RoneFuzz ;;
     flanger)        folder=rone-flanger-;      jid=RoneFlanger;     tag=RoneFlanger-latest;     inst=RoneFlanger ;;
     sync_verb)      folder="rone sync verb";   jid=RoneSyncVerb;   tag=RoneSyncVerb-latest;    inst=RoneSyncVerb ;;
     afterspace)     folder="RONE AFTER SPACE"; jid=RoneAfterspace; tag=RoneAfterspace-latest;  inst=RoneAfterspace ;;

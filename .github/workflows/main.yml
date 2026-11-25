@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       products:
-        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,sidechain,delay,dmt,hook,reverb,listen,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
+        description: "Products to build: comma-separated ids (stutter,stucker,throw,clipper,rise,iron,rone1176,rone2a,sidechain,delay,dmt,hook,reverb,listen,fuzz,flanger,reverse_reverb,afterspace,analyzer,plugins_center) or 'all'"
         required: true
         default: stutter
 
@@ -213,6 +213,14 @@ jobs:
               - 'Shared/RoneControlRack?*/**/*'
               - 'installer/RoneListen.iss'
               - '.github/workflows/main.yml'
+            fuzz:
+              - 'RoneFuzz'
+              - 'Shared/!(tests|check-vendored-copies.sh)'
+              - 'Shared/!(tests|RoneControlRack)/**/*'
+              - 'Shared/tests?*/**/*'
+              - 'Shared/RoneControlRack?*/**/*'
+              - 'installer/RoneFuzz.iss'
+              - '.github/workflows/main.yml'
             hook:
               - 'RoneHook'
               - 'Shared/!(tests|check-vendored-copies.sh)'
@@ -300,6 +308,7 @@ jobs:
           HK=${{ steps.filter.outputs.hook            || 'false' }}
           RV=${{ steps.filter.outputs.reverb          || 'false' }}
           LS=${{ steps.filter.outputs.listen          || 'false' }}
+          FZ=${{ steps.filter.outputs.fuzz            || 'false' }}
           FL=${{ steps.filter.outputs.flanger         || 'false' }}
           SV=${{ steps.filter.outputs.sync_verb       || 'false' }}
           PC=${{ steps.filter.outputs.plugins_center  || 'false' }}
@@ -312,14 +321,14 @@ jobs:
             want=",$(printf '%s' "$DISPATCH_PRODUCTS" | tr -d ' ' | tr 'A-Z' 'a-z'),"
             for p in $(printf '%s' "$want" | tr ',' ' '); do
               case "$p" in
-                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|sidechain|delay|dmt|hook|reverb|listen|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
+                all|reverse_reverb|stems_fixer|stutter|stucker|throw|clipper|rise|iron|rone1176|rone2a|sidechain|delay|dmt|hook|reverb|listen|fuzz|flanger|sync_verb|afterspace|plugins_center|analyzer) ;;
                 *) echo "::error::dry run: unknown product '$p'"; exit 1 ;;
               esac
             done
             pick() { case "$want" in *,all,*|*",$1,"*) echo true ;; *) echo false ;; esac; }
             RR=$(pick reverse_reverb); SF=$(pick stems_fixer); ST=$(pick stutter); SK=$(pick stucker)
             TH=$(pick throw); CL=$(pick clipper); RI=$(pick rise); IR=$(pick iron); FL=$(pick flanger)
-            C76=$(pick rone1176); C2A=$(pick rone2a); SC=$(pick sidechain); DL=$(pick delay); DM=$(pick dmt); HK=$(pick hook); RV=$(pick reverb); LS=$(pick listen)
+            C76=$(pick rone1176); C2A=$(pick rone2a); SC=$(pick sidechain); DL=$(pick delay); DM=$(pick dmt); HK=$(pick hook); RV=$(pick reverb); LS=$(pick listen); FZ=$(pick fuzz)
             SV=$(pick sync_verb); PC=$(pick plugins_center); AN=$(pick analyzer); AS=$(pick afterspace)
             echo "dry run, nothing is published: $DISPATCH_PRODUCTS"
           fi
@@ -372,6 +381,9 @@ jobs:
           # RONE Listen (17.11.2026): VST3 + AU, no standalone (scripts/ci/format_contract.py EXCEPTIONS); libopus 1.5.2
           # through FetchContent, plain C on the Mac (OPUS_DISABLE_INTRINSICS: one pass builds both slices)
           add "$LS" listen         RoneListen         RoneListen        RoneListen-latest          RoneListen                true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneListen.iss      "RONE Listen - User Manual.pdf"         ""
+          # RONE Fuzz: VST3 + AU + Standalone, no rack yet (RONE Control in it is undecided: when it goes in, add
+          # 'Shared/RoneControlRack/**' to its filter above)
+          add "$FZ" fuzz           RoneFuzz           RoneFuzz          RoneFuzz-latest            RoneFuzz                  true   JUCE_WEBVIEW2_PACKAGE_LOCATION    false    RoneFuzz.iss        "RONE Fuzz - User Manual.pdf"           ""
           add "$FL" flanger         rone-flanger-      ManualFlanger     RoneFlanger-latest         RoneFlanger               true   JUCE_WEBVIEW2_PACKAGE_LOCATION    true     RoneFlanger.iss     "RONE Flanger - User Manual.pdf"        "Rone Flanger"
           # shelved 2026-08-31 (Liran): Sync Verb is out of the bundle for now - uncomment to bring it back
           #add "$SV" sync_verb      "rone sync verb"   RoneSyncVerb      RoneSyncVerb-latest        RoneSyncVerb              true   FETCHCONTENT_SOURCE_DIR_WEBVIEW2  false    RoneSyncVerb.iss    "RONE Sync Verb - User Manual.pdf"      "Rone Sync Verb"
@@ -1798,6 +1810,7 @@ jobs:
               hook)           f=RoneHook ;;
               reverb)         f=RoneReverb ;;
               listen)         f=RoneListen ;;
+              fuzz)           f=RoneFuzz ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;
@@ -1922,6 +1935,7 @@ jobs:
               hook)           f=RoneHook ;;
               reverb)         f=RoneReverb ;;
               listen)         f=RoneListen ;;
+              fuzz)           f=RoneFuzz ;;
               flanger)        f=rone-flanger- ;;
               sync_verb)      f="rone sync verb" ;;
               afterspace)     f="RONE AFTER SPACE" ;;

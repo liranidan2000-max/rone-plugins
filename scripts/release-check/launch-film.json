@@ -18,6 +18,7 @@
     "afterspace":      { "color": "orange" },
     "rone-1176":       { "color": "orange" },
     "rone-2a":         { "color": "coral" },
-    "rone-listen":     { "color": "pink" }
+    "rone-listen":     { "color": "pink" },
+    "rone-fuzz":       { "color": "violet blue", "screen": "the violet bass spectrum rises and the four bands light up one after another" }
   }
 }
