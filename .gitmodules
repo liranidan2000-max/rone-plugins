@@ -56,3 +56,6 @@
 [submodule "RoneListen"]
 	path = RoneListen
 	url = https://github.com/liranidan2000-max/RoneListen.git
+[submodule "RoneFuzz"]
+	path = RoneFuzz
+	url = https://github.com/liranidan2000-max/RoneFuzz.git

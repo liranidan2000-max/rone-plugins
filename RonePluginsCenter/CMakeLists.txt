@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(RonePluginsCenter VERSION 2.1.51 LANGUAGES C CXX)  # 2.1.51 is built by run #446: run #445 got no Mac machine
+project(RonePluginsCenter VERSION 2.1.52 LANGUAGES C CXX)
 
 # Build nonce 2026-09-02-a. The v1.3.0 release push never produced a run: its
 # commit body quoted the CI skip token while explaining an earlier commit, and
