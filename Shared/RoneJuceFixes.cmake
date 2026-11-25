@@ -113,6 +113,107 @@ function(rone_fix_juce_webview_teardown juce_src_dir)
     message(STATUS "RoneJuceFixes: patched ${_file} (WebView teardown, support #133)")
 endfunction()
 
+# ---------------------------------------------------------------------------------------
+# 2. macOS standalone: an audio device change (headphones in/out, AirPods) no longer crashes
+#    the app (Stucker #142, Sidechain #203, Clipper #207: three reports of one JUCE race).
+#    CoreAudio's HAL thread runs AudioIODeviceCombiner::restartAsync, which closed the devices
+#    right there while the message thread was inside start() / close(): with #207 it called
+#    audioDeviceStopped() on start()'s own stack object. Now it only starts a timer; the close
+#    and the reopen run on the message thread. The same text as RoneStucker / RoneSidechain /
+#    RoneClipper cmake/JuceCoreAudioCombinerFix.cmake (the marker keeps it from running twice).
+#    JUCE 8.0.12 has the same code; JUCE 9 rewrote it.
+# ---------------------------------------------------------------------------------------
+
+function(rone_fix_juce_coreaudio_combiner juce_src_dir)
+    set(_file "${juce_src_dir}/modules/juce_audio_devices/native/juce_CoreAudio_mac.cpp")
+    if(NOT EXISTS "${_file}")
+        message(STATUS "RoneJuceFixes: no ${_file} - nothing to fix")
+        return()
+    endif()
+
+    file(READ "${_file}" _src)
+
+    set(_marker "RONE: combiner restart runs on the message thread")
+    string(FIND "${_src}" "${_marker}" _done)
+    if(NOT _done EQUAL -1)
+        return()
+    endif()
+
+    set(_old_restart [=[
+    void restartAsync() override
+    {
+        {
+            const ScopedLock sl (closeLock);
+
+            if (active)
+            {
+                if (callback != nullptr)
+                    previousCallback = callback;
+
+                close();
+            }
+        }
+
+        startTimer (100);
+    }
+]=])
+    set(_new_restart [=[
+    // RONE: combiner restart runs on the message thread (crash report #142).
+    // CoreAudio calls this on its HAL thread; closing the devices here raced the
+    // message thread closing them for a device-list change.
+    void restartAsync() override
+    {
+        startTimer (100);
+    }
+]=])
+
+    set(_old_timer [=[
+    void timerCallback() override
+    {
+        stopTimer();
+
+        restart (previousCallback);
+    }
+]=])
+    set(_new_timer [=[
+    void timerCallback() override
+    {
+        stopTimer();
+
+        {
+            const ScopedLock sl (closeLock);
+
+            if (active)
+            {
+                if (callback != nullptr)
+                    previousCallback = callback;
+
+                close();
+            }
+        }
+
+        restart (previousCallback);
+    }
+]=])
+
+    # Git may check out JUCE or this file with CRLF - compare with LF only
+    string(REPLACE "\r\n" "\n" _src "${_src}")
+
+    foreach(_part restart timer)
+        string(REPLACE "\r\n" "\n" _old_${_part} "${_old_${_part}}")
+        string(REPLACE "\r\n" "\n" _new_${_part} "${_new_${_part}}")
+        string(FIND "${_src}" "${_old_${_part}}" _at)
+        if(_at EQUAL -1)
+            message(FATAL_ERROR "RoneJuceFixes: JUCE's AudioIODeviceCombiner changed "
+                                "(no match for ${_part}) - re-check the fix for crash report #142 in ${_file}")
+        endif()
+        string(REPLACE "${_old_${_part}}" "${_new_${_part}}" _src "${_src}")
+    endforeach()
+
+    file(WRITE "${_file}" "${_src}")
+    message(STATUS "RoneJuceFixes: patched ${_file} (CoreAudio combiner, support #207)")
+endfunction()
+
 # Every fix, on whichever JUCE this project brought in (FetchContent or its own folder).
 function(rone_apply_juce_fixes)
     set(_dir "")
@@ -127,4 +228,5 @@ function(rone_apply_juce_fixes)
     endif()
 
     rone_fix_juce_webview_teardown("${_dir}")
+    rone_fix_juce_coreaudio_combiner("${_dir}")
 endfunction()
