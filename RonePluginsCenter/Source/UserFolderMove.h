@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "VersionChecker.h"
 #include "OldVersionCleaner.h"
+#include "MacAdmin.h"
 
 #if JUCE_MAC
  #include <unistd.h>
@@ -300,19 +301,19 @@ namespace UserFolderMove
         }
         script.replaceWithText (sh, false, false, "\n");
 
-        const auto cmd = "osascript -e 'do shell script \"/bin/sh \\\"" + script.getFullPathName()
-                       + "\\\"\" with administrator privileges' 2>'" + errFile.getFullPathName() + "'";
-        const int status = std::system (cmd.toRawUTF8());
+        const auto ran = MacAdmin::run ("-e 'do shell script \"/bin/sh \\\"" + script.getFullPathName()
+                                        + "\\\"\" with administrator privileges'", errFile);
         script.deleteFile();
-        const int code = WIFEXITED (status) ? WEXITSTATUS (status) : -1;
-        const auto err = errFile.loadFileAsString().trim();
-        errFile.deleteFile();
+        const int code = ran.code;
+        const auto err = ran.err;
 
         if (code == 0)
             return true;
         if (err.contains ("-128") || err.containsIgnoreCase ("cancel"))
             return false;
-        failure = err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
+        failure = MacAdmin::scriptingUnavailable (err)
+                      ? MacAdmin::scriptingUnavailableText() + ". " + MacAdmin::scriptingUnavailableHelp()
+                : err.isNotEmpty() ? err.fromLastOccurrenceOf ("execution error:", false, false).trim()
                                    : "could not start (code " + juce::String (code) + ")";
         // macOS 13+ guards apps (App Management): the Center needs the user's
         // permission to move one, exactly as InstallBatcher says for EPERM.
