@@ -214,6 +214,80 @@ function(rone_fix_juce_coreaudio_combiner juce_src_dir)
     message(STATUS "RoneJuceFixes: patched ${_file} (CoreAudio combiner, support #207)")
 endfunction()
 
+# ---------------------------------------------------------------------------------------
+# 3. macOS AU in Ableton Live: a key pressed while the plugin window is in front no longer
+#    takes Live down (support #210: RONE Sidechain 1.2.5 AU, Live 12.4.16, macOS 26.5.2,
+#    EXC_BREAKPOINT in libobjc; symbolized from build 451's component, arm64:
+#    JuceAU::EditorCompHolder::keyPressed + 0xc8 <- ComponentPeer::handleKeyPress
+#    <- NSViewComponentPeer::redirectKeyDown).
+#
+#    For Live only, JUCE passes every key on to Live's own view (so the space bar still
+#    plays). JUCE 8.0.4 reads Live's window once, BEFORE it hands Live the key, and gives
+#    the focus back to that same window afterwards. When the key makes Live close or
+#    rebuild the plugin window, that window is gone by then: a message to a freed object,
+#    which on Apple silicon traps in libobjc. JUCE 8.0.12 reads the window again after
+#    the key, and gives the focus back only when there still is one - the same text here.
+# ---------------------------------------------------------------------------------------
+
+function(rone_fix_juce_au_live_keys juce_src_dir)
+    set(_file "${juce_src_dir}/modules/juce_audio_plugin_client/juce_audio_plugin_client_AU_1.mm")
+    if(NOT EXISTS "${_file}")
+        message(STATUS "RoneJuceFixes: no ${_file} - nothing to fix")
+        return()
+    endif()
+
+    file(READ "${_file}" _src)
+
+    set(_marker "RONE: Live may close the window on that key")
+    string(FIND "${_src}" "${_marker}" _done)
+    if(NOT _done EQUAL -1)
+        return()
+    endif()
+
+    # JUCE's own fix (8.0.12 has it)
+    string(FIND "${_src}" "if ((hostView = [view superview]))" _upstream)
+    if(NOT _upstream EQUAL -1)
+        message(STATUS "RoneJuceFixes: this JUCE already re-reads Live's window after a key")
+        return()
+    endif()
+
+    set(_old_keys [=[
+                        auto* view = (NSView*) getWindowHandle();
+                        auto* hostView = [view superview];
+                        auto* hostWindow = [hostView window];
+
+                        [hostWindow makeFirstResponder: hostView];
+                        [hostView keyDown: currentEvent];
+                        [hostWindow makeFirstResponder: view];
+]=])
+    set(_new_keys [=[
+                        auto* view = (NSView*) getWindowHandle();
+                        auto* hostView = [view superview];
+
+                        [[hostView window] makeFirstResponder: hostView];
+                        [hostView keyDown: currentEvent];
+
+                        // RONE: Live may close the window on that key (support #210). Read it
+                        // again, as JUCE 8.0.12 does: the one read before keyDown can be freed.
+                        if ((hostView = [view superview]))
+                            if (auto* hostWindow = [hostView window])
+                                [hostWindow makeFirstResponder: view];
+]=])
+
+    string(REPLACE "\r\n" "\n" _src "${_src}")
+    string(REPLACE "\r\n" "\n" _old_keys "${_old_keys}")
+    string(REPLACE "\r\n" "\n" _new_keys "${_new_keys}")
+    string(FIND "${_src}" "${_old_keys}" _at)
+    if(_at EQUAL -1)
+        message(FATAL_ERROR "RoneJuceFixes: JUCE's AU keyPressed for Live changed "
+                            "- re-check the fix for support #210 in ${_file}")
+    endif()
+    string(REPLACE "${_old_keys}" "${_new_keys}" _src "${_src}")
+
+    file(WRITE "${_file}" "${_src}")
+    message(STATUS "RoneJuceFixes: patched ${_file} (AU keys in Live, support #210)")
+endfunction()
+
 # Every fix, on whichever JUCE this project brought in (FetchContent or its own folder).
 function(rone_apply_juce_fixes)
     set(_dir "")
@@ -229,4 +303,5 @@ function(rone_apply_juce_fixes)
 
     rone_fix_juce_webview_teardown("${_dir}")
     rone_fix_juce_coreaudio_combiner("${_dir}")
+    rone_fix_juce_au_live_keys("${_dir}")
 endfunction()
