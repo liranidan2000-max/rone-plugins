@@ -2665,16 +2665,19 @@ static bool centerSetupIsReady()
 }
 #endif
 
-void MainComponent::applyCenterUpdate (const juce::File& installerFile)
+void MainComponent::applyCenterUpdate (const juce::File& installerFile, const juce::String& fileVersion)
 {
     const auto info = networkManager.getCenterInstallerInfo();
 
     // Read back after the restart (reportCenterUpdateOutcome): did it land? The
     // marker also records each step reached (centerUpdateStep), so a Center quit
-    // mid-update says at the next start where it stopped.
+    // mid-update says at the next start where it stopped. Its version is the one
+    // of the FILE that runs (the download job's), not the catalog's of this
+    // moment: those differ when the catalog was refreshed during the download
+    // (support #193, 26.11.2026).
     {
         auto* m = new juce::DynamicObject();
-        m->setProperty ("version", info.version);
+        m->setProperty ("version", fileVersion.isNotEmpty() ? fileVersion : info.version);
         m->setProperty ("from", juce::String (JUCE_APPLICATION_VERSION_STRING));
         m->setProperty ("at", (double) juce::Time::currentTimeMillis());
         m->setProperty ("step", "requested");
@@ -3446,7 +3449,21 @@ void MainComponent::onDownloadComplete (const juce::String& pluginId,
                                    "center_update_waiting", juce::var (params));
                 return;
             }
-            applyCenterUpdate (localFile);
+
+            // Support #193 (fix round 15, 26.11.2026): the catalog moved on while this
+            // file was downloading (a refresh on focus, or a release landing minutes
+            // after the click). Measured in the field: Centers on 2.1.51.448 downloaded
+            // 2.1.51.454, the catalog said 2.1.53.457 by the time it finished, and the
+            // 454 installer ran under a marker that read 2.1.53.457 - so every one of
+            // them reported "did not finish" although setup succeeded. Installing the
+            // older file is a wasted restart: fetch the newer one instead.
+            const auto now = networkManager.getCenterInstallerInfo();
+            if (version.isNotEmpty() && now.isValid() && VersionChecker::isNewerVersion (version, now.version))
+            {
+                handleApplyCenterUpdate ({}, [] (juce::var) {});
+                return;
+            }
+            applyCenterUpdate (localFile, version);
         }
         else
             emitStatusMessage (errorMessage.isNotEmpty() ? errorMessage

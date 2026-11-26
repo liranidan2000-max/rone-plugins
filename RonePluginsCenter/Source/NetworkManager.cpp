@@ -498,14 +498,38 @@ void NetworkManager::runDownloadJob (const DownloadJob& job)
 
     if (success && partFile.existsAsFile())
     {
-        tempFile.deleteFile();
-        hashStampFor (tempFile).deleteFile();
-        if (partFile.moveFileTo (tempFile))
+        // Support #19 (fix round 15, 26.11.2026): the move from .part to the final
+        // name failed on two computers (2.1.9, 2.1.51) with nothing more to go on.
+        // An antivirus scanning the fresh .part holds it for a moment, so the move is
+        // tried a few times, then a copy (which only needs to READ the .part) before
+        // giving up - and the report says which of the usual causes it was.
+        bool saved = false;
+        for (int attempt = 0; attempt < 6 && ! saved && ! shouldAbortDownload(); ++attempt)
+        {
+            if (attempt > 0)
+                juce::Thread::sleep (500);
+            tempFile.deleteFile();
+            hashStampFor (tempFile).deleteFile();
+            saved = partFile.moveFileTo (tempFile);
+        }
+        if (! saved && partFile.existsAsFile() && ! tempFile.existsAsFile())
+            saved = partFile.copyFileTo (tempFile);
+
+        if (saved)
             hashStampFor (tempFile).replaceWithText (job.sha256.toLowerCase());
         else
         {
             success = false;
-            errorMsg = "Download failed - the file could not be saved. Check that antivirus is not blocking RONE installers.";
+            juce::String why;
+            if (tempFile.existsAsFile())
+                why = "an older installer under that name is in use and could not be replaced";
+            else if (! partFile.existsAsFile())
+                why = "the downloaded file was taken away before it could be saved, often by an antivirus";
+            else if (getDownloadDir().getBytesFreeOnVolume() < partFile.getSize() + 1024 * 1024)
+                why = "the disk is full";
+            else
+                why = "the downloaded file is locked, often by an antivirus";
+            errorMsg = "Download failed - the file could not be saved (" + why + "). Check that antivirus is not blocking RONE installers.";
         }
     }
 

@@ -169,7 +169,7 @@ public:
 private:
     void checkForCenterUpdate();                       // call after each manifest fetch
     void handleApplyCenterUpdate (NativeArgs args, NativeCompletion complete);
-    void applyCenterUpdate (const juce::File& installerFile);
+    void applyCenterUpdate (const juce::File& installerFile, const juce::String& fileVersion = {});
     void applyCenterUpdateWhenIdle();                  // never in the middle of an install
     void reportCenterUpdateOutcome();                  // after a restart: did the update land?
 
