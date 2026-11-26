@@ -917,12 +917,12 @@
       "video": "https://www.youtube.com/watch?v=5O7U35jwAzI",
       "inno_app_id": "{6B1F3E2A-9C47-4E58-B0D2-7A41C8E5F913}",
       "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-1.0.6.exe",
-      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-1.0.5.44.pkg",
+      "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneVstManager-latest/RoneVstManager_Installer-1.0.6.45.pkg",
       "sha256": "348303321184eb6cc6934128e84f1fc9cfab5d7e9c020276d4d2876826d7bf30",
-      "sha256_mac": "4ffe481abf29ad673d43c1d9330f8884deba0e19b3b5c611a191043dd57cb2e1",
+      "sha256_mac": "e2631ad808eb7d431e6f1784a1a4e5ccfa6eb954e42975a93e3bb18be5d99014",
       "size": 5566320,
-      "size_mac": 10245565,
-      "version_mac": "1.0.5.44",
+      "size_mac": 10246709,
+      "version_mac": "1.0.6.45",
       "released": "2026-11-26"
     }
   ],
