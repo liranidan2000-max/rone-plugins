@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "license_mode": "enforced",
   "license_message": "Sign in inside the RONE Plugins Center to unlock your plugins. Bought or claimed a plugin but never set a password? Sign in with that e-mail and we will send you the link to set one. New here? Free trial at roneaudio.com.",
-  "last_updated": "2026-11-25T14:35:37Z",
+  "last_updated": "2026-11-26T07:49:57Z",
   "center_installer": {
     "url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center_Installer-457.1.exe",
     "url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/PluginsCenter-latest/RONE_Plugins_Center-457.1.dmg",
@@ -864,7 +864,7 @@
     {
       "id": "RoneFuzz",
       "name": "RONE Fuzz",
-      "version": "1.0.0.456",
+      "version": "1.0.0.460",
       "type": "plugin",
       "formats": [
         "VST3",
@@ -877,9 +877,9 @@
       "vst3_bundle": "RONE Fuzz.vst3",
       "au_bundle": "RONE Fuzz.component",
       "manual": "RONE Fuzz - User Manual.pdf",
-      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFuzz-latest/RoneFuzz_Installer-456.1.exe",
+      "download_url": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFuzz-latest/RoneFuzz_Installer-460.1.exe",
       "download_url_mac": "https://github.com/liranidan2000-max/rone-plugins/releases/download/RoneFuzz-latest/RoneFuzz_Installer-456.1.pkg",
-      "sha256": "57d28e6bbe358c30c1774a3f3cc32fdcd0d22636a57dba88e5e56077571b3361",
+      "sha256": "c6075ad55f7ca892bcd18f63a5471ccb30635440a3b46ac6b30069fdcae71403",
       "registry_key": "RoneFuzz",
       "sha256_mac": "7ec329b9b73058b1f2801a7ff65de878b866109d07597bbfb1aeb3a2e809510a",
       "store_url": "https://roneaudio.com/products/rone-fuzz.html",
@@ -897,7 +897,7 @@
       "accent": "#6C5CFF",
       "inno_app_id": "{1A0ED777-C375-4E41-B0C2-CADC7E0015FC}",
       "version_mac": "1.0.0.456",
-      "size": 5633296,
+      "size": 5658448,
       "size_mac": 14023708
     }
   ],
